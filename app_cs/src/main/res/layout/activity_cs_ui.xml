@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- CS Launcher Plus home shell: brand header + content area -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:orientation="vertical">
+
+    <!-- ══════════════ TOP HEADER ══════════════ -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:background="@drawable/bg_home_header"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="12dp">
+
+        <!-- Brand block -->
+        <ImageView
+            android:id="@+id/brand_logo"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:contentDescription="@string/app_short_name"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_cs_full" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.08"
+                android:text="@string/brand_short_name"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.32"
+                android:text="@string/brand_tagline_home"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="7sp" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <!-- Account selector (existing AccountSpinner, restyled) -->
+        <com.kdt.mcgui.AccountSpinner
+            android:id="@+id/account_spinner"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            android:background="@drawable/bg_pill_home"
+            android:dropDownVerticalOffset="40dp"
+            android:minWidth="180dp"
+            android:paddingHorizontal="14dp"
+            android:popupBackground="@drawable/bg_popup_rounded"
+            tools:ignore="RtlSymmetry" />
+
+        <!-- Settings -->
+        <ImageButton
+            android:id="@+id/setting_button"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_icon_button_home"
+            android:contentDescription="@string/home_settings"
+            android:padding="10dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_px_sliders"
+            android:tooltipText="@string/home_settings" />
+
+        <!-- Overflow menu -->
+        <ImageButton
+            android:id="@+id/overflow_button"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_icon_button_home"
+            android:contentDescription="@string/home_more"
+            android:padding="10dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_overflow_home"
+            android:tooltipText="@string/home_more" />
+    </LinearLayout>
+
+    <!-- ══════════════ CONTENT ══════════════ -->
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/container_fragment"
+        android:name="com.craftstudio.cslauncher.fragments.MainMenuFragment"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <com.kdt.mcgui.ProgressLayout
+        android:id="@+id/progress_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+</LinearLayout>

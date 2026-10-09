@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Overflow menu of the home header: quick jumps to the existing screens -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/overflow_wiki"
+        android:icon="@drawable/ic_px_book"
+        android:title="@string/home_overflow_wiki" />
+    <item
+        android:id="@+id/overflow_community"
+        android:icon="@drawable/ic_discord"
+        android:title="@string/home_overflow_community" />
+    <item
+        android:id="@+id/overflow_install_jar"
+        android:icon="@drawable/ic_menu_install_jar"
+        android:title="@string/home_overflow_install_jar" />
+    <item
+        android:id="@+id/overflow_share_logs"
+        android:icon="@drawable/ic_px_sharelog"
+        android:title="@string/home_overflow_share_logs" />
+    <item
+        android:id="@+id/overflow_gamepad"
+        android:icon="@drawable/ic_px_gamepad"
+        android:title="@string/home_overflow_gamepad" />
+    <item
+        android:id="@+id/overflow_about"
+        android:icon="@drawable/ic_cs_full"
+        android:title="@string/home_overflow_about" />
+</menu>

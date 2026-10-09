@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- gamepad -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="22dp" android:height="22dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path android:strokeColor="?attr/colorOnSurface" android:strokeWidth="1.8" android:fillColor="#00000000" android:strokeLineJoin="round"
+        android:pathData="M6,7H18C20.2,7 22,8.8 22,11V15C22,17.2 20.2,19 18,19C16.7,19 15.8,18.4 15,17.5L13.5,15.5H10.5L9,17.5C8.2,18.4 7.3,19 6,19C3.8,19 2,17.2 2,15V11C2,8.8 3.8,7 6,7Z" />
+    <path android:strokeColor="?attr/colorOnSurface" android:strokeWidth="1.6" android:fillColor="#00000000"
+        android:pathData="M6,10V14M4,12H8" />
+    <path android:fillColor="?attr/colorOnSurface" android:pathData="M15.5,11.2A1,1 0,1 0,15.5 13.2A1,1 0,1 0,15.5 11.2ZM18,13.2A1,1 0,1 0,18 15.2A1,1 0,1 0,18 13.2Z" />
+</vector>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    CS animation system (CRAFT STUDIO).
+    Every animation only touches alpha / translation / scale (GPU-composited properties),
+    with short durations tuned to feel instant on mobile - no lag, no layout passes.
+-->
+<resources>
+    <!-- Window animation styles -->
+    <style name="Animation.CS.None" parent="@android:style/Animation">
+        <item name="android:windowEnterAnimation">@anim/cs_none</item>
+        <item name="android:windowExitAnimation">@anim/cs_none</item>
+    </style>
+
+    <style name="Animation.CS.Dialog" parent="@android:style/Animation.Dialog">
+        <item name="android:windowEnterAnimation">@anim/cs_dialog_enter</item>
+        <item name="android:windowExitAnimation">@anim/cs_dialog_exit</item>
+    </style>
+
+    <style name="Animation.CS.Activity" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/cs_activity_open_enter</item>
+        <item name="android:activityOpenExitAnimation">@anim/cs_activity_open_exit</item>
+        <item name="android:activityCloseEnterAnimation">@anim/cs_activity_close_enter</item>
+        <item name="android:activityCloseExitAnimation">@anim/cs_activity_close_exit</item>
+    </style>
+
+    <style name="Animation.CS.ActivityNone" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/cs_none</item>
+        <item name="android:activityOpenExitAnimation">@anim/cs_none</item>
+        <item name="android:activityCloseEnterAnimation">@anim/cs_none</item>
+        <item name="android:activityCloseExitAnimation">@anim/cs_none</item>
+    </style>
+
+    <!-- Overlays applied by AnimationManager for the animation types the user enabled -->
+    <style name="ThemeOverlay.CS.Animations.Dialogs" parent="">
+        <item name="csDialogAnimations">@style/Animation.CS.Dialog</item>
+    </style>
+
+    <style name="ThemeOverlay.CS.Animations.Buttons" parent="">
+        <item name="csPressAnimator">@animator/cs_press_scale</item>
+    </style>
+
+    <!-- Themed button defaults, the press animator is empty unless the overlay above is applied -->
+    <style name="Widget.CS.Button" parent="Widget.Material3.Button">
+        <item name="android:stateListAnimator">?attr/csPressAnimator</item>
+    </style>
+
+    <style name="Widget.CS.ImageButton" parent="Widget.AppCompat.ImageButton">
+        <item name="android:stateListAnimator">?attr/csPressAnimator</item>
+    </style>
+
+    <!-- Every plain <Button> gets the CS spring press too -->
+    <style name="Widget.CS.AppCompatButton" parent="Widget.AppCompat.Button">
+        <item name="android:stateListAnimator">?attr/csPressAnimator</item>
+    </style>
+
+    <!-- The account and version pickers act like big buttons, so they press like buttons -->
+    <style name="Widget.CS.Spinner" parent="Widget.AppCompat.Spinner">
+        <item name="android:stateListAnimator">?attr/csPressAnimator</item>
+    </style>
+</resources>

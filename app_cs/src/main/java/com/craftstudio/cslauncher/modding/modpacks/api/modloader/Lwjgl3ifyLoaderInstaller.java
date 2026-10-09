@@ -1,0 +1,30 @@
+package com.craftstudio.cslauncher.modding.modpacks.api.modloader;
+
+import com.craftstudio.cslauncher.instances.InstanceInstaller;
+import com.craftstudio.cslauncher.modding.lwjgl3ify.Lwjgl3ifyUtils;
+
+import java.io.IOException;
+import java.io.File;
+
+public class Lwjgl3ifyLoaderInstaller implements LoaderInstaller {
+    private final File lwjgl3ifyJarPath;
+
+    public Lwjgl3ifyLoaderInstaller(File lwjgl3ifyJarPath) {
+        this.lwjgl3ifyJarPath = lwjgl3ifyJarPath;
+    }
+
+    @Override
+    public boolean requiresGuiInstallation() {
+        return false;
+    }
+
+    @Override
+    public InstanceInstaller createInstaller() throws IOException {
+        throw new RuntimeException("Lwjgl3ifyLoaderInstaller only supports headless installation");
+    }
+
+    @Override
+    public String installHeadlessly() throws IOException {
+        return Lwjgl3ifyUtils.installRelauncherVersionJson(lwjgl3ifyJarPath);
+    }
+}
