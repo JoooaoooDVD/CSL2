@@ -2,7 +2,7 @@
 <!-- CS Launcher Plus home screen widget styles -->
 <resources>
     <!-- Sidebar navigation rows -->
-    <style name="Home.NavItem">
+    <style name="Home.NavItem" parent="">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:orientation">horizontal</item>
@@ -16,13 +16,13 @@
         <item name="android:focusable">true</item>
     </style>
 
-    <style name="Home.NavIcon">
+    <style name="Home.NavIcon" parent="">
         <item name="android:layout_width">22dp</item>
         <item name="android:layout_height">22dp</item>
         <item name="android:scaleType">fitCenter</item>
     </style>
 
-    <style name="Home.NavLabel">
+    <style name="Home.NavLabel" parent="">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginStart">12dp</item>
@@ -33,7 +33,7 @@
     </style>
 
     <!-- Quick settings chips -->
-    <style name="Home.Chip">
+    <style name="Home.Chip" parent="">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:orientation">horizontal</item>
@@ -46,7 +46,7 @@
         <item name="android:focusable">true</item>
     </style>
 
-    <style name="Home.ChipLabel">
+    <style name="Home.ChipLabel" parent="">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textColor">@color/home_text_dim</item>
@@ -54,7 +54,7 @@
         <item name="android:singleLine">true</item>
     </style>
 
-    <style name="Home.ChipValue">
+    <style name="Home.ChipValue" parent="">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textColor">@color/home_text</item>
@@ -65,7 +65,7 @@
     </style>
 
     <!-- Banner feature badges -->
-    <style name="Home.BannerBadge">
+    <style name="Home.BannerBadge" parent="">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginStart">5dp</item>
@@ -78,7 +78,7 @@
         <item name="android:textStyle">bold</item>
     </style>
 
-    <style name="Home.BannerBadgeDivider">
+    <style name="Home.BannerBadgeDivider" parent="">
         <item name="android:layout_width">1dp</item>
         <item name="android:layout_height">14dp</item>
         <item name="android:layout_marginHorizontal">6dp</item>
