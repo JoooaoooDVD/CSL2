@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- CS Launcher Plus home screen widget styles -->
+<resources>
+    <!-- Sidebar navigation rows -->
+    <style name="Home.NavItem" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:minHeight">44dp</item>
+        <item name="android:paddingHorizontal">10dp</item>
+        <item name="android:layout_marginBottom">2dp</item>
+        <item name="android:background">@drawable/bg_nav_item</item>
+        <item name="android:stateListAnimator">?attr/csPressAnimator</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+
+    <style name="Home.NavIcon" parent="">
+        <item name="android:layout_width">20dp</item>
+        <item name="android:layout_height">20dp</item>
+        <item name="android:scaleType">fitCenter</item>
+    </style>
+
+    <style name="Home.NavLabel" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginStart">10dp</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:ellipsize">end</item>
+        <item name="autoSizeTextType">uniform</item>
+        <item name="autoSizeMinTextSize">8sp</item>
+        <item name="autoSizeMaxTextSize">11sp</item>
+        <item name="autoSizeStepGranularity">1sp</item>
+    </style>
+
+    <!-- Quick-settings chips now carry explicit attributes in the home layout
+         (no style indirection) so the icon/title/value row cannot collapse. -->
+
+    <!-- Banner feature badges -->
+    <style name="Home.BannerBadge" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginStart">5dp</item>
+        <item name="android:layout_marginEnd">5dp</item>
+        <item name="android:letterSpacing">0.06</item>
+        <item name="android:shadowColor">#99000000</item>
+        <item name="android:shadowRadius">5</item>
+        <item name="android:textColor">@color/home_white</item>
+        <item name="android:textSize">10sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Home.BannerBadgeDivider" parent="">
+        <item name="android:layout_width">1dp</item>
+        <item name="android:layout_height">14dp</item>
+        <item name="android:layout_marginHorizontal">6dp</item>
+        <item name="android:background">#66FFFFFF</item>
+    </style>
+</resources>

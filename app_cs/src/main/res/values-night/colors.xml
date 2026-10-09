@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Static CS Launcher Plus palette (dark): premium charcoal + silver, seed #C9CFD8.
+     Used when the color source is "default"; dynamic/hue overlays replace it at runtime. -->
+<resources>
+    <color name="md_primary">#C9CFD8</color>
+    <color name="md_on_primary">#32373F</color>
+    <color name="md_primary_container">#DDE2EA</color>
+    <color name="md_on_primary_container">#101317</color>
+    <color name="md_secondary">#BEC6D2</color>
+    <color name="md_on_secondary">#28303A</color>
+    <color name="md_secondary_container">#2A303A</color>
+    <color name="md_on_secondary_container">#DAE1EA</color>
+    <color name="md_tertiary">#AAB4C6</color>
+    <color name="md_on_tertiary">#161F2C</color>
+    <color name="md_tertiary_container">#242B36</color>
+    <color name="md_on_tertiary_container">#C9D2E0</color>
+    <color name="md_error">#FFB4AB</color>
+    <color name="md_on_error">#690005</color>
+    <color name="md_error_container">#93000A</color>
+    <color name="md_on_error_container">#FFDAD6</color>
+    <color name="md_background">#0B0B0E</color>
+    <color name="md_on_background">#F1F3F5</color>
+    <color name="md_surface">#101317</color>
+    <color name="md_on_surface">#F1F3F5</color>
+    <color name="md_surface_variant">#333940</color>
+    <color name="md_on_surface_variant">#A8B0BC</color>
+    <color name="md_outline">#7C848F</color>
+    <color name="md_outline_variant">#282E35</color>
+    <color name="md_inverse_surface">#F1F3F5</color>
+    <color name="md_inverse_on_surface">#14171B</color>
+    <color name="md_inverse_primary">#454B54</color>
+    <color name="md_surface_dim">#060608</color>
+    <color name="md_surface_bright">#C6CCD4</color>
+    <color name="md_surface_container_lowest">#060608</color>
+    <color name="md_surface_container_low">#0F1216</color>
+    <color name="md_surface_container">#141419</color>
+    <color name="md_surface_container_high">#191D22</color>
+    <color name="md_surface_container_highest">#23282F</color>
+    <color name="md_scrim">#000000</color>
+    <color name="md_shadow">#000000</color>
+</resources>

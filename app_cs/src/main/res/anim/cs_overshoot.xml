@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Soft spring used by pop-ups and button releases. Low tension = barely-there, never bouncy-janky. -->
+<overshootInterpolator xmlns:android="http://schemas.android.com/apk/res/android"
+    android:tension="0.7" />

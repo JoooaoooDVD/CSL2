@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Static CS Launcher Plus palette (light): silver on paper grey, matches the dark design inverted.
+     Used when the color source is "default"; dynamic/hue overlays replace it at runtime. -->
+<resources>
+    <color name="md_primary">#454B54</color>
+    <color name="md_on_primary">#FFFFFF</color>
+    <color name="md_primary_container">#E9EDF2</color>
+    <color name="md_on_primary_container">#101317</color>
+    <color name="md_secondary">#5A616B</color>
+    <color name="md_on_secondary">#FFFFFF</color>
+    <color name="md_secondary_container">#DDE2E9</color>
+    <color name="md_on_secondary_container">#1B2027</color>
+    <color name="md_tertiary">#727881</color>
+    <color name="md_on_tertiary">#FFFFFF</color>
+    <color name="md_tertiary_container">#D5DAE3</color>
+    <color name="md_on_tertiary_container">#11151A</color>
+    <color name="md_error">#BA1A1A</color>
+    <color name="md_on_error">#FFFFFF</color>
+    <color name="md_error_container">#FFDAD6</color>
+    <color name="md_on_error_container">#410002</color>
+    <color name="md_background">#F5F6F8</color>
+    <color name="md_on_background">#14171A</color>
+    <color name="md_surface">#FFFFFF</color>
+    <color name="md_on_surface">#14171A</color>
+    <color name="md_surface_variant">#E3E6EA</color>
+    <color name="md_on_surface_variant">#49505A</color>
+    <color name="md_outline">#7B828C</color>
+    <color name="md_outline_variant">#C7CCD3</color>
+    <color name="md_inverse_surface">#2A2E33</color>
+    <color name="md_inverse_on_surface">#ECEEF1</color>
+    <color name="md_inverse_primary">#B7C0CC</color>
+    <color name="md_surface_dim">#D9DDE3</color>
+    <color name="md_surface_bright">#FFFFFF</color>
+    <color name="md_surface_container_lowest">#FFFFFF</color>
+    <color name="md_surface_container_low">#F7F8FA</color>
+    <color name="md_surface_container">#F1F3F5</color>
+    <color name="md_surface_container_high">#EBEEF1</color>
+    <color name="md_surface_container_highest">#E3E6EA</color>
+    <color name="md_scrim">#000000</color>
+    <color name="md_shadow">#000000</color>
+
+    <!-- On-screen control skin (not palette colors; keep the neutral grey) -->
+    <color name="control_button_color">#4CC4C4C4</color>
+    <color name="control_button_pressed_color">#4D000000</color>
+
+    <!-- Mod manager / content browser -->
+    <color name="mod_version_incompatible">#F7A325</color>
+</resources>

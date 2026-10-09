@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array name="theme_hue_overlays">
+        <item>@style/ThemeOverlay.CS.Hue0</item>
+        <item>@style/ThemeOverlay.CS.Hue10</item>
+        <item>@style/ThemeOverlay.CS.Hue20</item>
+        <item>@style/ThemeOverlay.CS.Hue30</item>
+        <item>@style/ThemeOverlay.CS.Hue40</item>
+        <item>@style/ThemeOverlay.CS.Hue50</item>
+        <item>@style/ThemeOverlay.CS.Hue60</item>
+        <item>@style/ThemeOverlay.CS.Hue70</item>
+        <item>@style/ThemeOverlay.CS.Hue80</item>
+        <item>@style/ThemeOverlay.CS.Hue90</item>
+        <item>@style/ThemeOverlay.CS.Hue100</item>
+        <item>@style/ThemeOverlay.CS.Hue110</item>
+        <item>@style/ThemeOverlay.CS.Hue120</item>
+        <item>@style/ThemeOverlay.CS.Hue130</item>
+        <item>@style/ThemeOverlay.CS.Hue140</item>
+        <item>@style/ThemeOverlay.CS.Hue150</item>
+        <item>@style/ThemeOverlay.CS.Hue160</item>
+        <item>@style/ThemeOverlay.CS.Hue170</item>
+        <item>@style/ThemeOverlay.CS.Hue180</item>
+        <item>@style/ThemeOverlay.CS.Hue190</item>
+        <item>@style/ThemeOverlay.CS.Hue200</item>
+        <item>@style/ThemeOverlay.CS.Hue210</item>
+        <item>@style/ThemeOverlay.CS.Hue220</item>
+        <item>@style/ThemeOverlay.CS.Hue230</item>
+        <item>@style/ThemeOverlay.CS.Hue240</item>
+        <item>@style/ThemeOverlay.CS.Hue250</item>
+        <item>@style/ThemeOverlay.CS.Hue260</item>
+        <item>@style/ThemeOverlay.CS.Hue270</item>
+        <item>@style/ThemeOverlay.CS.Hue280</item>
+        <item>@style/ThemeOverlay.CS.Hue290</item>
+        <item>@style/ThemeOverlay.CS.Hue300</item>
+        <item>@style/ThemeOverlay.CS.Hue310</item>
+        <item>@style/ThemeOverlay.CS.Hue320</item>
+        <item>@style/ThemeOverlay.CS.Hue330</item>
+        <item>@style/ThemeOverlay.CS.Hue340</item>
+        <item>@style/ThemeOverlay.CS.Hue350</item>
+    </array>
+</resources>

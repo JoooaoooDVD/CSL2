@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    CS animation system - activity open (forward).
+    Horizontal slide matching the landscape launcher. Only alpha/translate are used:
+    both are GPU-composited, so no layout passes and no jank on low-end devices.
+-->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shareInterpolator="false">
+    <translate
+        android:fromXDelta="7%p"
+        android:toXDelta="0"
+        android:duration="250"
+        android:interpolator="@android:anim/decelerate_interpolator" />
+    <alpha
+        android:fromAlpha="0.0"
+        android:toAlpha="1.0"
+        android:duration="200"
+        android:interpolator="@android:anim/decelerate_interpolator" />
+</set>

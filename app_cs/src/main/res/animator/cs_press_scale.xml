@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    CS spring press feedback for buttons and menu rows.
+    Fast squash on press (90ms) + soft overshoot restore (220ms).
+    Only scale properties are animated - GPU-composited, zero layout cost.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <set>
+            <objectAnimator
+                android:propertyName="scaleX"
+                android:valueTo="0.955"
+                android:valueType="floatType"
+                android:duration="64"
+                android:interpolator="@android:anim/accelerate_interpolator" />
+            <objectAnimator
+                android:propertyName="scaleY"
+                android:valueTo="0.955"
+                android:valueType="floatType"
+                android:duration="64"
+                android:interpolator="@android:anim/accelerate_interpolator" />
+        </set>
+    </item>
+    <item>
+        <set>
+            <objectAnimator
+                android:propertyName="scaleX"
+                android:valueTo="1.0"
+                android:valueType="floatType"
+                android:duration="150"
+                android:interpolator="@anim/cs_overshoot" />
+            <objectAnimator
+                android:propertyName="scaleY"
+                android:valueTo="1.0"
+                android:valueType="floatType"
+                android:duration="150"
+                android:interpolator="@anim/cs_overshoot" />
+        </set>
+    </item>
+</selector>

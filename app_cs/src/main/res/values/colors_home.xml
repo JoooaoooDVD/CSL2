@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- CS Launcher Plus home screen palette (fixed dark charcoal scheme) -->
+<resources>
+    <color name="home_bg">#0B0B0E</color>
+    <color name="home_bg_secondary">#141419</color>
+    <color name="home_card">#101317</color>
+    <color name="home_surface">#191D22</color>
+    <color name="home_border">#282E35</color>
+    <color name="home_text">#F1F3F5</color>
+    <color name="home_text_dim">#A8B0BC</color>
+    <color name="home_divider">#242930</color>
+
+    <!-- PLAY button metallic silver -->
+    <color name="home_play_start">#F4F6F8</color>
+    <color name="home_play_end">#B9C0C8</color>
+    <color name="home_play_text">#0B0B0E</color>
+
+    <!-- Banner overlay scrims -->
+    <color name="home_banner_scrim">#00000000</color>
+    <color name="home_banner_scrim_end">#B30B0B0E</color>
+    <color name="home_white">#FFFFFF</color>
+    <color name="home_white_dim">#CCFFFFFF</color>
+    <color name="home_disabled">#5A6270</color>
+</resources>

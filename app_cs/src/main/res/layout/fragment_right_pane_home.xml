@@ -1,0 +1,680 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    CS Launcher Plus home content: banner, selected profile + PLAY,
+    Browser Resources / Manager cards and Quick Settings.
+    All three rows are weight-based (with min heights) so the pane always
+    fits the available height on phones - nothing is clipped, no scrolling.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <!-- ══════════════ BANNER ══════════════ -->
+    <FrameLayout
+        android:id="@+id/home_banner_frame"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="140"
+        android:minHeight="64dp"
+        android:background="@drawable/bg_banner_round"
+        android:clipToOutline="true">
+
+        <!-- Default banner art, replaced by the custom launcher background when set -->
+        <ImageView
+            android:id="@+id/right_pane_wallpaper"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:scaleType="centerCrop"
+            android:src="@drawable/banner_home" />
+
+        <!-- Optional custom video background -->
+        <com.kdt.mcgui.CenterCropVideoView
+            android:id="@+id/right_pane_wallpaper_video"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+
+        <!-- Scrim so the overlay text stays readable on bright art -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:layout_gravity="bottom"
+            android:background="@drawable/bg_banner_scrim" />
+
+        <!-- Selected version + loader, top right, on a legible translucent pill -->
+        <TextView
+            android:id="@+id/home_banner_version"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|top"
+            android:layout_marginTop="9dp"
+            android:layout_marginEnd="11dp"
+            android:background="@drawable/bg_banner_pill"
+            android:maxWidth="220dp"
+            android:paddingHorizontal="11dp"
+            android:paddingVertical="5dp"
+            android:shadowColor="#B0000000"
+            android:shadowRadius="5"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:textColor="@color/home_white"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            tools:text="1.21.11 • Fabric" />
+
+        <!-- MINECRAFT wordmark -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start|bottom"
+            android:layout_marginStart="16dp"
+            android:layout_marginBottom="9dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/home_banner_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.12"
+                android:shadowColor="#99000000"
+                android:shadowRadius="6"
+                android:text="@string/home_banner_title"
+                android:textColor="@color/home_white"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.36"
+                android:shadowColor="#99000000"
+                android:shadowRadius="6"
+                android:text="@string/home_banner_subtitle"
+                android:textColor="@color/home_white_dim"
+                android:textSize="8sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- FAST | STABLE | CUSTOMIZABLE -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|bottom"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="11dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="13dp"
+                android:layout_height="13dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_badge_fast" />
+
+            <TextView
+                style="@style/Home.BannerBadge"
+                android:text="@string/home_banner_fast" />
+
+            <View style="@style/Home.BannerBadgeDivider" />
+
+            <ImageView
+                android:layout_width="13dp"
+                android:layout_height="13dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_badge_stable" />
+
+            <TextView
+                style="@style/Home.BannerBadge"
+                android:text="@string/home_banner_stable" />
+
+            <View style="@style/Home.BannerBadgeDivider" />
+
+            <ImageView
+                android:layout_width="13dp"
+                android:layout_height="13dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_badge_custom" />
+
+            <TextView
+                style="@style/Home.BannerBadge"
+                android:text="@string/home_banner_customizable" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- ══════════════ SELECTED PROFILE + PLAY ══════════════ -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:layout_weight="60"
+        android:minHeight="52dp"
+        android:orientation="horizontal">
+
+        <!-- Selected profile card: NAME ONLY on one line -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="55"
+            android:background="@drawable/bg_card_home"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="10dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:singleLine="true"
+                    android:text="@string/home_selected_profile"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="9sp" />
+
+                <!--
+                    mcVersionSpinner enforces a single line + end ellipsis itself
+                    (see mcVersionSpinner#init); the text is the plain profile name.
+                -->
+                <com.kdt.mcgui.mcVersionSpinner
+                    android:id="@+id/mc_version_spinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="1dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:drawableEnd="@drawable/ic_chevron_down_home"
+                    android:drawablePadding="6dp"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:singleLine="true"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/edit_profile_button"
+                android:layout_width="wrap_content"
+                android:layout_height="34dp"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_change_button"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:paddingHorizontal="11dp"
+                android:stateListAnimator="?attr/csPressAnimator"
+                android:tooltipText="@string/home_change">
+
+                <ImageView
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_change_cube" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:text="@string/home_change"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- PLAY -->
+        <LinearLayout
+            android:id="@+id/play_button"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="8dp"
+            android:layout_weight="45"
+            android:background="@drawable/bg_play_button"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:stateListAnimator="?attr/csPressAnimator">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_play_triangle" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="9dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:letterSpacing="0.1"
+                    android:text="@string/home_play"
+                    android:textColor="?attr/colorOnPrimaryContainer"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/home_play_subtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:singleLine="true"
+                    android:textColor="?attr/colorOnPrimaryContainer"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    tools:text="1.21.11 • Fabric" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- ══════════════ CARDS + QUICK SETTINGS ══════════════ -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:layout_weight="92"
+        android:minHeight="80dp"
+        android:orientation="horizontal">
+
+        <!-- Browser Resources card -->
+        <FrameLayout
+            android:id="@+id/home_card_browser"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="27"
+            android:background="@drawable/bg_card_media_round"
+            android:clickable="true"
+            android:clipToOutline="true"
+            android:focusable="true"
+            android:stateListAnimator="?attr/csPressAnimator"
+            android:tooltipText="@string/home_nav_browser">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null"
+                android:scaleType="centerCrop"
+                android:src="@drawable/card_browser" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#990B0B0E" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:padding="9dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:autoSizeMaxTextSize="13sp"
+                    android:autoSizeMinTextSize="8sp"
+                    android:autoSizeStepGranularity="0.5sp"
+                    android:autoSizeTextType="uniform"
+                    android:ellipsize="end"
+                    android:letterSpacing="0.02"
+                    android:maxLines="1"
+                    android:text="@string/home_card_browser_title"
+                    android:textColor="@color/home_white"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:ellipsize="end"
+                    android:singleLine="true"
+                    android:text="@string/home_card_browser_desc"
+                    android:textColor="@color/home_white_dim"
+                    android:textSize="8.5sp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="end"
+                    android:background="@drawable/bg_icon_button_home"
+                    android:contentDescription="@string/home_nav_browser"
+                    android:padding="6dp"
+                    android:src="@drawable/ic_chevron_right_home" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <!-- Manager card -->
+        <FrameLayout
+            android:id="@+id/home_card_manager"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="8dp"
+            android:layout_weight="25"
+            android:background="@drawable/bg_card_media_round"
+            android:clickable="true"
+            android:clipToOutline="true"
+            android:focusable="true"
+            android:stateListAnimator="?attr/csPressAnimator"
+            android:tooltipText="@string/home_nav_manager">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null"
+                android:scaleType="centerCrop"
+                android:src="@drawable/card_manager" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#990B0B0E" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:padding="9dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:autoSizeMaxTextSize="13sp"
+                    android:autoSizeMinTextSize="8sp"
+                    android:autoSizeStepGranularity="0.5sp"
+                    android:autoSizeTextType="uniform"
+                    android:ellipsize="end"
+                    android:letterSpacing="0.05"
+                    android:maxLines="1"
+                    android:text="@string/home_card_manager_title"
+                    android:textColor="@color/home_white"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:ellipsize="end"
+                    android:singleLine="true"
+                    android:text="@string/home_card_manager_desc"
+                    android:textColor="@color/home_white_dim"
+                    android:textSize="8.5sp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="end"
+                    android:background="@drawable/bg_icon_button_home"
+                    android:contentDescription="@string/home_nav_manager"
+                    android:padding="6dp"
+                    android:src="@drawable/ic_chevron_right_home" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <!-- Quick settings -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="8dp"
+            android:layout_weight="48"
+            android:background="@drawable/bg_card_home"
+            android:orientation="vertical"
+            android:paddingHorizontal="9dp"
+            android:paddingVertical="6dp">
+
+            <!-- Header -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:letterSpacing="0.08"
+                    android:singleLine="true"
+                    android:text="@string/home_quick_settings"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="10.5sp"
+                    android:textStyle="bold" />
+
+                <ImageView
+                    android:id="@+id/home_qs_more"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/home_settings"
+                    android:padding="3dp"
+                    android:src="@drawable/ic_chevron_right_home"
+                    android:stateListAnimator="?attr/csPressAnimator"
+                    android:tooltipText="@string/home_settings" />
+            </LinearLayout>
+
+            <!-- Row 1 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="4dp"
+                android:layout_weight="1"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:id="@+id/home_qs_ram"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_quick_chip"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:minHeight="22dp"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="6dp"
+                    android:stateListAnimator="?attr/csPressAnimator"
+                    android:tooltipText="@string/home_qs_ram">
+
+                    <ImageView
+                        android:layout_width="13dp"
+                        android:layout_height="13dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_px_ram" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:ellipsize="end"
+                        android:singleLine="true"
+                        android:text="@string/home_qs_ram"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="8sp" />
+
+                    <TextView
+                        android:id="@+id/home_qs_ram_value"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="5dp"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:gravity="end"
+                        android:singleLine="true"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="9sp"
+                        android:textStyle="bold"
+                        tools:text="2048 MB" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/home_qs_java"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="5dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_quick_chip"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:minHeight="22dp"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="6dp"
+                    android:stateListAnimator="?attr/csPressAnimator"
+                    android:tooltipText="@string/home_qs_java">
+
+                    <ImageView
+                        android:layout_width="13dp"
+                        android:layout_height="13dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_px_java" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:ellipsize="end"
+                        android:singleLine="true"
+                        android:text="@string/home_qs_java"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="8sp" />
+
+                    <TextView
+                        android:id="@+id/home_qs_java_value"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="5dp"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:gravity="end"
+                        android:singleLine="true"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="9sp"
+                        android:textStyle="bold"
+                        tools:text="Java 21" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Row 2 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="4dp"
+                android:layout_weight="1"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:id="@+id/home_qs_renderer"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_quick_chip"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:minHeight="22dp"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="6dp"
+                    android:stateListAnimator="?attr/csPressAnimator"
+                    android:tooltipText="@string/home_qs_renderer">
+
+                    <ImageView
+                        android:layout_width="13dp"
+                        android:layout_height="13dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_qs_monitor" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:ellipsize="end"
+                        android:singleLine="true"
+                        android:text="@string/home_qs_renderer"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="8sp" />
+
+                    <TextView
+                        android:id="@+id/home_qs_renderer_value"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="5dp"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:gravity="end"
+                        android:singleLine="true"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="9sp"
+                        android:textStyle="bold"
+                        tools:text="MobileGlues" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/home_qs_controls"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="5dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_quick_chip"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:minHeight="22dp"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="6dp"
+                    android:stateListAnimator="?attr/csPressAnimator"
+                    android:tooltipText="@string/home_qs_controls">
+
+                    <ImageView
+                        android:layout_width="13dp"
+                        android:layout_height="13dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_px_gamepad" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:ellipsize="end"
+                        android:singleLine="true"
+                        android:text="@string/home_qs_controls"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="8sp" />
+
+                    <TextView
+                        android:id="@+id/home_qs_controls_value"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="5dp"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:gravity="end"
+                        android:singleLine="true"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="9sp"
+                        android:textStyle="bold"
+                        tools:text="Default" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

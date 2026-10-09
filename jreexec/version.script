@@ -1,0 +1,7 @@
+{
+    global:
+        jreexec_*;
+        Java_*;
+    local:
+        *;
+};
