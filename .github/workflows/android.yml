@@ -1,10 +1,13 @@
-name: Android CI
+name: CS Launcher Plus CI
 
+# Builds on every push; auto-publishes the rolling "latest" prerelease from main
+# and a proper GitHub Release for every v* tag - no manual upload, no signing
+# secrets, no Play Store steps needed.
 on:
   push:
+    branches: [main, master]
+    tags: ['v*']
   workflow_dispatch:
-  pull_request:
-    types: [labeled]
 
 permissions:
   contents: write
@@ -13,14 +16,14 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     env:
+      # Optional: set these repo secrets to also produce a signed release APK.
+      # Without them the step is skipped and only the debug build is published.
       UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.UPLOAD_NEXT_KEYSTORE_PASSWORD }}
       CSPUB_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_NEXT_KEYSTORE_PASSWORD }}
       CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          submodules: true
+        uses: actions/checkout@v4
 
       - name: Get LTW
         uses: dawidd6/action-download-artifact@v6
@@ -47,14 +50,31 @@ jobs:
           gradle-version: "8.14.3"
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
+
       - name: Create out directory
         run: mkdir out
-      - name: Decode release keystores
-        if: github.repository_owner == 'CopperLauncher' && (github.ref_name == 'v3_openjdk' || startsWith(github.ref, 'refs/tags/v'))
+
+      - name: Build Debug .apk
+        run: |
+          gradle :app_cs:assembleFullDebug
+          mv app_cs/build/outputs/apk/full/debug/app_cs-full-debug.apk out/app-debug-full.apk
+
+      - name: Build Debug .apk (No runtime)
+        run: |
+          gradle :app_cs:assembleNoruntimeDebug
+          mv app_cs/build/outputs/apk/noruntime/debug/app_cs-noruntime-debug.apk out/app-debug-noruntime.apk
+
+      - name: Gen md5sums
+        run: |
+          md5sum out/app-debug-full.apk > out/app-debug-full.md5
+          md5sum out/app-debug-noruntime.apk > out/app-debug-noruntime.md5
+
+      - name: Decode release keystores (only if secrets configured)
+        if: env.CSPUB_KEYSTORE_PASSWORD != ''
         run: |
           if [ -n "${{ secrets.UPLOAD_KEYSTORE_BASE64 }}" ]; then
             echo "${{ secrets.UPLOAD_KEYSTORE_BASE64 }}" | base64 -d > app_cs/cs_upload_next.jks
@@ -63,78 +83,46 @@ jobs:
             echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 -d > app_cs/cs_release_next.jks
           fi
 
-      - name: Build Publishing .aab
-        if: github.repository_owner == 'CopperLauncher' && (github.ref_name == 'v3_openjdk' || startsWith(github.ref, 'refs/tags/v'))
-        run: |
-          gradle :app_cs:bundleFullGplay
-          mv app_cs/build/outputs/bundle/fullGplay/app_cs-full-gplay.aab out/app-gplay.aab
-
-      - name: Build Debug .apk
-        run: |
-          # Build the launcher
-          gradle :app_cs:assembleFullDebug
-          mv app_cs/build/outputs/apk/full/debug/app_cs-full-debug.apk out/app-debug-full.apk
-
-      - name: Build Debug .apk (No runtime)
-        run: |
-          gradle :app_cs:assembleNoruntimeDebug
-          mv app_cs/build/outputs/apk/noruntime/debug/app_cs-noruntime-debug.apk out/app-debug-noruntime.apk
-      - name: Build Nightly Release .apk
-        if: github.repository_owner == 'CopperLauncher' && (github.ref_name == 'v3_openjdk' || startsWith(github.ref, 'refs/tags/v'))
+      - name: Build Release .apk (signed, optional)
+        if: env.CSPUB_KEYSTORE_PASSWORD != ''
         run: |
           gradle :app_cs:assembleFullPubRelease
           mv app_cs/build/outputs/apk/full/pubRelease/app_cs-full-pubRelease.apk out/CS Launcher Plus-release.apk
-      - name: Gen md5sums
-        run: |
-          md5sum out/app-debug-full.apk > out/app-debug-full.md5
-          md5sum out/app-debug-noruntime.apk > out/app-debug-noruntime.md5
+          md5sum "out/CS Launcher Plus-release.apk" > out/CS Launcher Plus-release.md5
 
-      - name: Upload Debug APK
-        uses: actions/upload-artifact@v4
+      - name: Publish rolling latest build (main branch)
+        if: github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'master')
+        uses: softprops/action-gh-release@v2
         with:
-          name: app-debug
-          path: out/app-debug-full.apk
-
-      - name: Upload Debug APK (No runtime)
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-debug-noruntime
-          path: out/app-debug-noruntime.apk
-
-      - name: Upload Release APK
-        if: github.repository_owner == 'CopperLauncher' && (github.ref_name == 'v3_openjdk' || startsWith(github.ref, 'refs/tags/v'))
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-release
-          path: out/CS Launcher Plus-release.apk
-
-      - name: Upload AAB
-        if: github.repository_owner == 'CopperLauncher' && (github.ref_name == 'v3_openjdk' || startsWith(github.ref, 'refs/tags/v'))
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-release-aab
-          path: out/app-gplay.aab
-
-      - name: Release Nightly APK
-        if: github.repository_owner == 'CopperLauncher' && github.ref_name == 'v3_openjdk'
-        uses: softprops/action-gh-release@v3
-        with:
-          name: CS Launcher Plus Nightly Builds
+          tag_name: latest
+          name: CS Launcher Plus 1.4 - latest build
           prerelease: true
-          tag_name: nightly
           body: |
-            CS Launcher Plus nightly build.
-            Commit hash: ${{ github.sha }}
+            Automated build of @{{ github.sha }}
+            Built by GitHub Actions - no manual upload needed.
+            app-debug-full.apk is the one to install (includes the Java runtime).
           files: |
+            out/app-debug-full.apk
+            out/app-debug-full.md5
+            out/app-debug-noruntime.apk
+            out/app-debug-noruntime.md5
             out/CS Launcher Plus-release.apk
+            out/CS Launcher Plus-release.md5
+          fail_on_unmatched_files: false
 
-      - name: Upload onto the Google Play testing track
-        continue-on-error: true
-        if: github.repository_owner == 'CopperLauncher' && github.ref_name == 'v3_openjdk'
-        uses: r0adkll/upload-google-play@v1.1.5
+      - name: Release tagged build (v* tags)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
         with:
-          serviceAccountJsonPlainText: ${{ secrets.SERVICE_JSON }}
-          packageName: com.craftstudio.cslauncher
-          releaseFiles: out/app-gplay.aab
-          track: internal
-          inAppUpdatePriority: 5
+          name: CS Launcher Plus ${{ github.ref_name }}
+          body: |
+            Release build of @{{ github.sha }}
+            Install app-debug-full.apk.
+          files: |
+            out/app-debug-full.apk
+            out/app-debug-full.md5
+            out/app-debug-noruntime.apk
+            out/app-debug-noruntime.md5
+            out/CS Launcher Plus-release.apk
+            out/CS Launcher Plus-release.md5
+          fail_on_unmatched_files: false
