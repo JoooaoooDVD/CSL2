@@ -9,7 +9,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
-import git.artdeell.dnbootstrap.utils.Utils;
 
 public class GLFW {
     public interface PosCallback {
