@@ -1,0 +1,13 @@
+/.gradle
+/build
+/*/build
+app_cs/src/main/assets/components/jre
+/app_cs/src/main/assets/components/jre-new/
+/app_cs/src/main/assets/components/jre-21/
+local.properties
+.idea/
+app_cs/.cxx/
+.vs/
+/curseforge_key.txt
+/app_cs/libs/ltw-release.aar
+*.jks

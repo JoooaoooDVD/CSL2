@@ -1,0 +1,561 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    CS Launcher Plus home content: banner, selected version + PLAY,
+    Browser Resources / Manager cards and Quick Settings.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <!-- ══════════════ BANNER ══════════════ -->
+    <FrameLayout
+        android:id="@+id/home_banner_frame"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="46"
+        android:background="@drawable/bg_banner_round"
+        android:clipToOutline="true">
+
+        <!-- Default banner art, replaced by the custom launcher background when set -->
+        <ImageView
+            android:id="@+id/right_pane_wallpaper"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:scaleType="centerCrop"
+            android:src="@drawable/banner_home" />
+
+        <!-- Optional custom video background -->
+        <com.kdt.mcgui.CenterCropVideoView
+            android:id="@+id/right_pane_wallpaper_video"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+
+        <!-- Scrim so the overlay text stays readable on bright art -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="72dp"
+            android:layout_gravity="bottom"
+            android:background="@drawable/bg_banner_scrim" />
+
+        <!-- MINECRAFT wordmark -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start|bottom"
+            android:layout_marginStart="18dp"
+            android:layout_marginBottom="12dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/home_banner_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.12"
+                android:shadowColor="#99000000"
+                android:shadowRadius="6"
+                android:text="@string/home_banner_title"
+                android:textColor="@color/home_white"
+                android:textSize="26sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.42"
+                android:shadowColor="#99000000"
+                android:shadowRadius="6"
+                android:text="@string/home_banner_subtitle"
+                android:textColor="@color/home_white_dim"
+                android:textSize="9sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- FAST | STABLE | CUSTOMIZABLE -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|bottom"
+            android:layout_marginEnd="18dp"
+            android:layout_marginBottom="14dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_badge_fast" />
+
+            <TextView
+                style="@style/Home.BannerBadge"
+                android:text="@string/home_banner_fast" />
+
+            <View style="@style/Home.BannerBadgeDivider" />
+
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_badge_stable" />
+
+            <TextView
+                style="@style/Home.BannerBadge"
+                android:text="@string/home_banner_stable" />
+
+            <View style="@style/Home.BannerBadgeDivider" />
+
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_badge_custom" />
+
+            <TextView
+                style="@style/Home.BannerBadge"
+                android:text="@string/home_banner_customizable" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- ══════════════ VERSION + PLAY ══════════════ -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="10dp"
+        android:layout_weight="21"
+        android:orientation="horizontal">
+
+        <!-- Selected version card -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="52"
+            android:background="@drawable/bg_card_home"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="12dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/home_selected_version"
+                    android:textColor="@color/home_text_dim"
+                    android:textSize="10sp" />
+
+                <com.kdt.mcgui.mcVersionSpinner
+                    android:id="@+id/mc_version_spinner"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:drawableEnd="@drawable/ic_chevron_down_home"
+                    android:drawablePadding="8dp"
+                    android:textColor="@color/home_text"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/home_version_subtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:singleLine="true"
+                    android:textColor="@color/home_text_dim"
+                    android:textSize="10sp"
+                    tools:text="Fabric · CS Client" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/edit_profile_button"
+            android:stateListAnimator="?attr/csPressAnimator"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_change_button"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:paddingHorizontal="14dp">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_change_cube" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="@string/home_change"
+                    android:textColor="@color/home_text"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- PLAY -->
+        <LinearLayout
+            android:id="@+id/play_button"
+            android:stateListAnimator="?attr/csPressAnimator"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="10dp"
+            android:layout_weight="48"
+            android:background="@drawable/bg_play_button"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_play_triangle" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:letterSpacing="0.1"
+                    android:text="@string/home_play"
+                    android:textColor="@color/home_play_text"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/home_play_subtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#5A6270"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    tools:text="1.21.11 · Fabric" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- ══════════════ CARDS + QUICK SETTINGS ══════════════ -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="10dp"
+        android:layout_weight="33"
+        android:orientation="horizontal">
+
+        <!-- Browser Resources card -->
+        <FrameLayout
+            android:id="@+id/home_card_browser"
+            android:stateListAnimator="?attr/csPressAnimator"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="30"
+            android:background="@drawable/bg_card_media_round"
+            android:clickable="true"
+            android:clipToOutline="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null"
+                android:scaleType="centerCrop"
+                android:src="@drawable/card_browser" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#8C0B0B0E" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:lineSpacingExtra="1dp"
+                    android:text="@string/home_card_browser_title"
+                    android:textColor="@color/home_text"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:lineSpacingExtra="3dp"
+                    android:text="@string/home_card_browser_desc"
+                    android:textColor="@color/home_text_dim"
+                    android:textSize="10sp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <ImageView
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:layout_gravity="end"
+                    android:background="@drawable/bg_icon_button_home"
+                    android:contentDescription="@string/home_nav_browser"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_chevron_right_home" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <!-- Manager card -->
+        <FrameLayout
+            android:id="@+id/home_card_manager"
+            android:stateListAnimator="?attr/csPressAnimator"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="10dp"
+            android:layout_weight="30"
+            android:background="@drawable/bg_card_media_round"
+            android:clickable="true"
+            android:clipToOutline="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null"
+                android:scaleType="centerCrop"
+                android:src="@drawable/card_manager" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#8C0B0B0E" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:letterSpacing="0.06"
+                    android:text="@string/home_card_manager_title"
+                    android:textColor="@color/home_text"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:lineSpacingExtra="3dp"
+                    android:text="@string/home_card_manager_desc"
+                    android:textColor="@color/home_text_dim"
+                    android:textSize="10sp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <ImageView
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:layout_gravity="end"
+                    android:background="@drawable/bg_icon_button_home"
+                    android:contentDescription="@string/home_nav_manager"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_chevron_right_home" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <!-- Quick settings -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="10dp"
+            android:layout_weight="40"
+            android:background="@drawable/bg_card_home"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <!-- Header -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:letterSpacing="0.08"
+                    android:text="@string/home_quick_settings"
+                    android:textColor="@color/home_text"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <ImageView
+                    android:id="@+id/home_qs_more"
+            android:stateListAnimator="?attr/csPressAnimator"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/home_settings"
+                    android:padding="4dp"
+                    android:src="@drawable/ic_chevron_right_home" />
+            </LinearLayout>
+
+            <!-- Row 1 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="8dp"
+                android:layout_weight="1"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:id="@+id/home_qs_ram"
+                    style="@style/Home.Chip"
+                    android:layout_weight="1">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_px_ram" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/Home.ChipLabel"
+                            android:text="@string/home_qs_ram" />
+
+                        <TextView
+                            android:id="@+id/home_qs_ram_value"
+                            style="@style/Home.ChipValue"
+                            tools:text="2048 MB" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/home_qs_java"
+                    style="@style/Home.Chip"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_px_java" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/Home.ChipLabel"
+                            android:text="@string/home_qs_java" />
+
+                        <TextView
+                            android:id="@+id/home_qs_java_value"
+                            style="@style/Home.ChipValue"
+                            tools:text="Java 21" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Row 2 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="8dp"
+                android:layout_weight="1"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:id="@+id/home_qs_renderer"
+                    style="@style/Home.Chip"
+                    android:layout_weight="1">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_qs_monitor" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/Home.ChipLabel"
+                            android:text="@string/home_qs_renderer" />
+
+                        <TextView
+                            android:id="@+id/home_qs_renderer_value"
+                            style="@style/Home.ChipValue"
+                            tools:text="MobileGlues" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/home_qs_controls"
+                    style="@style/Home.Chip"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_px_gamepad" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/Home.ChipLabel"
+                            android:text="@string/home_qs_controls" />
+
+                        <TextView
+                            android:id="@+id/home_qs_controls_value"
+                            style="@style/Home.ChipValue"
+                            tools:text="Default" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>
