@@ -12,12 +12,11 @@ import com.craftstudio.cslauncher.R;
 import com.craftstudio.cslauncher.utils.CSAnimationEngine;
 
 /**
- * The icon rail on the left of the two-pane settings: one button per category plus a
- * home button that returns to the settings hub - the same set of buttons the hub shows
- * as cards, so every section stays one tap away while inside a category.
+ * The category tabs on the header banner of the two-pane settings: one tab per category plus
+ * a hub button - the same set of buttons the hub shows as cards, so every section stays one
+ * tap away while inside a category (they replaced the old left icon rail).
  * <p>
- * Selection follows {@link SettingsHostFragment}'s back stack (active = outlined tile,
- * same visual language as the main sidebar).
+ * Selection follows {@link SettingsHostFragment}'s back stack (active = bright tile).
  */
 public class SettingsRailFragment extends Fragment {
     public static final String TAG = "SettingsRailFragment";
@@ -63,11 +62,7 @@ public class SettingsRailFragment extends Fragment {
             });
             CSAnimationEngine.attachPressFeedback(button);
         }
-        // Staggered rail entrance - layout animation only ever configured by the engine
-        ViewGroup items = view.findViewById(R.id.settings_rail_items);
-        if (items != null) {
-            CSAnimationEngine.applyListEntrance(items);
-        }
+        // The entrance is played by SettingsMotion when the category header appears
         // Reflect the current screen (restored instances, default = hub)
         SettingsHostFragment host = host();
         if (host != null) setActive(host.getCurrentScreenClass());
@@ -98,10 +93,10 @@ public class SettingsRailFragment extends Fragment {
             View button = view.findViewById(RAIL_BUTTON_IDS[i]);
             if (button == null) continue;
             boolean active = i == activeIndex;
-            button.setSelected(active);
-            button.setBackgroundResource(active
-                    ? R.drawable.bg_nav_item_active
-                    : R.drawable.bg_nav_item);
+            if (button.isSelected() != active) {
+                button.setSelected(active);
+                if (active) com.craftstudio.cslauncher.utils.motion.Motion.bounce(button);
+            }
         }
     }
 }

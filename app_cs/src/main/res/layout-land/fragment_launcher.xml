@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    CS Launcher Plus main menu: left navigation sidebar + right content pane.
+    CS Launcher Plus main menu: full width content pane (navigation is the top bar dock),
+    plus the Manage Content picker column while it is open.
     The home content of the pane (banner, version, PLAY, cards, quick settings)
     lives in fragment_right_pane_home.
 -->
@@ -12,144 +13,15 @@
     android:layout_height="match_parent"
     android:background="?android:attr/colorBackground">
 
-    <!-- Sidebar = 20% of the width, content pane = 80% -->
+    <!-- 0 normally, 18% while the content picker is docked (MainMenuFragment) -->
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/pane_guideline"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:orientation="vertical"
-        app:layout_constraintGuide_begin="64dp" />
+        app:layout_constraintGuide_begin="0dp" />
 
-    <!-- ══════════════ LEFT SIDEBAR ══════════════ -->
-    <ScrollView
-        android:id="@+id/left_sidebar"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="?android:attr/colorBackground"
-        android:fillViewport="true"
-        android:scrollbars="none"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/pane_guideline"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <LinearLayout
-            android:id="@+id/left_sidebar_content"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingHorizontal="6dp"
-            android:paddingTop="6dp"
-            android:paddingBottom="8dp">
-
-            <!-- Home (active) -->
-            <LinearLayout
-                android:id="@+id/nav_home"
-                style="@style/Home.NavItem"
-                android:background="@drawable/bg_nav_item_active"
-                android:contentDescription="@string/home_nav_home"
-                android:tooltipText="@string/home_nav_home">
-
-                <ImageView
-                    style="@style/Home.NavIcon"
-                    android:src="@drawable/ic_nav_home" />
-            </LinearLayout>
-
-            <!-- Browser Resources -->
-            <LinearLayout
-                android:id="@+id/mod_store_button"
-                style="@style/Home.NavItem"
-                android:contentDescription="@string/home_nav_browser"
-                android:tooltipText="@string/home_nav_browser">
-
-                <ImageView
-                    style="@style/Home.NavIcon"
-                    android:src="@drawable/ic_nav_browser" />
-            </LinearLayout>
-
-            <!-- Manager -->
-            <LinearLayout
-                android:id="@+id/open_files_button"
-                style="@style/Home.NavItem"
-                android:contentDescription="@string/home_nav_manager"
-                android:tooltipText="@string/home_nav_manager">
-
-                <ImageView
-                    style="@style/Home.NavIcon"
-                    android:src="@drawable/ic_nav_manager" />
-            </LinearLayout>
-
-            <!-- Profiles -->
-            <LinearLayout
-                android:id="@+id/nav_profiles"
-                style="@style/Home.NavItem"
-                android:contentDescription="@string/home_nav_profiles"
-                android:tooltipText="@string/home_nav_profiles">
-
-                <ImageView
-                    style="@style/Home.NavIcon"
-                    android:src="@drawable/ic_nav_profiles" />
-            </LinearLayout>
-
-            <!-- Versions -->
-            <LinearLayout
-                android:id="@+id/nav_versions"
-                style="@style/Home.NavItem"
-                android:contentDescription="@string/home_nav_versions"
-                android:tooltipText="@string/home_nav_versions">
-
-                <ImageView
-                    style="@style/Home.NavIcon"
-                    android:src="@drawable/ic_nav_versions" />
-            </LinearLayout>
-
-            <!-- Servers: visual only for now -->
-            <LinearLayout
-                android:id="@+id/nav_servers"
-                style="@style/Home.NavItem"
-                android:alpha="0.45"
-                android:contentDescription="@string/home_nav_servers"
-                android:tooltipText="@string/home_nav_servers">
-
-                <ImageView
-                    style="@style/Home.NavIcon"
-                    android:src="@drawable/ic_nav_servers" />
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginHorizontal="4dp"
-                android:layout_marginVertical="4dp"
-                android:background="?attr/colorOutlineVariant" />
-
-            <!-- Directory -->
-            <LinearLayout
-                android:id="@+id/open_directory_button"
-                style="@style/Home.NavItem"
-                android:contentDescription="@string/home_nav_directory"
-                android:tooltipText="@string/home_nav_directory">
-
-                <ImageView
-                    style="@style/Home.NavIcon"
-                    android:src="@drawable/ic_nav_directory" />
-            </LinearLayout>
-
-            <!-- Logs -->
-            <LinearLayout
-                android:id="@+id/nav_logs"
-                style="@style/Home.NavItem"
-                android:contentDescription="@string/home_nav_logs"
-                android:tooltipText="@string/home_nav_logs">
-
-                <ImageView
-                    style="@style/Home.NavIcon"
-                    android:src="@drawable/ic_nav_logs" />
-            </LinearLayout>
-        </LinearLayout>
-    </ScrollView>
-
-    <!-- Replaces the sidebar while Browse/Manage Content is open, see ContentPickerFragment -->
+    <!-- Hosts the Manage Content picker while it is open, see ContentPickerFragment -->
     <FrameLayout
         android:id="@+id/left_pane_container"
         android:layout_width="0dp"
@@ -165,9 +37,9 @@
         android:id="@+id/right_pane_container"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginStart="10dp"
+        android:layout_marginStart="12dp"
         android:layout_marginTop="8dp"
-        android:layout_marginEnd="10dp"
+        android:layout_marginEnd="12dp"
         android:layout_marginBottom="10dp"
         android:background="@android:color/transparent"
         app:layout_constraintBottom_toBottomOf="parent"

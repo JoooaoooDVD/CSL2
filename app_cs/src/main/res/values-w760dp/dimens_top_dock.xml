@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Top bar navigation dock (wide landscape phones / tablets) -->
+<resources>
+    <dimen name="top_dock_item_width">44dp</dimen>
+    <dimen name="top_dock_item_height">36dp</dimen>
+    <dimen name="top_account_min_width">170dp</dimen>
+</resources>

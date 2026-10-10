@@ -140,24 +140,13 @@ public class SettingsHostFragment extends Fragment
     }
 
     /**
-     * Hub: the hub uses the whole screen (no rail, no header, no pane frame).
-     * Category: rail on the left and the header banner above the framed screen.
+     * Hub: the hub uses the whole screen (no header, no pane frame).
+     * Category: the header banner (with the category tabs) above the framed screen.
      */
     private void applyChrome(boolean category, boolean animate) {
         if (mRailPane == null || mRightColumn == null) return;
         View root = getView();
         if (root == null) return;
-        View guideline = root.findViewById(R.id.settings_pane_guideline);
-        if (guideline != null && guideline.getLayoutParams()
-                instanceof androidx.constraintlayout.widget.ConstraintLayout.LayoutParams) {
-            androidx.constraintlayout.widget.ConstraintLayout.LayoutParams params =
-                    (androidx.constraintlayout.widget.ConstraintLayout.LayoutParams) guideline.getLayoutParams();
-            int begin = category ? Math.round(64 * getResources().getDisplayMetrics().density) : 0;
-            if (params.guideBegin != begin) {
-                params.guideBegin = begin;
-                guideline.setLayoutParams(params);
-            }
-        }
         if (mRightColumn.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
             ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) mRightColumn.getLayoutParams();
             int margin = category ? Math.round(8 * getResources().getDisplayMetrics().density) : 0;

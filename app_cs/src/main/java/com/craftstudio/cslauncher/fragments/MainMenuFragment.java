@@ -1,6 +1,6 @@
 package com.craftstudio.cslauncher.fragments;
 
-import com.craftstudio.cslauncher.utils.motion.MainMenuMotion;
+import com.craftstudio.cslauncher.utils.TopNavDock;
 import com.craftstudio.cslauncher.utils.AnimationManager;
 import static com.craftstudio.cslauncher.Tools.openPath;
 import static com.craftstudio.cslauncher.Tools.shareLog;
@@ -49,19 +49,12 @@ public class MainMenuFragment extends Fragment {
 
     /* The two-pane views, null in portrait */
     private FrameLayout mRightPane;
-    /* The sidebar and the pane that replaces it while the content picker is open, null in portrait */
-    private View mLeftSidebar;
+    /* The pane that hosts the content picker, null in portrait */
     private FrameLayout mLeftPaneContainer;
     private Guideline mPaneGuideline;
-    /* The profile editor hides the whole left column while it is open */
-    private boolean mFocusMode;
     /* Intercepts back when the right pane shows something above the home screen */
     private OnBackPressedCallback mRightPaneBackCallback;
 
-    /** Every icon-only sidebar button; exactly one may show the selected background */
-    private static final int[] NAV_BUTTON_IDS = {
-            R.id.nav_home, R.id.mod_store_button, R.id.open_files_button, R.id.nav_profiles,
-            R.id.nav_versions, R.id.nav_servers, R.id.open_directory_button, R.id.nav_logs};
 
     private final ActivityResultLauncher<Object> mModInstallerLauncher =
             registerForActivityResult(new OpenDocumentWithExtension("jar"), (data)->{
@@ -211,49 +204,18 @@ public class MainMenuFragment extends Fragment {
     }
 
     /**
-     * Shows the sidebar or the content picker in the left pane, depending on which is active.
-     * The profile editor (and anything it opens) is a focus screen: the whole left column goes
-     * away so the editor gets the full width, and the rail slides back in when it closes.
+     * The left column only exists while the Manage Content picker is docked there; otherwise
+     * the right pane takes the full width (navigation is in the top bar dock).
      */
     private void updateLeftPaneVisibility() {
-        if (!isTwoPane() || mLeftSidebar == null || mLeftPaneContainer == null) return;
+        if (!isTwoPane() || mLeftPaneContainer == null) return;
         Fragment leftFragment = getChildFragmentManager().findFragmentById(R.id.left_pane_container);
         boolean pickerActive = leftFragment instanceof ContentPickerFragment;
-        boolean focus = isProfileEditorOpen();
-        boolean wasHidden = mLeftSidebar.getVisibility() != View.VISIBLE;
-
-        if (focus) {
-            mLeftSidebar.animate().cancel();
-            mLeftSidebar.setVisibility(View.GONE);
-            mLeftPaneContainer.setVisibility(View.GONE);
-        } else {
-            mLeftSidebar.setVisibility(pickerActive ? View.GONE : View.VISIBLE);
-            mLeftPaneContainer.setVisibility(pickerActive ? View.VISIBLE : View.GONE);
-            // Coming back from the focus screen: the rail glides in from the left edge
-            if (!pickerActive && wasHidden && mFocusMode) MainMenuMotion.railIn(mLeftSidebar);
+        mLeftPaneContainer.setVisibility(pickerActive ? View.VISIBLE : View.GONE);
+        if (mPaneGuideline != null) {
+            if (pickerActive) mPaneGuideline.setGuidelinePercent(0.18f);
+            else mPaneGuideline.setGuidelineBegin(0);
         }
-        mFocusMode = focus;
-        // The left column doubles as the compact icon-only nav rail and as the content picker
-        // column. Keep the rail at its reduced fixed width, but widen the column while the
-        // picker is open so its rows stay readable. The focus screen collapses it entirely.
-        if(mPaneGuideline != null) {
-            if(focus) {
-                mPaneGuideline.setGuidelineBegin(0);
-            }else if(pickerActive) {
-                mPaneGuideline.setGuidelinePercent(0.18f);
-            }else {
-                mPaneGuideline.setGuidelineBegin(Math.round(64f * getResources().getDisplayMetrics().density));
-            }
-        }
-    }
-
-    /** @return whether the profile editor is somewhere in the right pane back stack */
-    private boolean isProfileEditorOpen() {
-        FragmentManager manager = getChildFragmentManager();
-        for (int i = manager.getBackStackEntryCount() - 1; i >= 0; i--) {
-            if (InstanceEditorFragment.TAG.equals(manager.getBackStackEntryAt(i).getName())) return true;
-        }
-        return false;
     }
 
     private void showContentPickerDialog(boolean manage) {
@@ -367,10 +329,8 @@ public class MainMenuFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         mRightPane = view.findViewById(R.id.right_pane_container);
-        mLeftSidebar = view.findViewById(R.id.left_sidebar);
         mLeftPaneContainer = view.findViewById(R.id.left_pane_container);
         mPaneGuideline = view.findViewById(R.id.pane_guideline);
-        mFocusMode = false;
         getChildFragmentManager().addOnBackStackChangedListener(mBackStackListener);
 
         FragmentManager childManager = getChildFragmentManager();
@@ -390,62 +350,46 @@ public class MainMenuFragment extends Fragment {
             childManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
         }
 
-        AnimationManager.staggerIn(view.findViewById(R.id.left_sidebar_content));
-
-        // Sidebar navigation. The rows are icon-only, so the selected destination is
-        // shown by the active background + selected state (see setActiveNav).
-        view.findViewById(R.id.nav_home).setOnClickListener(v -> {
-            clearRightPane();
-            setActiveNav(R.id.nav_home);
-        });
-        view.findViewById(R.id.mod_store_button).setOnClickListener(v -> {
-            showContentPicker(false);
-            setActiveNav(R.id.mod_store_button);
-        });
-        view.findViewById(R.id.open_files_button).setOnClickListener(v -> {
-            showContentPicker(true);
-            setActiveNav(R.id.open_files_button);
-        });
-        view.findViewById(R.id.nav_profiles).setOnClickListener(v -> {
-            openPane(InstanceEditorFragment.class, InstanceEditorFragment.TAG, null);
-            setActiveNav(R.id.nav_profiles);
-        });
-        view.findViewById(R.id.nav_versions).setOnClickListener(v -> {
-            openPane(ProfileTypeSelectFragment.class, ProfileTypeSelectFragment.TAG, null);
-            setActiveNav(R.id.nav_versions);
-        });
-        // Servers: shown for visual parity, no workflow yet - no destination to select
-        view.findViewById(R.id.nav_servers).setOnClickListener(v ->
-                Toast.makeText(requireContext(), R.string.home_servers_soon, Toast.LENGTH_SHORT).show());
-        // Directory opens the external file manager - the pane does not navigate
-        view.findViewById(R.id.open_directory_button).setOnClickListener(v -> openGameDirectory(v.getContext()));
-        view.findViewById(R.id.nav_logs).setOnClickListener(v -> {
-            openPane(LogsFragment.class, LogsFragment.TAG, null);
-            setActiveNav(R.id.nav_logs);
-        });
+        // Navigation lives in the top bar dock (TopNavDock, bound by LauncherActivity) and
+        // calls navigate(); there is no left sidebar any more.
         // Reflect the real destination (restored stack after rotation, or plain home)
         syncActiveNav();
     }
 
     /**
-     * Marks one sidebar button as selected. With icon-only rows the background is the
-     * selection indicator, so the active row keeps the outlined
-     * {@code bg_nav_item_active} tile while every other row falls back to
-     * {@code bg_nav_item}; the selected state also feeds the drawable's state list.
-     * Pass {@link android.view.View#NO_ID} to clear the selection.
+     * Opens the destination of a top bar dock button.
+     * @return whether the id belongs to the main menu navigation
      */
-    private void setActiveNav(int navId) {
-        View root = getView();
-        if (root == null) return;
-        for (int id : NAV_BUTTON_IDS) {
-            View button = root.findViewById(id);
-            if (button == null) continue;
-            boolean active = id == navId;
-            button.setSelected(active);
-            button.setBackgroundResource(active
-                    ? R.drawable.bg_nav_item_active
-                    : R.drawable.bg_nav_item);
+    public boolean navigate(int navId) {
+        if (getView() == null) return false;
+        if (navId == R.id.nav_home) {
+            clearRightPane();
+        } else if (navId == R.id.mod_store_button) {
+            showContentPicker(false);
+        } else if (navId == R.id.open_files_button) {
+            showContentPicker(true);
+        } else if (navId == R.id.nav_profiles) {
+            openPane(InstanceEditorFragment.class, InstanceEditorFragment.TAG, null);
+        } else if (navId == R.id.nav_versions) {
+            openPane(ProfileTypeSelectFragment.class, ProfileTypeSelectFragment.TAG, null);
+        } else if (navId == R.id.nav_logs) {
+            openPane(LogsFragment.class, LogsFragment.TAG, null);
+        } else {
+            return false;
         }
+        setActiveNav(navId);
+        return true;
+    }
+
+    /** Opens the game directory of the selected instance (overflow menu) */
+    public void openGameDirectory() {
+        if (getContext() != null) openGameDirectory(requireContext());
+    }
+
+    /** Marks one dock button as active; {@link View#NO_ID} clears the selection */
+    private void setActiveNav(int navId) {
+        if (getView() == null || getActivity() == null) return;
+        TopNavDock.setActive(getActivity(), navId);
     }
 
     /** Follows the right-pane back stack: home when empty, the opened screen otherwise */
@@ -470,7 +414,6 @@ public class MainMenuFragment extends Fragment {
         super.onDestroyView();
         getChildFragmentManager().removeOnBackStackChangedListener(mBackStackListener);
         mRightPane = null;
-        mLeftSidebar = null;
         mLeftPaneContainer = null;
         mPaneGuideline = null;
     }

@@ -47,6 +47,7 @@ import com.craftstudio.cslauncher.prefs.LauncherPreferences;
 import com.craftstudio.cslauncher.progresskeeper.ProgressKeeper;
 import com.craftstudio.cslauncher.utils.ThemeColors;
 import com.craftstudio.cslauncher.utils.motion.InstallMotion;
+import com.craftstudio.cslauncher.utils.motion.MainMenuMotion;
 import com.craftstudio.cslauncher.utils.motion.Motion;
 import com.craftstudio.cslauncher.modding.modpacks.imagecache.GalleryImageLoader;
 import com.google.android.material.button.MaterialButton;
@@ -221,6 +222,19 @@ public class ModInstallFragment extends Fragment {
             renderLoading();
             if (!mLoading) load();
         }
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        // Full screen install page: the launcher top bar steps aside while it is visible
+        MainMenuMotion.topBar(getActivity(), false);
+    }
+
+    @Override
+    public void onStop() {
+        MainMenuMotion.topBar(getActivity(), true);
+        super.onStop();
     }
 
     @Override

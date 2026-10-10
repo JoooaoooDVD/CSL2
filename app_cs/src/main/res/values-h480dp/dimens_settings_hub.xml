@@ -11,4 +11,5 @@
     <dimen name="st_subtitle_size">18sp</dimen>
     <dimen name="st_card_title_size">20sp</dimen>
     <dimen name="st_card_summary_size">15sp</dimen>
+    <dimen name="st_tab_size">42dp</dimen>
 </resources>

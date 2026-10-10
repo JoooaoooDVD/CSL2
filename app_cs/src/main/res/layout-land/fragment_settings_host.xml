@@ -1,30 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Landscape settings. Hub: the hub fills the screen. Category: icon rail on the left,
-     header banner + screen on the right (toggled by SettingsHostFragment) -->
+<!-- Landscape settings. Hub: the hub fills the screen. Category: header banner with the
+     category tabs on its right + the screen below (toggled by SettingsHostFragment) -->
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSurfaceContainer">
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/settings_pane_guideline"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:orientation="vertical"
-        app:layout_constraintGuide_begin="64dp" />
-
-    <!-- Icon rail: every settings category (and the hub) stays one tap away -->
-    <FrameLayout
-        android:id="@+id/settings_left_pane_container"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="?android:attr/colorBackground"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/settings_pane_guideline"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
         android:id="@+id/settings_right_column"
@@ -37,7 +19,7 @@
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/settings_pane_guideline"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <!-- Header banner: art + scrim + section icon/title/subtitle -->
@@ -62,13 +44,12 @@
                 android:background="@drawable/settings_header_scrim" />
 
             <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
                 android:paddingLeft="14dp"
-                android:paddingRight="14dp">
+                android:paddingRight="10dp">
 
                 <ImageView
                     android:id="@+id/settings_header_icon"
@@ -81,9 +62,10 @@
                     android:src="@drawable/ic_sharp_settings_24" />
 
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="11dp"
+                    android:layout_weight="1"
                     android:orientation="vertical">
 
                     <TextView
@@ -108,6 +90,13 @@
                         android:textColor="#CCF1F3F5"
                         android:textSize="10sp" />
                 </LinearLayout>
+
+                <!-- Category tabs (SettingsRailFragment): replaced the old left rail -->
+                <FrameLayout
+                    android:id="@+id/settings_left_pane_container"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="10dp" />
             </LinearLayout>
         </FrameLayout>
 

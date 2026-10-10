@@ -2,53 +2,105 @@ package com.craftstudio.cslauncher.utils.motion;
 
 import android.app.Activity;
 import android.view.View;
-import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.craftstudio.cslauncher.R;
 
 /**
- * Motion of the main menu chrome: the icon rail glides back in from the left edge (and its
- * buttons pop in one after another) and the top bar drops back down when a focus screen such
- * as the profile editor closes.
+ * Motion of the launcher chrome:
+ * <ul>
+ *   <li>top bar dock: the highlight glides (with a small stretch) behind the active button,
+ *       icons brighten / dim, a tapped icon gives a short bounce;</li>
+ *   <li>top bar: hidden for full screen focus screens (profile editor, install page) and
+ *       dropped back down when they close.</li>
+ * </ul>
  * Only alpha / translation / scale are animated.
  */
 public final class MainMenuMotion {
 
     private MainMenuMotion() {}
 
-    /** The rail slides in from the left, then its buttons pop in top to bottom */
-    public static void railIn(@Nullable View rail) {
-        if (rail == null || !Motion.content(rail)) return;
-        rail.animate().cancel();
-        rail.setAlpha(0f);
-        rail.setTranslationX(-Motion.dp(rail, 36));
-        rail.animate().alpha(1f).translationX(0f).setStartDelay(40)
-                .setDuration(Motion.LONG).setInterpolator(Motion.ENTER).setListener(null).start();
+    // ─── Dock ────────────────────────────────────────────────────────────────
 
-        View content = rail.findViewById(R.id.left_sidebar_content);
-        if (!(content instanceof ViewGroup)) return;
-        ViewGroup group = (ViewGroup) content;
-        int shown = 0;
-        for (int i = 0; i < group.getChildCount(); i++) {
-            View child = group.getChildAt(i);
-            if (child.getVisibility() != View.VISIBLE) continue;
-            child.animate().cancel();
-            child.setAlpha(0f);
-            child.setScaleX(0.7f);
-            child.setScaleY(0.7f);
-            child.setTranslationX(-Motion.dp(child, 14));
-            child.animate().alpha(1f).scaleX(1f).scaleY(1f).translationX(0f)
-                    .setStartDelay(120 + Math.min(shown, 12) * 35L)
-                    .setDuration(Motion.MEDIUM + 40).setInterpolator(Motion.SPRING)
-                    .setListener(null).start();
-            shown++;
+    /** Slides the dock highlight to {@code x} (left edge inside the dock frame) */
+    public static void dockIndicatorTo(@NonNull View indicator, float x, boolean animate) {
+        float targetX = x - indicator.getLeft();
+        indicator.animate().cancel();
+        indicator.animate().setUpdateListener(null);
+        boolean wasHidden = indicator.getVisibility() != View.VISIBLE || indicator.getAlpha() < 0.05f;
+        indicator.setVisibility(View.VISIBLE);
+        if (!animate || !Motion.buttons(indicator)) {
+            indicator.setTranslationX(targetX);
+            indicator.setAlpha(1f);
+            indicator.setScaleX(1f);
+            indicator.setScaleY(1f);
+            return;
         }
+        if (wasHidden) {
+            // Appears in place with a pop
+            indicator.setTranslationX(targetX);
+            indicator.setAlpha(0f);
+            indicator.setScaleX(0.6f);
+            indicator.setScaleY(0.6f);
+            indicator.animate().alpha(1f).scaleX(1f).scaleY(1f).setStartDelay(0)
+                    .setDuration(Motion.MEDIUM).setInterpolator(Motion.SPRING).setListener(null).start();
+            return;
+        }
+        if (Math.abs(indicator.getTranslationX() - targetX) < 1f) return;
+        // Glide with a slight horizontal stretch while moving
+        indicator.setScaleY(1f);
+        indicator.animate().translationX(targetX).scaleX(1f).alpha(1f).setStartDelay(0)
+                .setDuration(Motion.MEDIUM + 40).setInterpolator(Motion.SPRING).setListener(null)
+                .setUpdateListener(animation -> {
+                    float f = animation.getAnimatedFraction();
+                    indicator.setScaleX(1f + 0.18f * (float) Math.sin(Math.PI * Math.min(1f, f)));
+                })
+                .withEndAction(() -> {
+                    indicator.animate().setUpdateListener(null);
+                    indicator.setScaleX(1f);
+                })
+                .start();
     }
 
+    public static void dockIndicatorHide(@NonNull View indicator) {
+        indicator.animate().cancel();
+        indicator.animate().setUpdateListener(null);
+        if (indicator.getVisibility() != View.VISIBLE) return;
+        if (!Motion.buttons(indicator)) {
+            indicator.setVisibility(View.INVISIBLE);
+            return;
+        }
+        indicator.animate().alpha(0f).scaleX(0.7f).scaleY(0.7f).setStartDelay(0)
+                .setDuration(Motion.SHORT).setInterpolator(Motion.STANDARD).setListener(null)
+                .withEndAction(() -> indicator.setVisibility(View.INVISIBLE)).start();
+    }
+
+    /** Active icons brighten, inactive ones dim */
+    public static void dockIcon(@NonNull View icon, float alpha) {
+        if (!Motion.buttons(icon)) {
+            icon.setAlpha(alpha);
+            return;
+        }
+        icon.animate().alpha(alpha).setStartDelay(0).setDuration(Motion.MEDIUM)
+                .setInterpolator(Motion.STANDARD).setListener(null).start();
+    }
+
+    /** Short squash + spring back on tap */
+    public static void dockTap(@NonNull View icon) {
+        if (!Motion.buttons(icon)) return;
+        icon.setScaleX(0.82f);
+        icon.setScaleY(0.82f);
+        icon.animate().scaleX(1f).scaleY(1f).setStartDelay(0).setDuration(Motion.MEDIUM)
+                .setInterpolator(Motion.SPRING_STRONG).setListener(null).start();
+    }
+
+    // ─── Top bar ─────────────────────────────────────────────────────────────
+
     /**
-     * Hides / shows the launcher top bar (logo, account, home, overflow).
+     * Hides / shows the launcher top bar (logo, dock, account, settings, overflow).
+     * Every hide call must be balanced by a show call (onStart / onStop of the focus screen).
      * Hiding is instant (the focus screen's own entrance covers the jump), showing drops the
      * bar down from above with a fade.
      */
@@ -56,6 +108,13 @@ public final class MainMenuMotion {
         if (activity == null) return;
         View bar = activity.findViewById(R.id.cs_top_bar);
         if (bar == null) return;
+        // Counts the focus screens that asked to hide it, so overlapping start / stop calls of
+        // two focus screens (one replacing the other) cannot show it in the middle
+        Object tag = bar.getTag(R.id.cs_top_bar);
+        int hidden = tag instanceof Integer ? (Integer) tag : 0;
+        hidden = Math.max(0, hidden + (show ? -1 : 1));
+        bar.setTag(R.id.cs_top_bar, hidden);
+        if (show && hidden > 0) return;
         bar.animate().cancel();
         if (!show) {
             bar.setVisibility(View.GONE);

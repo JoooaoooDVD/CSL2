@@ -55,6 +55,7 @@ import com.craftstudio.cslauncher.tasks.mojson.MoJsonExtras;
 import com.craftstudio.cslauncher.tasks.AsyncVersionList;
 import com.craftstudio.cslauncher.tasks.mojson.MoJsonDownloader;
 import com.craftstudio.cslauncher.utils.NotificationUtils;
+import com.craftstudio.cslauncher.utils.TopNavDock;
 
 public class LauncherActivity extends BaseActivity {
     public static final String SETTING_FRAGMENT_TAG = "SETTINGS_FRAGMENT";
@@ -95,28 +96,36 @@ public class LauncherActivity extends BaseActivity {
         return false;
     };
 
-    /* Listener for the settings fragment */
+    /* Listener for the settings button: opens the settings, or closes them when they are open */
     private final View.OnClickListener mSettingButtonListener = v -> {
         FragmentManager manager = getSupportFragmentManager();
         if(manager.isStateSaved()) return;
         Fragment fragment = manager.findFragmentById(mFragmentView.getId());
-        if(fragment instanceof MainMenuFragment){
-            MainMenuFragment mainMenu = (MainMenuFragment) fragment;
-            if(mainMenu.isRightPaneActive()) {
-                // Home button of the two-pane main menu: close the screen in the right pane
-                mainMenu.clearRightPane();
-                return;
-            }
-            // The settings replace the whole screen, they are not opened in the right pane.
-            // In landscape they have two panes of their own
-            Class<? extends Fragment> settingsClass = getResources().getConfiguration().orientation == ORIENTATION_LANDSCAPE
-                    ? SettingsHostFragment.class : LauncherPreferenceFragment.class;
-            Tools.swapFragmentFullScreen(this, settingsClass, SETTING_FRAGMENT_TAG, null);
-        } else{
-            // The setting button doubles as a home button now
-            Tools.backToMainMenu(this);
+        if(fragment != null && SETTING_FRAGMENT_TAG.equals(fragment.getTag())) {
+            manager.popBackStack();
+            return;
         }
+        // The settings replace the whole screen, they are not opened in the right pane.
+        // In landscape they have two panes of their own
+        Class<? extends Fragment> settingsClass = getResources().getConfiguration().orientation == ORIENTATION_LANDSCAPE
+                ? SettingsHostFragment.class : LauncherPreferenceFragment.class;
+        Tools.swapFragmentFullScreen(this, settingsClass, SETTING_FRAGMENT_TAG, null);
     };
+
+    /**
+     * Top bar dock click: the destination always opens in the main menu, so any full screen
+     * screen above it (settings, account...) is closed first.
+     */
+    private void onDockItemClicked(int id) {
+        FragmentManager manager = getSupportFragmentManager();
+        if(manager.isStateSaved()) return;
+        Fragment current = manager.findFragmentById(R.id.container_fragment);
+        if(!(current instanceof MainMenuFragment) || current.getView() == null) {
+            manager.popBackStackImmediate(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+            current = manager.findFragmentById(R.id.container_fragment);
+        }
+        if(current instanceof MainMenuFragment) ((MainMenuFragment) current).navigate(id);
+    }
 
     private final ExtraListener<Boolean> mLaunchGameListener = (key, value) -> {
         if(mProgressLayout.hasProcesses()){
@@ -167,13 +176,15 @@ public class LauncherActivity extends BaseActivity {
         }
         return false;
     };
-    /** The button is the settings button on the home screen, and the home button everywhere else */
+    /** Settings button = settings (selected while they are open); the dock follows the main menu */
     private void updateSettingsButton() {
         if(mSettingsButton == null) return;
         Fragment current = getSupportFragmentManager().findFragmentById(R.id.container_fragment);
-        boolean atHome = current instanceof MainMenuFragment && !((MainMenuFragment) current).isRightPaneActive();
-        mSettingsButton.setImageDrawable(ContextCompat.getDrawable(this,
-                atHome ? R.drawable.ic_px_sliders : R.drawable.ic_px_home));
+        boolean inSettings = current != null && SETTING_FRAGMENT_TAG.equals(current.getTag());
+        mSettingsButton.setSelected(inSettings);
+        mSettingsButton.setAlpha(1f);
+        // Outside the main menu no dock destination is active
+        if(!(current instanceof MainMenuFragment)) TopNavDock.setActive(this, View.NO_ID);
     }
 
     @Override
@@ -380,6 +391,7 @@ public class LauncherActivity extends BaseActivity {
         mSettingsButton = findViewById(R.id.setting_button);
         mOverflowButton = findViewById(R.id.overflow_button);
         mProgressLayout = findViewById(R.id.progress_layout);
+        TopNavDock.bind(this, this::onDockItemClicked);
     }
 
     /** The three-dots menu of the header: shortcuts to the flows that lost their dedicated buttons */
@@ -395,6 +407,9 @@ public class LauncherActivity extends BaseActivity {
             } else if (id == R.id.overflow_install_jar) {
                 MainMenuFragment menu0 = peekMainMenu();
                 if (menu0 != null) menu0.openJarInstaller();
+            } else if (id == R.id.overflow_directory) {
+                MainMenuFragment menu0 = peekMainMenu();
+                if (menu0 != null) menu0.openGameDirectory();
             } else if (id == R.id.overflow_share_logs) {
                 Tools.shareLog(this);
             } else if (id == R.id.overflow_gamepad) {

@@ -13,8 +13,8 @@ import androidx.annotation.Nullable;
  *       six cards sweep in diagonally (row by row, column by column); every artwork settles
  *       from a soft zoom while its chevron glides in from the right;</li>
  *   <li>card tap: the artwork pushes in, the chevron nudges forward, then the category opens;</li>
- *   <li>host: the category rail slides in from the left and the header banner drops in when a
- *       category opens, both leave again when going back to the hub.</li>
+ *   <li>host: the header banner drops in when a category opens and its category tabs pop in
+ *       from the right; both leave again when going back to the hub.</li>
  * </ul>
  * Only alpha / translation / scale / rotation are animated, so it stays smooth on phones.
  */
@@ -113,27 +113,28 @@ public final class SettingsMotion {
         card.postDelayed(open, 120);
     }
 
-    /** Shows / hides the category rail with a slide from the left */
+    /**
+     * Shows / hides the category tabs (on the header banner). When they appear the tabs pop in
+     * one after another from the right.
+     */
     public static void rail(@Nullable View rail, boolean show, boolean animate) {
         if (rail == null) return;
-        if (!animate || !Motion.content(rail)) {
-            rail.animate().cancel();
-            rail.setVisibility(show ? View.VISIBLE : View.GONE);
-            rail.setAlpha(1f);
-            rail.setTranslationX(0f);
-            return;
-        }
-        rail.animate().cancel();
-        if (show) {
-            rail.setVisibility(View.VISIBLE);
-            rail.setAlpha(0f);
-            rail.setTranslationX(-Motion.dp(rail, 40));
-            rail.animate().alpha(1f).translationX(0f).setStartDelay(60).setDuration(Motion.LONG)
-                    .setInterpolator(Motion.ENTER).setListener(null).start();
-        } else {
-            rail.setVisibility(View.GONE);
-            rail.setAlpha(1f);
-            rail.setTranslationX(0f);
+        boolean wasVisible = rail.getVisibility() == View.VISIBLE;
+        rail.setVisibility(show ? View.VISIBLE : View.GONE);
+        if (!show || !animate || wasVisible || !Motion.content(rail)) return;
+        View items = rail.findViewById(com.craftstudio.cslauncher.R.id.settings_rail_items);
+        if (!(items instanceof ViewGroup)) return;
+        ViewGroup group = (ViewGroup) items;
+        for (int i = 0; i < group.getChildCount(); i++) {
+            View tab = group.getChildAt(i);
+            tab.animate().cancel();
+            tab.setAlpha(0f);
+            tab.setTranslationX(Motion.dp(tab, 18));
+            tab.setScaleX(0.8f);
+            tab.setScaleY(0.8f);
+            tab.animate().alpha(1f).translationX(0f).scaleX(1f).scaleY(1f)
+                    .setStartDelay(120 + i * 35L).setDuration(Motion.MEDIUM + 40)
+                    .setInterpolator(Motion.SPRING).setListener(null).start();
         }
     }
 
