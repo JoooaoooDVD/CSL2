@@ -45,7 +45,7 @@
         <item name="windowNoTitle">true</item>
         <item name="windowActionBar">false</item>
         <item name="android:windowContentOverlay">@null</item>
-        <item name="preferenceTheme">@style/Settings.PreferenceTheme</item>
+        <item name="preferenceTheme">@style/SettingsPreferenceTheme</item>
 
         <item name="android:textSize">@dimen/_12ssp</item>
 
