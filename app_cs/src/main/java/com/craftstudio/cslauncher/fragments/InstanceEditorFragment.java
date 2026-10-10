@@ -35,6 +35,7 @@ import com.craftstudio.cslauncher.multirt.Runtime;
 import com.craftstudio.cslauncher.utils.CSAnimationEngine;
 import com.craftstudio.cslauncher.utils.CropperUtils;
 import com.craftstudio.cslauncher.utils.LauncherBackground;
+import com.craftstudio.cslauncher.utils.motion.MainMenuMotion;
 import com.craftstudio.cslauncher.utils.motion.ProfileEditorMotion;
 import com.craftstudio.cslauncher.utils.profiles.VersionSelectorDialog;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -157,6 +158,7 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
         bindViews(view);
         bindBehaviors(view);
         applyStateToViews();
+        applyCompactChrome(view);
 
         if (!mEntrancePlayed) {
             mEntrancePlayed = true;
@@ -171,6 +173,57 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
                     mBackgroundPreview,
                     view.findViewById(R.id.pe_config_rows),
                     view.findViewById(R.id.pe_action_bar));
+        }
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        // Full screen editor: the launcher top bar steps aside while it is visible
+        MainMenuMotion.topBar(getActivity(), false);
+    }
+
+    @Override
+    public void onStop() {
+        MainMenuMotion.topBar(getActivity(), true);
+        super.onStop();
+    }
+
+    /**
+     * Short screens (landscape phones): tighter header and action bar, so the cards get
+     * most of the height. Tall screens keep the full-size mockup proportions.
+     */
+    private void applyCompactChrome(@NonNull View view) {
+        if (getResources().getConfiguration().screenHeightDp >= 480) return;
+        float density = getResources().getDisplayMetrics().density;
+        View header = view.findViewById(R.id.pe_header);
+        if (header != null) {
+            header.setPadding(header.getPaddingLeft(), Math.round(4 * density),
+                    header.getPaddingRight(), Math.round(6 * density));
+        }
+        View back = view.findViewById(R.id.vprof_editor_back);
+        if (back != null) {
+            ViewGroup.LayoutParams params = back.getLayoutParams();
+            params.width = params.height = Math.round(44 * density);
+            back.setLayoutParams(params);
+        }
+        TextView title = view.findViewById(R.id.pe_title);
+        if (title != null) title.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 24);
+        TextView subtitle = view.findViewById(R.id.pe_subtitle);
+        if (subtitle != null) subtitle.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 13);
+        View actionBar = view.findViewById(R.id.pe_action_bar);
+        if (actionBar != null) {
+            actionBar.setPadding(actionBar.getPaddingLeft(), Math.round(6 * density),
+                    actionBar.getPaddingRight(), Math.round(8 * density));
+        }
+        int[] buttons = {R.id.vprof_editor_delete_button, R.id.vprof_editor_cancel_button, R.id.vprof_editor_save_button};
+        for (int id : buttons) {
+            View button = view.findViewById(id);
+            if (button == null) continue;
+            ViewGroup.LayoutParams params = button.getLayoutParams();
+            params.height = Math.round(46 * density);
+            button.setLayoutParams(params);
+            if (button instanceof TextView) ((TextView) button).setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 15);
         }
     }
 

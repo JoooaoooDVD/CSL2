@@ -9,7 +9,9 @@
     android:orientation="vertical">
 
     <!-- ══════════════ TOP HEADER ══════════════ -->
+    <!-- Hidden while a focus screen (profile editor) is open, see MainMenuMotion.topBar -->
     <LinearLayout
+        android:id="@+id/cs_top_bar"
         android:layout_width="match_parent"
         android:layout_height="64dp"
         android:background="@drawable/bg_home_header"
