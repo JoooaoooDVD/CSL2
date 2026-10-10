@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Settings hub sizes for short landscape screens (phones) -->
+<resources>
+    <dimen name="st_card_height">96dp</dimen>
+    <dimen name="st_card_gap">10dp</dimen>
+    <dimen name="st_icon_box">58dp</dimen>
+    <dimen name="st_icon_padding">15dp</dimen>
+    <dimen name="st_chevron">40dp</dimen>
+    <dimen name="st_header_tile">56dp</dimen>
+    <dimen name="st_title_size">26sp</dimen>
+    <dimen name="st_subtitle_size">14sp</dimen>
+    <dimen name="st_card_title_size">16sp</dimen>
+    <dimen name="st_card_summary_size">12.5sp</dimen>
+</resources>

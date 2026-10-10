@@ -3,6 +3,7 @@ package com.craftstudio.cslauncher.fragments;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -17,6 +18,7 @@ import androidx.preference.PreferenceFragmentCompat;
 import com.craftstudio.cslauncher.R;
 import com.craftstudio.cslauncher.prefs.screens.LauncherPreferenceFragment;
 import com.craftstudio.cslauncher.utils.CSAnimationEngine;
+import com.craftstudio.cslauncher.utils.motion.SettingsMotion;
 
 /**
  * Two-pane landscape settings, redesigned:
@@ -43,6 +45,9 @@ public class SettingsHostFragment extends Fragment
     private TextView mHeaderTitle;
     private TextView mHeaderSubtitle;
     private ImageView mHeaderIcon;
+    private ImageView mHeaderArt;
+    private View mHeader, mRailPane, mRightColumn, mRightPane;
+    @Nullable private Integer mHeaderArtRes;
 
     /** The screen currently shown in the right pane, null = the settings hub */
     @Nullable
@@ -76,26 +81,34 @@ public class SettingsHostFragment extends Fragment
         // or the hub when the stack is empty
         getChildFragmentManager().addOnBackStackChangedListener(() -> {
             mBackCallback.setEnabled(getChildFragmentManager().getBackStackEntryCount() > 0);
-            syncHeaderAndRail();
+            syncHeaderAndRail(true);
         });
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         FragmentManager manager = getChildFragmentManager();
-        if (manager.findFragmentByTag(LEFT_PANE_TAG) != null
-                || manager.findFragmentByTag(RAIL_TAG) != null
-                || manager.findFragmentByTag(DEFAULT_RIGHT_PANE_TAG) != null) {
-            return;
-        }
         mHeaderIcon = view.findViewById(R.id.settings_header_icon);
         mHeaderTitle = view.findViewById(R.id.settings_header_title);
         mHeaderSubtitle = view.findViewById(R.id.settings_header_subtitle);
+        mHeaderArt = view.findViewById(R.id.settings_header_art);
+        mHeader = view.findViewById(R.id.settings_header);
+        mRightColumn = view.findViewById(R.id.settings_right_column);
+        mRightPane = view.findViewById(R.id.settings_right_pane_container);
+        mRailPane = isTwoPane() ? view.findViewById(R.id.settings_left_pane_container) : null;
+        mHeaderArtRes = null;
+
+        if (manager.findFragmentByTag(LEFT_PANE_TAG) != null
+                || manager.findFragmentByTag(RAIL_TAG) != null
+                || manager.findFragmentByTag(DEFAULT_RIGHT_PANE_TAG) != null) {
+            // Restored: bring the chrome in line with the restored back stack
+            syncHeaderAndRail(false);
+            return;
+        }
 
         if (isTwoPane()) {
-            // Landscape: icon rail on the left, hub as the default right screen
-            Fragment hub = manager.getFragmentFactory().instantiate(
-                    requireContext().getClassLoader(), LauncherPreferenceFragment.class.getName());
+            // Landscape: the hub fills the screen; the rail appears once a category opens
+            Fragment hub = new SettingsHubFragment();
             applyTransitions(hub);
             manager.beginTransaction()
                     .setReorderingAllowed(true)
@@ -115,6 +128,60 @@ public class SettingsHostFragment extends Fragment
         }
         mCurrentScreenClass = null;
         updateHeader(null);
+        applyChrome(false, false);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        mHeaderIcon = mHeaderArt = null;
+        mHeaderTitle = mHeaderSubtitle = null;
+        mHeader = mRailPane = mRightColumn = mRightPane = null;
+    }
+
+    /**
+     * Hub: the hub uses the whole screen (no rail, no header, no pane frame).
+     * Category: rail on the left and the header banner above the framed screen.
+     */
+    private void applyChrome(boolean category, boolean animate) {
+        if (mRailPane == null || mRightColumn == null) return;
+        View root = getView();
+        if (root == null) return;
+        View guideline = root.findViewById(R.id.settings_pane_guideline);
+        if (guideline != null && guideline.getLayoutParams()
+                instanceof androidx.constraintlayout.widget.ConstraintLayout.LayoutParams) {
+            androidx.constraintlayout.widget.ConstraintLayout.LayoutParams params =
+                    (androidx.constraintlayout.widget.ConstraintLayout.LayoutParams) guideline.getLayoutParams();
+            int begin = category ? Math.round(64 * getResources().getDisplayMetrics().density) : 0;
+            if (params.guideBegin != begin) {
+                params.guideBegin = begin;
+                guideline.setLayoutParams(params);
+            }
+        }
+        if (mRightColumn.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
+            ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) mRightColumn.getLayoutParams();
+            int margin = category ? Math.round(8 * getResources().getDisplayMetrics().density) : 0;
+            if (params.topMargin != margin) {
+                params.setMargins(margin, margin, margin, margin);
+                params.setMarginStart(margin);
+                params.setMarginEnd(margin);
+                mRightColumn.setLayoutParams(params);
+            }
+        }
+        if (mRightPane != null) {
+            if (category) mRightPane.setBackgroundResource(R.drawable.bg_right_pane);
+            else mRightPane.setBackground(null);
+            if (mRightPane.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
+                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) mRightPane.getLayoutParams();
+                int top = category ? Math.round(6 * getResources().getDisplayMetrics().density) : 0;
+                if (params.topMargin != top) {
+                    params.topMargin = top;
+                    mRightPane.setLayoutParams(params);
+                }
+            }
+        }
+        SettingsMotion.rail(mRailPane, category, animate);
+        SettingsMotion.header(mHeader, category, animate);
     }
 
     /** Shared enter/exit spec - the engine is the single source of transition motion */
@@ -137,7 +204,7 @@ public class SettingsHostFragment extends Fragment
             if (manager.getBackStackEntryCount() > 0) {
                 manager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
             } else {
-                syncHeaderAndRail();
+                syncHeaderAndRail(true);
             }
             return true;
         }
@@ -146,7 +213,7 @@ public class SettingsHostFragment extends Fragment
         String tag = SCREEN_TAG_PREFIX + fragmentClassName;
         int count = manager.getBackStackEntryCount();
         if (count > 0 && tag.equals(manager.getBackStackEntryAt(count - 1).getName())) {
-            syncHeaderAndRail();
+            syncHeaderAndRail(true);
             return true;
         }
 
@@ -175,7 +242,7 @@ public class SettingsHostFragment extends Fragment
     }
 
     /** Brings header + rail in line with the top of the child back stack */
-    private void syncHeaderAndRail() {
+    private void syncHeaderAndRail(boolean animate) {
         FragmentManager manager = getChildFragmentManager();
         String top = null;
         int count = manager.getBackStackEntryCount();
@@ -188,12 +255,14 @@ public class SettingsHostFragment extends Fragment
         mCurrentScreenClass = top;
         updateHeader(top);
         updateRail(top);
+        applyChrome(top != null, animate);
     }
 
     private void updateRail(@Nullable String fragmentClassName) {
         // The renderer sub-screen belongs to the video category for the rail highlight
         if (fragmentClassName != null
                 && fragmentClassName.endsWith("LauncherPreferenceRendererSettingsFragment")) {
+            art = R.drawable.settings_art_video;
             fragmentClassName = "com.craftstudio.cslauncher.prefs.screens.LauncherPreferenceVideoFragment";
         }
         Fragment rail = getChildFragmentManager().findFragmentByTag(RAIL_TAG);
@@ -209,35 +278,43 @@ public class SettingsHostFragment extends Fragment
         int icon;
         int title;
         int subtitle;
+        int art = R.drawable.settings_banner;
         if (fragmentClassName == null) {
             icon = R.drawable.ic_sharp_settings_24;
             title = R.string.settings_hub_title;
             subtitle = R.string.settings_hub_subtitle;
         } else if (fragmentClassName.endsWith("LauncherPreferenceAppearanceFragment")) {
+            art = R.drawable.settings_art_appearance;
             icon = R.drawable.ic_px_image;
             title = R.string.preference_appearance_title;
             subtitle = R.string.preference_appearance_description;
         } else if (fragmentClassName.endsWith("LauncherPreferenceControlFragment")) {
+            art = R.drawable.settings_art_control;
             icon = R.drawable.ic_px_gamepad;
             title = R.string.preference_control_title;
             subtitle = R.string.preference_control_description;
         } else if (fragmentClassName.endsWith("LauncherPreferenceJavaFragment")) {
+            art = R.drawable.settings_art_java;
             icon = R.drawable.ic_px_java;
             title = R.string.preference_java_title;
             subtitle = R.string.preference_java_description;
         } else if (fragmentClassName.endsWith("LauncherPreferenceMiscellaneousFragment")) {
+            art = R.drawable.settings_art_misc;
             icon = R.drawable.ic_px_alt_sliders;
             title = R.string.preference_misc_title;
             subtitle = R.string.preference_misc_description;
         } else if (fragmentClassName.endsWith("LauncherPreferenceExperimentalFragment")) {
+            art = R.drawable.settings_art_experimental;
             icon = R.drawable.ic_px_experiment;
             title = R.string.preference_experimental_title;
             subtitle = R.string.preference_experimental_description;
         } else if (fragmentClassName.endsWith("LauncherPreferenceRendererSettingsFragment")) {
+            art = R.drawable.settings_art_video;
             icon = R.drawable.ic_mg_renderer;
             title = R.string.mcl_setting_title_renderer_settings;
             subtitle = R.string.mcl_setting_title_renderer_subtitle;
         } else {
+            art = R.drawable.settings_art_video;
             icon = R.drawable.ic_qs_monitor;
             title = R.string.preference_video_title;
             subtitle = R.string.preference_video_description;
@@ -252,5 +329,11 @@ public class SettingsHostFragment extends Fragment
         }
         mHeaderIcon.setImageResource(icon);
         CSAnimationEngine.animateImageSwap(mHeaderIcon);
+        if (mHeaderArt != null && (mHeaderArtRes == null || mHeaderArtRes != art)) {
+            boolean first = mHeaderArtRes == null;
+            mHeaderArtRes = art;
+            mHeaderArt.setImageResource(art);
+            if (!first) SettingsMotion.headerArtChanged(mHeaderArt);
+        }
     }
 }

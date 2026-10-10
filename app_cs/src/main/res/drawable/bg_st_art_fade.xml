@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Blends the card artwork into the card colour on its left edge -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="0"
+        android:centerColor="@color/st_fade_mid"
+        android:centerX="0.38"
+        android:endColor="@android:color/transparent"
+        android:startColor="@color/pe_card_bg" />
+</shape>

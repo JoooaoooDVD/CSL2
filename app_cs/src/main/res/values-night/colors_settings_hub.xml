@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Settings hub palette (dark theme) -->
+<resources>
+    <color name="st_panel_bg">#0D1014</color>
+    <color name="st_panel_stroke">#1E2228</color>
+    <color name="st_fade_mid">#B314171C</color>
+    <color name="st_card_outline">#2C313A</color>
+</resources>

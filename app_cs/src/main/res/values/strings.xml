@@ -798,6 +798,10 @@
     <string name="lib_search_resourcepacks">Search resource packs…</string>
     <string name="lib_search_shaders">Search shaders…</string>
     <string name="lib_clear_search">Clear search</string>
+    <string name="st_subtitle">Customize CS Launcher Plus to match your style</string>
+    <string name="st_control_description">Touch controls, layouts and behavior</string>
+    <string name="st_force_english_short">Show original English text. Requires a restart.</string>
+    <string name="st_notification_short">Needed for background downloads</string>
     <string name="lib_gallery">Gallery</string>
     <string name="lib_gallery_count">%1$d images</string>
     <string name="lib_gallery_counter">%1$d / %2$d</string>

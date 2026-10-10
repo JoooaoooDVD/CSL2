@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Settings hub sizes for tall screens (tablets), as in the mockup -->
+<resources>
+    <dimen name="st_card_height">128dp</dimen>
+    <dimen name="st_card_gap">14dp</dimen>
+    <dimen name="st_icon_box">84dp</dimen>
+    <dimen name="st_icon_padding">22dp</dimen>
+    <dimen name="st_chevron">52dp</dimen>
+    <dimen name="st_header_tile">74dp</dimen>
+    <dimen name="st_title_size">36sp</dimen>
+    <dimen name="st_subtitle_size">18sp</dimen>
+    <dimen name="st_card_title_size">20sp</dimen>
+    <dimen name="st_card_summary_size">15sp</dimen>
+</resources>

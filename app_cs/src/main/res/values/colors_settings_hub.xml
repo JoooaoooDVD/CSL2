@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Settings hub palette (light theme) -->
+<resources>
+    <color name="st_panel_bg">#F4F6F9</color>
+    <color name="st_panel_stroke">#E1E4E9</color>
+    <color name="st_fade_mid">#B3FFFFFF</color>
+    <color name="st_card_outline">#DDE1E7</color>
+</resources>

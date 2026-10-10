@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Settings hub: header, the six category cards in two columns and the general toggles -->
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/st_scroll"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipToPadding="false"
+    android:fillViewport="true"
+    android:overScrollMode="ifContentScrolls"
+    android:scrollbars="none">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="16dp"
+        android:paddingTop="6dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="16dp">
+
+        <LinearLayout
+            android:id="@+id/st_header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <FrameLayout
+                android:id="@+id/st_header_tile"
+                android:layout_width="@dimen/st_header_tile"
+                android:layout_height="@dimen/st_header_tile"
+                android:background="@drawable/bg_st_icon_box">
+
+                <ImageView
+                    android:id="@+id/st_header_icon"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="center"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_pe_gear"
+                    android:tint="@color/pe_icon" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/st_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/minecraft_ten"
+                    android:maxLines="1"
+                    android:text="@string/settings_hub_title"
+                    android:textColor="@color/pe_text_primary"
+                    android:textSize="@dimen/st_title_size" />
+
+                <TextView
+                    android:id="@+id/st_subtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:maxLines="2"
+                    android:text="@string/st_subtitle"
+                    android:textColor="@color/pe_text_secondary"
+                    android:textSize="@dimen/st_subtitle_size" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/st_panel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_st_panel"
+            android:baselineAligned="false"
+            android:orientation="horizontal"
+            android:padding="@dimen/st_card_gap">
+
+            <LinearLayout
+                android:id="@+id/st_col_left"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <include
+                    android:id="@+id/st_card_java"
+                    layout="@layout/item_settings_hub_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/st_card_height" />
+
+                <include
+                    android:id="@+id/st_card_video"
+                    layout="@layout/item_settings_hub_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/st_card_height"
+                    android:layout_marginTop="@dimen/st_card_gap" />
+
+                <include
+                    android:id="@+id/st_card_appearance"
+                    layout="@layout/item_settings_hub_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/st_card_height"
+                    android:layout_marginTop="@dimen/st_card_gap" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/st_col_right"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/st_card_gap"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <include
+                    android:id="@+id/st_card_misc"
+                    layout="@layout/item_settings_hub_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/st_card_height" />
+
+                <include
+                    android:id="@+id/st_card_experimental"
+                    layout="@layout/item_settings_hub_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/st_card_height"
+                    android:layout_marginTop="@dimen/st_card_gap" />
+
+                <include
+                    android:id="@+id/st_card_control"
+                    layout="@layout/item_settings_hub_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/st_card_height"
+                    android:layout_marginTop="@dimen/st_card_gap" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/st_general"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/st_card_gap"
+            android:baselineAligned="false"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:id="@+id/st_force_english_row"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@drawable/bg_st_card"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:minHeight="64dp"
+                android:orientation="horizontal"
+                android:paddingStart="14dp"
+                android:paddingTop="10dp"
+                android:paddingEnd="14dp"
+                android:paddingBottom="10dp">
+
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_st_icon_box"
+                    android:importantForAccessibility="no"
+                    android:padding="9dp"
+                    android:src="@drawable/ic_st_translate"
+                    android:tint="@color/pe_icon" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:fontFamily="@font/noto_sans_bold"
+                        android:maxLines="1"
+                        android:text="@string/preference_force_english_title"
+                        android:textColor="@color/pe_text_primary"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:ellipsize="end"
+                        android:maxLines="2"
+                        android:text="@string/st_force_english_short"
+                        android:textColor="@color/pe_text_secondary"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/st_force_english_switch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/st_notification_row"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="@dimen/st_card_gap"
+                android:background="@drawable/bg_st_card"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:minHeight="64dp"
+                android:orientation="horizontal"
+                android:paddingStart="14dp"
+                android:paddingTop="10dp"
+                android:paddingEnd="14dp"
+                android:paddingBottom="10dp">
+
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_st_icon_box"
+                    android:importantForAccessibility="no"
+                    android:padding="9dp"
+                    android:src="@drawable/ic_st_bell"
+                    android:tint="@color/pe_icon" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:fontFamily="@font/noto_sans_bold"
+                        android:maxLines="1"
+                        android:text="@string/preference_ask_for_notification_title"
+                        android:textColor="@color/pe_text_primary"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:ellipsize="end"
+                        android:maxLines="2"
+                        android:text="@string/st_notification_short"
+                        android:textColor="@color/pe_text_secondary"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_marginStart="8dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_st_chevron_right"
+                    android:tint="@color/pe_icon" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

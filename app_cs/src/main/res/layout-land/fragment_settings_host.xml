@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Two-pane landscape settings: icon rail on the left, header banner + screen on the right -->
+<!-- Landscape settings. Hub: the hub fills the screen. Category: icon rail on the left,
+     header banner + screen on the right (toggled by SettingsHostFragment) -->
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -26,6 +27,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
+        android:id="@+id/settings_right_column"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="8dp"
