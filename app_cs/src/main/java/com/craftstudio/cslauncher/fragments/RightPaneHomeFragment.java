@@ -37,6 +37,7 @@ import com.craftstudio.cslauncher.prefs.screens.LauncherPreferenceJavaFragment;
 import com.craftstudio.cslauncher.prefs.screens.LauncherPreferenceVideoFragment;
 import com.craftstudio.cslauncher.utils.CSAnimationEngine;
 import com.craftstudio.cslauncher.utils.LauncherBackground;
+import com.craftstudio.cslauncher.utils.motion.HomeMotion;
 
 import java.io.File;
 import java.util.Locale;
@@ -45,8 +46,8 @@ import static com.craftstudio.cslauncher.Architecture.is32BitsDevice;
 import static com.craftstudio.cslauncher.Tools.getTotalDeviceMemory;
 
 /**
- * The home content of the right pane: banner, selected version, PLAY, the two feature cards
- * and the quick settings. Every control is wired to the existing launcher systems, this
+ * The home content of the right pane: banner, selected profile, EDIT, PLAY and the two
+ * feature cards. Every control is wired to the existing launcher systems, this
  * fragment owns no state of its own.
  */
 public class RightPaneHomeFragment extends Fragment implements ExtraListener<Void> {
@@ -69,6 +70,8 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
     private int mLoadId;
     /** Key of the artwork currently shown on the banner (path + mtime), null before the first load */
     private String mBackgroundKey;
+    /** The full entrance plays once per fragment instance, returns get a light settle */
+    private boolean mEntrancePlayed;
 
     public RightPaneHomeFragment() {
         super(R.layout.fragment_right_pane_home);
@@ -81,7 +84,10 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         mVideo.setErrorListener(this::clearBackground);
         loadBackground();
 
-        // Banner tap: nothing to open, it is pure branding
+        // android:clipToOutline in XML only works from API 31: round the banner art and the
+        // PLAY texture in code so every Android version gets the rounded corners
+        view.findViewById(R.id.home_banner_frame).setClipToOutline(true);
+        view.findViewById(R.id.home_play_face).setClipToOutline(true);
 
         mVersionSpinner = view.findViewById(R.id.mc_version_spinner);
         // The Change button opens the editor of the currently selected profile
@@ -100,33 +106,43 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         mPlayArc = view.findViewById(R.id.home_play_arc);
 
         view.findViewById(R.id.home_card_browser).setOnClickListener(v -> {
-            openContentPicker(false);
+            HomeMotion.cardTapped(v, view.findViewById(R.id.home_card_browser_chevron), () -> openContentPicker(false));
         });
         view.findViewById(R.id.home_card_manager).setOnClickListener(v -> {
-            openContentPicker(true);
+            HomeMotion.cardTapped(v, view.findViewById(R.id.home_card_manager_chevron), () -> openContentPicker(true));
         });
+        // Version chip on the banner + chevron of PLAY: open the profile list
+        View.OnClickListener openProfiles = v -> {
+            if (mVersionSpinner != null) mVersionSpinner.performClick();
+        };
+        view.findViewById(R.id.home_banner_version_chip).setOnClickListener(openProfiles);
+        view.findViewById(R.id.home_play_more).setOnClickListener(openProfiles);
 
-        // Quick settings
-        view.findViewById(R.id.home_qs_ram).setOnClickListener(v -> {
-            showRamDialog();
-        });
-        view.findViewById(R.id.home_qs_java).setOnClickListener(v -> {
-            openPane(LauncherPreferenceJavaFragment.class, "HOME_SETTINGS_JAVA", null);
-        });
-        view.findViewById(R.id.home_qs_renderer).setOnClickListener(v -> {
-            openPane(LauncherPreferenceVideoFragment.class, "HOME_SETTINGS_RENDERER", null);
-        });
-        view.findViewById(R.id.home_qs_controls).setOnClickListener(v -> {
-            startActivity(new android.content.Intent(requireContext(), CustomControlsActivity.class));
-        });
-        view.findViewById(R.id.home_qs_more).setOnClickListener(v -> {
-            // Same target as the settings button of the header
-            Tools.swapFragmentFullScreen(requireActivity(),
-                    SettingsHostFragment.class, LauncherActivity.SETTING_FRAGMENT_TAG, null);
-        });
+        CSAnimationEngine.attachPressFeedback(view.findViewById(R.id.home_card_browser));
+        CSAnimationEngine.attachPressFeedback(view.findViewById(R.id.home_card_manager));
+        CSAnimationEngine.attachPressFeedback(view.findViewById(R.id.edit_profile_button));
+        CSAnimationEngine.attachPressFeedback(view.findViewById(R.id.home_banner_version_chip));
+        CSAnimationEngine.attachPressFeedback(view.findViewById(R.id.play_button));
 
-        refreshQuickSettings();
         refreshVersionInfo();
+
+        if (!mEntrancePlayed) {
+            mEntrancePlayed = true;
+            HomeMotion.playEntrance(
+                    view.findViewById(R.id.home_banner_frame), mWallpaper,
+                    view.findViewById(R.id.home_banner_wordmark),
+                    view.findViewById(R.id.home_banner_version_chip),
+                    view.findViewById(R.id.home_banner_features),
+                    view.findViewById(R.id.home_profile_card),
+                    view.findViewById(R.id.home_edit_card),
+                    view.findViewById(R.id.home_play_container),
+                    view.findViewById(R.id.home_play_glint),
+                    new View[]{view.findViewById(R.id.home_card_browser), view.findViewById(R.id.home_card_manager)},
+                    new View[]{view.findViewById(R.id.home_card_browser_tile), view.findViewById(R.id.home_card_manager_tile)});
+        } else {
+            // Coming back (closing a screen of the pane): a quick settle instead of the full show
+            HomeMotion.playReturn(view.findViewById(R.id.home_root), view.findViewById(R.id.home_play_glint));
+        }
     }
 
     /** Delegates to the parent menu so the picker opens in the panes on tablet-width screens */
@@ -159,7 +175,6 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         if (progressLayout != null) progressLayout.setHiddenByHost(true);
         if (mVideo != null) mVideo.resumePlayback();
         setImageAnimation(true);
-        refreshQuickSettings();
         refreshVersionInfo();
     }
 
@@ -196,6 +211,7 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         if (root == null || mPlayTitle == null || mPlayArc == null) return;
         if (mDownloading) {
             if (mPlayIcon != null) mPlayIcon.setVisibility(View.GONE);
+            setPlayDividerVisible(root, false);
             CSAnimationEngine.animateValueRefresh(mPlayTitle, getString(R.string.home_downloading));
             updateDownloadSubtitle();
             mPlayArc.setProgress(mAggregateProgress);
@@ -204,10 +220,16 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
             mPlayArc.setDownloading(false);
             mPlayArc.setProgress(-1);
             if (mPlayIcon != null) mPlayIcon.setVisibility(View.VISIBLE);
+            setPlayDividerVisible(root, true);
             CSAnimationEngine.animateValueRefresh(mPlayTitle, getString(R.string.home_play));
             // Restore the version/loader subtitle
             refreshVersionInfo();
         }
+    }
+
+    private static void setPlayDividerVisible(@NonNull View root, boolean visible) {
+        View divider = root.findViewById(R.id.home_play_divider);
+        if (divider != null) divider.setVisibility(visible ? View.VISIBLE : View.GONE);
     }
 
     private void updateDownloadSubtitle() {
@@ -226,10 +248,7 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         if (root != null) {
             // Consume so late-attached screens don't replay it, then update from the real state
             ExtraCore.consumeValue(key);
-            root.post(() -> {
-                refreshVersionInfo();
-                refreshQuickSettings();
-            });
+            root.post(this::refreshVersionInfo);
         }
         return false;
     }
@@ -269,9 +288,10 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
 
         // The banner pill carries the same info so it is readable at a glance from the home screen
         TextView bannerVersion = root.findViewById(R.id.home_banner_version);
-        if (bannerVersion != null) {
+        View versionChip = root.findViewById(R.id.home_banner_version_chip);
+        if (bannerVersion != null && versionChip != null) {
             boolean hasInstance = instance != null;
-            bannerVersion.setVisibility(hasInstance ? View.VISIBLE : View.GONE);
+            versionChip.setVisibility(hasInstance ? View.VISIBLE : View.GONE);
             if (hasInstance) bannerVersion.setText(detail);
         }
 
@@ -283,56 +303,6 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
     private static String capitalize(String s) {
         if (s == null || s.isEmpty()) return s;
         return Character.toUpperCase(s.charAt(0)) + s.substring(1);
-    }
-
-    // ─── Quick settings ──────────────────────────────────────────────────────
-
-    /** Pulls the live values out of the preference system, no copies of the state here */
-    private void refreshQuickSettings() {
-        View root = getView();
-        if (root == null) return;
-
-        // Shared engine: values update instantly and give a brief fade pulse only
-        // when they actually changed (never delays the information itself)
-        CSAnimationEngine.animateValueRefresh(
-                (TextView) root.findViewById(R.id.home_qs_ram_value),
-                LauncherPreferences.PREF_RAM_ALLOCATION + " MB");
-        CSAnimationEngine.animateValueRefresh(
-                (TextView) root.findViewById(R.id.home_qs_java_value),
-                javaRuntimeLabel());
-        CSAnimationEngine.animateValueRefresh(
-                (TextView) root.findViewById(R.id.home_qs_renderer_value),
-                rendererLabel(LauncherPreferences.PREF_RENDERER));
-
-        TextView controls = root.findViewById(R.id.home_qs_controls_value);
-        String ctrlPath = LauncherPreferences.PREF_DEFAULTCTRL_PATH;
-        String controlsLabel;
-        if (ctrlPath == null || ctrlPath.equals(Tools.CTRLDEF_FILE)) {
-            controlsLabel = getString(R.string.home_qs_default);
-        } else {
-            String name = new File(ctrlPath).getName();
-            int dot = name.lastIndexOf('.');
-            controlsLabel = dot > 0 ? name.substring(0, dot) : name;
-        }
-        CSAnimationEngine.animateValueRefresh(controls, controlsLabel);
-    }
-
-    private String javaRuntimeLabel() {
-        String configured = LauncherPreferences.PREF_DEFAULT_RUNTIME;
-        if (configured == null || configured.isEmpty()) {
-            return getString(R.string.home_qs_default);
-        }
-        // Resolve the readable "Java N" label from the runtime folder, fall back to its name
-        try {
-            for (Runtime runtime : MultiRTUtils.getRuntimes()) {
-                if (configured.equals(runtime.name)) {
-                    return "Java " + runtime.javaVersion;
-                }
-            }
-        } catch (Exception ignored) {
-            // Runtime directory not ready, the raw name is still a meaningful label
-        }
-        return configured;
     }
 
     /** Human-readable names for the stored renderer key, mirrors the video settings list */
@@ -350,23 +320,6 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
             case Renderers.SFPEW_RENDERER: return "SimpleFPE Wrapper";
             default: return key.toUpperCase(Locale.ROOT);
         }
-    }
-
-    /** Same dialog the memory slider in the settings uses, validated against the same bounds */
-    private void showRamDialog() {
-        int deviceRam = getTotalDeviceMemory(requireContext());
-        int maxRAM;
-        if (is32BitsDevice() || deviceRam < 2048) maxRAM = Math.min(1024, deviceRam);
-        else maxRAM = deviceRam - (deviceRam < 3064 ? 800 : 1024); //Keep some room for the system
-        int minRAM = Math.min(256, maxRAM);
-
-        RamInputDialog.show(requireContext(), LauncherPreferences.PREF_RAM_ALLOCATION,
-                minRAM, maxRAM, megabytes -> {
-                    LauncherPreferences.PREF_RAM_ALLOCATION = megabytes;
-                    LauncherPreferences.DEFAULT_PREF.edit()
-                            .putInt("allocation", megabytes).apply();
-                    refreshQuickSettings();
-                });
     }
 
     // ─── Launcher background (overrides the banner art when the user set one) ───
@@ -395,9 +348,12 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
      */
     private void loadBackground() {
         if (mWallpaper == null || mVideo == null) return;
-        int loadId = ++mLoadId;
         String key = backgroundKey();
+        // Same artwork already shown or being decoded: nothing to do. The load id is only
+        // bumped AFTER this check, otherwise a refresh would drop the decode in flight and the
+        // banner would stay on the default art (profile background not showing on home)
         if (key != null && key.equals(mBackgroundKey)) return;
+        int loadId = ++mLoadId;
         mBackgroundKey = key;
 
         Instance selected = Instances.loadSelectedInstance();
@@ -422,7 +378,7 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
                     mWallpaper.setImageDrawable(drawable);
                     mWallpaper.setVisibility(View.VISIBLE);
                     setImageAnimation(isResumed());
-                    CSAnimationEngine.animateImageSwap(mWallpaper);
+                    HomeMotion.artSwap(mWallpaper);
                 });
             });
             return;
@@ -457,7 +413,7 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
                 mWallpaper.setImageDrawable(drawable);
                 mWallpaper.setVisibility(View.VISIBLE);
                 setImageAnimation(isResumed());
-                CSAnimationEngine.animateImageSwap(mWallpaper);
+                HomeMotion.artSwap(mWallpaper);
             });
         });
     }

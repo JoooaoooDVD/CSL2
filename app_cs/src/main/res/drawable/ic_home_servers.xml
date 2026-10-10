@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Stacked drives (Manager) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="32dp" android:height="32dp" android:viewportWidth="24" android:viewportHeight="24">
+    <path android:strokeColor="@color/hm_servers" android:strokeWidth="1.6" android:strokeLineJoin="round" android:fillColor="#00000000"
+        android:pathData="M4.5,3.5h15a1.5,1.5 0,0 1,1.5 1.5v3a1.5,1.5 0,0 1,-1.5 1.5h-15a1.5,1.5 0,0 1,-1.5 -1.5v-3a1.5,1.5 0,0 1,1.5 -1.5z M4.5,9.5h15a1.5,1.5 0,0 1,1.5 1.5v3a1.5,1.5 0,0 1,-1.5 1.5h-15a1.5,1.5 0,0 1,-1.5 -1.5v-3a1.5,1.5 0,0 1,1.5 -1.5z M4.5,15.5h15a1.5,1.5 0,0 1,1.5 1.5v2a1.5,1.5 0,0 1,-1.5 1.5h-15a1.5,1.5 0,0 1,-1.5 -1.5v-2a1.5,1.5 0,0 1,1.5 -1.5z" />
+    <path android:fillColor="@color/hm_servers"
+        android:pathData="M6.5,5.6h2v1.3h-2z M10,5.6h2v1.3h-2z M6.5,11.6h2v1.3h-2z M10,11.6h2v1.3h-2z M6.5,17.4h2v1.3h-2z M10,17.4h2v1.3h-2z" />
+</vector>

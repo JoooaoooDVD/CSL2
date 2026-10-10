@@ -210,12 +210,32 @@ public class MainMenuFragment extends Fragment {
     private void updateLeftPaneVisibility() {
         if (!isTwoPane() || mLeftPaneContainer == null) return;
         Fragment leftFragment = getChildFragmentManager().findFragmentById(R.id.left_pane_container);
-        boolean pickerActive = leftFragment instanceof ContentPickerFragment;
+        boolean pickerActive = leftFragment instanceof ContentPickerFragment && !leftFragment.isRemoving()
+                && isTagInBackStack(ContentPickerFragment.TAG);
         mLeftPaneContainer.setVisibility(pickerActive ? View.VISIBLE : View.GONE);
         if (mPaneGuideline != null) {
-            if (pickerActive) mPaneGuideline.setGuidelinePercent(0.18f);
-            else mPaneGuideline.setGuidelineBegin(0);
+            // Set the params directly: setGuidelineBegin() alone keeps an earlier percent and
+            // the percent wins, which left an empty black column after closing the Manager
+            androidx.constraintlayout.widget.ConstraintLayout.LayoutParams params =
+                    (androidx.constraintlayout.widget.ConstraintLayout.LayoutParams) mPaneGuideline.getLayoutParams();
+            if (pickerActive) {
+                params.guidePercent = 0.18f;
+                params.guideBegin = -1;
+            } else {
+                params.guidePercent = -1f;
+                params.guideBegin = 0;
+            }
+            params.guideEnd = -1;
+            mPaneGuideline.setLayoutParams(params);
         }
+    }
+
+    private boolean isTagInBackStack(@NonNull String tag) {
+        FragmentManager manager = getChildFragmentManager();
+        for (int i = manager.getBackStackEntryCount() - 1; i >= 0; i--) {
+            if (tag.equals(manager.getBackStackEntryAt(i).getName())) return true;
+        }
+        return false;
     }
 
     private void showContentPickerDialog(boolean manage) {

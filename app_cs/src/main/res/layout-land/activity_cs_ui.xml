@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:attr/colorBackground"
+    android:background="@drawable/bg_home_backdrop"
     android:orientation="vertical">
 
     <!-- ══════════════ TOP HEADER ══════════════ -->
@@ -14,7 +14,7 @@
         android:id="@+id/cs_top_bar"
         android:layout_width="match_parent"
         android:layout_height="64dp"
-        android:background="@drawable/bg_home_header"
+        android:background="@android:color/transparent"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="12dp">
@@ -160,10 +160,11 @@
             android:id="@+id/account_spinner"
             android:layout_width="wrap_content"
             android:layout_height="38dp"
-            android:background="@drawable/bg_pill_home"
+            android:background="@drawable/bg_account_pill"
             android:dropDownVerticalOffset="40dp"
             android:minWidth="@dimen/top_account_min_width"
-            android:paddingHorizontal="14dp"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
             android:popupBackground="@drawable/bg_popup_rounded"
             tools:ignore="RtlSymmetry" />
 

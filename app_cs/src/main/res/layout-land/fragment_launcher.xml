@@ -11,7 +11,7 @@
     android:id="@+id/fragment_menu_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:attr/colorBackground">
+    android:background="@android:color/transparent">
 
     <!-- 0 normally, 18% while the content picker is docked (MainMenuFragment) -->
     <androidx.constraintlayout.widget.Guideline

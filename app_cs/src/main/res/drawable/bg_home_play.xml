@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- PLAY: soft blue glow ring + bright edge (the pixel texture is drawn inside) -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="19dp" />
+            <stroke android:width="3dp" android:color="#3D8AB4FF" />
+        </shape>
+    </item>
+    <item android:bottom="3dp" android:left="3dp" android:right="3dp" android:top="3dp">
+        <shape android:shape="rectangle">
+            <gradient android:angle="0" android:startColor="#E2ECFF" android:endColor="#96BAFA" />
+            <corners android:radius="16dp" />
+        </shape>
+    </item>
+</layer-list>

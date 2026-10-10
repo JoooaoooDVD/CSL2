@@ -134,7 +134,8 @@ public class AccountSpinner extends AppCompatSpinner implements LoginListener, A
         setOnItemSelectedListener(this);
         reload();
 
-        setBackgroundColor(ThemeColors.surfaceContainer(getContext()));
+        // The pill background comes from the layout (bg_account_pill); keep it
+        if (getBackground() == null) setBackgroundColor(ThemeColors.surfaceContainer(getContext()));
         mLoginBarPaint.setColor(ThemeColors.primary(getContext()));
         mLoginBarPaint.setStrokeWidth(getResources().getDimensionPixelOffset(R.dimen._2sdp));
         mLoginStepAnimator.addUpdateListener(this);
@@ -226,9 +227,12 @@ public class AccountSpinner extends AppCompatSpinner implements LoginListener, A
     @Override
     protected void onDraw(@NonNull Canvas canvas) {
         super.onDraw(canvas);
+        // Login progress line: only while a login runs (or failed), not as a permanent underline
+        if (mLoginStep >= mMaxSteps && mLoginBarPaint.getColor() == ThemeColors.primary(getContext())) return;
         float bottom = getHeight() - mLoginBarPaint.getStrokeWidth()/2;
         float lineFillPercent = (mLoginStep / mMaxSteps);
-        canvas.drawLine(0, bottom, lineFillPercent * getWidth(), bottom, mLoginBarPaint);
+        float inset = getHeight() / 3f;
+        canvas.drawLine(inset, bottom, inset + lineFillPercent * (getWidth() - 2 * inset), bottom, mLoginBarPaint);
     }
 
     @Override
@@ -308,8 +312,9 @@ public class AccountSpinner extends AppCompatSpinner implements LoginListener, A
         @NonNull
         @Override
         public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-            if(convertView == null) {
-                convertView = mInflater.inflate(R.layout.item_account, parent, false);
+            // The closed spinner is the compact top bar pill (head, name, chevron)
+            if(convertView == null || convertView.getId() != R.id.account_compact_root) {
+                convertView = mInflater.inflate(R.layout.item_account_compact, parent, false);
             }
             populateView(convertView, position, false);
             return convertView;
@@ -375,11 +380,22 @@ public class AccountSpinner extends AppCompatSpinner implements LoginListener, A
             BitmapDrawable accountHead = mSkinHeadCache.get(headCacheHash);
             if (accountHead == null){
                 Bitmap accountSkinFace = account.getSkinFace();
+                if (accountSkinFace == null) {
+                    // Local / not yet fetched skins: the default pixel head
+                    accountSkinFace = android.graphics.BitmapFactory.decodeResource(resources, R.drawable.ic_default_head);
+                }
                 accountHead = new BitmapDrawable(resources, accountSkinFace);
+                accountHead.setFilterBitmap(false);
                 mSkinHeadCache.put(headCacheHash, accountHead);
             }
 
             textview.setText(account.username);
+            if (!isDropDown && view.getId() == R.id.account_compact_root) {
+                editButton.setVisibility(View.GONE);
+                Drawable chevron = ResourcesCompat.getDrawable(resources, R.drawable.ic_home_chevron_down, theme);
+                textview.setCompoundDrawablesRelative(accountHead, null, chevron, null);
+                return;
+            }
             textview.setCompoundDrawablesRelative(accountHead, null, authType, null);
         }
 

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Home redesign (night): navy palette of the mockup -->
+<resources>
+    <color name="hm_backdrop_top">#0B1322</color>
+    <color name="hm_backdrop_bottom">#080D18</color>
+    <color name="hm_card">#E60F1729</color>
+    <color name="hm_card_pressed">#F2172036</color>
+    <color name="hm_card_stroke">#1F2B44</color>
+    <color name="hm_inner">#0F1A2E</color>
+    <color name="hm_inner_stroke">#2A3754</color>
+    <color name="hm_text">#F2F5FA</color>
+    <color name="hm_text_dim">#A3AEC2</color>
+    <color name="hm_icon">#E8EDF6</color>
+    <color name="hm_tile_blue_start">#12305A</color>
+    <color name="hm_tile_blue_end">#0B1C38</color>
+    <color name="hm_tile_blue_stroke">#2B5E97</color>
+    <color name="hm_tile_purple_start">#2D1A52</color>
+    <color name="hm_tile_purple_end">#1B1033</color>
+    <color name="hm_tile_purple_stroke">#5A3C92</color>
+    <color name="hm_cube">#8CD8FF</color>
+    <color name="hm_servers">#E596FF</color>
+</resources>

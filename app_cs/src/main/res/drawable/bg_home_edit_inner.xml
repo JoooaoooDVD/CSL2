@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EDIT button inside its card -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/hm_card_pressed" />
+            <corners android:radius="12dp" />
+            <stroke android:width="1dp" android:color="@color/hm_text_dim" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/hm_inner" />
+            <corners android:radius="12dp" />
+            <stroke android:width="1dp" android:color="@color/hm_inner_stroke" />
+        </shape>
+    </item>
+</selector>

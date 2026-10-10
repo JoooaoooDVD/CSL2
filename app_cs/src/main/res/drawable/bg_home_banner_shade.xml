@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Left + bottom shade so the wordmark and pills stay readable -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient android:angle="90" android:startColor="#B3070C18" android:centerColor="#26070C18" android:endColor="#00070C18" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <gradient android:angle="0" android:startColor="#80070C18" android:centerColor="#00070C18" android:endColor="#00070C18" />
+        </shape>
+    </item>
+</layer-list>
