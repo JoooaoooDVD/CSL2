@@ -3,10 +3,11 @@ package com.kdt.mcgui;
 import com.craftstudio.cslauncher.utils.AnimationManager;
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 
+import com.craftstudio.cslauncher.utils.CSAnimationEngine;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Build;
-import android.transition.Slide;
 import android.transition.Transition;
 import android.util.AttributeSet;
 import android.util.TypedValue;
@@ -126,6 +127,9 @@ public class mcVersionSpinner extends ExtendedTextView {
         setHorizontallyScrolling(true);
         setSingleLine(true);
         setEllipsize(TextUtils.TruncateAt.END);
+        // The profile chip is a real button: shared CS press feedback (gated by the
+        // TYPE_BUTTONS preference, skipped when the style already provides one)
+        CSAnimationEngine.attachPressFeedback(this);
         addOnAttachStateChangeListener(new ExtraAttachListener());
         setSelection(0);
 
@@ -191,12 +195,9 @@ public class mcVersionSpinner extends ExtendedTextView {
         });
 
 
-        // Custom animation, nice slide in
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && AnimationManager.isEnabled(getContext(), AnimationManager.TYPE_DIALOGS)){
-            mPopupAnimation = new Slide(Gravity.BOTTOM);
-            mPopupWindow.setEnterTransition((Transition) mPopupAnimation);
-            mPopupWindow.setExitTransition((Transition) mPopupAnimation);
-        }
+        // Shared popup entrance/dismissal from the animation engine; the returned
+        // transition (null when popup animations are off) is kept for hidePopup(false)
+        mPopupAnimation = CSAnimationEngine.applyPopupTransition(getContext(), mPopupWindow);
     }
 
     private void hidePopup(boolean animate) {

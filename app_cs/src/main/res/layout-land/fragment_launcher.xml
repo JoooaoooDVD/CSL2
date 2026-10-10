@@ -46,86 +46,74 @@
             <LinearLayout
                 android:id="@+id/nav_home"
                 style="@style/Home.NavItem"
-                android:background="@drawable/bg_nav_item_active">
+                android:background="@drawable/bg_nav_item_active"
+                android:contentDescription="@string/home_nav_home"
+                android:tooltipText="@string/home_nav_home">
 
                 <ImageView
                     style="@style/Home.NavIcon"
                     android:src="@drawable/ic_nav_home" />
-
-                <TextView
-                    style="@style/Home.NavLabel"
-                    android:text="@string/home_nav_home" />
             </LinearLayout>
 
             <!-- Browser Resources -->
             <LinearLayout
                 android:id="@+id/mod_store_button"
-                style="@style/Home.NavItem">
+                style="@style/Home.NavItem"
+                android:contentDescription="@string/home_nav_browser"
+                android:tooltipText="@string/home_nav_browser">
 
                 <ImageView
                     style="@style/Home.NavIcon"
                     android:src="@drawable/ic_nav_browser" />
-
-                <TextView
-                    style="@style/Home.NavLabel"
-                    android:text="@string/home_nav_browser" />
             </LinearLayout>
 
             <!-- Manager -->
             <LinearLayout
                 android:id="@+id/open_files_button"
-                style="@style/Home.NavItem">
+                style="@style/Home.NavItem"
+                android:contentDescription="@string/home_nav_manager"
+                android:tooltipText="@string/home_nav_manager">
 
                 <ImageView
                     style="@style/Home.NavIcon"
                     android:src="@drawable/ic_nav_manager" />
-
-                <TextView
-                    style="@style/Home.NavLabel"
-                    android:text="@string/home_nav_manager" />
             </LinearLayout>
 
             <!-- Profiles -->
             <LinearLayout
                 android:id="@+id/nav_profiles"
-                style="@style/Home.NavItem">
+                style="@style/Home.NavItem"
+                android:contentDescription="@string/home_nav_profiles"
+                android:tooltipText="@string/home_nav_profiles">
 
                 <ImageView
                     style="@style/Home.NavIcon"
                     android:src="@drawable/ic_nav_profiles" />
-
-                <TextView
-                    style="@style/Home.NavLabel"
-                    android:text="@string/home_nav_profiles" />
             </LinearLayout>
 
             <!-- Versions -->
             <LinearLayout
                 android:id="@+id/nav_versions"
-                style="@style/Home.NavItem">
+                style="@style/Home.NavItem"
+                android:contentDescription="@string/home_nav_versions"
+                android:tooltipText="@string/home_nav_versions">
 
                 <ImageView
                     style="@style/Home.NavIcon"
                     android:src="@drawable/ic_nav_versions" />
-
-                <TextView
-                    style="@style/Home.NavLabel"
-                    android:text="@string/home_nav_versions" />
             </LinearLayout>
 
             <!-- Servers: visual only for now -->
             <LinearLayout
                 android:id="@+id/nav_servers"
                 style="@style/Home.NavItem"
-                android:alpha="0.45">
+                android:alpha="0.45"
+                android:contentDescription="@string/home_nav_servers"
+                android:tooltipText="@string/home_nav_servers">
 
                 <ImageView
                     style="@style/Home.NavIcon"
                     android:src="@drawable/ic_nav_servers" />
-
-                <TextView
-                    style="@style/Home.NavLabel"
-                    android:text="@string/home_nav_servers" />
             </LinearLayout>
 
             <View
@@ -138,29 +126,25 @@
             <!-- Directory -->
             <LinearLayout
                 android:id="@+id/open_directory_button"
-                style="@style/Home.NavItem">
+                style="@style/Home.NavItem"
+                android:contentDescription="@string/home_nav_directory"
+                android:tooltipText="@string/home_nav_directory">
 
                 <ImageView
                     style="@style/Home.NavIcon"
                     android:src="@drawable/ic_nav_directory" />
-
-                <TextView
-                    style="@style/Home.NavLabel"
-                    android:text="@string/home_nav_directory" />
             </LinearLayout>
 
             <!-- Logs -->
             <LinearLayout
                 android:id="@+id/nav_logs"
-                style="@style/Home.NavItem">
+                style="@style/Home.NavItem"
+                android:contentDescription="@string/home_nav_logs"
+                android:tooltipText="@string/home_nav_logs">
 
                 <ImageView
                     style="@style/Home.NavIcon"
                     android:src="@drawable/ic_nav_logs" />
-
-                <TextView
-                    style="@style/Home.NavLabel"
-                    android:text="@string/home_nav_logs" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

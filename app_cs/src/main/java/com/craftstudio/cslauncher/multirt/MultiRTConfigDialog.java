@@ -1,6 +1,7 @@
 package com.craftstudio.cslauncher.multirt;
 
 import com.craftstudio.cslauncher.utils.AnimationManager;
+import com.craftstudio.cslauncher.utils.CSAnimationEngine;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -50,6 +51,8 @@ public class MultiRTConfigDialog {
 
         // Custom button behavior without dismiss
         mDialog.setOnShowListener(dialog -> {
+            // Shared dialog content entrance from the animation engine
+            CSAnimationEngine.animateDialogContentView(mDialogView);
             Button button = ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_NEUTRAL);
             button.setOnClickListener(view -> {
                 boolean isEditing = !adapter.getIsEditing();

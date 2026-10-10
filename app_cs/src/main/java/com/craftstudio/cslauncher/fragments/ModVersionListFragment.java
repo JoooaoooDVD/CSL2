@@ -1,6 +1,7 @@
 package com.craftstudio.cslauncher.fragments;
 
 import com.craftstudio.cslauncher.utils.AnimationManager;
+import com.craftstudio.cslauncher.utils.CSAnimationEngine;
 import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -76,16 +77,17 @@ public abstract class ModVersionListFragment<T> extends Fragment implements Runn
                     mExpandableListView.setAdapter(createAdapter(versions, mInflater));
                     AnimationManager.applyListAnimation(mExpandableListView);
                 }else{
-                    mRetryView.setVisibility(View.VISIBLE);
+                    // Shared loading-state transitions from the animation engine
+                    CSAnimationEngine.showLoading(mRetryView);
                 }
-                mProgressBar.setVisibility(View.GONE);
+                CSAnimationEngine.hideLoading(mProgressBar);
             });
         }catch (IOException e) {
             Tools.runOnUiThread(()-> {
                 if (getContext() != null) {
                     Tools.showError(getContext(), e);
-                    mRetryView.setVisibility(View.VISIBLE);
-                    mProgressBar.setVisibility(View.GONE);
+                    CSAnimationEngine.showLoading(mRetryView);
+                    CSAnimationEngine.hideLoading(mProgressBar);
                 }
             });
         }
@@ -93,8 +95,8 @@ public abstract class ModVersionListFragment<T> extends Fragment implements Runn
 
     @Override
     public void onClick(View view) {
-        mRetryView.setVisibility(View.GONE);
-        mProgressBar.setVisibility(View.VISIBLE);
+        CSAnimationEngine.hideLoading(mRetryView);
+        CSAnimationEngine.showLoading(mProgressBar);
         new Thread(this).start();
     }
 

@@ -64,7 +64,12 @@ public class InstanceAdapter extends BaseAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         View v = convertView;
-        if (v == null) v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_version_profile_layout,parent,false);
+        if (v == null) {
+            v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_version_profile_layout, parent, false);
+            // First bind only: shared press feedback for dropdown rows (engine is
+            // idempotent and gated by the TYPE_BUTTONS preference)
+            com.craftstudio.cslauncher.utils.CSAnimationEngine.attachPressFeedback(v);
+        }
         setView(v, position, true);
         return v;
     }

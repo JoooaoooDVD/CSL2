@@ -11,7 +11,6 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateInterpolator;
-import android.view.animation.AnimationUtils;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
@@ -24,10 +23,6 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
-import androidx.transition.Fade;
-import androidx.transition.Slide;
-import androidx.transition.Transition;
-import androidx.transition.TransitionSet;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -73,9 +68,6 @@ public final class AnimationManager {
     private static final Set<String> DEFAULT_TYPES = Collections.unmodifiableSet(
             new HashSet<>(Arrays.asList(TYPE_SCREENS, TYPE_DIALOGS, TYPE_BUTTONS, TYPE_CONTENT)));
 
-    /** Hard cap for staggered enter animations, keeps frame times stable on weak GPUs */
-    private static final int MAX_STAGGERED_CHILDREN = 14;
-
     private AnimationManager() {}
 
     /** @return whether animations of this type should be played */
@@ -108,14 +100,14 @@ public final class AnimationManager {
         if (isEnabled(activity, TYPE_BUTTONS)) {
             theme.applyStyle(R.style.ThemeOverlay_CS_Animations_Buttons, true);
         }
-        activity.getWindow().setWindowAnimations(isEnabled(activity, TYPE_SCREENS)
-                ? R.style.Animation_CS_Activity
-                : R.style.Animation_CS_ActivityNone);
+        // Window transitions live in the shared engine so every screen uses one spec
+        CSAnimationEngine.applyWindowAnimations(activity);
     }
 
     /**
      * Lightweight horizontal slide + fade fragment transitions, tuned for the
      * two-pane landscape launcher: screens travel along the X axis like pages.
+     * The transition specs are owned by {@link CSAnimationEngine}.
      */
     public static void installFragmentTransitions(@NonNull FragmentActivity activity) {
         activity.getSupportFragmentManager().registerFragmentLifecycleCallbacks(
@@ -125,79 +117,31 @@ public final class AnimationManager {
                                                      @Nullable android.os.Bundle savedInstanceState) {
                         if (f instanceof DialogFragment) return;
                         if (!isEnabled(activity, TYPE_SCREENS)) return;
-                        f.setEnterTransition(makeForwardEnter());
-                        f.setExitTransition(makeForwardExit());
-                        f.setReenterTransition(makeBackEnter());
-                        f.setReturnTransition(makeBackExit());
+                        f.setEnterTransition(CSAnimationEngine.makeFragmentForwardEnter());
+                        f.setExitTransition(CSAnimationEngine.makeFragmentForwardExit());
+                        f.setReenterTransition(CSAnimationEngine.makeFragmentBackEnter());
+                        f.setReturnTransition(CSAnimationEngine.makeFragmentBackExit());
                     }
                 }, true);
-    }
-
-    /** Forward: the new screen slides in from the right edge with a fade */
-    private static Transition makeForwardEnter() {
-        TransitionSet set = new TransitionSet();
-        set.setOrdering(TransitionSet.ORDERING_TOGETHER);
-        Slide slide = new Slide(Gravity.END);
-        slide.setDuration(190);
-        Fade fade = new Fade(Fade.IN);
-        fade.setDuration(150);
-        set.addTransition(slide);
-        set.addTransition(fade);
-        return set;
-    }
-
-    /** Forward: the old screen just fades out fast - no lag, no wasted frames */
-    private static Transition makeForwardExit() {
-        Fade fade = new Fade(Fade.OUT);
-        fade.setDuration(130);
-        return fade;
-    }
-
-    /** Back: the screen underneath reappears with a quick fade */
-    private static Transition makeBackEnter() {
-        Fade fade = new Fade(Fade.IN);
-        fade.setDuration(160);
-        return fade;
-    }
-
-    /** Back: the top screen slides back out to the right edge */
-    private static Transition makeBackExit() {
-        TransitionSet set = new TransitionSet();
-        set.setOrdering(TransitionSet.ORDERING_TOGETHER);
-        Slide slide = new Slide(Gravity.END);
-        slide.setDuration(170);
-        Fade fade = new Fade(Fade.OUT);
-        fade.setDuration(140);
-        set.addTransition(slide);
-        set.addTransition(fade);
-        return set;
     }
 
     /**
      * Makes the items of a list enter one after the other, exactly once.
      *
-     * IMPORTANT: nothing must ever clear the controller afterwards. Not even
-     * deferred with post(): ViewGroup.dispatchDraw reads the internal
-     * mLayoutAnimationController field more than once per frame, and an external
-     * setLayoutAnimation(null) - listener-driven or posted - can land between
-     * those reads and NPE inside the framework (seen on-device as
-     * "LayoutAnimationController.isDone() on a null object reference").
-     * The framework itself clears the controller when the stagger is done, so
-     * applying it once here already gives a single, self-cleaning enter pass;
-     * recycling or data changes can never re-trigger it.
+     * Delegates to {@link CSAnimationEngine#applyListEntrance(ViewGroup)} - the single
+     * sanctioned writer of layout animations in the launcher. That method documents the
+     * crash this replaced: ViewGroup.dispatchDraw() reads mLayoutAnimationController
+     * unguarded when its animation flags are dirty, so any external
+     * setLayoutAnimation(null) - deferred, listener-driven or cross-thread - could land
+     * between the framework's reads and NPE inside the draw pass
+     * ("LayoutAnimationController.isDone() on a null object reference", seen on both
+     * ListView and RecyclerView draw paths). The engine only ever writes a non-null
+     * controller, always on the UI thread, and never clears one - the framework settles
+     * the flags itself, so no stale or invalid animation state can survive navigation,
+     * recycling or data changes.
      */
     public static void applyListAnimation(@Nullable ViewGroup list) {
-        if (list == null) return;
-        Context context = list.getContext();
-        if (!isEnabled(context, TYPE_CONTENT)) {
-            // Safe here: called during view setup, no layout animation is in flight
-            list.setLayoutAnimation(null);
-            return;
-        }
-        android.view.animation.LayoutAnimationController controller =
-                AnimationUtils.loadLayoutAnimation(context, R.anim.cs_layout_list);
-        if (controller == null) return;
-        list.setLayoutAnimation(controller);
+        CSAnimationEngine.applyListEntrance(list);
     }
 
     /**
@@ -206,24 +150,7 @@ public final class AnimationManager {
      * screen of buttons still animates smoothly on low-end devices.
      */
     public static void staggerIn(@Nullable ViewGroup parent) {
-        if (parent == null || !isEnabled(parent.getContext(), TYPE_CONTENT)) return;
-        float offset = 12 * parent.getResources().getDisplayMetrics().density;
-        int shown = 0;
-        for (int i = 0; i < parent.getChildCount(); i++) {
-            View child = parent.getChildAt(i);
-            if (child.getVisibility() != View.VISIBLE) continue;
-            child.animate().cancel();
-            child.setAlpha(0f);
-            child.setTranslationX(-offset);
-            child.animate()
-                    .alpha(1f)
-                    .translationX(0f)
-                    .setStartDelay(Math.min(shown, MAX_STAGGERED_CHILDREN) * 22L)
-                    .setDuration(180)
-                    .setInterpolator(new DecelerateInterpolator(1.4f))
-                    .start();
-            shown++;
-        }
+        CSAnimationEngine.staggerChildren(parent);
     }
 
     /**

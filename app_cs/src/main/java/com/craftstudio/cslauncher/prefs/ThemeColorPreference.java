@@ -19,6 +19,7 @@ import androidx.preference.PreferenceViewHolder;
 import com.google.android.material.color.utilities.Hct;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
+import com.craftstudio.cslauncher.utils.CSAnimationEngine;
 import com.craftstudio.cslauncher.utils.ThemeManager;
 
 import com.craftstudio.cslauncher.R;
@@ -157,6 +158,9 @@ public class ThemeColorPreference extends Preference {
                 .setNeutralButton(R.string.preference_theme_color_reset,
                         (d, w) -> save(ThemeManager.DEFAULT_CUSTOM_COLOR))
                 .show();
+        // Shared dialog content entrance from the animation engine: the theme picker
+        // animates like every other dialog in the launcher
+        CSAnimationEngine.animateDialogContentView(content);
     }
 
     private static void setRounded(View view, int color, float density) {

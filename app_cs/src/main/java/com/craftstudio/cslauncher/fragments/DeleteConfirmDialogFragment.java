@@ -14,6 +14,7 @@ import com.craftstudio.cslauncher.Tools;
 import com.craftstudio.cslauncher.instances.Instance;
 import com.craftstudio.cslauncher.instances.Instances;
 import com.craftstudio.cslauncher.instances.InstanceIconProvider;
+import com.craftstudio.cslauncher.utils.CSAnimationEngine;
 import java.io.IOException;
 
 
@@ -40,5 +41,15 @@ public class DeleteConfirmDialogFragment extends DialogFragment {
                 .setNegativeButton(R.string.global_no, null)
                 .create();
     }
+    @Override
+    public void onStart() {
+        super.onStart();
+        // Shared dialog content entrance (engine): layered under the themed window
+        // animation; null-safe while the dialog is being torn down
+        if (getDialog() != null && getDialog().getWindow() != null) {
+            CSAnimationEngine.animateDialogContentView(getDialog().getWindow().getDecorView());
+        }
+    }
+
     public static String TAG = "delete_dialog_confirm";
 }

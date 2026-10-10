@@ -1,6 +1,7 @@
 package com.craftstudio.cslauncher.utils.profiles;
 
 import com.craftstudio.cslauncher.utils.AnimationManager;
+import com.craftstudio.cslauncher.utils.CSAnimationEngine;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import static com.craftstudio.cslauncher.extra.ExtraCore.getValue;
 
@@ -29,6 +30,8 @@ public class VersionSelectorDialog {
         AnimationManager.applyListAnimation(expandableListView);
         builder.setView(expandableListView);
         AlertDialog dialog = builder.show();
+        // Shared dialog content entrance (engine), layered under the themed window animation
+        CSAnimationEngine.animateDialogContentView(expandableListView);
 
         expandableListView.setOnChildClickListener((parent, v1, groupPosition, childPosition, id) -> {
             String version = adapter.getChild(groupPosition, childPosition);

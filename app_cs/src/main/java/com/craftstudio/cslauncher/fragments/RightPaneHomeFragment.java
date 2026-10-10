@@ -32,6 +32,7 @@ import com.craftstudio.cslauncher.prefs.LauncherPreferences;
 import com.craftstudio.cslauncher.prefs.RamInputDialog;
 import com.craftstudio.cslauncher.prefs.screens.LauncherPreferenceJavaFragment;
 import com.craftstudio.cslauncher.prefs.screens.LauncherPreferenceVideoFragment;
+import com.craftstudio.cslauncher.utils.CSAnimationEngine;
 import com.craftstudio.cslauncher.utils.LauncherBackground;
 
 import java.io.File;
@@ -209,22 +210,29 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         View root = getView();
         if (root == null) return;
 
-        ((TextView) root.findViewById(R.id.home_qs_ram_value))
-                .setText(LauncherPreferences.PREF_RAM_ALLOCATION + " MB");
-        ((TextView) root.findViewById(R.id.home_qs_java_value))
-                .setText(javaRuntimeLabel());
-        ((TextView) root.findViewById(R.id.home_qs_renderer_value))
-                .setText(rendererLabel(LauncherPreferences.PREF_RENDERER));
+        // Shared engine: values update instantly and give a brief fade pulse only
+        // when they actually changed (never delays the information itself)
+        CSAnimationEngine.animateValueRefresh(
+                (TextView) root.findViewById(R.id.home_qs_ram_value),
+                LauncherPreferences.PREF_RAM_ALLOCATION + " MB");
+        CSAnimationEngine.animateValueRefresh(
+                (TextView) root.findViewById(R.id.home_qs_java_value),
+                javaRuntimeLabel());
+        CSAnimationEngine.animateValueRefresh(
+                (TextView) root.findViewById(R.id.home_qs_renderer_value),
+                rendererLabel(LauncherPreferences.PREF_RENDERER));
 
         TextView controls = root.findViewById(R.id.home_qs_controls_value);
         String ctrlPath = LauncherPreferences.PREF_DEFAULTCTRL_PATH;
+        String controlsLabel;
         if (ctrlPath == null || ctrlPath.equals(Tools.CTRLDEF_FILE)) {
-            controls.setText(R.string.home_qs_default);
+            controlsLabel = getString(R.string.home_qs_default);
         } else {
             String name = new File(ctrlPath).getName();
             int dot = name.lastIndexOf('.');
-            controls.setText(dot > 0 ? name.substring(0, dot) : name);
+            controlsLabel = dot > 0 ? name.substring(0, dot) : name;
         }
+        CSAnimationEngine.animateValueRefresh(controls, controlsLabel);
     }
 
     private String javaRuntimeLabel() {

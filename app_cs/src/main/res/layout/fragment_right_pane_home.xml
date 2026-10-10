@@ -6,6 +6,7 @@
     fits the available height on phones - nothing is clipped, no scrolling.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -180,7 +181,10 @@
 
                 <!--
                     mcVersionSpinner enforces a single line + end ellipsis itself
-                    (see mcVersionSpinner#init); the text is the plain profile name.
+                    (see mcVersionSpinner#init); the text is the plain profile name and the
+                    compound start icon is the profile's real icon (InstanceIconProvider),
+                    rendered at a fixed _30sdp box so custom icon.webp files cannot blow up
+                    the card. The version/loader subtitle lives on the banner pill instead.
                 -->
                 <com.kdt.mcgui.mcVersionSpinner
                     android:id="@+id/mc_version_spinner"
@@ -194,7 +198,10 @@
                     android:maxLines="1"
                     android:singleLine="true"
                     android:textColor="?attr/colorOnSurface"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    app:drawableStartSize="@dimen/_30sdp"
+                    app:drawableStartIntegerScaling="true"
+                    tools:ignore="RtlSymmetry" />
             </LinearLayout>
 
             <LinearLayout

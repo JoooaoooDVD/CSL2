@@ -53,6 +53,11 @@ public class MainMenuFragment extends Fragment {
     /* Intercepts back when the right pane shows something above the home screen */
     private OnBackPressedCallback mRightPaneBackCallback;
 
+    /** Every icon-only sidebar button; exactly one may show the selected background */
+    private static final int[] NAV_BUTTON_IDS = {
+            R.id.nav_home, R.id.mod_store_button, R.id.open_files_button, R.id.nav_profiles,
+            R.id.nav_versions, R.id.nav_servers, R.id.open_directory_button, R.id.nav_logs};
+
     private final ActivityResultLauncher<Object> mModInstallerLauncher =
             registerForActivityResult(new OpenDocumentWithExtension("jar"), (data)->{
                 if(data != null) Tools.launchModInstaller(requireContext(), data);
@@ -61,6 +66,7 @@ public class MainMenuFragment extends Fragment {
     private final FragmentManager.OnBackStackChangedListener mBackStackListener = () -> {
         mRightPaneBackCallback.setEnabled(isRightPaneActive());
         updateLeftPaneVisibility();
+        syncActiveNav();
     };
 
     public MainMenuFragment(){
@@ -318,20 +324,75 @@ public class MainMenuFragment extends Fragment {
 
         AnimationManager.staggerIn(view.findViewById(R.id.left_sidebar_content));
 
-        // Sidebar navigation
-        view.findViewById(R.id.nav_home).setOnClickListener(v -> clearRightPane());
-        view.findViewById(R.id.mod_store_button).setOnClickListener(v -> showContentPicker(false));
-        view.findViewById(R.id.open_files_button).setOnClickListener(v -> showContentPicker(true));
-        view.findViewById(R.id.nav_profiles).setOnClickListener(v ->
-                openPane(InstanceEditorFragment.class, InstanceEditorFragment.TAG, null));
-        view.findViewById(R.id.nav_versions).setOnClickListener(v ->
-                openPane(ProfileTypeSelectFragment.class, ProfileTypeSelectFragment.TAG, null));
-        // Servers: shown for visual parity, no workflow yet
+        // Sidebar navigation. The rows are icon-only, so the selected destination is
+        // shown by the active background + selected state (see setActiveNav).
+        view.findViewById(R.id.nav_home).setOnClickListener(v -> {
+            clearRightPane();
+            setActiveNav(R.id.nav_home);
+        });
+        view.findViewById(R.id.mod_store_button).setOnClickListener(v -> {
+            showContentPicker(false);
+            setActiveNav(R.id.mod_store_button);
+        });
+        view.findViewById(R.id.open_files_button).setOnClickListener(v -> {
+            showContentPicker(true);
+            setActiveNav(R.id.open_files_button);
+        });
+        view.findViewById(R.id.nav_profiles).setOnClickListener(v -> {
+            openPane(InstanceEditorFragment.class, InstanceEditorFragment.TAG, null);
+            setActiveNav(R.id.nav_profiles);
+        });
+        view.findViewById(R.id.nav_versions).setOnClickListener(v -> {
+            openPane(ProfileTypeSelectFragment.class, ProfileTypeSelectFragment.TAG, null);
+            setActiveNav(R.id.nav_versions);
+        });
+        // Servers: shown for visual parity, no workflow yet - no destination to select
         view.findViewById(R.id.nav_servers).setOnClickListener(v ->
                 Toast.makeText(requireContext(), R.string.home_servers_soon, Toast.LENGTH_SHORT).show());
+        // Directory opens the external file manager - the pane does not navigate
         view.findViewById(R.id.open_directory_button).setOnClickListener(v -> openGameDirectory(v.getContext()));
-        view.findViewById(R.id.nav_logs).setOnClickListener(v ->
-                openPane(LogsFragment.class, LogsFragment.TAG, null));
+        view.findViewById(R.id.nav_logs).setOnClickListener(v -> {
+            openPane(LogsFragment.class, LogsFragment.TAG, null);
+            setActiveNav(R.id.nav_logs);
+        });
+        // Reflect the real destination (restored stack after rotation, or plain home)
+        syncActiveNav();
+    }
+
+    /**
+     * Marks one sidebar button as selected. With icon-only rows the background is the
+     * selection indicator, so the active row keeps the outlined
+     * {@code bg_nav_item_active} tile while every other row falls back to
+     * {@code bg_nav_item}; the selected state also feeds the drawable's state list.
+     * Pass {@link android.view.View#NO_ID} to clear the selection.
+     */
+    private void setActiveNav(int navId) {
+        View root = getView();
+        if (root == null) return;
+        for (int id : NAV_BUTTON_IDS) {
+            View button = root.findViewById(id);
+            if (button == null) continue;
+            boolean active = id == navId;
+            button.setSelected(active);
+            button.setBackgroundResource(active
+                    ? R.drawable.bg_nav_item_active
+                    : R.drawable.bg_nav_item);
+        }
+    }
+
+    /** Follows the right-pane back stack: home when empty, the opened screen otherwise */
+    private void syncActiveNav() {
+        FragmentManager manager = getChildFragmentManager();
+        int count = manager.getBackStackEntryCount();
+        if (count == 0) {
+            setActiveNav(R.id.nav_home);
+            return;
+        }
+        String top = manager.getBackStackEntryAt(count - 1).getName();
+        if (InstanceEditorFragment.TAG.equals(top)) setActiveNav(R.id.nav_profiles);
+        else if (ProfileTypeSelectFragment.TAG.equals(top)) setActiveNav(R.id.nav_versions);
+        else if (LogsFragment.TAG.equals(top)) setActiveNav(R.id.nav_logs);
+        else setActiveNav(android.view.View.NO_ID);
     }
 
     @Override

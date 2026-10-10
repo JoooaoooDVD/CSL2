@@ -19,6 +19,7 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import com.craftstudio.cslauncher.R;
 import com.craftstudio.cslauncher.Tools;
+import com.craftstudio.cslauncher.utils.CSAnimationEngine;
 
 /**
  * Dialog that lets the user type the amount of RAM to allocate, instead of dragging the slider.
@@ -65,6 +66,8 @@ public final class RamInputDialog {
         };
         dialog.setOnShowListener(d -> {
             refresher.run();
+            // Shared dialog content entrance from the animation engine
+            CSAnimationEngine.animateDialogContentView(view);
 
             View okButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
             Runnable submit = () -> {
