@@ -135,8 +135,34 @@ public class MainMenuFragment extends Fragment {
      * The picker docks in the left pane and its default section loads in the right pane.
      */
     public void showContentPicker(boolean manage) {
+        if (!manage) {
+            // Browsing has its own Mods / Resource Packs / Shaders tabs in the library header
+            openLibrary(ContentType.MOD);
+            return;
+        }
         if (isTwoPane()) openContentPickerPane(manage);
         else showContentPickerDialog(manage);
+    }
+
+    /**
+     * Opens the content library. If it is already somewhere in the right pane (e.g. under an
+     * install page), it is brought back instead of stacking a second copy.
+     */
+    public void openLibrary(@NonNull ContentType contentType) {
+        if (isTwoPane()) {
+            FragmentManager manager = getChildFragmentManager();
+            for (int i = manager.getBackStackEntryCount() - 1; i >= 0; i--) {
+                if (ModsSearchFragment.TAG.equals(manager.getBackStackEntryAt(i).getName())) {
+                    if (i != manager.getBackStackEntryCount() - 1) {
+                        manager.popBackStack(ModsSearchFragment.TAG, 0);
+                    }
+                    return;
+                }
+            }
+        }
+        Bundle args = new Bundle();
+        populateModStoreArgs(args, contentType);
+        openPane(ModsSearchFragment.class, ModsSearchFragment.TAG, args);
     }
 
     /**
@@ -253,9 +279,7 @@ public class MainMenuFragment extends Fragment {
             args.putString(ManageModsFragment.ARG_CONTENT_TYPE, contentType.name());
             openPane(ManageModsFragment.class, ManageModsFragment.TAG + ":" + contentType.name(), args);
         } else {
-            Bundle args = new Bundle();
-            populateModStoreArgs(args, contentType);
-            openPane(ModsSearchFragment.class, ModsSearchFragment.TAG + ":" + contentType.name(), args);
+            openLibrary(contentType);
         }
     }
 
@@ -405,6 +429,8 @@ public class MainMenuFragment extends Fragment {
         if (InstanceEditorFragment.TAG.equals(top)) setActiveNav(R.id.nav_profiles);
         else if (ProfileTypeSelectFragment.TAG.equals(top)) setActiveNav(R.id.nav_versions);
         else if (LogsFragment.TAG.equals(top)) setActiveNav(R.id.nav_logs);
+        else if (top != null && (top.startsWith(ModsSearchFragment.TAG) || ModInstallFragment.TAG.equals(top)))
+            setActiveNav(R.id.mod_store_button);
         else setActiveNav(android.view.View.NO_ID);
     }
 

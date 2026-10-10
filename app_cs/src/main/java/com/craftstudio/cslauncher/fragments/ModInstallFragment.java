@@ -1,0 +1,1235 @@
+package com.craftstudio.cslauncher.fragments;
+
+import android.content.Context;
+import android.content.res.ColorStateList;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
+import android.os.Bundle;
+import android.text.TextUtils;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
+import androidx.core.graphics.drawable.RoundedBitmapDrawable;
+import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
+import androidx.core.widget.TextViewCompat;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.craftstudio.cslauncher.R;
+import com.craftstudio.cslauncher.Tools;
+import com.craftstudio.cslauncher.instances.Instance;
+import com.craftstudio.cslauncher.instances.InstanceIconProvider;
+import com.craftstudio.cslauncher.instances.Instances;
+import com.craftstudio.cslauncher.modding.modpacks.ContentInstaller;
+import com.craftstudio.cslauncher.modding.modpacks.InstalledContentIndex;
+import com.craftstudio.cslauncher.modding.modpacks.LibraryCardAdapter;
+import com.craftstudio.cslauncher.modding.modpacks.LibraryCatalog;
+import com.craftstudio.cslauncher.modding.modpacks.api.CommonApi;
+import com.craftstudio.cslauncher.modding.modpacks.imagecache.ImageReceiver;
+import com.craftstudio.cslauncher.modding.modpacks.imagecache.ModIconCache;
+import com.craftstudio.cslauncher.modding.modpacks.models.Constants;
+import com.craftstudio.cslauncher.modding.modpacks.models.ContentType;
+import com.craftstudio.cslauncher.modding.modpacks.models.ModDetail;
+import com.craftstudio.cslauncher.modding.modpacks.models.ModItem;
+import com.craftstudio.cslauncher.prefs.LauncherPreferences;
+import com.craftstudio.cslauncher.progresskeeper.ProgressKeeper;
+import com.craftstudio.cslauncher.utils.ThemeColors;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.checkbox.MaterialCheckBox;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.materialswitch.MaterialSwitch;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+/**
+ * Install page of the content library. Detects the Minecraft version and loader of the
+ * selected profile, recommends the best matching version of the project, lets the user pick
+ * another one with "Change version", and installs, updates or uninstalls it.
+ */
+public class ModInstallFragment extends Fragment {
+
+    public static final String TAG = "ModInstallFragment";
+    /** ModItem serialized with Tools.GLOBAL_GSON */
+    public static final String ARG_ITEM = "library_item";
+    /** ContentType name() */
+    public static final String ARG_CONTENT_TYPE = "content_type";
+    /** Name of the library section, shown in the breadcrumb */
+    public static final String ARG_LIBRARY_TITLE = "library_title";
+
+    private static final ExecutorService sExecutor = Executors.newFixedThreadPool(3);
+    private static final float NARROW_DP = 620f;
+
+    private ModItem mItem;
+    private ContentType mType = ContentType.MOD;
+    private String mLibraryTitle;
+    private String mCurseforgeKey;
+    private CommonApi mApi;
+    private ModIconCache mIconCache;
+
+    @Nullable private Instance mInstance;
+    @Nullable private String mProfileVersion;
+    private String mProfileLoader = "";
+
+    // Loaded state, kept across view re-creation
+    private boolean mLoading;
+    private boolean mLoadFailed;
+    @Nullable private ModDetail mDetail;
+    @Nullable private InstalledContentIndex mIndex;
+    @Nullable private InstalledContentIndex.Entry mInstalled;
+    private int mInstalledIndex = -1;
+    private int mRecommendedIndex = -1;
+    private int mSelectedIndex = -1;
+    private boolean mUserPicked;
+    private boolean mInstalling;
+    private int mLoadGeneration;
+    private final Map<String, String[]> mDependencyInfo = new HashMap<>();
+    private int mDependencyGeneration;
+
+    // Views
+    private TextView mVersionLabel, mVersionBadge, mVersionName, mVersionMeta, mVersionExtra, mVersionWarning, mStatus;
+    private View mVersionLoading;
+    private MaterialButton mChangeVersion, mUseRecommended, mPrimary, mUninstall;
+    private View mProgress;
+    private LinearLayout mDepsList;
+    private TextView mDepsEmpty;
+    private final List<DependencyRow> mDependencyRows = new ArrayList<>();
+
+    /** One dependency of the selected version */
+    private static final class DependencyRow {
+        final String projectId;
+        final boolean required;
+        boolean installed;
+        MaterialCheckBox check;
+        ImageView icon;
+        TextView name;
+        TextView status;
+        ImageReceiver receiver;
+
+        DependencyRow(String projectId, boolean required) {
+            this.projectId = projectId;
+            this.required = required;
+        }
+    }
+
+    public ModInstallFragment() {
+        super(R.layout.fragment_mod_install);
+    }
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        if (mApi == null) {
+            mCurseforgeKey = LauncherPreferences.PREF_DISABLE_CURSEFORGE_API
+                    ? null : LauncherPreferences.resolveCurseforgeApiKey(context);
+            mApi = new CommonApi(mCurseforgeKey != null ? mCurseforgeKey : "", mCurseforgeKey == null);
+        }
+        if (mIconCache == null) mIconCache = new ModIconCache();
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        if (mItem == null && !readArguments()) {
+            Tools.removeCurrentFragment(requireActivity());
+            return;
+        }
+
+        mVersionLabel = view.findViewById(R.id.install_version_label);
+        mVersionBadge = view.findViewById(R.id.install_version_badge);
+        mVersionLoading = view.findViewById(R.id.install_version_loading);
+        mVersionName = view.findViewById(R.id.install_version_name);
+        mVersionMeta = view.findViewById(R.id.install_version_meta);
+        mVersionExtra = view.findViewById(R.id.install_version_extra);
+        mVersionWarning = view.findViewById(R.id.install_version_warning);
+        mChangeVersion = view.findViewById(R.id.install_change_version);
+        mUseRecommended = view.findViewById(R.id.install_use_recommended);
+        mPrimary = view.findViewById(R.id.install_primary);
+        mProgress = view.findViewById(R.id.install_progress);
+        mStatus = view.findViewById(R.id.install_status);
+        mUninstall = view.findViewById(R.id.install_uninstall);
+        mDepsList = view.findViewById(R.id.install_deps_list);
+        mDepsEmpty = view.findViewById(R.id.install_deps_empty);
+
+        view.findViewById(R.id.install_back).setOnClickListener(v -> Tools.removeCurrentFragment(requireActivity()));
+        bindProjectInfo(view);
+        bindProfile(view);
+        view.post(() -> adaptToWidth(view));
+
+        mChangeVersion.setOnClickListener(v -> showVersionPicker());
+        mUseRecommended.setOnClickListener(v -> {
+            if (mRecommendedIndex < 0) return;
+            mSelectedIndex = mRecommendedIndex;
+            mUserPicked = false;
+            renderVersion();
+            renderDependencies();
+            renderActions();
+        });
+        mPrimary.setOnClickListener(v -> onPrimaryClicked());
+        mUninstall.setOnClickListener(v -> confirmUninstall());
+
+        if (mDetail != null) {
+            renderVersion();
+            renderDependencies();
+            renderActions();
+        } else if (mLoadFailed) {
+            renderLoadFailed();
+        } else {
+            renderLoading();
+            if (!mLoading) load();
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        for (DependencyRow row : mDependencyRows) {
+            if (row.receiver != null) mIconCache.cancelImage(row.receiver);
+        }
+        mDependencyRows.clear();
+        mVersionLabel = mVersionBadge = mVersionName = mVersionMeta = mVersionExtra = mVersionWarning = mStatus = null;
+        mVersionLoading = mProgress = null;
+        mChangeVersion = mUseRecommended = mPrimary = mUninstall = null;
+        mDepsList = null;
+        mDepsEmpty = null;
+    }
+
+    private boolean readArguments() {
+        Bundle args = getArguments();
+        if (args == null) return false;
+        String json = args.getString(ARG_ITEM, null);
+        if (json == null) return false;
+        try {
+            mItem = Tools.GLOBAL_GSON.fromJson(json, ModItem.class);
+        } catch (Exception e) {
+            mItem = null;
+        }
+        if (mItem == null || mItem.id == null) return false;
+        String type = args.getString(ARG_CONTENT_TYPE, null);
+        if (type != null) {
+            try {
+                mType = ContentType.valueOf(type);
+            } catch (IllegalArgumentException ignored) {}
+        }
+        mLibraryTitle = args.getString(ARG_LIBRARY_TITLE, null);
+        if (mLibraryTitle == null) mLibraryTitle = getString(R.string.lib_tab_mods);
+
+        mInstance = Instances.loadSelectedInstance();
+        String key = Instances.getSelectedInstanceKey();
+        if (mInstance != null && key != null && !key.isEmpty()) {
+            InstanceVersionResolver.Info info = InstanceVersionResolver.resolve(key);
+            mProfileVersion = info.mcVersion;
+            mProfileLoader = info.loader == null ? "" : info.loader;
+        }
+        return true;
+    }
+
+    /** Loader used for matching versions: only mods depend on the profile loader */
+    private String typeLoader() {
+        return mType == ContentType.MOD ? mProfileLoader : "";
+    }
+
+    // ─── Static parts ────────────────────────────────────────────────────────
+
+    private void bindProjectInfo(View view) {
+        Context context = view.getContext();
+        TextView breadcrumb = view.findViewById(R.id.install_breadcrumb);
+        breadcrumb.setText(getString(R.string.lib_breadcrumb, mLibraryTitle, mItem.title));
+        TextView source = view.findViewById(R.id.install_source);
+        source.setText(mItem.apiSource == Constants.SOURCE_CURSEFORGE ? "CurseForge" : "Modrinth");
+        styleBadge(source, BADGE_NEUTRAL);
+
+        ((TextView) view.findViewById(R.id.install_title)).setText(mItem.title);
+        TextView author = view.findViewById(R.id.install_author);
+        if (TextUtils.isEmpty(mItem.author)) {
+            author.setVisibility(View.GONE);
+        } else {
+            author.setText(getString(R.string.lib_by_author, mItem.author));
+        }
+        ((TextView) view.findViewById(R.id.install_description)).setText(mItem.description);
+
+        LinearLayout tags = view.findViewById(R.id.install_tags);
+        tags.removeAllViews();
+        String category = LibraryCatalog.primaryCategory(mType, mItem, null);
+        if (category != null) {
+            addTag(tags, LibraryCatalog.labelFor(mType, category), LibraryCatalog.tintFor(mType, category));
+        }
+        String loader = LibraryCatalog.displayLoader(mType, mItem, typeLoader());
+        if (loader != null) addTag(tags, LibraryCatalog.loaderLabel(loader), LibraryCatalog.TINT_NEUTRAL);
+        String version = LibraryCatalog.versionPill(mItem.gameVersions, mProfileVersion);
+        if (version != null) addTag(tags, version, LibraryCatalog.TINT_NEUTRAL);
+        tags.setVisibility(tags.getChildCount() > 0 ? View.VISIBLE : View.GONE);
+
+        TextView downloads = view.findViewById(R.id.install_stat_downloads);
+        TextView follows = view.findViewById(R.id.install_stat_follows);
+        TextView updated = view.findViewById(R.id.install_stat_updated);
+        bindStat(downloads, mItem.downloads > 0
+                ? getString(R.string.lib_stat_downloads, LibraryCatalog.compactNumber(mItem.downloads)) : null);
+        bindStat(follows, mItem.follows > 0
+                ? getString(R.string.lib_stat_follows, LibraryCatalog.compactNumber(mItem.follows)) : null);
+        String relative = LibraryCatalog.relativeDate(mItem.dateModified);
+        bindStat(updated, TextUtils.isEmpty(relative) ? null : getString(R.string.lib_stat_updated, relative));
+        if (downloads.getVisibility() == View.GONE && follows.getVisibility() == View.GONE
+                && updated.getVisibility() == View.GONE) {
+            view.findViewById(R.id.install_stats).setVisibility(View.GONE);
+        }
+
+        ImageView icon = view.findViewById(R.id.install_icon);
+        icon.setImageResource(iconPlaceholder());
+        float radius = 14 * getResources().getDisplayMetrics().density;
+        mIconCache.getImage(new ImageReceiver() {
+            @Override
+            public void onImageAvailable(Bitmap image) {
+                if (getView() == null || image == null) return;
+                RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getResources(), image);
+                drawable.setCornerRadius(radius);
+                icon.setImageDrawable(drawable);
+            }
+        }, mItem.getIconCacheTag(), mItem.imageUrl);
+    }
+
+    private int iconPlaceholder() {
+        switch (mType) {
+            case RESOURCE_PACK: return R.drawable.ic_lib_image;
+            case SHADER_PACK: return R.drawable.ic_lib_sun;
+            default: return R.drawable.ic_lib_cube;
+        }
+    }
+
+    private void addTag(LinearLayout parent, String text, int tint) {
+        if (TextUtils.isEmpty(text)) return;
+        Context context = parent.getContext();
+        float density = getResources().getDisplayMetrics().density;
+        TextView tag = new TextView(context, null, 0, R.style.Library_Tag);
+        tag.setText(text);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, Math.round(26 * density));
+        params.setMarginEnd(Math.round(6 * density));
+        tag.setLayoutParams(params);
+        LibraryCardAdapter.applyTint(context, tag, tint);
+        parent.addView(tag);
+    }
+
+    private void bindStat(TextView stat, @Nullable String text) {
+        if (text == null) {
+            stat.setVisibility(View.GONE);
+            return;
+        }
+        stat.setText(text);
+        int color = ThemeColors.get(stat.getContext(), com.google.android.material.R.attr.colorOnSurfaceVariant);
+        Drawable[] drawables = stat.getCompoundDrawablesRelative();
+        if (drawables[0] != null) {
+            int size = Math.round(16 * getResources().getDisplayMetrics().density);
+            Drawable start = drawables[0].mutate();
+            start.setBounds(0, 0, size, size);
+            stat.setCompoundDrawablesRelative(start, null, null, null);
+        }
+        TextViewCompat.setCompoundDrawableTintList(stat, ColorStateList.valueOf(color));
+    }
+
+    private void bindProfile(View view) {
+        ImageView icon = view.findViewById(R.id.install_profile_icon);
+        TextView name = view.findViewById(R.id.install_profile_name);
+        TextView version = view.findViewById(R.id.install_profile_version);
+        View autoBadge = view.findViewById(R.id.install_auto_badge);
+        if (mInstance == null) {
+            name.setText(R.string.lib_no_profile);
+            version.setText(R.string.lib_profile_any_version);
+            autoBadge.setVisibility(View.GONE);
+            icon.setImageResource(R.drawable.ic_lib_cube);
+            return;
+        }
+        name.setText(TextUtils.isEmpty(mInstance.name) ? getString(R.string.lib_no_profile) : mInstance.name);
+        version.setText(profileLabel());
+        autoBadge.setVisibility(mProfileVersion != null ? View.VISIBLE : View.GONE);
+        if (autoBadge instanceof TextView) styleBadge((TextView) autoBadge, BADGE_GREEN);
+        try {
+            icon.setImageDrawable(InstanceIconProvider.fetchIcon(getResources(), mInstance));
+        } catch (Exception e) {
+            icon.setImageResource(R.drawable.ic_lib_cube);
+        }
+    }
+
+    /** "Fabric 1.21.1", "1.20.4" or "Version not detected" */
+    private String profileLabel() {
+        if (mProfileVersion == null) return getString(R.string.lib_profile_any_version);
+        String loader = mType == ContentType.MOD ? LibraryCatalog.loaderLabel(mProfileLoader) : "";
+        return loader.isEmpty() ? mProfileVersion : loader + " " + mProfileVersion;
+    }
+
+    /** Stacks the two columns in narrow panes */
+    private void adaptToWidth(View root) {
+        if (getView() == null) return;
+        float density = getResources().getDisplayMetrics().density;
+        if (root.getWidth() <= 0 || root.getWidth() / density >= NARROW_DP) return;
+        LinearLayout columns = root.findViewById(R.id.install_columns);
+        columns.setOrientation(LinearLayout.VERTICAL);
+        View info = root.findViewById(R.id.install_info_panel);
+        View action = root.findViewById(R.id.install_action_panel);
+        // The install controls matter most, show them first
+        columns.removeView(action);
+        columns.addView(action, 0, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        info.setLayoutParams(withTopMargin(Math.round(14 * density)));
+    }
+
+    private static LinearLayout.LayoutParams withTopMargin(int margin) {
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        params.topMargin = margin;
+        return params;
+    }
+
+    // ─── Loading ─────────────────────────────────────────────────────────────
+
+    private void load() {
+        mLoading = true;
+        mLoadFailed = false;
+        final int generation = ++mLoadGeneration;
+        final ModItem item = mItem;
+        final ContentType type = mType;
+        final String version = mProfileVersion;
+        final String loader = mProfileLoader;
+        final String key = mCurseforgeKey;
+        final boolean hasProfile = mInstance != null;
+        sExecutor.execute(() -> {
+            ModDetail detail = null;
+            InstalledContentIndex index = null;
+            try {
+                detail = mApi.getModDetails(item);
+            } catch (Exception ignored) {}
+            if (hasProfile) {
+                try {
+                    index = InstalledContentIndex.build(type, version, loader, key);
+                } catch (Exception ignored) {}
+            }
+            final ModDetail loadedDetail = detail;
+            final InstalledContentIndex loadedIndex = index != null ? index : InstalledContentIndex.empty(type);
+            Tools.runOnUiThread(() -> {
+                if (generation != mLoadGeneration) return;
+                mLoading = false;
+                onLoaded(loadedDetail, loadedIndex);
+            });
+        });
+    }
+
+    private void onLoaded(@Nullable ModDetail detail, @NonNull InstalledContentIndex index) {
+        mIndex = index;
+        mInstalled = index.find(mItem);
+        if (detail == null || detail.versionNames == null || detail.versionNames.length == 0) {
+            mDetail = null;
+            mLoadFailed = true;
+            if (getView() != null) renderLoadFailed();
+            return;
+        }
+        mDetail = detail;
+        mInstalledIndex = -1;
+        if (mInstalled != null && mInstalled.versionId != null && detail.versionIds != null) {
+            for (int i = 0; i < detail.versionIds.length; i++) {
+                if (mInstalled.versionId.equals(detail.versionIds[i])) {
+                    mInstalledIndex = i;
+                    break;
+                }
+            }
+        }
+        mRecommendedIndex = findRecommended();
+        mSelectedIndex = mRecommendedIndex >= 0 ? mRecommendedIndex : newestIndex(false);
+        if (mInstalledIndex >= 0 && (mRecommendedIndex < 0 || !isNewer(mRecommendedIndex, mInstalledIndex))) {
+            // The installed version is already the best one (or newer), keep it selected
+            mSelectedIndex = mInstalledIndex;
+        }
+        mUserPicked = false;
+        if (getView() == null) return;
+        renderVersion();
+        renderDependencies();
+        renderActions();
+    }
+
+    // ─── Version logic ───────────────────────────────────────────────────────
+
+    private int versionCount() {
+        return mDetail == null || mDetail.versionNames == null ? 0 : mDetail.versionNames.length;
+    }
+
+    private boolean isRestrictedProject() {
+        if (mDetail == null) return mItem.isRestricted;
+        if (mItem.isRestricted) return true;
+        if (mDetail.versionUrls == null) return true;
+        for (String url : mDetail.versionUrls) {
+            if (url != null && !url.isEmpty()) return false;
+        }
+        return true;
+    }
+
+    private String[] gameVersionsOf(int index) {
+        if (mDetail.versionGameVersions != null && index < mDetail.versionGameVersions.length
+                && mDetail.versionGameVersions[index] != null) {
+            return mDetail.versionGameVersions[index];
+        }
+        if (mDetail.mcVersionNames != null && index < mDetail.mcVersionNames.length && mDetail.mcVersionNames[index] != null) {
+            return new String[]{mDetail.mcVersionNames[index]};
+        }
+        return new String[0];
+    }
+
+    @Nullable
+    private String[] loadersOf(int index) {
+        if (mDetail.versionLoaders != null && index < mDetail.versionLoaders.length) return mDetail.versionLoaders[index];
+        return null;
+    }
+
+    private boolean isReleaseVersion(int index) {
+        if (mDetail.versionTypes == null || index >= mDetail.versionTypes.length) return true;
+        String type = mDetail.versionTypes[index];
+        return type == null || type.isEmpty() || "release".equalsIgnoreCase(type);
+    }
+
+    private long dateOf(int index) {
+        if (mDetail.versionDates == null || index >= mDetail.versionDates.length) return 0;
+        return LibraryCatalog.parseIsoDate(mDetail.versionDates[index]);
+    }
+
+    /** Whether version a was published after version b; the APIs list newest first otherwise */
+    private boolean isNewer(int a, int b) {
+        long dateA = dateOf(a), dateB = dateOf(b);
+        if (dateA > 0 && dateB > 0 && dateA != dateB) return dateA > dateB;
+        return a < b;
+    }
+
+    private boolean isDownloadable(int index) {
+        return mDetail.versionUrls != null && index < mDetail.versionUrls.length
+                && mDetail.versionUrls[index] != null && !mDetail.versionUrls[index].isEmpty();
+    }
+
+    /** Whether a version runs on the selected profile */
+    private boolean isCompatible(int index) {
+        if (mProfileVersion == null) return true;
+        if (!LibraryCatalog.containsVersion(gameVersionsOf(index), mProfileVersion)) return false;
+        return mType != ContentType.MOD || LibraryCatalog.loaderMatches(loadersOf(index), mProfileLoader);
+    }
+
+    /** Version indices, newest first */
+    private List<Integer> orderedIndices() {
+        List<Integer> indices = new ArrayList<>();
+        for (int i = 0; i < versionCount(); i++) indices.add(i);
+        Collections.sort(indices, (a, b) -> {
+            if (a.equals(b)) return 0;
+            return isNewer(a, b) ? -1 : 1;
+        });
+        return indices;
+    }
+
+    /** First compatible release, else any compatible version, else -1 */
+    private int findRecommended() {
+        if (mProfileVersion == null) return newestIndex(true);
+        int fallback = -1;
+        for (int index : orderedIndices()) {
+            if (!isDownloadable(index) || !isCompatible(index)) continue;
+            if (isReleaseVersion(index)) return index;
+            if (fallback < 0) fallback = index;
+        }
+        return fallback;
+    }
+
+    /** Newest downloadable version, preferring releases when asked */
+    private int newestIndex(boolean releaseOnly) {
+        int fallback = -1;
+        for (int index : orderedIndices()) {
+            if (!isDownloadable(index)) continue;
+            if (!releaseOnly || isReleaseVersion(index)) return index;
+            if (fallback < 0) fallback = index;
+        }
+        if (fallback < 0 && versionCount() > 0) fallback = 0;
+        return fallback;
+    }
+
+    private boolean hasAnyCompatible() {
+        for (int i = 0; i < versionCount(); i++) {
+            if (isDownloadable(i) && isCompatible(i)) return true;
+        }
+        return false;
+    }
+
+    private String versionTitle(int index) {
+        String name = mDetail.versionNames[index];
+        String number = mDetail.versionNumbers != null && index < mDetail.versionNumbers.length
+                ? mDetail.versionNumbers[index] : null;
+        if (TextUtils.isEmpty(name)) return number == null ? "" : number;
+        return name;
+    }
+
+    /** "Fabric, Quilt · 1.21 – 1.21.1 · Beta" */
+    private String versionMeta(int index) {
+        List<String> parts = new ArrayList<>();
+        String[] loaders = loadersOf(index);
+        if (loaders != null && mType != ContentType.RESOURCE_PACK) {
+            List<String> labels = new ArrayList<>();
+            for (String loader : loaders) {
+                if (loader == null || "minecraft".equalsIgnoreCase(loader)) continue;
+                labels.add(LibraryCatalog.loaderLabel(loader));
+            }
+            if (!labels.isEmpty()) parts.add(TextUtils.join(", ", labels));
+        }
+        String range = LibraryCatalog.versionRange(gameVersionsOf(index));
+        if (range != null) parts.add(range);
+        if (!isReleaseVersion(index)) parts.add(LibraryCatalog.capitalize(mDetail.versionTypes[index]));
+        return TextUtils.join("  \u00b7  ", parts);
+    }
+
+    /** "sodium-fabric-0.6.0.jar · 1.2 MB · 3 days ago" */
+    private String versionExtra(int index) {
+        List<String> parts = new ArrayList<>();
+        if (mDetail.versionFileNames != null && index < mDetail.versionFileNames.length
+                && !TextUtils.isEmpty(mDetail.versionFileNames[index])) {
+            parts.add(mDetail.versionFileNames[index]);
+        }
+        if (mDetail.versionFileSizes != null && index < mDetail.versionFileSizes.length) {
+            String size = LibraryCatalog.fileSize(mDetail.versionFileSizes[index]);
+            if (!TextUtils.isEmpty(size)) parts.add(size);
+        }
+        if (mDetail.versionDates != null && index < mDetail.versionDates.length) {
+            String date = LibraryCatalog.relativeDate(mDetail.versionDates[index]);
+            if (!TextUtils.isEmpty(date)) parts.add(date);
+        }
+        return TextUtils.join("  \u00b7  ", parts);
+    }
+
+    // ─── Rendering ───────────────────────────────────────────────────────────
+
+    private static final int BADGE_GREEN = 0, BADGE_WARNING = 1, BADGE_NEUTRAL = 2;
+
+    private void styleBadge(TextView badge, int style) {
+        Context context = badge.getContext();
+        switch (style) {
+            case BADGE_WARNING:
+                badge.setBackgroundResource(R.drawable.bg_lib_badge_warning);
+                badge.setTextColor(ContextCompat.getColor(context, R.color.lib_warning));
+                break;
+            case BADGE_NEUTRAL:
+                badge.setBackgroundResource(R.drawable.bg_lib_badge_neutral);
+                badge.setTextColor(ThemeColors.get(context, com.google.android.material.R.attr.colorOnSurfaceVariant));
+                break;
+            default:
+                badge.setBackgroundResource(R.drawable.bg_lib_badge_green);
+                badge.setTextColor(ContextCompat.getColor(context, R.color.lib_badge_green_text));
+                break;
+        }
+    }
+
+    private void renderLoading() {
+        mVersionLoading.setVisibility(View.VISIBLE);
+        mVersionName.setVisibility(View.GONE);
+        mVersionMeta.setVisibility(View.GONE);
+        mVersionExtra.setVisibility(View.GONE);
+        mVersionWarning.setVisibility(View.GONE);
+        mVersionBadge.setVisibility(View.GONE);
+        mChangeVersion.setEnabled(false);
+        mUseRecommended.setVisibility(View.GONE);
+        mDepsEmpty.setVisibility(View.VISIBLE);
+        mDepsEmpty.setText(R.string.lib_dep_resolving);
+        styleInstallButton(R.string.lib_checking, R.drawable.ic_lib_download);
+        mPrimary.setEnabled(false);
+        mUninstall.setVisibility(View.GONE);
+    }
+
+    private void renderLoadFailed() {
+        mVersionLoading.setVisibility(View.GONE);
+        mVersionName.setVisibility(View.GONE);
+        mVersionMeta.setVisibility(View.GONE);
+        mVersionExtra.setVisibility(View.GONE);
+        mVersionBadge.setVisibility(View.GONE);
+        mVersionWarning.setVisibility(View.VISIBLE);
+        mVersionWarning.setText(R.string.lib_versions_failed);
+        mChangeVersion.setEnabled(false);
+        mUseRecommended.setVisibility(View.GONE);
+        mDepsEmpty.setVisibility(View.GONE);
+        mDepsList.removeAllViews();
+        styleInstallButton(R.string.lib_retry, R.drawable.ic_lib_update);
+        mPrimary.setEnabled(true);
+        mUninstall.setVisibility(mInstalled != null ? View.VISIBLE : View.GONE);
+    }
+
+    private void renderVersion() {
+        mVersionLoading.setVisibility(View.GONE);
+        boolean restricted = isRestrictedProject();
+        if (restricted || mSelectedIndex < 0) {
+            mVersionLabel.setText(R.string.lib_selected_version);
+            mVersionBadge.setVisibility(View.GONE);
+            mVersionName.setVisibility(View.VISIBLE);
+            mVersionName.setText(restricted ? getString(R.string.lib_open_curseforge) : mItem.title);
+            mVersionMeta.setVisibility(View.GONE);
+            mVersionExtra.setVisibility(View.GONE);
+            mVersionWarning.setVisibility(View.VISIBLE);
+            mVersionWarning.setText(restricted ? getString(R.string.lib_restricted) : getString(R.string.lib_versions_failed));
+            mChangeVersion.setEnabled(false);
+            mUseRecommended.setVisibility(View.GONE);
+            return;
+        }
+
+        int index = mSelectedIndex;
+        boolean compatible = isCompatible(index);
+        mVersionLabel.setText(index == mRecommendedIndex ? R.string.lib_recommended_version : R.string.lib_selected_version);
+
+        if (index == mInstalledIndex) {
+            mVersionBadge.setText(R.string.lib_badge_installed);
+            styleBadge(mVersionBadge, BADGE_GREEN);
+            mVersionBadge.setVisibility(View.VISIBLE);
+        } else if (!compatible) {
+            mVersionBadge.setText(R.string.lib_badge_incompatible);
+            styleBadge(mVersionBadge, BADGE_WARNING);
+            mVersionBadge.setVisibility(View.VISIBLE);
+        } else if (index == mRecommendedIndex) {
+            mVersionBadge.setText(R.string.lib_badge_recommended);
+            styleBadge(mVersionBadge, BADGE_GREEN);
+            mVersionBadge.setVisibility(View.VISIBLE);
+        } else {
+            mVersionBadge.setText(R.string.lib_badge_selected);
+            styleBadge(mVersionBadge, BADGE_NEUTRAL);
+            mVersionBadge.setVisibility(View.VISIBLE);
+        }
+
+        mVersionName.setVisibility(View.VISIBLE);
+        mVersionName.setText(versionTitle(index));
+        String meta = versionMeta(index);
+        mVersionMeta.setVisibility(meta.isEmpty() ? View.GONE : View.VISIBLE);
+        mVersionMeta.setText(meta);
+        String extra = versionExtra(index);
+        mVersionExtra.setVisibility(extra.isEmpty() ? View.GONE : View.VISIBLE);
+        mVersionExtra.setText(extra);
+
+        if (!compatible) {
+            mVersionWarning.setVisibility(View.VISIBLE);
+            mVersionWarning.setText(hasAnyCompatible()
+                    ? getString(R.string.lib_version_mismatch, profileLabel())
+                    : getString(R.string.lib_no_compatible_version, profileLabel()));
+        } else if (!isDownloadable(index)) {
+            mVersionWarning.setVisibility(View.VISIBLE);
+            mVersionWarning.setText(R.string.lib_restricted);
+        } else {
+            mVersionWarning.setVisibility(View.GONE);
+        }
+
+        mChangeVersion.setEnabled(!mInstalling && versionCount() > 1);
+        mUseRecommended.setVisibility(mRecommendedIndex >= 0 && index != mRecommendedIndex && !mInstalling
+                ? View.VISIBLE : View.GONE);
+    }
+
+    /** Whether the selected version is the one already installed */
+    private boolean selectionIsInstalled() {
+        if (mInstalled == null) return false;
+        if (mInstalledIndex >= 0) return mSelectedIndex == mInstalledIndex;
+        // Installed, but its exact version isn't in the list: treat it as current unless
+        // an update is known or the user picked something on purpose
+        return !mUserPicked && !mInstalled.updateAvailable;
+    }
+
+    private void renderActions() {
+        mProgress.setVisibility(mInstalling ? View.VISIBLE : View.GONE);
+        mStatus.setTextColor(ThemeColors.get(mStatus.getContext(), com.google.android.material.R.attr.colorOnSurfaceVariant));
+        if (mInstalling) {
+            styleInstallButton(R.string.lib_installing, R.drawable.ic_lib_download);
+            mPrimary.setEnabled(false);
+            mUninstall.setVisibility(View.GONE);
+            return;
+        }
+        boolean hasProfile = mInstance != null;
+        if (isRestrictedProject() || (mSelectedIndex >= 0 && !isDownloadable(mSelectedIndex))) {
+            styleInstallButton(R.string.lib_open_curseforge, R.drawable.ic_lib_open);
+            mPrimary.setEnabled(true);
+            mUninstall.setVisibility(mInstalled != null && hasProfile ? View.VISIBLE : View.GONE);
+            return;
+        }
+        if (mSelectedIndex < 0) {
+            styleInstallButton(R.string.lib_install, R.drawable.ic_lib_download);
+            mPrimary.setEnabled(false);
+            mUninstall.setVisibility(View.GONE);
+            return;
+        }
+        if (mInstalled == null) {
+            styleInstallButton(R.string.lib_install, R.drawable.ic_lib_download);
+            mUninstall.setVisibility(View.GONE);
+        } else if (selectionIsInstalled()) {
+            styleUninstallButton();
+            mUninstall.setVisibility(View.GONE);
+        } else {
+            int label;
+            if (mInstalledIndex >= 0) {
+                label = isNewer(mSelectedIndex, mInstalledIndex) ? R.string.lib_update : R.string.lib_downgrade;
+            } else {
+                label = mInstalled.updateAvailable && !mUserPicked ? R.string.lib_update : R.string.lib_reinstall;
+            }
+            styleInstallButton(label, label == R.string.lib_update ? R.drawable.ic_lib_update : R.drawable.ic_lib_download);
+            mUninstall.setVisibility(View.VISIBLE);
+        }
+        mPrimary.setEnabled(hasProfile);
+        if (mInstalled != null && selectionIsInstalled()) {
+            mStatus.setVisibility(View.VISIBLE);
+            mStatus.setText(R.string.lib_installed_hint);
+        } else if (mInstalled != null) {
+            mStatus.setVisibility(View.VISIBLE);
+            mStatus.setText(mInstalledIndex >= 0 && isNewer(mSelectedIndex, mInstalledIndex) || mInstalled.updateAvailable
+                    ? R.string.lib_update_hint : R.string.lib_installed_hint);
+        } else if (!hasProfile) {
+            mStatus.setVisibility(View.VISIBLE);
+            mStatus.setText(R.string.lib_no_profile);
+        } else {
+            mStatus.setVisibility(View.GONE);
+        }
+    }
+
+    private void styleInstallButton(int label, int icon) {
+        Context context = mPrimary.getContext();
+        int text = ContextCompat.getColor(context, R.color.lib_update_text);
+        mPrimary.setText(label);
+        mPrimary.setIconResource(icon);
+        mPrimary.setTextColor(text);
+        mPrimary.setIconTint(ColorStateList.valueOf(text));
+        mPrimary.setBackgroundTintList(ContextCompat.getColorStateList(context, R.color.lib_update_bg));
+        mPrimary.setTag(label);
+    }
+
+    private void styleUninstallButton() {
+        Context context = mPrimary.getContext();
+        int white = 0xFFFFFFFF;
+        mPrimary.setText(R.string.lib_uninstall);
+        mPrimary.setIconResource(R.drawable.ic_lib_trash);
+        mPrimary.setTextColor(white);
+        mPrimary.setIconTint(ColorStateList.valueOf(white));
+        mPrimary.setBackgroundTintList(ContextCompat.getColorStateList(context, R.color.lib_danger));
+        mPrimary.setTag(R.string.lib_uninstall);
+    }
+
+    // ─── Dependencies ────────────────────────────────────────────────────────
+
+    private void renderDependencies() {
+        for (DependencyRow row : mDependencyRows) {
+            if (row.receiver != null) mIconCache.cancelImage(row.receiver);
+        }
+        mDependencyRows.clear();
+        mDepsList.removeAllViews();
+        final int generation = ++mDependencyGeneration;
+
+        List<DependencyRow> rows = new ArrayList<>();
+        if (mDetail != null && mSelectedIndex >= 0 && mDetail.dependencies != null
+                && mSelectedIndex < mDetail.dependencies.length && mDetail.dependencies[mSelectedIndex] != null) {
+            List<String> seen = new ArrayList<>();
+            for (ModDetail.Dependencies dependency : mDetail.dependencies[mSelectedIndex]) {
+                if (dependency == null || TextUtils.isEmpty(dependency.project_id)) continue;
+                if (seen.contains(dependency.project_id) || dependency.project_id.equals(mItem.id)) continue;
+                String kind = dependency.dependency_type == null ? "" : dependency.dependency_type.toLowerCase(Locale.ROOT);
+                boolean required = kind.equals("required") || kind.equals("3");
+                boolean optional = kind.equals("optional") || kind.equals("2");
+                if (!required && !optional) continue;
+                seen.add(dependency.project_id);
+                rows.add(new DependencyRow(dependency.project_id, required));
+            }
+        }
+        // Required ones first
+        Collections.sort(rows, (a, b) -> Boolean.compare(b.required, a.required));
+
+        if (rows.isEmpty()) {
+            mDepsEmpty.setVisibility(View.VISIBLE);
+            mDepsEmpty.setText(R.string.lib_no_dependencies);
+            return;
+        }
+        mDepsEmpty.setVisibility(View.GONE);
+        LayoutInflater inflater = LayoutInflater.from(requireContext());
+        for (DependencyRow row : rows) {
+            View view = inflater.inflate(R.layout.item_lib_dependency, mDepsList, false);
+            row.icon = view.findViewById(R.id.dep_icon);
+            row.name = view.findViewById(R.id.dep_name);
+            row.status = view.findViewById(R.id.dep_status);
+            row.check = view.findViewById(R.id.dep_check);
+            TextView type = view.findViewById(R.id.dep_type);
+            type.setText(row.required ? R.string.lib_dep_required : R.string.lib_dep_optional);
+            row.icon.setImageResource(R.drawable.ic_lib_cube);
+            row.check.setChecked(row.required);
+            row.check.setEnabled(!mInstalling);
+            view.setOnClickListener(v -> {
+                if (row.check.getVisibility() == View.VISIBLE && row.check.isEnabled()) row.check.toggle();
+            });
+            styleBadge(row.status, BADGE_GREEN);
+            int size = Math.round(14 * getResources().getDisplayMetrics().density);
+            Drawable[] drawables = row.status.getCompoundDrawablesRelative();
+            if (drawables[0] != null) {
+                Drawable start = drawables[0].mutate();
+                start.setBounds(0, 0, size, size);
+                row.status.setCompoundDrawablesRelative(start, null, null, null);
+            }
+            TextViewCompat.setCompoundDrawableTintList(row.status, ColorStateList.valueOf(
+                    ContextCompat.getColor(requireContext(), R.color.lib_badge_green_text)));
+            updateDependencyInstalled(row, null);
+            String[] info = mDependencyInfo.get(cacheKey(row.projectId));
+            if (info != null) applyDependencyInfo(row, info);
+            mDepsList.addView(view);
+            mDependencyRows.add(row);
+        }
+
+        // Fetch names and icons of the ones not resolved yet
+        final int source = mItem.apiSource;
+        final String key = mCurseforgeKey;
+        for (DependencyRow row : rows) {
+            if (mDependencyInfo.containsKey(cacheKey(row.projectId))) continue;
+            sExecutor.execute(() -> {
+                String[] info = null;
+                try {
+                    info = source == Constants.SOURCE_CURSEFORGE
+                            ? ContentInstaller.fetchCurseforgeProject(row.projectId, key)
+                            : ContentInstaller.fetchModrinthProject(row.projectId);
+                } catch (Exception ignored) {}
+                final String[] result = info;
+                Tools.runOnUiThread(() -> {
+                    if (result != null) mDependencyInfo.put(cacheKey(row.projectId), result);
+                    if (generation != mDependencyGeneration || getView() == null) return;
+                    if (result != null) applyDependencyInfo(row, result);
+                    else row.name.setText(row.projectId);
+                });
+            });
+        }
+    }
+
+    private String cacheKey(String projectId) {
+        return mItem.apiSource + "_" + projectId;
+    }
+
+    /** info = {title, icon url, slug, project type} */
+    private void applyDependencyInfo(DependencyRow row, String[] info) {
+        row.name.setText(TextUtils.isEmpty(info[0]) ? row.projectId : info[0]);
+        updateDependencyInstalled(row, info.length > 2 ? info[2] : null);
+        String iconUrl = info.length > 1 ? info[1] : null;
+        if (TextUtils.isEmpty(iconUrl)) return;
+        float radius = 8 * getResources().getDisplayMetrics().density;
+        ImageView icon = row.icon;
+        row.receiver = new ImageReceiver() {
+            @Override
+            public void onImageAvailable(Bitmap image) {
+                if (getView() == null || image == null || row.receiver != this) return;
+                RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getResources(), image);
+                drawable.setCornerRadius(radius);
+                icon.setImageDrawable(drawable);
+            }
+        };
+        mIconCache.getImage(row.receiver, mItem.apiSource + "_" + row.projectId, iconUrl);
+    }
+
+    private void updateDependencyInstalled(DependencyRow row, @Nullable String slug) {
+        if (mIndex == null) return;
+        ModItem probe = new ModItem(mItem.apiSource, false, row.projectId, "", "", null);
+        probe.slug = slug;
+        boolean installed = mIndex.find(probe) != null;
+        // Mods are matched against the mods folder only
+        row.installed = installed;
+        row.status.setVisibility(installed ? View.VISIBLE : View.GONE);
+        row.check.setVisibility(installed ? View.GONE : View.VISIBLE);
+    }
+
+    private List<ContentInstaller.Dependency> selectedDependencies() {
+        List<ContentInstaller.Dependency> list = new ArrayList<>();
+        for (DependencyRow row : mDependencyRows) {
+            if (row.installed || !row.check.isChecked()) continue;
+            list.add(new ContentInstaller.Dependency(row.projectId, mItem.apiSource));
+        }
+        return list;
+    }
+
+    // ─── Actions ─────────────────────────────────────────────────────────────
+
+    private void onPrimaryClicked() {
+        if (mInstalling) return;
+        if (mLoadFailed || mDetail == null) {
+            renderLoading();
+            load();
+            return;
+        }
+        Object tag = mPrimary.getTag();
+        if (tag instanceof Integer && (Integer) tag == R.string.lib_uninstall) {
+            confirmUninstall();
+            return;
+        }
+        if (tag instanceof Integer && (Integer) tag == R.string.lib_open_curseforge) {
+            openCurseforgePage();
+            return;
+        }
+        if (mInstance == null) {
+            Toast.makeText(requireContext(), R.string.lib_no_profile, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (ProgressKeeper.getTaskCount() > 0) {
+            Toast.makeText(requireContext(), R.string.lib_tasks_running, Toast.LENGTH_LONG).show();
+            return;
+        }
+        if (mSelectedIndex < 0) return;
+        startInstall();
+    }
+
+    private void openCurseforgePage() {
+        String url = mItem.websiteUrl;
+        if (TextUtils.isEmpty(url)) {
+            String section;
+            switch (mType) {
+                case RESOURCE_PACK: section = "texture-packs"; break;
+                case SHADER_PACK: section = "shaders"; break;
+                default: section = "mc-mods"; break;
+            }
+            url = "https://www.curseforge.com/minecraft/" + section + "/"
+                    + (TextUtils.isEmpty(mItem.slug) ? mItem.id : mItem.slug);
+        }
+        Tools.openURL(requireActivity(), url);
+    }
+
+    private void startInstall() {
+        final ModDetail detail = mDetail;
+        final int index = mSelectedIndex;
+        final boolean wasInstalled = mInstalled != null;
+        final String oldPath = mInstalled != null ? mInstalled.file.getAbsolutePath() : null;
+        final String title = mItem.title;
+        final Context appContext = requireContext().getApplicationContext();
+        List<ContentInstaller.Dependency> dependencies = selectedDependencies();
+
+        mInstalling = true;
+        mStatus.setVisibility(View.VISIBLE);
+        mStatus.setTextColor(ThemeColors.get(mStatus.getContext(), com.google.android.material.R.attr.colorOnSurfaceVariant));
+        mStatus.setText(R.string.lib_installing);
+        setDependencyChecksEnabled(false);
+        renderVersion();
+        renderActions();
+
+        ContentInstaller.install(detail, index, mType, dependencies, oldPath, mProfileVersion, typeLoader(),
+                mCurseforgeKey, (file, error) -> {
+                    mInstalling = false;
+                    if (error == null && file != null) {
+                        mInstalled = new InstalledContentIndex.Entry(file,
+                                detail.versionIds != null && index < detail.versionIds.length ? detail.versionIds[index] : null);
+                        mInstalledIndex = index;
+                        mUserPicked = false;
+                        Toast.makeText(appContext, appContext.getString(
+                                wasInstalled ? R.string.lib_update_done : R.string.lib_install_done, title),
+                                Toast.LENGTH_SHORT).show();
+                    } else {
+                        String message = error == null ? "" : String.valueOf(error.getMessage());
+                        Toast.makeText(appContext, appContext.getString(R.string.lib_install_failed, message),
+                                Toast.LENGTH_LONG).show();
+                    }
+                    if (getView() == null) return;
+                    setDependencyChecksEnabled(true);
+                    renderVersion();
+                    renderActions();
+                    if (error != null) {
+                        mStatus.setVisibility(View.VISIBLE);
+                        mStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.lib_danger));
+                        mStatus.setText(getString(R.string.lib_install_failed, String.valueOf(error.getMessage())));
+                    } else {
+                        refreshDependencyState();
+                    }
+                });
+    }
+
+    private void setDependencyChecksEnabled(boolean enabled) {
+        for (DependencyRow row : mDependencyRows) {
+            if (row.check != null) row.check.setEnabled(enabled);
+        }
+    }
+
+    /** Rescans the content folder so freshly installed dependencies show as installed */
+    private void refreshDependencyState() {
+        final ContentType type = mType;
+        final String version = mProfileVersion;
+        final String loader = mProfileLoader;
+        final String key = mCurseforgeKey;
+        sExecutor.execute(() -> {
+            InstalledContentIndex index;
+            try {
+                index = InstalledContentIndex.build(type, version, loader, key);
+            } catch (Exception e) {
+                return;
+            }
+            Tools.runOnUiThread(() -> {
+                mIndex = index;
+                if (getView() == null) return;
+                for (DependencyRow row : mDependencyRows) {
+                    String[] info = mDependencyInfo.get(cacheKey(row.projectId));
+                    updateDependencyInstalled(row, info != null && info.length > 2 ? info[2] : null);
+                }
+            });
+        });
+    }
+
+    private void confirmUninstall() {
+        if (mInstalled == null) return;
+        final File file = mInstalled.file;
+        String section = mLibraryTitle;
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(getString(R.string.lib_uninstall_title, mItem.title))
+                .setMessage(getString(R.string.lib_uninstall_message, file.getName(), section))
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton(R.string.lib_uninstall, (dialog, which) -> {
+                    if (ContentInstaller.uninstall(file)) {
+                        if (mIndex != null) mIndex.remove(file);
+                        mInstalled = null;
+                        mInstalledIndex = -1;
+                        mUserPicked = false;
+                        if (mDetail != null && mRecommendedIndex >= 0) mSelectedIndex = mRecommendedIndex;
+                        Toast.makeText(requireContext(), getString(R.string.lib_uninstall_done, mItem.title),
+                                Toast.LENGTH_SHORT).show();
+                        mStatus.setTextColor(ThemeColors.get(mStatus.getContext(),
+                                com.google.android.material.R.attr.colorOnSurfaceVariant));
+                        if (mDetail != null) {
+                            renderVersion();
+                            renderDependencies();
+                            renderActions();
+                        } else {
+                            renderLoadFailed();
+                        }
+                    } else {
+                        Toast.makeText(requireContext(), getString(R.string.lib_uninstall_failed, file.getName()),
+                                Toast.LENGTH_LONG).show();
+                    }
+                })
+                .show();
+    }
+
+    // ─── Version picker ──────────────────────────────────────────────────────
+
+    private void showVersionPicker() {
+        if (mDetail == null || versionCount() == 0) return;
+        View content = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_lib_version_picker, null, false);
+        TextView subtitle = content.findViewById(R.id.picker_subtitle);
+        MaterialSwitch showAll = content.findViewById(R.id.picker_show_all);
+        RecyclerView list = content.findViewById(R.id.picker_list);
+        TextView empty = content.findViewById(R.id.picker_empty);
+
+        subtitle.setText(getString(R.string.lib_versions_for, profileLabel()));
+        boolean compatibleExists = hasAnyCompatible();
+        if (mProfileVersion == null) showAll.setVisibility(View.GONE);
+        showAll.setChecked(!compatibleExists || mProfileVersion == null
+                || (mSelectedIndex >= 0 && !isCompatible(mSelectedIndex)));
+
+        AlertDialog dialog = new MaterialAlertDialogBuilder(requireContext())
+                .setView(content)
+                .setNegativeButton(android.R.string.cancel, null)
+                .create();
+
+        VersionAdapter adapter = new VersionAdapter(index -> {
+            mSelectedIndex = index;
+            mUserPicked = index != mRecommendedIndex;
+            renderVersion();
+            renderDependencies();
+            renderActions();
+            dialog.dismiss();
+        });
+        list.setLayoutManager(new LinearLayoutManager(requireContext()));
+        list.setAdapter(adapter);
+
+        Runnable refresh = () -> {
+            List<Integer> indices = new ArrayList<>();
+            for (int index : orderedIndices()) {
+                if (showAll.isChecked() || isCompatible(index)) indices.add(index);
+            }
+            adapter.setIndices(indices);
+            empty.setVisibility(indices.isEmpty() ? View.VISIBLE : View.GONE);
+            list.setVisibility(indices.isEmpty() ? View.GONE : View.VISIBLE);
+            int position = indices.indexOf(mSelectedIndex);
+            if (position > 0) list.scrollToPosition(position);
+        };
+        showAll.setOnCheckedChangeListener((button, checked) -> refresh.run());
+        refresh.run();
+        dialog.show();
+    }
+
+    private interface VersionClickListener {
+        void onVersionPicked(int index);
+    }
+
+    private final class VersionAdapter extends RecyclerView.Adapter<VersionAdapter.Holder> {
+        private final VersionClickListener mListener;
+        private List<Integer> mIndices = new ArrayList<>();
+
+        VersionAdapter(VersionClickListener listener) {
+            mListener = listener;
+        }
+
+        void setIndices(List<Integer> indices) {
+            mIndices = indices;
+            notifyDataSetChanged();
+        }
+
+        @NonNull
+        @Override
+        public Holder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            return new Holder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_lib_version, parent, false));
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull Holder holder, int position) {
+            int index = mIndices.get(position);
+            holder.name.setText(versionTitle(index));
+            String meta = versionMeta(index);
+            String date = mDetail.versionDates != null && index < mDetail.versionDates.length
+                    ? LibraryCatalog.relativeDate(mDetail.versionDates[index]) : null;
+            if (!TextUtils.isEmpty(date)) meta = meta.isEmpty() ? date : meta + "  \u00b7  " + date;
+            holder.meta.setText(meta);
+
+            if (index == mInstalledIndex) {
+                holder.badge.setVisibility(View.VISIBLE);
+                holder.badge.setText(R.string.lib_badge_installed);
+                styleBadge(holder.badge, BADGE_GREEN);
+            } else if (index == mRecommendedIndex) {
+                holder.badge.setVisibility(View.VISIBLE);
+                holder.badge.setText(R.string.lib_badge_recommended);
+                styleBadge(holder.badge, BADGE_GREEN);
+            } else if (!isCompatible(index)) {
+                holder.badge.setVisibility(View.VISIBLE);
+                holder.badge.setText(R.string.lib_badge_incompatible);
+                styleBadge(holder.badge, BADGE_WARNING);
+            } else {
+                holder.badge.setVisibility(View.GONE);
+            }
+
+            boolean selected = index == mSelectedIndex;
+            holder.itemView.setSelected(selected);
+            holder.check.setVisibility(selected ? View.VISIBLE : View.INVISIBLE);
+            holder.itemView.setAlpha(isDownloadable(index) ? 1f : 0.5f);
+            holder.itemView.setOnClickListener(v -> {
+                if (!isDownloadable(index)) {
+                    Toast.makeText(v.getContext(), R.string.lib_restricted, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                mListener.onVersionPicked(index);
+            });
+        }
+
+        @Override
+        public int getItemCount() {
+            return mIndices.size();
+        }
+
+        final class Holder extends RecyclerView.ViewHolder {
+            final TextView name, meta, badge;
+            final ImageView check;
+
+            Holder(@NonNull View itemView) {
+                super(itemView);
+                name = itemView.findViewById(R.id.pick_name);
+                meta = itemView.findViewById(R.id.pick_meta);
+                badge = itemView.findViewById(R.id.pick_badge);
+                check = itemView.findViewById(R.id.pick_check);
+            }
+        }
+    }
+}

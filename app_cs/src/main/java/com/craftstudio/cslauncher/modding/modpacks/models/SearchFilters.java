@@ -26,4 +26,16 @@ public class SearchFilters {
      */
     public ContentType contentType = ContentType.MOD;
 
+    /** Modrinth category slug to narrow the search to (e.g. "optimization"), empty for all */
+    @Nullable public String category;
+
+    /** Sort order, one of the SORT_* constants below */
+    public String sort = SORT_RELEVANCE;
+
+    public static final String SORT_RELEVANCE = "relevance";
+    public static final String SORT_DOWNLOADS = "downloads";
+    public static final String SORT_FOLLOWS = "follows";
+    public static final String SORT_NEWEST = "newest";
+    public static final String SORT_UPDATED = "updated";
+
 }

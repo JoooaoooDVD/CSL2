@@ -30,6 +30,18 @@ public class ModDetail extends ModItem {
      * both versions sitting in the mods folder side-by-side. */
     public String installedFilePath = null;
 
+    /* Optional per-version metadata used by the install screen. Any of these may be null
+     * when the source API did not provide it, every entry is parallel to versionNames. */
+    public String[] versionNumbers;
+    /* "release", "beta" or "alpha" */
+    public String[] versionTypes;
+    /* ISO-8601 publish date */
+    public String[] versionDates;
+    public String[][] versionLoaders;
+    public String[][] versionGameVersions;
+    public long[] versionFileSizes;
+    public String[] versionFileNames;
+
     public ModDetail(ModItem item, String[] versionNames, String[] mcVersionNames, String[] versionUrls, String[] hashes) {
         this(item, versionNames, null, mcVersionNames, versionUrls, hashes, null);
     }
@@ -37,8 +49,7 @@ public class ModDetail extends ModItem {
     public ModDetail(ModItem item, String[] versionNames, String[] versionIds, String[] mcVersionNames, String[] versionUrls, String[] hashes,
                      Dependencies[][] dependencies) {
         super(item.apiSource, item.isModpack, item.id, item.title, item.description, item.imageUrl);
-        this.isRestricted = item.isRestricted;
-        this.websiteUrl = item.websiteUrl;
+        copyMetaFrom(item);
         this.versionNames = versionNames;
         this.mcVersionNames = mcVersionNames;
         this.versionIds = versionIds;

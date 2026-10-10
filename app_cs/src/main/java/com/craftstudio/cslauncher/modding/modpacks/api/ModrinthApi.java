@@ -65,11 +65,14 @@ public class ModrinthApi implements ModpackApi{
             facetString.append(String.format(",[\"versions:%s\"]", searchFilters.mcVersion));
         if(searchFilters.modLoader != null && !searchFilters.modLoader.isEmpty())
             facetString.append(String.format(",[\"categories:%s\"]", searchFilters.modLoader));
+        if(searchFilters.category != null && !searchFilters.category.isEmpty())
+            facetString.append(String.format(",[\"categories:%s\"]", searchFilters.category));
         facetString.append("]");
         params.put("facets", facetString.toString());
         params.put("query", searchFilters.name);
         params.put("limit", 50);
-        params.put("index", "relevance");
+        params.put("index", searchFilters.sort != null && !searchFilters.sort.isEmpty()
+                ? searchFilters.sort : SearchFilters.SORT_RELEVANCE);
         if(modrinthSearchResult != null)
             params.put("offset", modrinthSearchResult.previousOffset);
 
@@ -89,12 +92,56 @@ public class ModrinthApi implements ModpackApi{
                     hit.get("description").getAsString(),
                     hit.get("icon_url").getAsString()
             );
+            fillSearchMeta(items[i], hit);
         }
         if(modrinthSearchResult == null) modrinthSearchResult = new ModrinthSearchResult();
         modrinthSearchResult.previousOffset += responseHits.size();
         modrinthSearchResult.results = items;
         modrinthSearchResult.totalResultCount = response.get("total_hits").getAsInt();
         return modrinthSearchResult;
+    }
+
+    private static final java.util.Set<String> LOADER_CATEGORIES = new java.util.HashSet<>(java.util.Arrays.asList(
+            "fabric", "forge", "quilt", "neoforge", "liteloader", "modloader", "rift", "risugami",
+            "babric", "bta-babric", "java-agent", "legacy-fabric", "nilloader", "ornithe",
+            "bukkit", "folia", "paper", "purpur", "spigot", "sponge", "bungeecord", "velocity",
+            "waterfall", "datapack", "minecraft", "iris", "optifine", "canvas", "vanilla"));
+
+    /** Reads the extra fields the library cards need out of a search hit */
+    private static void fillSearchMeta(ModItem item, JsonObject hit) {
+        try {
+            item.slug = GsonJsonUtils.getStringSafe(hit, "slug");
+            item.author = GsonJsonUtils.getStringSafe(hit, "author");
+            item.dateModified = GsonJsonUtils.getStringSafe(hit, "date_modified");
+            JsonElement downloads = hit.get("downloads");
+            if (downloads != null && !downloads.isJsonNull()) item.downloads = downloads.getAsLong();
+            JsonElement follows = hit.get("follows");
+            if (follows != null && !follows.isJsonNull()) item.follows = follows.getAsLong();
+
+            List<String> categories = new ArrayList<>();
+            List<String> loaders = new ArrayList<>();
+            JsonArray categoryArray = GsonJsonUtils.getJsonArraySafe(hit, "categories");
+            if (categoryArray != null) {
+                for (JsonElement element : categoryArray) {
+                    if (element == null || element.isJsonNull()) continue;
+                    String value = element.getAsString();
+                    if (LOADER_CATEGORIES.contains(value)) loaders.add(value);
+                    else categories.add(value);
+                }
+            }
+            item.categories = categories.toArray(new String[0]);
+            item.loaders = loaders.toArray(new String[0]);
+
+            JsonArray versionArray = GsonJsonUtils.getJsonArraySafe(hit, "versions");
+            if (versionArray != null) {
+                String[] versions = new String[versionArray.size()];
+                for (int i = 0; i < versions.length; i++) {
+                    JsonElement element = versionArray.get(i);
+                    versions[i] = element == null || element.isJsonNull() ? "" : element.getAsString();
+                }
+                item.gameVersions = versions;
+            }
+        } catch (Exception ignored) {}
     }
 
     @Override
@@ -149,11 +196,40 @@ public class ModrinthApi implements ModpackApi{
         String[] urls = new String[size];
         String[] hashes = new String[size];
         ModDetail.Dependencies[][] dependencies = new ModDetail.Dependencies[size][];
+        String[] numbers = new String[size];
+        String[] types = new String[size];
+        String[] dates = new String[size];
+        String[][] loaders = new String[size][];
+        String[][] gameVersions = new String[size][];
+        long[] fileSizes = new long[size];
+        String[] fileNames = new String[size];
 
         for (int i = 0; i < size; i++) {
             JsonObject version = versions.get(i);
             names[i] = version.get("name").getAsString();
             ids[i] = version.get("id").getAsString();
+            try {
+                numbers[i] = GsonJsonUtils.getStringSafe(version, "version_number");
+                types[i] = GsonJsonUtils.getStringSafe(version, "version_type");
+                dates[i] = GsonJsonUtils.getStringSafe(version, "date_published");
+                loaders[i] = toStringArray(GsonJsonUtils.getJsonArraySafe(version, "loaders"));
+                gameVersions[i] = toStringArray(GsonJsonUtils.getJsonArraySafe(version, "game_versions"));
+                JsonArray files = GsonJsonUtils.getJsonArraySafe(version, "files");
+                if (files != null && files.size() > 0) {
+                    JsonObject primary = files.get(0).getAsJsonObject();
+                    for (JsonElement fileElement : files) {
+                        JsonObject candidate = fileElement.getAsJsonObject();
+                        JsonElement isPrimary = candidate.get("primary");
+                        if (isPrimary != null && !isPrimary.isJsonNull() && isPrimary.getAsBoolean()) {
+                            primary = candidate;
+                            break;
+                        }
+                    }
+                    fileNames[i] = GsonJsonUtils.getStringSafe(primary, "filename");
+                    JsonElement fileSize = primary.get("size");
+                    if (fileSize != null && !fileSize.isJsonNull()) fileSizes[i] = fileSize.getAsLong();
+                }
+            } catch (Exception ignored) {}
             try {
                 JsonArray dependenciesJsonArray = version.getAsJsonArray("dependencies");
                 dependencies[i] = new ModDetail.Dependencies[dependenciesJsonArray.size()];
@@ -168,16 +244,45 @@ public class ModrinthApi implements ModpackApi{
                 }
             } catch (Exception ignored) {}
 
-            mcNames[i] = version.get("game_versions").getAsJsonArray().get(0).getAsString();
-            urls[i] = version.get("files").getAsJsonArray().get(0).getAsJsonObject().get("url").getAsString();
+            JsonArray gameVersionArray = version.get("game_versions").getAsJsonArray();
+            mcNames[i] = gameVersionArray.size() > 0 ? gameVersionArray.get(0).getAsString() : "";
+            // Download the primary file (falls back to the first one), same file whose name was recorded above
+            JsonArray versionFiles = version.getAsJsonArray("files");
+            JsonObject primaryFile = versionFiles.get(0).getAsJsonObject();
+            for (JsonElement fileElement : versionFiles) {
+                JsonObject candidate = fileElement.getAsJsonObject();
+                JsonElement isPrimary = candidate.get("primary");
+                if (isPrimary != null && !isPrimary.isJsonNull() && isPrimary.getAsBoolean()) {
+                    primaryFile = candidate;
+                    break;
+                }
+            }
+            urls[i] = primaryFile.get("url").getAsString();
             // Assume there may not be hashes, in case the API changes
-            JsonObject hashesMap = version.getAsJsonArray("files").get(0).getAsJsonObject()
-                    .get("hashes").getAsJsonObject();
+            JsonObject hashesMap = primaryFile.get("hashes").getAsJsonObject();
             hashes[i] = (hashesMap == null || hashesMap.get("sha1") == null) ? null
                     : hashesMap.get("sha1").getAsString();
         }
 
-        return new ModDetail(item, names, ids, mcNames, urls, hashes, dependencies);
+        ModDetail detail = new ModDetail(item, names, ids, mcNames, urls, hashes, dependencies);
+        detail.versionNumbers = numbers;
+        detail.versionTypes = types;
+        detail.versionDates = dates;
+        detail.versionLoaders = loaders;
+        detail.versionGameVersions = gameVersions;
+        detail.versionFileSizes = fileSizes;
+        detail.versionFileNames = fileNames;
+        return detail;
+    }
+
+    private static String[] toStringArray(JsonArray array) {
+        if (array == null) return new String[0];
+        String[] result = new String[array.size()];
+        for (int i = 0; i < result.length; i++) {
+            JsonElement element = array.get(i);
+            result[i] = element == null || element.isJsonNull() ? "" : element.getAsString();
+        }
+        return result;
     }
 
     private void fillInMissingModItemData(ModItem item) {

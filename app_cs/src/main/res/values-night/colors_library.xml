@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Content library palette -->
+<resources>
+    <color name="lib_compatible">#34C759</color>
+    <color name="lib_compatible_check">#06210E</color>
+    <color name="lib_warning">#F7A325</color>
+    <color name="lib_danger">#FF5A5F</color>
+    <color name="lib_danger_ripple">#33FF5A5F</color>
+    <color name="lib_update_bg">#E9EDF2</color>
+    <color name="lib_update_text">#0B0B0E</color>
+    <color name="lib_chip_selected_bg">#4A5362</color>
+    <color name="lib_chip_selected_stroke">#8C96A5</color>
+    <color name="lib_chip_selected_text">#FFFFFF</color>
+    <color name="lib_install_stroke">#F1F3F5</color>
+    <color name="lib_install_text">#F1F3F5</color>
+    <color name="lib_tag_green_bg">#1F3518</color>
+    <color name="lib_tag_green_stroke">#4C7A2C</color>
+    <color name="lib_tag_green_text">#D9F5BF</color>
+    <color name="lib_tag_blue_bg">#17263F</color>
+    <color name="lib_tag_blue_stroke">#35558A</color>
+    <color name="lib_tag_blue_text">#C9DBFF</color>
+    <color name="lib_tag_slate_bg">#2A313C</color>
+    <color name="lib_tag_slate_stroke">#566174</color>
+    <color name="lib_tag_slate_text">#E6EAF0</color>
+    <color name="lib_tag_purple_bg">#2A2140</color>
+    <color name="lib_tag_purple_stroke">#5B4486</color>
+    <color name="lib_tag_purple_text">#E4D8FF</color>
+    <color name="lib_tag_amber_bg">#372A12</color>
+    <color name="lib_tag_amber_stroke">#7D5F22</color>
+    <color name="lib_tag_amber_text">#FFE3AA</color>
+    <color name="lib_badge_green_bg">#1A3A22</color>
+    <color name="lib_badge_green_text">#8FF0A4</color>
+</resources>
