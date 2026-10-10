@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Redesigned profile editor: dark cards with subtle borders and rounded fields,
+    grouped into Profile Identity / Profile Appearance / Game Configuration sections
+    plus a Save / Cancel / Delete action bar. All interactive element IDs are kept
+    from the previous layout so InstanceEditorFragment behaviour is preserved.
+-->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -6,8 +12,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSurface"
-    android:orientation="vertical"
-    >
+    android:orientation="vertical">
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -15,258 +21,472 @@
         android:fadeScrollbars="true"
         android:scrollbarThumbVertical="?attr/colorPrimary">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingHorizontal="@dimen/fragment_padding_medium">
+            android:orientation="vertical"
+            android:paddingHorizontal="@dimen/fragment_padding_medium"
+            android:paddingTop="@dimen/padding_heavy"
+            android:paddingBottom="@dimen/padding_heavy">
 
-            <ImageView
-                android:id="@+id/vprof_editor_instance_icon"
-                android:layout_width="@dimen/_50sdp"
-                android:layout_height="@dimen/_50sdp"
-                android:layout_marginTop="@dimen/padding_heavy"
-                android:paddingHorizontal="@dimen/profile_editor_image_padding"
-
-                android:paddingVertical="@dimen/profile_editor_image_padding"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:src="@tools:sample/avatars" />
-
-            <ImageView
-                android:layout_width="@dimen/_14sdp"
-                android:layout_height="@dimen/_14sdp"
-                android:src="@drawable/ic_px_edit"
-                android:background="@drawable/background_icon_edit"
-                app:layout_constraintBottom_toBottomOf="@+id/vprof_editor_instance_icon"
-                app:layout_constraintEnd_toEndOf="@+id/vprof_editor_instance_icon"/>
-
-            <TextView
-                android:id="@+id/vprof_editor_profile_name_sub"
+            <!-- ============ A. Profile Identity ============ -->
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/profiles_profile_name"
-                app:layout_constraintBottom_toTopOf="@+id/vprof_editor_instance_name"
-                app:layout_constraintStart_toStartOf="@+id/vprof_editor_instance_name" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-            <EditText
-                android:id="@+id/vprof_editor_instance_name"
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:layout_marginEnd="6dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_nav_profiles"
+                    android:tint="?attr/colorOnSurfaceVariant" />
+
+                <TextView
+                    style="@style/ProfileEditorSection"
+                    android:text="@string/profile_editor_identity" />
+            </LinearLayout>
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/padding_large"
-                android:background="@drawable/background_line"
-                android:textSize="@dimen/_13ssp"
+                android:background="@drawable/bg_card_home"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:padding="@dimen/padding_large">
 
-                android:ems="10"
-                android:hint="@string/unnamed"
-                android:inputType="textPersonName"
-                android:paddingHorizontal="@dimen/padding_heavy"
-                app:layout_constraintTop_toBottomOf="@id/vprof_editor_instance_icon" />
+                <!-- Icon preview, tap to pick an image from storage -->
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
 
+                    <ImageView
+                        android:id="@+id/vprof_editor_instance_icon"
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
+                        android:background="@drawable/bg_icon_chip"
+                        android:contentDescription="@string/profile_editor_appearance"
+                        android:padding="5dp"
+                        android:scaleType="fitCenter"
+                        tools:src="@tools:sample/avatars" />
 
-            <TextView
-                android:id="@+id/textView4"
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_gravity="bottom|end"
+                        android:background="@drawable/background_icon_edit"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_px_edit" />
+                </FrameLayout>
+
+                <TextView
+                    style="@style/ProfileEditorFieldLabel"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center_horizontal"
+                    android:text="@string/profile_icon_launcher_icons" />
+
+                <!-- Built-in launcher icon choices; tags carry the InstanceIconProvider icon name -->
+                <LinearLayout
+                    android:id="@+id/vprof_editor_icon_choices"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_margin="3dp"
+                        android:background="@drawable/bg_icon_chip"
+                        android:contentDescription="@string/profile_icon_content_desc"
+                        android:padding="6dp"
+                        android:scaleType="fitCenter"
+                        android:tag="default"
+                        android:tooltipText="@string/profile_icon_content_desc"
+                        android:src="@drawable/ic_cs_full" />
+
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_margin="3dp"
+                        android:background="@drawable/bg_icon_chip"
+                        android:contentDescription="@string/profile_icon_content_desc"
+                        android:padding="6dp"
+                        android:scaleType="fitCenter"
+                        android:tag="fabric"
+                        android:tooltipText="@string/profile_icon_content_desc"
+                        android:src="@drawable/ic_fabric" />
+
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_margin="3dp"
+                        android:background="@drawable/bg_icon_chip"
+                        android:contentDescription="@string/profile_icon_content_desc"
+                        android:padding="6dp"
+                        android:scaleType="fitCenter"
+                        android:tag="quilt"
+                        android:tooltipText="@string/profile_icon_content_desc"
+                        android:src="@drawable/ic_quilt" />
+
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_margin="3dp"
+                        android:background="@drawable/bg_icon_chip"
+                        android:contentDescription="@string/profile_icon_content_desc"
+                        android:padding="6dp"
+                        android:scaleType="fitCenter"
+                        android:tag="forge"
+                        android:tooltipText="@string/profile_icon_content_desc"
+                        android:src="@drawable/ic_forge" />
+
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_margin="3dp"
+                        android:background="@drawable/bg_icon_chip"
+                        android:contentDescription="@string/profile_icon_content_desc"
+                        android:padding="6dp"
+                        android:scaleType="fitCenter"
+                        android:tag="neoforge"
+                        android:tooltipText="@string/profile_icon_content_desc"
+                        android:src="@drawable/ic_neoforge" />
+                </LinearLayout>
+
+                <!-- Device image picker (system photo picker → cropper) -->
+                <com.kdt.mcgui.MineButton
+                    android:id="@+id/vprof_editor_icon_gallery"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/profile_icon_from_storage" />
+
+                <TextView
+                    style="@style/ProfileEditorFieldLabel"
+                    android:layout_marginTop="14dp"
+                    android:text="@string/profiles_profile_name" />
+
+                <EditText
+                    android:id="@+id/vprof_editor_instance_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/bg_input_field"
+                    android:hint="@string/unnamed"
+                    android:inputType="textPersonName"
+                    android:maxLength="64"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="10dp"
+                    android:singleLine="true"
+                    android:textSize="@dimen/_13ssp" />
+            </LinearLayout>
+
+            <!-- ============ B. Profile Appearance ============ -->
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/profiles_profile_version"
-                app:layout_constraintBottom_toTopOf="@+id/vprof_editor_version_spinner"
-                app:layout_constraintStart_toStartOf="@+id/vprof_editor_version_spinner" />
+                android:layout_marginTop="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/vprof_editor_version_spinner"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:layout_marginEnd="@dimen/padding_medium"
-                android:background="@drawable/background_line"
-                android:hint="@string/version_select_hint"
-                android:paddingHorizontal="@dimen/padding_heavy"
-                android:textSize="@dimen/_13ssp"
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:layout_marginEnd="6dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_px_image"
+                    android:tint="?attr/colorOnSurfaceVariant" />
 
-                app:layout_constraintEnd_toStartOf="@+id/vprof_editor_version_button"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_instance_name" />
+                <TextView
+                    style="@style/ProfileEditorSection"
+                    android:text="@string/profile_editor_appearance" />
+            </LinearLayout>
 
-            <Button
-                android:id="@+id/vprof_editor_version_button"
-                android:layout_width="wrap_content"
-                android:layout_height="0dp"
-                android:paddingHorizontal="@dimen/padding_large"
-                android:paddingVertical="0px"
-
-
-                android:text="@string/global_select"
-
-                app:layout_constraintBottom_toBottomOf="@+id/vprof_editor_version_spinner"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/vprof_editor_version_spinner" />
-
-
-            <TextView
-                android:id="@+id/textView7"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/default_control"
-                app:layout_constraintBottom_toTopOf="@+id/vprof_editor_ctrl_spinner"
-                app:layout_constraintStart_toStartOf="@+id/vprof_editor_ctrl_spinner" />
-
-            <TextView
-                android:id="@+id/vprof_editor_ctrl_spinner"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:layout_marginEnd="@dimen/padding_medium"
-
-                android:background="@drawable/background_line"
-                android:hint="@string/use_global_default"
-                android:paddingHorizontal="@dimen/padding_heavy"
-                android:textSize="@dimen/_13ssp"
-
-                app:layout_constraintEnd_toStartOf="@id/vprof_editor_ctrl_button"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_version_spinner" />
-
-            <Button
-                android:id="@+id/vprof_editor_ctrl_button"
-                android:layout_width="wrap_content"
-                android:layout_height="0dp"
-                android:paddingHorizontal="@dimen/padding_large"
-                android:text="@string/global_select"
-
-
-                app:layout_constraintBottom_toBottomOf="@id/vprof_editor_ctrl_spinner"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@id/vprof_editor_ctrl_spinner" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/instance_shared_data"
-                app:layout_constraintBottom_toTopOf="@+id/vprof_editor_data_checkbox_container"
-                app:layout_constraintStart_toStartOf="@+id/vprof_editor_data_checkbox_container"/>
-
-            <CheckBox
-                android:id="@+id/vprof_editor_data_checkbox_container"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:background="@drawable/background_line"
-                android:paddingHorizontal="@dimen/padding_heavy"
-                android:button="@null"
-                android:text="@string/instance_shared_data_off"
-                android:textColor="@color/checkbox_text_color"
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_ctrl_spinner"
-                tools:layout_editor_absoluteX="22dp"/>
+                android:background="@drawable/bg_card_home"
+                android:orientation="vertical"
+                android:padding="@dimen/padding_large">
 
+                <ImageView
+                    android:id="@+id/vprof_editor_bg_preview"
+                    android:layout_width="match_parent"
+                    android:layout_height="74dp"
+                    android:background="@drawable/banner_home"
+                    android:contentDescription="@string/profile_editor_appearance"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/banner_home"
+                    tools:ignore="RtlSymmetry" />
 
-            <TextView
-                android:id="@+id/textView6"
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/padding_heavy"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <com.kdt.mcgui.MineButton
+                        android:id="@+id/vprof_editor_bg_choose"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="6dp"
+                        android:layout_weight="1"
+                        android:text="@string/profile_background_choose" />
+
+                    <com.kdt.mcgui.MineButton
+                        android:id="@+id/vprof_editor_bg_reset"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:text="@string/profile_background_reset" />
+                </LinearLayout>
+
+                <TextView
+                    style="@style/ProfileEditorHint"
+                    android:text="@string/profile_background_hint" />
+            </LinearLayout>
+
+            <!-- ============ C. Game Configuration ============ -->
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/pvc_jvmArgs"
-                app:layout_constraintBottom_toTopOf="@+id/vprof_editor_jre_args"
-                app:layout_constraintStart_toStartOf="@+id/vprof_editor_jre_args" />
+                android:layout_marginTop="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-            <EditText
-                android:id="@+id/vprof_editor_jre_args"
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:layout_marginEnd="6dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_px_sliders"
+                    android:tint="?attr/colorOnSurfaceVariant" />
+
+                <TextView
+                    style="@style/ProfileEditorSection"
+                    android:text="@string/profile_editor_game_config" />
+            </LinearLayout>
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:background="@drawable/background_line"
-                android:ems="10"
-                android:hint="@string/use_global_default"
-                android:inputType="text"
-                android:paddingHorizontal="@dimen/padding_heavy"
-                android:textSize="@dimen/_13ssp"
+                android:background="@drawable/bg_card_home"
+                android:orientation="vertical"
+                android:padding="@dimen/padding_large">
 
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_data_checkbox_container" />
+                <!-- Version (+ loader where the selector offers it) -->
+                <TextView
+                    style="@style/ProfileEditorFieldLabel"
+                    android:layout_marginTop="0dp"
+                    android:text="@string/profiles_profile_version" />
 
-            <TextView
-                android:id="@+id/textView2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/pedit_java_runtime"
-                app:layout_constraintBottom_toTopOf="@+id/vprof_editor_spinner_runtime"
-                app:layout_constraintStart_toStartOf="@+id/vprof_editor_spinner_runtime" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
 
-            <Spinner
-                android:id="@+id/vprof_editor_spinner_runtime"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/background_line"
-                android:paddingVertical="0px"
-                android:layout_marginTop="32dp"
-                app:layout_constraintTop_toBottomOf="@id/vprof_editor_jre_args"
-                tools:paddingVertical="@dimen/_12sdp" />
+                    <TextView
+                        android:id="@+id/vprof_editor_version_spinner"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_input_field"
+                        android:ellipsize="end"
+                        android:hint="@string/version_select_hint"
+                        android:paddingHorizontal="14dp"
+                        android:paddingVertical="12dp"
+                        android:singleLine="true"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="@dimen/_13ssp"
+                        tools:text="1.20.4" />
 
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/_8sdp"
-                android:paddingHorizontal="@dimen/_8sdp"
-                android:rotation="180"
-                android:src="@drawable/spinner_arrow"
+                    <Button
+                        android:id="@+id/vprof_editor_version_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:minHeight="0dp"
+                        android:minWidth="0dp"
+                        android:paddingHorizontal="@dimen/padding_large"
+                        android:paddingVertical="10dp"
+                        android:text="@string/global_select" />
+                </LinearLayout>
 
-                app:layout_constraintBottom_toBottomOf="@id/vprof_editor_spinner_runtime"
-                app:layout_constraintEnd_toEndOf="@id/vprof_editor_spinner_runtime"
-                app:layout_constraintTop_toTopOf="@id/vprof_editor_spinner_runtime" />
+                <!-- Control layout -->
+                <TextView
+                    style="@style/ProfileEditorFieldLabel"
+                    android:text="@string/default_control" />
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/textView3"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/pedit_renderer"
-                app:layout_constraintBottom_toTopOf="@+id/vprof_editor_instance_renderer"
-                app:layout_constraintStart_toStartOf="@+id/vprof_editor_instance_renderer" />
+                    <TextView
+                        android:id="@+id/vprof_editor_ctrl_spinner"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_input_field"
+                        android:ellipsize="end"
+                        android:hint="@string/use_global_default"
+                        android:paddingHorizontal="14dp"
+                        android:paddingVertical="12dp"
+                        android:singleLine="true"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="@dimen/_13ssp"
+                        tools:text="default" />
 
-            <Spinner
-                android:id="@+id/vprof_editor_instance_renderer"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:background="@drawable/background_line"
-                android:dropDownWidth="match_parent"
-                android:paddingVertical="0px"
+                    <Button
+                        android:id="@+id/vprof_editor_ctrl_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:minHeight="0dp"
+                        android:minWidth="0dp"
+                        android:paddingHorizontal="@dimen/padding_large"
+                        android:paddingVertical="10dp"
+                        android:text="@string/global_select" />
+                </LinearLayout>
 
+                <!-- Java runtime -->
+                <TextView
+                    style="@style/ProfileEditorFieldLabel"
+                    android:text="@string/pedit_java_runtime" />
 
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_spinner_runtime"
-                tools:paddingVertical="@dimen/_12sdp" />
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp">
 
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/_8sdp"
-                android:paddingHorizontal="@dimen/_8sdp"
-                android:rotation="180"
-                android:src="@drawable/spinner_arrow"
+                    <Spinner
+                        android:id="@+id/vprof_editor_spinner_runtime"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_input_field"
+                        android:dropDownWidth="match_parent"
+                        android:paddingHorizontal="14dp"
+                        android:paddingVertical="10dp" />
 
-                app:layout_constraintBottom_toBottomOf="@id/vprof_editor_instance_renderer"
-                app:layout_constraintEnd_toEndOf="@id/vprof_editor_instance_renderer"
-                app:layout_constraintTop_toTopOf="@id/vprof_editor_instance_renderer" />
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical|end"
+                        android:contentDescription="@null"
+                        android:paddingEnd="12dp"
+                        android:rotation="180"
+                        android:src="@drawable/spinner_arrow"
+                        android:tint="?attr/colorOnSurfaceVariant" />
+                </FrameLayout>
 
+                <!-- Renderer -->
+                <TextView
+                    style="@style/ProfileEditorFieldLabel"
+                    android:text="@string/pedit_renderer" />
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp">
+
+                    <Spinner
+                        android:id="@+id/vprof_editor_instance_renderer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_input_field"
+                        android:dropDownWidth="match_parent"
+                        android:paddingHorizontal="14dp"
+                        android:paddingVertical="10dp" />
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical|end"
+                        android:contentDescription="@null"
+                        android:paddingEnd="12dp"
+                        android:rotation="180"
+                        android:src="@drawable/spinner_arrow"
+                        android:tint="?attr/colorOnSurfaceVariant" />
+                </FrameLayout>
+
+                <!-- JVM arguments -->
+                <TextView
+                    style="@style/ProfileEditorFieldLabel"
+                    android:text="@string/pvc_jvmArgs" />
+
+                <EditText
+                    android:id="@+id/vprof_editor_jre_args"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/bg_input_field"
+                    android:hint="@string/use_global_default"
+                    android:inputType="text"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="10dp"
+                    android:singleLine="true"
+                    android:textSize="@dimen/_13ssp" />
+
+                <!-- Shared game data -->
+                <CheckBox
+                    android:id="@+id/vprof_editor_data_checkbox_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/padding_large"
+                    android:background="@drawable/bg_input_field"
+                    android:buttonTint="?attr/colorPrimary"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="10dp"
+                    android:text="@string/instance_shared_data_off"
+                    android:textColor="@color/checkbox_text_color"
+                    android:textSize="11sp" />
+            </LinearLayout>
+        </LinearLayout>
     </ScrollView>
+
+    <!-- D. Actions: cancel discards every pending change, save persists all sections -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/padding_moderate"
+        android:baselineAligned="false"
         android:orientation="horizontal"
         android:paddingHorizontal="@dimen/fragment_padding_medium"
-        android:layout_marginVertical="13dp"
-        >
-        <com.kdt.mcgui.MineButton
-            android:id="@+id/vprof_editor_save_button"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/global_save"
-            android:layout_marginEnd="@dimen/padding_medium" />
+        android:paddingBottom="@dimen/padding_heavy">
 
         <com.kdt.mcgui.MineButton
             android:id="@+id/vprof_editor_delete_button"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="5dp"
             android:layout_weight="1"
-            android:layout_marginStart="@dimen/padding_medium"
             android:text="@string/global_delete" />
+
+        <com.kdt.mcgui.MineButton
+            android:id="@+id/vprof_editor_cancel_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"
+            android:layout_weight="1"
+            android:text="@android:string/cancel" />
+
+        <com.kdt.mcgui.MineButton
+            android:id="@+id/vprof_editor_save_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:layout_weight="1"
+            android:text="@string/global_save" />
     </LinearLayout>
 </LinearLayout>

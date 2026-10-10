@@ -86,6 +86,68 @@ public class Instance extends DisplayInstance {
         }
     }
 
+    /**
+     * @return the profile's custom banner artwork file (may not exist)
+     */
+    public File getBackgroundFile() {
+        return getInstanceBackgroundLocation();
+    }
+
+    /**
+     * @return true when a readable custom background artwork exists for this profile
+     */
+    public boolean hasCustomBackground() {
+        File background = getBackgroundFile();
+        return background != null && background.isFile() && background.canRead();
+    }
+
+    /**
+     * Store the given bitmap as this profile's custom home-banner artwork.
+     * The global launcher banner (LauncherBackground) is a separate file and is untouched.
+     * @param bitmap the cropped banner bitmap
+     * @throws IOException in case of write errors
+     */
+    public void encodeNewBackground(Bitmap bitmap) throws IOException {
+        try(FileOutputStream fileOutputStream = new FileOutputStream(getBackgroundFile())) {
+            bitmap.compress(
+                    Build.VERSION.SDK_INT < Build.VERSION_CODES.R ?
+                            Bitmap.CompressFormat.WEBP :
+                            Bitmap.CompressFormat.WEBP_LOSSY,
+                    85,
+                    fileOutputStream
+            );
+        }
+    }
+
+    /**
+     * Remove this profile's custom background so the global launcher banner shows again.
+     * Ignores a missing file; logs but does not throw if deletion fails.
+     */
+    public void clearCustomBackground() {
+        File background = getBackgroundFile();
+        if(background != null && background.exists() && !background.delete()) {
+            Log.w("Instance", "Failed to delete profile background " + background);
+        }
+    }
+
+    /**
+     * @return true when a readable custom icon file exists for this profile
+     */
+    public boolean hasCustomIconFile() {
+        File iconFile = getInstanceIconLocation();
+        return iconFile != null && iconFile.isFile() && iconFile.canRead();
+    }
+
+    /**
+     * Remove the custom icon file so the profile falls back to its built-in icon.
+     */
+    public void deleteCustomIcon() {
+        File iconFile = getInstanceIconLocation();
+        if(iconFile != null && iconFile.exists() && !iconFile.delete()) {
+            Log.w("Instance", "Failed to delete profile icon " + iconFile);
+        }
+    }
+
     public String getLaunchRenderer() {
         if(Tools.isValidString(renderer)) return renderer;
         return LauncherPreferences.PREF_RENDERER;

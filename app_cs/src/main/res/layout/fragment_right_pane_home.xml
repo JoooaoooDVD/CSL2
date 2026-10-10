@@ -216,7 +216,7 @@
                 android:orientation="horizontal"
                 android:paddingHorizontal="11dp"
                 android:stateListAnimator="?attr/csPressAnimator"
-                android:tooltipText="@string/home_change">
+                android:tooltipText="@string/home_edit">
 
                 <ImageView
                     android:layout_width="15dp"
@@ -228,7 +228,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"
-                    android:text="@string/home_change"
+                    android:text="@string/home_edit"
                     android:textColor="?attr/colorOnSurface"
                     android:textSize="11sp"
                     android:textStyle="bold" />
@@ -444,7 +444,7 @@
             android:layout_weight="48"
             android:background="@drawable/bg_card_home"
             android:orientation="vertical"
-            android:paddingHorizontal="9dp"
+            android:paddingHorizontal="8dp"
             android:paddingVertical="6dp">
 
             <!-- Header -->
@@ -477,7 +477,7 @@
                     android:tooltipText="@string/home_settings" />
             </LinearLayout>
 
-            <!-- Row 1 -->
+            <!-- Row 1: RAM allocation + Java runtime -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
@@ -495,92 +495,102 @@
                     android:clickable="true"
                     android:focusable="true"
                     android:gravity="center_vertical"
-                    android:minHeight="22dp"
                     android:orientation="horizontal"
-                    android:paddingHorizontal="6dp"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="3dp"
                     android:stateListAnimator="?attr/csPressAnimator"
                     android:tooltipText="@string/home_qs_ram">
 
                     <ImageView
-                        android:layout_width="13dp"
-                        android:layout_height="13dp"
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
                         android:contentDescription="@null"
                         android:src="@drawable/ic_px_ram" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
-                        android:ellipsize="end"
-                        android:singleLine="true"
-                        android:text="@string/home_qs_ram"
-                        android:textColor="?attr/colorOnSurfaceVariant"
-                        android:textSize="8sp" />
-
-                    <TextView
-                        android:id="@+id/home_qs_ram_value"
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
+                        android:layout_marginStart="7dp"
                         android:layout_weight="1"
-                        android:ellipsize="end"
-                        android:gravity="end"
-                        android:singleLine="true"
-                        android:textColor="?attr/colorOnSurface"
-                        android:textSize="9sp"
-                        android:textStyle="bold"
-                        tools:text="2048 MB" />
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:singleLine="true"
+                            android:text="@string/home_qs_ram"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="8.5sp" />
+
+                        <TextView
+                            android:id="@+id/home_qs_ram_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="1dp"
+                            android:ellipsize="end"
+                            android:singleLine="true"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="10.5sp"
+                            android:textStyle="bold"
+                            tools:text="2048 MB" />
+                    </LinearLayout>
                 </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/home_qs_java"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
-                    android:layout_marginStart="5dp"
                     android:layout_weight="1"
+                    android:layout_marginStart="3dp"
                     android:background="@drawable/bg_quick_chip"
                     android:clickable="true"
                     android:focusable="true"
                     android:gravity="center_vertical"
-                    android:minHeight="22dp"
                     android:orientation="horizontal"
-                    android:paddingHorizontal="6dp"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="3dp"
                     android:stateListAnimator="?attr/csPressAnimator"
                     android:tooltipText="@string/home_qs_java">
 
                     <ImageView
-                        android:layout_width="13dp"
-                        android:layout_height="13dp"
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
                         android:contentDescription="@null"
                         android:src="@drawable/ic_px_java" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
-                        android:ellipsize="end"
-                        android:singleLine="true"
-                        android:text="@string/home_qs_java"
-                        android:textColor="?attr/colorOnSurfaceVariant"
-                        android:textSize="8sp" />
-
-                    <TextView
-                        android:id="@+id/home_qs_java_value"
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
+                        android:layout_marginStart="7dp"
                         android:layout_weight="1"
-                        android:ellipsize="end"
-                        android:gravity="end"
-                        android:singleLine="true"
-                        android:textColor="?attr/colorOnSurface"
-                        android:textSize="9sp"
-                        android:textStyle="bold"
-                        tools:text="Java 21" />
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:singleLine="true"
+                            android:text="@string/home_qs_java"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="8.5sp" />
+
+                        <TextView
+                            android:id="@+id/home_qs_java_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="1dp"
+                            android:ellipsize="end"
+                            android:singleLine="true"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="10.5sp"
+                            android:textStyle="bold"
+                            tools:text="Internal JRE" />
+                    </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Row 2 -->
+            <!-- Row 2: Renderer + control layout -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
@@ -598,88 +608,98 @@
                     android:clickable="true"
                     android:focusable="true"
                     android:gravity="center_vertical"
-                    android:minHeight="22dp"
                     android:orientation="horizontal"
-                    android:paddingHorizontal="6dp"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="3dp"
                     android:stateListAnimator="?attr/csPressAnimator"
                     android:tooltipText="@string/home_qs_renderer">
 
                     <ImageView
-                        android:layout_width="13dp"
-                        android:layout_height="13dp"
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
                         android:contentDescription="@null"
                         android:src="@drawable/ic_qs_monitor" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
-                        android:ellipsize="end"
-                        android:singleLine="true"
-                        android:text="@string/home_qs_renderer"
-                        android:textColor="?attr/colorOnSurfaceVariant"
-                        android:textSize="8sp" />
-
-                    <TextView
-                        android:id="@+id/home_qs_renderer_value"
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
+                        android:layout_marginStart="7dp"
                         android:layout_weight="1"
-                        android:ellipsize="end"
-                        android:gravity="end"
-                        android:singleLine="true"
-                        android:textColor="?attr/colorOnSurface"
-                        android:textSize="9sp"
-                        android:textStyle="bold"
-                        tools:text="MobileGlues" />
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:singleLine="true"
+                            android:text="@string/home_qs_renderer"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="8.5sp" />
+
+                        <TextView
+                            android:id="@+id/home_qs_renderer_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="1dp"
+                            android:ellipsize="end"
+                            android:singleLine="true"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="10.5sp"
+                            android:textStyle="bold"
+                            tools:text="GL4ES" />
+                    </LinearLayout>
                 </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/home_qs_controls"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
-                    android:layout_marginStart="5dp"
                     android:layout_weight="1"
+                    android:layout_marginStart="3dp"
                     android:background="@drawable/bg_quick_chip"
                     android:clickable="true"
                     android:focusable="true"
                     android:gravity="center_vertical"
-                    android:minHeight="22dp"
                     android:orientation="horizontal"
-                    android:paddingHorizontal="6dp"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="3dp"
                     android:stateListAnimator="?attr/csPressAnimator"
                     android:tooltipText="@string/home_qs_controls">
 
                     <ImageView
-                        android:layout_width="13dp"
-                        android:layout_height="13dp"
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
                         android:contentDescription="@null"
                         android:src="@drawable/ic_px_gamepad" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
-                        android:ellipsize="end"
-                        android:singleLine="true"
-                        android:text="@string/home_qs_controls"
-                        android:textColor="?attr/colorOnSurfaceVariant"
-                        android:textSize="8sp" />
-
-                    <TextView
-                        android:id="@+id/home_qs_controls_value"
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
+                        android:layout_marginStart="7dp"
                         android:layout_weight="1"
-                        android:ellipsize="end"
-                        android:gravity="end"
-                        android:singleLine="true"
-                        android:textColor="?attr/colorOnSurface"
-                        android:textSize="9sp"
-                        android:textStyle="bold"
-                        tools:text="Default" />
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:singleLine="true"
+                            android:text="@string/home_qs_controls"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="8.5sp" />
+
+                        <TextView
+                            android:id="@+id/home_qs_controls_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="1dp"
+                            android:ellipsize="end"
+                            android:singleLine="true"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="10.5sp"
+                            android:textStyle="bold"
+                            tools:text="Default" />
+                    </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>

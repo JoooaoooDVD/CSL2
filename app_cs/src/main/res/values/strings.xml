@@ -26,6 +26,7 @@
     <string name="home_banner_customizable">CUSTOMIZABLE</string>
     <string name="home_selected_profile">Selected Profile</string>
     <string name="home_change">Change</string>
+    <string name="home_edit" translatable="false">EDIT</string>
     <string name="home_play">PLAY</string>
     <string name="home_card_browser_title">BROWSER RESOURCES</string>
     <string name="home_card_browser_desc">Mods • Resource Packs</string>
@@ -304,6 +305,21 @@
     <string name="profiles_latest_release">Latest release</string>
     <string name="profiles_profile_name">Name</string>
     <string name="profiles_profile_version">Version</string>
+
+    <!-- Profile editor redesign -->
+    <string name="profile_editor_title">Edit profile</string>
+    <string name="profile_editor_identity">Profile Identity</string>
+    <string name="profile_editor_appearance">Profile Appearance</string>
+    <string name="profile_editor_game_config">Game Configuration</string>
+    <string name="profile_editor_saved">Profile saved</string>
+    <string name="profile_icon_launcher_icons">Launcher icons</string>
+    <string name="profile_icon_from_storage">Choose from storage</string>
+    <string name="profile_icon_content_desc">Profile icon</string>
+    <string name="profile_background_choose">Choose image</string>
+    <string name="profile_background_reset">Use default</string>
+    <string name="profile_background_hint">Shown on the home banner for this profile only. The global launcher banner is not changed.</string>
+    <string name="profile_name_empty_error">Profile name cannot be empty</string>
+    <string name="profile_name_too_long">Profile name is too long (64 characters max)</string>
     <string name="instance_shared_data">Shared data (click to switch)</string>
     <string name="instance_shared_data_on">Store game data in a shared directory</string>
     <string name="instance_shared_data_off">Store game data in the instance directory</string>

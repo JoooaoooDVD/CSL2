@@ -73,14 +73,14 @@
         app:layout_constraintVertical_bias="0.0"
         tools:text="This mod uses async path-tracing to hide Tiles/Entities that are not vi…" />
 
-    <!-- Update button, hidden until an update is available -->
+    <!-- Update/download button, hidden until an update is available -->
     <ImageButton
         android:id="@+id/installed_mod_update"
         android:layout_width="@dimen/_38sdp"
         android:layout_height="@dimen/_38sdp"
         android:layout_marginEnd="@dimen/padding_small"
         android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:src="@drawable/ic_export_mrpack"
+        android:src="@drawable/ic_download"
         android:tint="?attr/colorOnSurfaceVariant"
         android:padding="@dimen/padding_moderate"
         android:visibility="gone"

@@ -27,6 +27,15 @@ public class DisplayInstance {
         return new File(mInstanceRoot, "icon.webp");
     }
 
+    /**
+     * Location of this profile's custom home-banner artwork ("background.webp").
+     * Sits next to the profile metadata so it follows the profile directory and
+     * survives restarts; absence of the file means "use the global launcher banner".
+     */
+    protected File getInstanceBackgroundLocation() {
+        return new File(mInstanceRoot, "background.webp");
+    }
+
     private void sanitizeIcon() {
         if(!InstanceIconProvider.hasStaticIcon(icon)) {
             icon = InstanceIconProvider.FALLBACK_ICON_NAME;

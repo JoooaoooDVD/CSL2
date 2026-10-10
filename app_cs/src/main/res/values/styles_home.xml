@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- CS Launcher Plus home screen widget styles -->
 <resources>
-    <!-- Sidebar navigation buttons: icon-only, centered icon, 48dp touch target -->
+    <!-- Sidebar navigation buttons: icon-only, centered icon, compact 44dp rows -->
     <style name="Home.NavItem" parent="">
         <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">48dp</item>
+        <item name="android:layout_height">44dp</item>
         <item name="android:orientation">horizontal</item>
         <item name="android:gravity">center</item>
-        <item name="android:layout_marginBottom">4dp</item>
+        <item name="android:layout_marginBottom">2dp</item>
         <item name="android:background">@drawable/bg_nav_item</item>
         <item name="android:stateListAnimator">?attr/csPressAnimator</item>
         <item name="android:clickable">true</item>

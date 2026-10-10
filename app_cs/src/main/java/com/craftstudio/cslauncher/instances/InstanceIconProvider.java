@@ -7,6 +7,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.content.res.ResourcesCompat;
 
 import com.craftstudio.cslauncher.R;
@@ -105,5 +106,23 @@ public class InstanceIconProvider {
      */
     public static boolean hasStaticIcon(String name) {
         return sStaticIcons.containsKey(name);
+    }
+
+    /**
+     * Fetch a built-in launcher icon by its static name (see the sStaticIcons table),
+     * with the shared static cache. Unknown names fall back to the default icon.
+     * Intended for the profile editor's icon choice strip.
+     * @param name the icon name (e.g. "fabric"), may be null
+     * @return the drawable, or null only if the resources are broken
+     */
+    public static @Nullable Drawable fetchStaticIconByName(@Nullable Resources resources, @Nullable String name) {
+        if(resources == null) return null;
+        String key = hasStaticIcon(name) ? name : FALLBACK_ICON_NAME;
+        Drawable cached = sStaticIconCache.get(key);
+        if(cached != null) return cached;
+        Drawable drawable = getStaticIcon(resources, key);
+        if(drawable == null) drawable = getStaticIcon(resources, FALLBACK_ICON_NAME);
+        if(drawable != null) sStaticIconCache.put(key, drawable);
+        return drawable;
     }
 }

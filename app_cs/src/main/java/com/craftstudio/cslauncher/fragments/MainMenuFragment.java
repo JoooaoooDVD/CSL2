@@ -17,6 +17,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.constraintlayout.widget.Guideline;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
@@ -50,6 +51,7 @@ public class MainMenuFragment extends Fragment {
     /* The sidebar and the pane that replaces it while the content picker is open, null in portrait */
     private View mLeftSidebar;
     private FrameLayout mLeftPaneContainer;
+    private Guideline mPaneGuideline;
     /* Intercepts back when the right pane shows something above the home screen */
     private OnBackPressedCallback mRightPaneBackCallback;
 
@@ -186,6 +188,16 @@ public class MainMenuFragment extends Fragment {
         boolean pickerActive = leftFragment instanceof ContentPickerFragment;
         mLeftSidebar.setVisibility(pickerActive ? View.GONE : View.VISIBLE);
         mLeftPaneContainer.setVisibility(pickerActive ? View.VISIBLE : View.GONE);
+        // The left column doubles as the compact icon-only nav rail and as the content picker
+        // column. Keep the rail at its reduced fixed width, but widen the column while the
+        // picker is open so its rows stay readable.
+        if(mPaneGuideline != null) {
+            if(pickerActive) {
+                mPaneGuideline.setGuidelinePercent(0.18f);
+            }else {
+                mPaneGuideline.setGuidelineBegin(Math.round(64f * getResources().getDisplayMetrics().density));
+            }
+        }
     }
 
     private void showContentPickerDialog(boolean manage) {
@@ -303,6 +315,7 @@ public class MainMenuFragment extends Fragment {
         mRightPane = view.findViewById(R.id.right_pane_container);
         mLeftSidebar = view.findViewById(R.id.left_sidebar);
         mLeftPaneContainer = view.findViewById(R.id.left_pane_container);
+        mPaneGuideline = view.findViewById(R.id.pane_guideline);
         getChildFragmentManager().addOnBackStackChangedListener(mBackStackListener);
 
         FragmentManager childManager = getChildFragmentManager();
@@ -402,6 +415,7 @@ public class MainMenuFragment extends Fragment {
         mRightPane = null;
         mLeftSidebar = null;
         mLeftPaneContainer = null;
+        mPaneGuideline = null;
     }
 
     private void openGameDirectory(Context context) {

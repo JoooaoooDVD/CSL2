@@ -54,6 +54,8 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
     private mcVersionSpinner mVersionSpinner;
     /* Incremented to drop the result of a decode that is not needed anymore */
     private int mLoadId;
+    /** Key of the artwork currently shown on the banner (path + mtime), null before the first load */
+    private String mBackgroundKey;
 
     public RightPaneHomeFragment() {
         super(R.layout.fragment_right_pane_home);
@@ -196,6 +198,10 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
             bannerVersion.setVisibility(hasInstance ? View.VISIBLE : View.GONE);
             if (hasInstance) bannerVersion.setText(detail);
         }
+
+        // The banner artwork follows the selected profile (and profile-editor saves) immediately;
+        // loadBackground() is a no-op while the same artwork is already shown
+        loadBackground();
     }
 
     private static String capitalize(String s) {
@@ -298,10 +304,50 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         mWallpaper = null;
         mVideo = null;
         mVersionSpinner = null;
+        mBackgroundKey = null;
     }
 
+    /**
+     * Loads the banner artwork: the selected profile's own background first (when set),
+     * otherwise the global launcher background, otherwise the default banner.
+     * Decoding is skipped entirely while the same artwork (profile + mtime) is already shown,
+     * so profile refreshes never repeatedly decode large images.
+     */
     private void loadBackground() {
+        if (mWallpaper == null || mVideo == null) return;
         int loadId = ++mLoadId;
+        String key = backgroundKey();
+        if (key != null && key.equals(mBackgroundKey)) return;
+        mBackgroundKey = key;
+
+        Instance selected = Instances.loadSelectedInstance();
+        if (selected != null && selected.hasCustomBackground()) {
+            // Profile-specific artwork: stored next to the profile, shown only while that
+            // profile is selected. The global launcher background file stays untouched.
+            final File profileBackground = selected.getBackgroundFile();
+            mVideo.release();
+            mVideo.setVisibility(View.GONE);
+            CSLauncherApplication.sExecutorService.execute(() -> {
+                Drawable drawable = LauncherBackground.decodeImage(profileBackground);
+                View root = getView();
+                if (root == null) return;
+                root.post(() -> {
+                    if (loadId != mLoadId || mWallpaper == null) return;
+                    if (drawable == null) {
+                        // Missing/unreadable file: fall back and allow a later retry
+                        mBackgroundKey = null;
+                        clearBackground();
+                        return;
+                    }
+                    mWallpaper.setImageDrawable(drawable);
+                    mWallpaper.setVisibility(View.VISIBLE);
+                    setImageAnimation(isResumed());
+                    CSAnimationEngine.animateImageSwap(mWallpaper);
+                });
+            });
+            return;
+        }
+
         String kind = LauncherBackground.getKind(requireContext());
         if (kind == null) {
             clearBackground();
@@ -324,14 +370,33 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
             root.post(() -> {
                 if (loadId != mLoadId || mWallpaper == null) return;
                 if (drawable == null) {
+                    mBackgroundKey = null;
                     clearBackground();
                     return;
                 }
                 mWallpaper.setImageDrawable(drawable);
                 mWallpaper.setVisibility(View.VISIBLE);
                 setImageAnimation(isResumed());
+                CSAnimationEngine.animateImageSwap(mWallpaper);
             });
         });
+    }
+
+    /** Cheap identity of the artwork the banner should show right now (no decoding) */
+    private String backgroundKey() {
+        try {
+            Instance selected = Instances.loadSelectedInstance();
+            if (selected != null && selected.hasCustomBackground()) {
+                File profileBackground = selected.getBackgroundFile();
+                return "profile:" + profileBackground.getAbsolutePath() + ":" + profileBackground.lastModified();
+            }
+            String kind = LauncherBackground.getKind(requireContext());
+            if (kind == null) return "default";
+            File file = LauncherBackground.getFile();
+            return "global:" + kind + ":" + file.getAbsolutePath() + ":" + (file.exists() ? file.lastModified() : 0L);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     /** No custom background: the banner art shows */
