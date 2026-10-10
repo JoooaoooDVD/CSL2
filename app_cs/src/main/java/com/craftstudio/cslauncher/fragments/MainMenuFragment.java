@@ -1,5 +1,6 @@
 package com.craftstudio.cslauncher.fragments;
 
+import com.craftstudio.cslauncher.utils.motion.MainMenuMotion;
 import com.craftstudio.cslauncher.utils.AnimationManager;
 import static com.craftstudio.cslauncher.Tools.openPath;
 import static com.craftstudio.cslauncher.Tools.shareLog;
@@ -52,6 +53,8 @@ public class MainMenuFragment extends Fragment {
     private View mLeftSidebar;
     private FrameLayout mLeftPaneContainer;
     private Guideline mPaneGuideline;
+    /* The profile editor hides the whole left column while it is open */
+    private boolean mFocusMode;
     /* Intercepts back when the right pane shows something above the home screen */
     private OnBackPressedCallback mRightPaneBackCallback;
 
@@ -207,23 +210,50 @@ public class MainMenuFragment extends Fragment {
         onContentTypeChosen(manage, contentType);
     }
 
-    /** Shows the sidebar or the content picker in the left pane, depending on which is active */
+    /**
+     * Shows the sidebar or the content picker in the left pane, depending on which is active.
+     * The profile editor (and anything it opens) is a focus screen: the whole left column goes
+     * away so the editor gets the full width, and the rail slides back in when it closes.
+     */
     private void updateLeftPaneVisibility() {
         if (!isTwoPane() || mLeftSidebar == null || mLeftPaneContainer == null) return;
         Fragment leftFragment = getChildFragmentManager().findFragmentById(R.id.left_pane_container);
         boolean pickerActive = leftFragment instanceof ContentPickerFragment;
-        mLeftSidebar.setVisibility(pickerActive ? View.GONE : View.VISIBLE);
-        mLeftPaneContainer.setVisibility(pickerActive ? View.VISIBLE : View.GONE);
+        boolean focus = isProfileEditorOpen();
+        boolean wasHidden = mLeftSidebar.getVisibility() != View.VISIBLE;
+
+        if (focus) {
+            mLeftSidebar.animate().cancel();
+            mLeftSidebar.setVisibility(View.GONE);
+            mLeftPaneContainer.setVisibility(View.GONE);
+        } else {
+            mLeftSidebar.setVisibility(pickerActive ? View.GONE : View.VISIBLE);
+            mLeftPaneContainer.setVisibility(pickerActive ? View.VISIBLE : View.GONE);
+            // Coming back from the focus screen: the rail glides in from the left edge
+            if (!pickerActive && wasHidden && mFocusMode) MainMenuMotion.railIn(mLeftSidebar);
+        }
+        mFocusMode = focus;
         // The left column doubles as the compact icon-only nav rail and as the content picker
         // column. Keep the rail at its reduced fixed width, but widen the column while the
-        // picker is open so its rows stay readable.
+        // picker is open so its rows stay readable. The focus screen collapses it entirely.
         if(mPaneGuideline != null) {
-            if(pickerActive) {
+            if(focus) {
+                mPaneGuideline.setGuidelineBegin(0);
+            }else if(pickerActive) {
                 mPaneGuideline.setGuidelinePercent(0.18f);
             }else {
                 mPaneGuideline.setGuidelineBegin(Math.round(64f * getResources().getDisplayMetrics().density));
             }
         }
+    }
+
+    /** @return whether the profile editor is somewhere in the right pane back stack */
+    private boolean isProfileEditorOpen() {
+        FragmentManager manager = getChildFragmentManager();
+        for (int i = manager.getBackStackEntryCount() - 1; i >= 0; i--) {
+            if (InstanceEditorFragment.TAG.equals(manager.getBackStackEntryAt(i).getName())) return true;
+        }
+        return false;
     }
 
     private void showContentPickerDialog(boolean manage) {
@@ -340,6 +370,7 @@ public class MainMenuFragment extends Fragment {
         mLeftSidebar = view.findViewById(R.id.left_sidebar);
         mLeftPaneContainer = view.findViewById(R.id.left_pane_container);
         mPaneGuideline = view.findViewById(R.id.pane_guideline);
+        mFocusMode = false;
         getChildFragmentManager().addOnBackStackChangedListener(mBackStackListener);
 
         FragmentManager childManager = getChildFragmentManager();
