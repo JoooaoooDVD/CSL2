@@ -245,7 +245,8 @@ public class SettingsHostFragment extends Fragment
 
         CharSequence newTitle = getString(title);
         CharSequence newSubtitle = getString(subtitle);
-        if (mHeaderTitle.getText() == null || !mHeaderTitle.getText().contentEquals(newTitle)) {
+        if (mHeaderTitle.getText() == null
+                || !newTitle.toString().contentEquals(mHeaderTitle.getText().toString())) {
             CSAnimationEngine.animateValueRefresh(mHeaderTitle, newTitle);
             CSAnimationEngine.animateValueRefresh(mHeaderSubtitle, newSubtitle);
         }
