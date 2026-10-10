@@ -110,7 +110,8 @@ public final class CSAnimationEngine {
             popup.setExitTransition(null);
             return null;
         }
-        TransitionSet set = new TransitionSet(TransitionSet.ORDERING_TOGETHER);
+        TransitionSet set = new TransitionSet();
+        set.setOrdering(TransitionSet.ORDERING_TOGETHER);
         Slide slide = new Slide(Gravity.BOTTOM);
         slide.setDuration(DURATION_NORMAL);
         Fade fade = new Fade(Fade.IN);
