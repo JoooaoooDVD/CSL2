@@ -27,6 +27,10 @@
     <string name="home_selected_profile">Selected Profile</string>
     <string name="home_change">Change</string>
     <string name="home_edit" translatable="false">EDIT</string>
+    <string name="home_downloading">Downloading</string>
+    <string name="home_downloading_wait">Starting download…</string>
+    <string name="settings_hub_title">Settings</string>
+    <string name="settings_hub_subtitle">Customize CS Launcher Plus</string>
     <string name="home_play">PLAY</string>
     <string name="home_card_browser_title">BROWSER RESOURCES</string>
     <string name="home_card_browser_desc">Mods • Resource Packs</string>

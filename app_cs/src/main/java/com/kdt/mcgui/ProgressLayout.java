@@ -115,15 +115,33 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
         mFlipArrow.setRotation(mLinearLayout.getVisibility() == GONE? 0 : 180);
     }
 
+    /** When true (set by the home screen, which shows progress on the PLAY button instead),
+     *  the floating panel stays hidden while still keeping its task-count registration. */
+    private boolean mHiddenByHost = false;
+
+    public void setHiddenByHost(boolean hidden) {
+        post(() -> {
+            mHiddenByHost = hidden;
+            applyVisibility(ProgressKeeper.getTaskCount());
+        });
+    }
+
+    private void applyVisibility(int tc) {
+        if (mHiddenByHost) {
+            setVisibility(GONE);
+            return;
+        }
+        if (tc > 0) {
+            mTaskNumberDisplayer.setText(getContext().getString(R.string.progresslayout_tasks_in_progress, tc));
+            setVisibility(VISIBLE);
+        } else {
+            setVisibility(GONE);
+        }
+    }
+
     @Override
     public boolean onUpdateTaskCount(int tc) {
-        post(()->{
-            if(tc > 0) {
-                mTaskNumberDisplayer.setText(getContext().getString(R.string.progresslayout_tasks_in_progress, tc));
-                setVisibility(VISIBLE);
-            }else
-                setVisibility(GONE);
-        });
+        post(()->applyVisibility(tc));
         return false;
     }
 

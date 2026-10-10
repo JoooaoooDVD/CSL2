@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app2="http://schemas.android.com/apk/res-auto">
-    <com.craftstudio.cslauncher.prefs.BackButtonPreference />
-    <PreferenceCategory android:title="@string/preference_category_experimental_settings">
+    <com.craftstudio.cslauncher.prefs.BackButtonPreference android:layout="@layout/item_setting_row" />
+    <PreferenceCategory android:layout="@layout/item_settings_section" android:title="@string/preference_category_experimental_settings">
 
-        <SwitchPreferenceCompat
+        <SwitchPreferenceCompat android:layout="@layout/item_setting_row"
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:key="dump_shaders"
             android:title="@string/preference_shader_dump_title"
             android:summary="@string/preference_shader_dump_description"
             />
-        <SwitchPreferenceCompat
+        <SwitchPreferenceCompat android:layout="@layout/item_setting_row"
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:defaultValue="false"
             android:key="bigCoreAffinity"
             android:title="@string/preference_force_big_core_title"
             android:summary="@string/preference_force_big_core_desc" />
-        <SwitchPreferenceCompat
+        <SwitchPreferenceCompat android:layout="@layout/item_setting_row"
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:defaultValue="false"
             android:key="freedrenoSysmem"
             android:title="@string/preference_sysmem_title"
             android:summary="@string/preference_sysmem_summary"
             />
-        <SwitchPreferenceCompat
+        <SwitchPreferenceCompat android:layout="@layout/item_setting_row"
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:defaultValue="false"
             android:key="alsoftForceOpenSL"
@@ -31,7 +31,7 @@
             android:title="@string/preference_alsoft_opensl_title"
             android:summary="@string/preference_alsoft_opensl_summary"
             />
-        <SwitchPreferenceCompat
+        <SwitchPreferenceCompat android:layout="@layout/item_setting_row"
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:key="disableCurseforgeApi"
             android:defaultValue="false"
@@ -43,7 +43,7 @@
             android:summary="@string/preference_curseforge_api_key_desc"
             android:dialogTitle="@string/preference_curseforge_api_key_title"
             android:dialogMessage="@string/preference_curseforge_api_key_desc" />
-        <SwitchPreferenceCompat
+        <SwitchPreferenceCompat android:layout="@layout/item_setting_row"
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:defaultValue="false"
             android:key="ubwcWorkaround"

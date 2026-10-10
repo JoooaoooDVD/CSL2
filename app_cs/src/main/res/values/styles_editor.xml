@@ -31,4 +31,20 @@
         <item name="android:lineSpacingExtra">2dp</item>
     </style>
 
+
+    <!-- Redesigned settings: every Preference renders as a rounded mockup-style card row,
+         every PreferenceCategory as an accent-bar section heading. SeekBar/switch rows keep
+         their own style attributes and are unaffected (seekBarPreferenceStyle etc. untouched). -->
+    <style name="Settings.PreferenceRow">
+        <item name="android:layout">@layout/item_setting_row</item>
+    </style>
+
+    <style name="Settings.SectionHeader">
+        <item name="android:layout">@layout/item_settings_section</item>
+    </style>
+
+    <style name="Settings.PreferenceTheme" parent="PreferenceThemeOverlay.v14.Material">
+        <item name="preferenceStyle">@style/Settings.PreferenceRow</item>
+        <item name="preferenceCategoryStyle">@style/Settings.SectionHeader</item>
+    </style>
 </resources>

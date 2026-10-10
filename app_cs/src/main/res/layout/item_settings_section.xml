@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Section heading with the accent bar from the settings mockup -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginLeft="4dp"
+    android:layout_marginRight="4dp"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingTop="11dp"
+    android:paddingBottom="5dp">
+
+    <View
+        android:layout_width="3dp"
+        android:layout_height="15dp"
+        android:background="@drawable/bg_section_bar" />
+
+    <TextView
+        android:id="@android:id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="9dp"
+        android:letterSpacing="0.04"
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="11.5sp"
+        android:textStyle="bold" />
+</LinearLayout>

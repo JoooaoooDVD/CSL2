@@ -13,6 +13,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.kdt.mcgui.CenterCropVideoView;
+import com.kdt.mcgui.ProgressLayout;
 import com.kdt.mcgui.mcVersionSpinner;
 
 import com.craftstudio.cslauncher.CustomControlsActivity;
@@ -26,6 +27,8 @@ import com.craftstudio.cslauncher.extra.ExtraListener;
 import com.craftstudio.cslauncher.game.renderer.def.Renderers;
 import com.craftstudio.cslauncher.instances.Instance;
 import com.craftstudio.cslauncher.instances.Instances;
+import com.craftstudio.cslauncher.OutlineArcProgressView;
+import com.craftstudio.cslauncher.progresskeeper.ProgressKeeper;
 import com.craftstudio.cslauncher.multirt.MultiRTUtils;
 import com.craftstudio.cslauncher.multirt.Runtime;
 import com.craftstudio.cslauncher.prefs.LauncherPreferences;
@@ -50,6 +53,16 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
     public static final String TAG = "RightPaneHomeFragment";
 
     private ImageView mWallpaper;
+    private View mPlayIcon;
+    private TextView mPlayTitle;
+    private TextView mPlaySubtitle;
+    private OutlineArcProgressView mPlayArc;
+    private boolean mDownloading;
+    private int mAggregateProgress = -1;
+    /** One listener covers every progress record + the initial state on registration */
+    private final ProgressKeeper.GlobalProgressListener mGlobalProgressListener =
+            (taskCount, aggregatePercent) -> Tools.runOnUiThread(
+                    () -> onDownloadStateChanged(taskCount, aggregatePercent));
     private CenterCropVideoView mVideo;
     private mcVersionSpinner mVersionSpinner;
     /* Incremented to drop the result of a decode that is not needed anymore */
@@ -81,6 +94,10 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         view.findViewById(R.id.play_button).setOnClickListener(v -> {
             ExtraCore.setValue(ExtraConstants.LAUNCH_GAME, true);
         });
+        mPlayIcon = view.findViewById(R.id.home_play_icon);
+        mPlayTitle = view.findViewById(R.id.home_play_title);
+        mPlaySubtitle = view.findViewById(R.id.home_play_subtitle);
+        mPlayArc = view.findViewById(R.id.home_play_arc);
 
         view.findViewById(R.id.home_card_browser).setOnClickListener(v -> {
             openContentPicker(false);
@@ -136,6 +153,10 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
     public void onResume() {
         super.onResume();
         ExtraCore.addExtraListener(ExtraConstants.REFRESH_VERSION_SPINNER, this);
+        // The PLAY button carries the download state here, so the floating panel steps aside
+        ProgressKeeper.addGlobalListener(mGlobalProgressListener);
+        ProgressLayout progressLayout = requireActivity().findViewById(R.id.progress_layout);
+        if (progressLayout != null) progressLayout.setHiddenByHost(true);
         if (mVideo != null) mVideo.resumePlayback();
         setImageAnimation(true);
         refreshQuickSettings();
@@ -146,8 +167,56 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
     public void onPause() {
         super.onPause();
         ExtraCore.removeExtraListenerFromValue(ExtraConstants.REFRESH_VERSION_SPINNER, this);
+        ProgressKeeper.removeGlobalListener(mGlobalProgressListener);
+        ProgressLayout progressLayout = requireActivity().findViewById(R.id.progress_layout);
+        if (progressLayout != null) progressLayout.setHiddenByHost(false);
         if (mVideo != null) mVideo.pausePlayback();
         setImageAnimation(false);
+    }
+
+    // ─── Download state on the PLAY button ──────────────────────────────────
+
+    /** Callback from ProgressKeeper (any thread) - hops to the UI thread above */
+    private void onDownloadStateChanged(int taskCount, int aggregatePercent) {
+        View root = getView();
+        if (root == null) return;
+        mAggregateProgress = aggregatePercent;
+        boolean downloading = taskCount > 0;
+        if (downloading != mDownloading) {
+            mDownloading = downloading;
+            applyPlayDownloadState();
+        } else if (downloading) {
+            updateDownloadSubtitle();
+        }
+    }
+
+    /** Toggles the PLAY button between its normal and downloading presentation */
+    private void applyPlayDownloadState() {
+        View root = getView();
+        if (root == null || mPlayTitle == null || mPlayArc == null) return;
+        if (mDownloading) {
+            if (mPlayIcon != null) mPlayIcon.setVisibility(View.GONE);
+            CSAnimationEngine.animateValueRefresh(mPlayTitle, getString(R.string.home_downloading));
+            updateDownloadSubtitle();
+            mPlayArc.setProgress(mAggregateProgress);
+            mPlayArc.setDownloading(true);
+        } else {
+            mPlayArc.setDownloading(false);
+            mPlayArc.setProgress(-1);
+            if (mPlayIcon != null) mPlayIcon.setVisibility(View.VISIBLE);
+            CSAnimationEngine.animateValueRefresh(mPlayTitle, getString(R.string.home_play));
+            // Restore the version/loader subtitle
+            refreshVersionInfo();
+        }
+    }
+
+    private void updateDownloadSubtitle() {
+        if (mPlaySubtitle == null || !mDownloading) return;
+        String text = mAggregateProgress >= 0
+                ? mAggregateProgress + "%"
+                : getString(R.string.home_downloading_wait);
+        CSAnimationEngine.animateValueRefresh(mPlaySubtitle, text);
+        if (mPlayArc != null) mPlayArc.setProgress(mAggregateProgress);
     }
 
     /** The spinner broadcasts a refresh through ExtraCore whenever the selection changed */
@@ -189,7 +258,14 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
             detail = loaderLabel;
         }
 
-        ((TextView) root.findViewById(R.id.home_play_subtitle)).setText(detail);
+        if (mDownloading) {
+            // While downloading the subtitle carries the percent instead of the version line
+            updateDownloadSubtitle();
+        } else if (mPlaySubtitle != null) {
+            mPlaySubtitle.setText(detail);
+        } else {
+            ((TextView) root.findViewById(R.id.home_play_subtitle)).setText(detail);
+        }
 
         // The banner pill carries the same info so it is readable at a glance from the home screen
         TextView bannerVersion = root.findViewById(R.id.home_banner_version);
@@ -305,6 +381,10 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         mVideo = null;
         mVersionSpinner = null;
         mBackgroundKey = null;
+        mPlayIcon = null;
+        mPlayTitle = null;
+        mPlaySubtitle = null;
+        mPlayArc = null;
     }
 
     /**

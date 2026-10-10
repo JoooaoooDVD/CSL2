@@ -2,10 +2,10 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app2="http://schemas.android.com/apk/res-auto">
 
-    <com.craftstudio.cslauncher.prefs.BackButtonPreference />
+    <com.craftstudio.cslauncher.prefs.BackButtonPreference android:layout="@layout/item_setting_row" />
 
-    <PreferenceCategory android:title="@string/preference_category_miscellaneous">
-        <SwitchPreferenceCompat
+    <PreferenceCategory android:layout="@layout/item_settings_section" android:title="@string/preference_category_miscellaneous">
+        <SwitchPreferenceCompat android:layout="@layout/item_setting_row"
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:defaultValue="true"
             android:icon="@drawable/ic_px_hash"
@@ -13,14 +13,14 @@
             android:summary="@string/preference_verify_game_files_description"
             android:title="@string/preference_verify_game_files_title" />
 
-        <SwitchPreferenceCompat
+        <SwitchPreferenceCompat android:layout="@layout/item_setting_row"
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:defaultValue="true"
             android:icon="@drawable/ic_px_zap"
             android:key="fastStartupCheck"
             android:summary="@string/preference_go_vroom_description"
             android:title="@string/preference_go_vroom_title" />
-        <androidx.preference.ListPreference
+        <androidx.preference.ListPreference android:layout="@layout/item_setting_row"
             android:defaultValue="default"
             android:icon="@drawable/ic_px_file_dl"
             android:key="downloadSource"
@@ -28,29 +28,29 @@
             android:entryValues="@array/download_source_values"
             android:title="@string/preference_download_source_title"
             android:summary="@string/preference_download_source_description"
-            app2:useSimpleSummaryProvider="true"/>
-        <SwitchPreferenceCompat
+            app2:useSimpleSummaryProvider="true" android:widgetLayout="@layout/view_chevron"/>
+        <SwitchPreferenceCompat android:layout="@layout/item_setting_row"
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:defaultValue="true"
             android:icon="@drawable/ic_px_verify_hash"
             android:key="verifyManifest"
             android:title="@string/preference_verify_manifest_title"
             android:summary="@string/preference_verify_manifest_description"/>
-        <Preference
+        <Preference android:layout="@layout/item_setting_row"
             android:key="microphoneAccessRequest"
             android:icon="@drawable/ic_microphone"
             android:title="@string/preference_microphone_access_title"
             android:summary="@string/preference_microphone_access_description" />
-        <Preference
+        <Preference android:layout="@layout/item_setting_row"
             android:key="runDataMigration"
             android:icon="@drawable/ic_px_data_import"
             android:title="@string/preference_data_migration_title"
             android:summary="@string/preference_data_migration_summary" />
-        <Preference
+        <Preference android:layout="@layout/item_setting_row"
             android:key="clearMetadataCache"
             android:title="@string/preference_metadata_clear"
             android:summary="@string/preference_metadata_clear_summary" />
-        <SwitchPreferenceCompat
+        <SwitchPreferenceCompat android:layout="@layout/item_setting_row"
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:defaultValue="true"
             android:icon="@drawable/ic_px_memory_warning"
@@ -60,8 +60,8 @@
 
     </PreferenceCategory>
 
-    <PreferenceCategory android:title="@string/preference_category_about">
-        <Preference
+    <PreferenceCategory android:layout="@layout/item_settings_section" android:title="@string/preference_category_about">
+        <Preference android:layout="@layout/item_setting_row"
             android:key="aboutBrand"
             android:icon="@mipmap/ic_launcher"
             android:title="@string/preference_about_title"

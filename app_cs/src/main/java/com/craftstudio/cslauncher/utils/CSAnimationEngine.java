@@ -315,25 +315,6 @@ public final class CSAnimationEngine {
     // ─── Loading / progress state transitions ──────────────────────────────────
 
     /** Shows a loading view with a quick fade. Degrades to a plain show when disabled. */
-    /**
-     * Lightweight in-place fade for content swaps: profile icon/background previews and
-     * home banner artwork changes. Alpha only - no layout pass, no decoding - and like
-     * every engine method it cancels any previous animation on the same view first.
-     */
-    public static void animateImageSwap(@Nullable ImageView target) {
-        if (target == null) return;
-        Context context = target.getContext();
-        if (context == null || !enabled(context, AnimationManager.TYPE_CONTENT)) return;
-        target.animate().cancel();
-        target.setAlpha(0.3f);
-        target.animate()
-                .alpha(1f)
-                .setDuration(DURATION_FAST)
-                .setInterpolator(new DecelerateInterpolator(1.4f))
-                .setListener(null)
-                .start();
-    }
-
     public static void showLoading(@Nullable View view) {
         if (view == null) return;
         view.animate().cancel();
@@ -346,6 +327,25 @@ public final class CSAnimationEngine {
         view.setAlpha(0f);
         view.setVisibility(View.VISIBLE);
         view.animate()
+                .alpha(1f)
+                .setDuration(DURATION_FAST)
+                .setInterpolator(new DecelerateInterpolator(1.4f))
+                .setListener(null)
+                .start();
+    }
+
+    /**
+     * Lightweight in-place fade for content swaps: profile icon/background previews and
+     * home banner artwork changes. Alpha only - no layout pass, no decoding - and like
+     * every engine method it cancels any previous animation on the same view first.
+     */
+    public static void animateImageSwap(@Nullable ImageView target) {
+        if (target == null) return;
+        Context context = target.getContext();
+        if (context == null || !enabled(context, AnimationManager.TYPE_CONTENT)) return;
+        target.animate().cancel();
+        target.setAlpha(0.3f);
+        target.animate()
                 .alpha(1f)
                 .setDuration(DURATION_FAST)
                 .setInterpolator(new DecelerateInterpolator(1.4f))

@@ -2,10 +2,10 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app2="http://schemas.android.com/apk/res-auto">
 
-    <com.craftstudio.cslauncher.prefs.BackButtonPreference />
+    <com.craftstudio.cslauncher.prefs.BackButtonPreference android:layout="@layout/item_setting_row" />
 
 
-    <Preference
+    <Preference android:layout="@layout/item_setting_row"
         android:title="@string/preference_edit_controls_title"
         android:summary="@string/preference_edit_controls_summary"
         app2:icon="@drawable/ic_px_gamepad"
@@ -13,10 +13,10 @@
         <intent android:targetPackage="@string/application_package" android:targetClass="com.craftstudio.cslauncher.CustomControlsActivity" android:action=".CustomControlsActivity"/>
     </Preference>
 
-    <PreferenceCategory
+    <PreferenceCategory android:layout="@layout/item_settings_section"
         android:title="@string/preference_category_gestures">
 
-        <androidx.preference.SwitchPreferenceCompat
+        <androidx.preference.SwitchPreferenceCompat android:layout="@layout/item_setting_row"
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:defaultValue="false"
             android:icon="@drawable/ic_px_nogestures"
@@ -24,7 +24,7 @@
             android:summary="@string/mcl_disable_gestures_subtitle"
             android:title="@string/mcl_disable_gestures" />
 
-        <androidx.preference.SwitchPreferenceCompat
+        <androidx.preference.SwitchPreferenceCompat android:layout="@layout/item_setting_row"
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:defaultValue="false"
             android:key="disableDoubleTap"
@@ -46,7 +46,7 @@
 
     </PreferenceCategory>
 
-    <PreferenceCategory
+    <PreferenceCategory android:layout="@layout/item_settings_section"
         android:title="@string/preference_category_buttons">
 
         <com.craftstudio.cslauncher.prefs.CustomSeekBarPreference
@@ -70,7 +70,7 @@
             android:max="100"
             app2:seekBarIncrement="@integer/button_scale_seekbar_increment"
             />
-        <SwitchPreferenceCompat
+        <SwitchPreferenceCompat android:layout="@layout/item_setting_row"
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:key="buttonAllCaps"
             android:defaultValue="true"
@@ -81,7 +81,7 @@
 
     </PreferenceCategory>
 
-    <PreferenceCategory
+    <PreferenceCategory android:layout="@layout/item_settings_section"
         android:title="@string/preference_category_virtual_mouse">
 
         <com.craftstudio.cslauncher.prefs.CustomSeekBarPreference
@@ -107,7 +107,7 @@
             android:max="@integer/mouse_speed_seekbar_max"
             app2:seekBarIncrement="@integer/mouse_speed_seekbar_increment"
             app2:showSeekBarValue="true" />
-        <SwitchPreferenceCompat
+        <SwitchPreferenceCompat android:layout="@layout/item_setting_row"
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:key="mouse_start"
             android:title="@string/preference_mouse_start_title"
@@ -115,11 +115,11 @@
             android:icon="@drawable/ic_px_virtual_mouse"/>
     </PreferenceCategory>
 
-    <PreferenceCategory
+    <PreferenceCategory android:layout="@layout/item_settings_section"
         android:key="gyroCategory"
         android:title="@string/preference_category_gyro_controls"
         >
-        <SwitchPreferenceCompat
+        <SwitchPreferenceCompat android:layout="@layout/item_setting_row"
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:key="enableGyro"
             android:title="@string/preference_enable_gyro_title"
@@ -141,19 +141,19 @@
             android:max="@integer/gyro_rate_seekbar_max"
             app2:selectable="false"
             app2:showSeekBarValue="true"/>
-        <SwitchPreferenceCompat
+        <SwitchPreferenceCompat android:layout="@layout/item_setting_row"
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:key="gyroSmoothing"
             android:title="@string/preference_gyro_smoothing_title"
             android:summary="@string/preference_gyro_smoothing_description"
             android:defaultValue="true"
             />
-        <SwitchPreferenceCompat
+        <SwitchPreferenceCompat android:layout="@layout/item_setting_row"
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:key="gyroInvertX"
             android:title="@string/preference_gyro_invert_x_axis"
             android:summary="@string/preference_gyro_invert_x_axis_description"/>
-        <SwitchPreferenceCompat
+        <SwitchPreferenceCompat android:layout="@layout/item_setting_row"
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:key="gyroInvertY"
             android:title="@string/preference_gyro_invert_y_axis"
@@ -161,14 +161,15 @@
 
     </PreferenceCategory>
 
-    <PreferenceCategory
+    <PreferenceCategory android:layout="@layout/item_settings_section"
         android:title="@string/preference_category_controller_settings"
         >
-        <Preference
+        <Preference android:layout="@layout/item_setting_row"
             android:title="@string/preference_remap_controller_title"
             android:summary="@string/preference_remap_controller_description"
-            android:fragment="com.craftstudio.cslauncher.fragments.GamepadMapperFragment"/>
-        <com.craftstudio.cslauncher.prefs.GamepadRemapPreference
+            android:fragment="com.craftstudio.cslauncher.fragments.GamepadMapperFragment"
+            android:widgetLayout="@layout/view_chevron" />
+        <com.craftstudio.cslauncher.prefs.GamepadRemapPreference android:layout="@layout/item_setting_row"
             android:title="@string/preference_wipe_controller_title"
             android:summary="@string/preference_wipe_controller_description"
             />
@@ -184,8 +185,8 @@
 
     </PreferenceCategory>
 
-    <PreferenceCategory android:title="@string/preference_category_keyboard">
-        <SwitchPreferenceCompat
+    <PreferenceCategory android:layout="@layout/item_settings_section" android:title="@string/preference_category_keyboard">
+        <SwitchPreferenceCompat android:layout="@layout/item_setting_row"
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:key="keyboardAutoPanning"
             android:title="@string/preference_keyboard_autopan_title"

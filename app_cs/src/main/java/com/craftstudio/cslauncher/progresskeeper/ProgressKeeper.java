@@ -9,6 +9,55 @@ public class ProgressKeeper {
     private static final HashMap<String, List<ProgressListener>> sProgressListeners = new HashMap<>();
     private static final HashMap<String, ProgressState> sProgressStates = new HashMap<>();
     private static final List<TaskCountListener> sTaskCountListeners = new ArrayList<>();
+    private static final List<GlobalProgressListener> sGlobalListeners = new ArrayList<>();
+
+    /**
+     * Notified about every progress change regardless of the record, plus once
+     * immediately when registered. Carries the active task count and an aggregate
+     * percent (0-100) across all running tasks, or -1 while unknown.
+     * Callbacks run on whichever thread submitted the progress - keep them short
+     * and hop to the UI thread if the work touches views.
+     */
+    public interface GlobalProgressListener {
+        void onGlobalProgress(int taskCount, int aggregatePercent);
+    }
+
+    public static synchronized void addGlobalListener(GlobalProgressListener listener) {
+        if (sGlobalListeners.contains(listener)) return;
+        sGlobalListeners.add(listener);
+        listener.onGlobalProgress(sProgressStates.size(), aggregateProgressLocked());
+    }
+
+    public static synchronized void removeGlobalListener(GlobalProgressListener listener) {
+        sGlobalListeners.remove(listener);
+    }
+
+    /** Average percent across the active tasks, or -1 when nothing measurable is running */
+    public static synchronized int getAggregateProgress() {
+        return aggregateProgressLocked();
+    }
+
+    private static int aggregateProgressLocked() {
+        if (sProgressStates.isEmpty()) return -1;
+        int sum = 0;
+        int n = 0;
+        for (ProgressState state : sProgressStates.values()) {
+            if (state.progress >= 0) {
+                sum += state.progress;
+                n++;
+            }
+        }
+        return n == 0 ? -1 : Math.round(sum / (float) n);
+    }
+
+    private static void notifyGlobalListenersLocked() {
+        if (sGlobalListeners.isEmpty()) return;
+        int count = sProgressStates.size();
+        int percent = aggregateProgressLocked();
+        for (GlobalProgressListener listener : new ArrayList<>(sGlobalListeners)) {
+            listener.onGlobalProgress(count, percent);
+        }
+    }
 
     public static synchronized void submitProgress(String progressRecord, int progress, int resid, Object... va) {
         ProgressState progressState = sProgressStates.get(progressRecord);
@@ -34,6 +83,8 @@ public class ProgressKeeper {
                     else if(shouldCallEnded) listener.onProgressEnded();
                     else listener.onProgressUpdated(progress, resid, va);
             }
+        // Screen-level observers (home PLAY download state) see every change
+        notifyGlobalListenersLocked();
     }
 
     private static void updateTaskCount(int count) {

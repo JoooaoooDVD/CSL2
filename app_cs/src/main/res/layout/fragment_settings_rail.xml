@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Settings icon rail (left column of the two-pane settings): one icon button per
+    category plus a home button for the settings hub. Rows are 44dp tall with 22dp
+    icons - same rhythm as the main sidebar.
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fillViewport="true"
+    android:scrollbars="none">
+
+    <LinearLayout
+        android:id="@+id/settings_rail_items"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingTop="6dp"
+        android:paddingBottom="8dp"
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp">
+
+        <ImageView
+            android:id="@+id/rail_home"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_nav_item"
+            android:clickable="true"
+            android:contentDescription="@string/settings_hub_title"
+            android:focusable="true"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_px_home"
+            android:tooltipText="@string/settings_hub_title" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="5dp"
+            android:layout_marginLeft="9dp"
+            android:layout_marginRight="9dp"
+            android:background="?attr/colorOutlineVariant" />
+
+        <ImageView
+            android:id="@+id/rail_video"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginBottom="2dp"
+            android:background="@drawable/bg_nav_item"
+            android:clickable="true"
+            android:contentDescription="@string/preference_video_title"
+            android:focusable="true"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_qs_monitor"
+            android:tooltipText="@string/preference_video_title" />
+
+        <ImageView
+            android:id="@+id/rail_appearance"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginBottom="2dp"
+            android:background="@drawable/bg_nav_item"
+            android:clickable="true"
+            android:contentDescription="@string/preference_appearance_title"
+            android:focusable="true"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_px_image"
+            android:tooltipText="@string/preference_appearance_title" />
+
+        <ImageView
+            android:id="@+id/rail_control"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginBottom="2dp"
+            android:background="@drawable/bg_nav_item"
+            android:clickable="true"
+            android:contentDescription="@string/preference_control_title"
+            android:focusable="true"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_px_gamepad"
+            android:tooltipText="@string/preference_control_title" />
+
+        <ImageView
+            android:id="@+id/rail_java"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginBottom="2dp"
+            android:background="@drawable/bg_nav_item"
+            android:clickable="true"
+            android:contentDescription="@string/preference_java_title"
+            android:focusable="true"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_px_java"
+            android:tooltipText="@string/preference_java_title" />
+
+        <ImageView
+            android:id="@+id/rail_misc"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginBottom="2dp"
+            android:background="@drawable/bg_nav_item"
+            android:clickable="true"
+            android:contentDescription="@string/preference_misc_title"
+            android:focusable="true"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_px_alt_sliders"
+            android:tooltipText="@string/preference_misc_title" />
+
+        <ImageView
+            android:id="@+id/rail_experimental"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginBottom="2dp"
+            android:background="@drawable/bg_nav_item"
+            android:clickable="true"
+            android:contentDescription="@string/preference_experimental_title"
+            android:focusable="true"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_px_experiment"
+            android:tooltipText="@string/preference_experimental_title" />
+    </LinearLayout>
+</ScrollView>
