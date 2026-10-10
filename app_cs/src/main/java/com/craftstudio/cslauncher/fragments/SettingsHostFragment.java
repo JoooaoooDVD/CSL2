@@ -262,7 +262,6 @@ public class SettingsHostFragment extends Fragment
         // The renderer sub-screen belongs to the video category for the rail highlight
         if (fragmentClassName != null
                 && fragmentClassName.endsWith("LauncherPreferenceRendererSettingsFragment")) {
-            art = R.drawable.settings_art_video;
             fragmentClassName = "com.craftstudio.cslauncher.prefs.screens.LauncherPreferenceVideoFragment";
         }
         Fragment rail = getChildFragmentManager().findFragmentByTag(RAIL_TAG);
