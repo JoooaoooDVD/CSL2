@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Breathing placeholder card shown while the first page of results loads -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="5dp"
+    android:background="@drawable/bg_lib_card"
+    android:importantForAccessibility="noHideDescendants"
+    android:orientation="vertical"
+    android:padding="14dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <View
+            android:layout_width="66dp"
+            android:layout_height="66dp"
+            android:background="@drawable/bg_lib_skeleton_block" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <View
+            android:layout_width="96dp"
+            android:layout_height="24dp"
+            android:background="@drawable/bg_lib_skeleton_block" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="150dp"
+        android:layout_height="18dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/bg_lib_skeleton_block" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="11dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_lib_skeleton_block" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="11dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_lib_skeleton_block" />
+
+    <View
+        android:layout_width="180dp"
+        android:layout_height="11dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_lib_skeleton_block" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:orientation="horizontal">
+
+        <View
+            android:layout_width="70dp"
+            android:layout_height="24dp"
+            android:background="@drawable/bg_lib_skeleton_block" />
+
+        <View
+            android:layout_width="54dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/bg_lib_skeleton_block" />
+
+        <View
+            android:layout_width="48dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/bg_lib_skeleton_block" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="42dp"
+        android:layout_marginTop="14dp"
+        android:background="@drawable/bg_lib_skeleton_block" />
+</LinearLayout>

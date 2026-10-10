@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Library type tab: transparent, the selection is drawn by bg_lib_tab_indicator -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:enterFadeDuration="120"
+    android:exitFadeDuration="200">
+    <item android:state_pressed="true" android:state_selected="false">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorSurfaceContainerHigh" />
+            <corners android:radius="9dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+            <corners android:radius="9dp" />
+        </shape>
+    </item>
+</selector>

@@ -2,17 +2,17 @@ package com.craftstudio.cslauncher.fragments;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.text.InputType;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,22 +21,24 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.craftstudio.cslauncher.CSLauncherApplication;
 import com.craftstudio.cslauncher.R;
 import com.craftstudio.cslauncher.Tools;
-import com.craftstudio.cslauncher.CSLauncherApplication;
 import com.craftstudio.cslauncher.extra.ExtraConstants;
 import com.craftstudio.cslauncher.extra.ExtraCore;
 import com.craftstudio.cslauncher.game.renderer.RendererCache;
 import com.craftstudio.cslauncher.instances.Instance;
+import com.craftstudio.cslauncher.instances.InstanceIconProvider;
 import com.craftstudio.cslauncher.instances.Instances;
 import com.craftstudio.cslauncher.multirt.MultiRTUtils;
-import com.craftstudio.cslauncher.multirt.RTSpinnerAdapter;
 import com.craftstudio.cslauncher.multirt.Runtime;
-import com.craftstudio.cslauncher.instances.InstanceIconProvider;
-import com.craftstudio.cslauncher.utils.profiles.VersionSelectorDialog;
 import com.craftstudio.cslauncher.utils.CSAnimationEngine;
 import com.craftstudio.cslauncher.utils.CropperUtils;
 import com.craftstudio.cslauncher.utils.LauncherBackground;
+import com.craftstudio.cslauncher.utils.motion.ProfileEditorMotion;
+import com.craftstudio.cslauncher.utils.profiles.VersionSelectorDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.materialswitch.MaterialSwitch;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -44,12 +46,13 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * The profile editor: identity (name + icon), appearance (per-profile banner artwork)
- * and the profile's game configuration. Every edit is held in memory and written only
- * when Save is pressed; Cancel (or closing the screen) discards all pending changes and
- * keeps the saved profile intact. The profile directory itself is never renamed - it is
- * the profile's stable identity and game directory - so a rename can't duplicate or
- * overwrite any other profile.
+ * The profile editor: identity (name + icon), the per-profile banner artwork and the
+ * profile's game configuration (version, Java runtime, controlmap, JVM arguments,
+ * renderer, shared data). Every edit is held in memory and written only when Save is
+ * pressed; Cancel (or closing the screen) discards all pending changes and keeps the saved
+ * profile intact. Pending edits survive the trip to the controlmap file picker. The
+ * profile directory itself is never renamed - it is the profile's stable identity and game
+ * directory - so a rename can't duplicate or overwrite any other profile.
  */
 public class InstanceEditorFragment extends Fragment implements CropperUtils.CropperReceiver {
     public static final String TAG = "InstanceEditorFragment";
@@ -58,24 +61,40 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
     private static final int BACKGROUND_MAX_SIDE = 1600;
     /** Hard cap for profile names so one long name can never break the home layout */
     private static final int MAX_NAME_LENGTH = 64;
+    /** Built-in icons drawn as pixel art: scaled without smoothing to stay crisp */
+    private static final List<String> PIXEL_ICONS = Arrays.asList("fox", "grass", "creeper", "sword", "enderman");
 
+    // ─── Editing session (kept while the fragment lives, e.g. across the file picker) ──
     private Instance mInstance;
-    private String mSelectedControlLayout;
-    private Button mSaveButton, mDeleteButton, mCancelButton, mControlSelectButton, mVersionSelectButton;
-    private Spinner mDefaultRuntime, mDefaultRenderer;
-    private EditText mDefaultName, mDefaultJvmArgument;
-    private TextView mDefaultVersion, mDefaultControl;
-    private ImageView mInstanceIcon, mBackgroundPreview;
-    private CheckBox mSharedDataCheckbox;
-    private ViewGroup mIconChoices;
-    private int mRecommendedIconSize;
+    private boolean mStateLoaded;
+    private boolean mEntrancePlayed;
+    private String mEditName;
+    private String mVersionId;
+    @Nullable private String mControlLayout;
+    @Nullable private String mControlFromSelector;
+    @Nullable private String mJvmArgs;
+    private boolean mSharedData;
+    private final List<Runtime> mRuntimes = new ArrayList<>();
+    private int mRuntimeIndex;
+    private List<String> mRenderNames = new ArrayList<>();
+    private final List<String> mRenderDisplayNames = new ArrayList<>();
+    private int mRendererIndex;
 
-    // ─── Pending changes: memory only until Save ─────────────────────────────
+    // ─── Pending artwork: memory only until Save ─────────────────────────────
     private Bitmap mPendingIcon;           // custom icon cropped from storage
     private String mPendingStaticIcon;     // built-in icon picked from the strip
     private Bitmap mPendingBackground;     // banner artwork cropped from storage
     private boolean mClearBackground;      // reset banner artwork to the global default
     private int mBackgroundLoadId;         // cancels stale preview decodes
+    private int mRecommendedIconSize;
+
+    // ─── Views ───────────────────────────────────────────────────────────────
+    private EditText mName;
+    private View mNameField;
+    private ImageView mInstanceIcon, mBackgroundPreview;
+    private TextView mVersionValue, mRuntimeValue, mControlValue, mJvmValue, mRendererValue, mSharedValue;
+    private MaterialSwitch mSharedSwitch;
+    private ViewGroup mIconChoices;
 
     private final ActivityResultLauncher<?> mCropperLauncher = CropperUtils.registerCropper(this, this);
 
@@ -105,8 +124,6 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
                 }
             });
 
-    private List<String> mRenderNames;
-
     public InstanceEditorFragment() {
         super(R.layout.fragment_instance_editor);
     }
@@ -114,194 +131,347 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        // Paths, which can be changed
+        // Coming back from the controlmap file picker
         String value = (String) ExtraCore.consumeValue(ExtraConstants.FILE_SELECTOR);
-        if (value != null) {
-            mSelectedControlLayout = value;
-        }
+        if (value != null) mControlFromSelector = value;
         return super.onCreateView(inflater, container, savedInstanceState);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        CSAnimationEngine.animateDialogContentView(view.findViewById(R.id.instance_editor_banner));
+        Context context = view.getContext();
+        if (!mStateLoaded) {
+            Instance selected = Instances.loadSelectedInstance();
+            if (selected == null) {
+                Toast.makeText(context, R.string.no_instance, Toast.LENGTH_LONG).show();
+                getParentFragmentManager().popBackStack();
+                return;
+            }
+            loadState(selected, context);
+        }
+        if (mControlFromSelector != null) {
+            mControlLayout = mControlFromSelector;
+            mControlFromSelector = null;
+        }
+
         bindViews(view);
-        bindIconChoices(view);
-        CSAnimationEngine.attachPressFeedback(mSaveButton);
-        CSAnimationEngine.attachPressFeedback(mCancelButton);
-        CSAnimationEngine.attachPressFeedback(mDeleteButton);
-        CSAnimationEngine.attachPressFeedback(mControlSelectButton);
-        CSAnimationEngine.attachPressFeedback(mVersionSelectButton);
+        bindBehaviors(view);
+        applyStateToViews();
 
-        RendererCache list = RendererCache.getCompatibleRenderers(view.getContext());
-        mRenderNames = list.rendererIds;
-        List<String> renderList = new ArrayList<>(list.rendererDisplayNames.length + 1);
-        renderList.addAll(Arrays.asList(list.rendererDisplayNames));
-        renderList.add(view.getContext().getString(R.string.global_default));
-        mDefaultRenderer.setAdapter(new ArrayAdapter<>(view.getContext(), R.layout.item_simple_list_1, renderList));
+        if (!mEntrancePlayed) {
+            mEntrancePlayed = true;
+            ProfileEditorMotion.playEntrance(
+                    view.findViewById(R.id.vprof_editor_back),
+                    view.findViewById(R.id.pe_title),
+                    view.findViewById(R.id.pe_subtitle),
+                    new View[]{view.findViewById(R.id.pe_card_identity), view.findViewById(R.id.pe_card_icon),
+                            view.findViewById(R.id.pe_card_banner), view.findViewById(R.id.pe_card_config)},
+                    view.findViewById(R.id.pe_icon_preview_box),
+                    mIconChoices,
+                    mBackgroundPreview,
+                    view.findViewById(R.id.pe_config_rows),
+                    view.findViewById(R.id.pe_action_bar));
+        }
+    }
 
-        // Set up behaviors
-        mSaveButton.setOnClickListener(v -> {
+    @Override
+    public void onDestroyView() {
+        if (mName != null) mEditName = mName.getText().toString();
+        super.onDestroyView();
+        mName = null;
+        mNameField = null;
+        mInstanceIcon = mBackgroundPreview = null;
+        mVersionValue = mRuntimeValue = mControlValue = mJvmValue = mRendererValue = mSharedValue = null;
+        mSharedSwitch = null;
+        mIconChoices = null;
+    }
+
+    // ─── State ───────────────────────────────────────────────────────────────
+
+    private void loadState(@NonNull Instance instance, @NonNull Context context) {
+        mInstance = instance;
+        mStateLoaded = true;
+        mPendingIcon = null;
+        mPendingStaticIcon = null;
+        mPendingBackground = null;
+        mClearBackground = false;
+
+        mEditName = nullToEmpty(instance.name);
+        mVersionId = instance.versionId;
+        mControlLayout = instance.controlLayout;
+        mJvmArgs = instance.jvmArgs;
+        mSharedData = instance.sharedData;
+
+        mRuntimes.clear();
+        try {
+            mRuntimes.addAll(MultiRTUtils.getRuntimes());
+        } catch (Exception e) {
+            // No runtime folder yet: only the default entry is offered
+        }
+        mRuntimes.add(new Runtime("<Default>"));
+        mRuntimeIndex = instance.selectedRuntime != null ? mRuntimes.indexOf(new Runtime(instance.selectedRuntime)) : -1;
+        if (mRuntimeIndex < 0) mRuntimeIndex = mRuntimes.size() - 1;
+
+        RendererCache renderers = RendererCache.getCompatibleRenderers(context);
+        mRenderNames = renderers.rendererIds;
+        mRenderDisplayNames.clear();
+        mRenderDisplayNames.addAll(Arrays.asList(renderers.rendererDisplayNames));
+        mRenderDisplayNames.add(context.getString(R.string.global_default));
+        mRendererIndex = mRenderNames.indexOf(instance.getLaunchRenderer());
+        if (mRendererIndex < 0) mRendererIndex = mRenderNames.size();
+    }
+
+    private void bindViews(@NonNull View view) {
+        mName = view.findViewById(R.id.vprof_editor_instance_name);
+        mNameField = view.findViewById(R.id.pe_name_field);
+        mInstanceIcon = view.findViewById(R.id.vprof_editor_instance_icon);
+        mBackgroundPreview = view.findViewById(R.id.vprof_editor_bg_preview);
+        mVersionValue = view.findViewById(R.id.vprof_editor_version_spinner);
+        mRuntimeValue = view.findViewById(R.id.pe_runtime_value);
+        mControlValue = view.findViewById(R.id.vprof_editor_ctrl_spinner);
+        mJvmValue = view.findViewById(R.id.pe_jvm_value);
+        mRendererValue = view.findViewById(R.id.pe_renderer_value);
+        mSharedValue = view.findViewById(R.id.pe_shared_value);
+        mSharedSwitch = view.findViewById(R.id.vprof_editor_shared_switch);
+        mIconChoices = view.findViewById(R.id.vprof_editor_icon_choices);
+        // Rounded clipping of the artwork previews
+        mInstanceIcon.setClipToOutline(true);
+        mBackgroundPreview.setClipToOutline(true);
+    }
+
+    private void bindBehaviors(@NonNull View view) {
+        View back = view.findViewById(R.id.vprof_editor_back);
+        View save = view.findViewById(R.id.vprof_editor_save_button);
+        View delete = view.findViewById(R.id.vprof_editor_delete_button);
+        View cancel = view.findViewById(R.id.vprof_editor_cancel_button);
+        View controlSelect = view.findViewById(R.id.vprof_editor_ctrl_button);
+        View iconGallery = view.findViewById(R.id.vprof_editor_icon_gallery);
+        View iconAdd = view.findViewById(R.id.pe_icon_add);
+        View iconBadge = view.findViewById(R.id.pe_icon_edit_badge);
+        View bannerChoose = view.findViewById(R.id.vprof_editor_bg_choose);
+        View bannerReset = view.findViewById(R.id.vprof_editor_bg_reset);
+        View bannerBadge = view.findViewById(R.id.pe_banner_edit_badge);
+        View rowVersion = view.findViewById(R.id.pe_row_version);
+        View rowRuntime = view.findViewById(R.id.pe_row_runtime);
+        View rowControl = view.findViewById(R.id.pe_row_control);
+        View rowJvm = view.findViewById(R.id.pe_row_jvm);
+        View rowRenderer = view.findViewById(R.id.pe_row_renderer);
+        View rowShared = view.findViewById(R.id.pe_row_shared);
+
+        for (View v : new View[]{back, save, delete, cancel, controlSelect, iconGallery, iconAdd, iconBadge,
+                bannerChoose, bannerReset, bannerBadge, rowVersion, rowRuntime, rowControl, rowJvm, rowRenderer, rowShared}) {
+            CSAnimationEngine.attachPressFeedback(v);
+        }
+
+        back.setOnClickListener(v -> Tools.removeCurrentFragment(requireActivity()));
+        // Cancel discards everything pending - the saved profile is never touched
+        cancel.setOnClickListener(v -> Tools.removeCurrentFragment(requireActivity()));
+        delete.setOnClickListener(v -> {
+            DeleteConfirmDialogFragment dialogFragment = new DeleteConfirmDialogFragment();
+            dialogFragment.show(getChildFragmentManager(), "delete_dialog_confirm");
+        });
+        save.setOnClickListener(v -> {
             if (!save()) return;
-            Toast.makeText(view.getContext(), R.string.profile_editor_saved, Toast.LENGTH_SHORT).show();
+            Toast.makeText(v.getContext(), R.string.profile_editor_saved, Toast.LENGTH_SHORT).show();
             // Listening screens (home banner, version pill, icon strip) re-read the saved state
             ExtraCore.setValue(ExtraConstants.REFRESH_VERSION_SPINNER, null);
             Tools.backToMainMenu(requireActivity());
         });
 
-        mDeleteButton.setOnClickListener(v -> {
-            DeleteConfirmDialogFragment dialogFragment = new DeleteConfirmDialogFragment();
-            dialogFragment.show(getChildFragmentManager(), "delete_dialog_confirm");
+        // Name field lifts while focused
+        mName.setOnFocusChangeListener((v, focused) -> ProfileEditorMotion.fieldFocus(mNameField, focused));
+        view.findViewById(R.id.pe_name_edit).setOnClickListener(v -> {
+            mName.requestFocus();
+            mName.setSelection(mName.getText().length());
+            android.view.inputmethod.InputMethodManager imm = (android.view.inputmethod.InputMethodManager)
+                    v.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm != null) imm.showSoftInput(mName, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
         });
 
-        // Cancel discards everything pending - the saved profile is never touched
-        mCancelButton.setOnClickListener(v -> Tools.removeCurrentFragment(requireActivity()));
-
-        View.OnClickListener controlSelectListener = getControlSelectListener();
-        mControlSelectButton.setOnClickListener(controlSelectListener);
-        mDefaultControl.setOnClickListener(controlSelectListener);
-
-        // Setup the expendable list behavior
-        View.OnClickListener versionSelectListener = getVersionSelectListener();
-        mVersionSelectButton.setOnClickListener(versionSelectListener);
-        mDefaultVersion.setOnClickListener(versionSelectListener);
-
-        // Set up the icon change click listeners (system picker → cropper)
-        View.OnClickListener pickIconListener = v -> {
+        // Icon: built-in strip, or storage → cropper
+        bindIconChoices();
+        View.OnClickListener pickIcon = v -> {
             // Fill recommended size on click to get the most up to date data
-            mRecommendedIconSize = Math.max(mInstanceIcon.getWidth(), mInstanceIcon.getHeight());
+            mRecommendedIconSize = Math.max(256, Math.max(mInstanceIcon.getWidth(), mInstanceIcon.getHeight()));
             CropperUtils.startCropper(mCropperLauncher);
         };
-        mInstanceIcon.setOnClickListener(pickIconListener);
-        View galleryButton = view.findViewById(R.id.vprof_editor_icon_gallery);
-        if (galleryButton != null) {
-            galleryButton.setOnClickListener(pickIconListener);
-            CSAnimationEngine.attachPressFeedback(galleryButton);
-        }
+        mInstanceIcon.setOnClickListener(pickIcon);
+        iconGallery.setOnClickListener(pickIcon);
+        iconAdd.setOnClickListener(pickIcon);
+        iconBadge.setOnClickListener(pickIcon);
 
-        // Profile banner artwork: pick from storage or restore the default
-        View backgroundChoose = view.findViewById(R.id.vprof_editor_bg_choose);
-        if (backgroundChoose != null) {
-            backgroundChoose.setOnClickListener(v -> CropperUtils.startCropper(mBackgroundCropperLauncher));
-        }
-        View backgroundReset = view.findViewById(R.id.vprof_editor_bg_reset);
-        if (backgroundReset != null) {
-            backgroundReset.setOnClickListener(v -> resetBackground());
-        }
-        View backgroundPreview = view.findViewById(R.id.vprof_editor_bg_preview);
-        if (backgroundPreview instanceof ImageView) {
-            mBackgroundPreview = (ImageView) backgroundPreview;
-        }
-        View cancelButton = view.findViewById(R.id.vprof_editor_cancel_button);
-        CSAnimationEngine.attachPressFeedback(backgroundChoose);
-        CSAnimationEngine.attachPressFeedback(backgroundReset);
-        CSAnimationEngine.attachPressFeedback(cancelButton);
+        // Banner artwork: pick from storage or restore the default
+        View.OnClickListener pickBanner = v -> CropperUtils.startCropper(mBackgroundCropperLauncher);
+        bannerChoose.setOnClickListener(pickBanner);
+        bannerBadge.setOnClickListener(pickBanner);
+        mBackgroundPreview.setOnClickListener(pickBanner);
+        bannerReset.setOnClickListener(v -> resetBackground());
 
-        mSharedDataCheckbox.setOnCheckedChangeListener((v, checked) -> {
-            mInstance.sharedData = checked;
-            int text = R.string.instance_shared_data_off;
-            if (checked) text = R.string.instance_shared_data_on;
-            mSharedDataCheckbox.setText(text);
-        });
-
-        Instance selectedInstance = Instances.loadSelectedInstance();
-        Context context = view.getContext();
-        if (selectedInstance == null) {
-            Toast.makeText(context, R.string.no_instance, Toast.LENGTH_LONG).show();
-            getParentFragmentManager().popBackStack();
-        } else {
-            loadValues(selectedInstance, context);
-        }
-    }
-
-    private View.OnClickListener getControlSelectListener() {
-        return v -> {
+        // Game configuration rows
+        rowVersion.setOnClickListener(v -> VersionSelectorDialog.open(v.getContext(), false, (id, snapshot) -> {
+            mVersionId = id;
+            if (mVersionValue != null) ProfileEditorMotion.valueChanged(mVersionValue, versionLabel());
+        }));
+        rowRuntime.setOnClickListener(v -> showRuntimeDialog());
+        View.OnClickListener pickControl = v -> {
             Bundle bundle = new Bundle(3);
             bundle.putBoolean(FileSelectorFragment.BUNDLE_SELECT_FOLDER, false);
             bundle.putString(FileSelectorFragment.BUNDLE_ROOT_PATH, Tools.CTRLMAP_PATH);
-
-            Tools.swapFragment(requireActivity(),
-                    FileSelectorFragment.class, FileSelectorFragment.TAG, bundle);
+            Tools.swapFragment(requireActivity(), FileSelectorFragment.class, FileSelectorFragment.TAG, bundle);
         };
+        rowControl.setOnClickListener(pickControl);
+        controlSelect.setOnClickListener(pickControl);
+        // Long press goes back to the global controlmap
+        rowControl.setOnLongClickListener(v -> {
+            if (mControlLayout == null) return false;
+            mControlLayout = null;
+            ProfileEditorMotion.valueChanged(mControlValue, controlLabel());
+            return true;
+        });
+        rowJvm.setOnClickListener(v -> showJvmDialog());
+        rowRenderer.setOnClickListener(v -> showRendererDialog());
+        rowShared.setOnClickListener(v -> mSharedSwitch.toggle());
+        mSharedSwitch.setOnCheckedChangeListener((button, checked) -> {
+            if (checked == mSharedData) return;
+            mSharedData = checked;
+            ProfileEditorMotion.valueChanged(mSharedValue, getString(checked
+                    ? R.string.instance_shared_data_on : R.string.instance_shared_data_off));
+        });
     }
 
-    private View.OnClickListener getVersionSelectListener() {
-        return v -> VersionSelectorDialog.open(v.getContext(), false, (id, snapshot) -> mDefaultVersion.setText(id));
-    }
+    private void applyStateToViews() {
+        mName.setText(mEditName);
+        mVersionValue.setText(versionLabel());
+        mRuntimeValue.setText(runtimeLabel());
+        mControlValue.setText(controlLabel());
+        mJvmValue.setText(jvmLabel());
+        mRendererValue.setText(rendererLabel());
+        mSharedSwitch.setChecked(mSharedData);
+        mSharedValue.setText(mSharedData ? R.string.instance_shared_data_on : R.string.instance_shared_data_off);
 
-    private static String nullToEmpty(String in) {
-        if (in == null) return "";
-        return in;
-    }
-
-    private void loadValues(@NonNull Instance instance, @NonNull Context context) {
-        mInstance = instance;
-        // Reset every pending edit for this editing session
-        mPendingIcon = null;
-        mPendingStaticIcon = null;
-        mPendingBackground = null;
-        mClearBackground = false;
-        mBackgroundLoadId++;
-
-        mInstanceIcon.setImageDrawable(
-                InstanceIconProvider.fetchIcon(getResources(), instance)
-        );
-        updateStaticIconSelection(instance.hasCustomIconFile() ? null : instance.icon);
+        if (mPendingIcon != null) {
+            mInstanceIcon.setImageBitmap(mPendingIcon);
+            updateStaticIconSelection(null);
+        } else if (mPendingStaticIcon != null) {
+            setStaticPreview(mPendingStaticIcon);
+            updateStaticIconSelection(mPendingStaticIcon);
+        } else {
+            mInstanceIcon.setImageDrawable(InstanceIconProvider.fetchIcon(getResources(), mInstance));
+            String icon = mInstance.hasCustomIconFile() ? null : mInstance.icon;
+            if (icon != null && PIXEL_ICONS.contains(icon)) crisp(mInstanceIcon.getDrawable());
+            updateStaticIconSelection(icon);
+        }
         refreshBackgroundPreview();
-
-        // Runtime spinner
-        List<Runtime> runtimes = MultiRTUtils.getRuntimes();
-        int jvmIndex = -1;
-        if (instance.selectedRuntime != null) {
-            jvmIndex = runtimes.indexOf(new Runtime(instance.selectedRuntime));
-        }
-        mDefaultRuntime.setAdapter(new RTSpinnerAdapter(context, runtimes));
-        if (jvmIndex == -1) jvmIndex = runtimes.size() - 1;
-        mDefaultRuntime.setSelection(jvmIndex);
-
-        // Renderer spinner
-        int rendererIndex = mRenderNames.indexOf(instance.getLaunchRenderer());
-        if (rendererIndex == -1) {
-            rendererIndex = mDefaultRenderer.getAdapter().getCount() - 1;
-        }
-        mDefaultRenderer.setSelection(rendererIndex);
-
-        mDefaultVersion.setText(instance.versionId);
-        mDefaultJvmArgument.setText(nullToEmpty(instance.jvmArgs));
-        mDefaultName.setText(nullToEmpty(instance.name));
-        mDefaultControl.setText(mSelectedControlLayout == null ? nullToEmpty(instance.controlLayout) : mSelectedControlLayout);
-        mSharedDataCheckbox.setChecked(instance.sharedData);
     }
 
-    private void bindViews(@NonNull View view) {
-        mDefaultControl = view.findViewById(R.id.vprof_editor_ctrl_spinner);
-        mDefaultRuntime = view.findViewById(R.id.vprof_editor_spinner_runtime);
-        mDefaultRenderer = view.findViewById(R.id.vprof_editor_instance_renderer);
-        mDefaultVersion = view.findViewById(R.id.vprof_editor_version_spinner);
+    // ─── Value labels ────────────────────────────────────────────────────────
 
-        mDefaultName = view.findViewById(R.id.vprof_editor_instance_name);
-        mDefaultJvmArgument = view.findViewById(R.id.vprof_editor_jre_args);
+    private String versionLabel() {
+        return mVersionId == null || mVersionId.isEmpty() ? getString(R.string.pe_no_version) : mVersionId;
+    }
 
-        mSaveButton = view.findViewById(R.id.vprof_editor_save_button);
-        mDeleteButton = view.findViewById(R.id.vprof_editor_delete_button);
-        mCancelButton = view.findViewById(R.id.vprof_editor_cancel_button);
-        mControlSelectButton = view.findViewById(R.id.vprof_editor_ctrl_button);
-        mVersionSelectButton = view.findViewById(R.id.vprof_editor_version_button);
-        mInstanceIcon = view.findViewById(R.id.vprof_editor_instance_icon);
-        mSharedDataCheckbox = view.findViewById(R.id.vprof_editor_data_checkbox_container);
+    private String runtimeLabel() {
+        if (mRuntimeIndex < 0 || mRuntimeIndex >= mRuntimes.size() - 1) return getString(R.string.pe_default_runtime);
+        return runtimeDisplay(mRuntimes.get(mRuntimeIndex));
+    }
+
+    private String runtimeDisplay(Runtime runtime) {
+        return runtime.name.replace(".tar.xz", "") + " - " + (runtime.versionString == null
+                ? getString(R.string.multirt_runtime_corrupt) : runtime.versionString);
+    }
+
+    private String controlLabel() {
+        if (mControlLayout == null || mControlLayout.isEmpty()) return getString(R.string.pe_use_global);
+        return new File(mControlLayout).getName();
+    }
+
+    private String jvmLabel() {
+        return mJvmArgs == null || mJvmArgs.trim().isEmpty() ? getString(R.string.pe_use_global) : mJvmArgs.trim();
+    }
+
+    private String rendererLabel() {
+        if (mRendererIndex < 0 || mRendererIndex >= mRenderDisplayNames.size()) return getString(R.string.global_default);
+        return mRenderDisplayNames.get(mRendererIndex);
+    }
+
+    // ─── Dialogs ─────────────────────────────────────────────────────────────
+
+    private void showRuntimeDialog() {
+        String[] items = new String[mRuntimes.size()];
+        for (int i = 0; i < mRuntimes.size(); i++) {
+            items[i] = i == mRuntimes.size() - 1 ? getString(R.string.pe_default_runtime) : runtimeDisplay(mRuntimes.get(i));
+        }
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.pedit_java_runtime)
+                .setSingleChoiceItems(items, mRuntimeIndex, (dialog, which) -> {
+                    mRuntimeIndex = which;
+                    if (mRuntimeValue != null) ProfileEditorMotion.valueChanged(mRuntimeValue, runtimeLabel());
+                    dialog.dismiss();
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
+    private void showRendererDialog() {
+        String[] items = mRenderDisplayNames.toArray(new String[0]);
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.pedit_renderer)
+                .setSingleChoiceItems(items, mRendererIndex, (dialog, which) -> {
+                    mRendererIndex = which;
+                    if (mRendererValue != null) ProfileEditorMotion.valueChanged(mRendererValue, rendererLabel());
+                    dialog.dismiss();
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
+    private void showJvmDialog() {
+        Context context = requireContext();
+        float density = getResources().getDisplayMetrics().density;
+        EditText input = new EditText(context);
+        input.setText(mJvmArgs == null ? "" : mJvmArgs);
+        input.setHint(R.string.pe_jvm_hint);
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+        input.setMinLines(2);
+        input.setMaxLines(6);
+        input.setGravity(Gravity.TOP | Gravity.START);
+        input.setTypeface(android.graphics.Typeface.MONOSPACE);
+        input.setTextSize(14);
+        input.setSelection(input.getText().length());
+        FrameLayout box = new FrameLayout(context);
+        int pad = Math.round(20 * density);
+        box.setPadding(pad, Math.round(8 * density), pad, 0);
+        box.addView(input, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        new MaterialAlertDialogBuilder(context)
+                .setTitle(R.string.pe_jvm_args)
+                .setView(box)
+                .setPositiveButton(R.string.global_save, (dialog, which) -> {
+                    String value = input.getText().toString().trim();
+                    mJvmArgs = value.isEmpty() ? null : value;
+                    if (mJvmValue != null) ProfileEditorMotion.valueChanged(mJvmValue, jvmLabel());
+                })
+                .setNeutralButton(R.string.global_default, (dialog, which) -> {
+                    mJvmArgs = null;
+                    if (mJvmValue != null) ProfileEditorMotion.valueChanged(mJvmValue, jvmLabel());
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
     }
 
     // ─── Built-in icon strip ────────────────────────────────────────────────
 
     /** Wires the launcher-icon chips (tags carry the InstanceIconProvider icon names) */
-    private void bindIconChoices(@NonNull View view) {
-        View choices = view.findViewById(R.id.vprof_editor_icon_choices);
-        if (!(choices instanceof ViewGroup)) return;
-        mIconChoices = (ViewGroup) choices;
+    private void bindIconChoices() {
+        if (mIconChoices == null) return;
         for (int i = 0; i < mIconChoices.getChildCount(); i++) {
             View chip = mIconChoices.getChildAt(i);
             if (!(chip.getTag() instanceof String)) continue;
-            chip.setOnClickListener(v -> selectStaticIcon(String.valueOf(v.getTag())));
+            String name = (String) chip.getTag();
+            if (PIXEL_ICONS.contains(name) && chip instanceof ImageView) crisp(((ImageView) chip).getDrawable());
+            chip.setOnClickListener(v -> {
+                ProfileEditorMotion.chipSelected(v);
+                selectStaticIcon(String.valueOf(v.getTag()));
+            });
             CSAnimationEngine.attachPressFeedback(chip);
         }
     }
@@ -310,16 +480,38 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
         if (iconName == null || mInstance == null || !InstanceIconProvider.hasStaticIcon(iconName)) return;
         mPendingStaticIcon = iconName;
         mPendingIcon = null;
-        mInstanceIcon.setImageDrawable(InstanceIconProvider.fetchStaticIconByName(getResources(), iconName));
+        setStaticPreview(iconName);
         updateStaticIconSelection(iconName);
-        CSAnimationEngine.animateImageSwap(mInstanceIcon);
+        ProfileEditorMotion.iconChanged(mInstanceIcon);
+    }
+
+    private void setStaticPreview(@NonNull String iconName) {
+        Drawable drawable = InstanceIconProvider.fetchStaticIconByName(getResources(), iconName);
+        if (PIXEL_ICONS.contains(iconName)) crisp(drawable);
+        mInstanceIcon.setImageDrawable(drawable);
     }
 
     private void updateStaticIconSelection(@Nullable String selectedTag) {
         if (mIconChoices == null) return;
         for (int i = 0; i < mIconChoices.getChildCount(); i++) {
             View chip = mIconChoices.getChildAt(i);
-            chip.setSelected(selectedTag != null && selectedTag.equals(String.valueOf(chip.getTag())));
+            boolean selected = selectedTag != null && selectedTag.equals(String.valueOf(chip.getTag()));
+            chip.setSelected(selected);
+            if (selected) {
+                // Keep the chosen chip in view
+                View scroll = (View) mIconChoices.getParent();
+                if (scroll instanceof android.widget.HorizontalScrollView) {
+                    scroll.post(() -> ((android.widget.HorizontalScrollView) scroll)
+                            .smoothScrollTo(Math.max(0, chip.getLeft() - chip.getWidth()), 0));
+                }
+            }
+        }
+    }
+
+    private static void crisp(@Nullable Drawable drawable) {
+        if (drawable instanceof BitmapDrawable) {
+            ((BitmapDrawable) drawable).setFilterBitmap(false);
+            ((BitmapDrawable) drawable).setAntiAlias(false);
         }
     }
 
@@ -329,7 +521,7 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
     private void refreshBackgroundPreview() {
         if (mBackgroundPreview == null) return;
         if (mPendingBackground != null) {
-            showBackgroundPreview(mPendingBackground);
+            mBackgroundPreview.setImageBitmap(mPendingBackground);
             return;
         }
         if (mClearBackground || mInstance == null || !mInstance.hasCustomBackground()) {
@@ -349,23 +541,25 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
                     return;
                 }
                 mBackgroundPreview.setImageDrawable(drawable);
-                CSAnimationEngine.animateImageSwap(mBackgroundPreview);
+                ProfileEditorMotion.bannerChanged(mBackgroundPreview);
             });
         });
     }
 
     private void showBackgroundPreview(@Nullable Bitmap bitmap) {
         if (mBackgroundPreview == null || bitmap == null) return;
+        mBackgroundLoadId++;
         mBackgroundPreview.setImageBitmap(bitmap);
-        CSAnimationEngine.animateImageSwap(mBackgroundPreview);
+        ProfileEditorMotion.bannerChanged(mBackgroundPreview);
     }
 
     private void resetBackground() {
         mClearBackground = true;
         mPendingBackground = null;
+        mBackgroundLoadId++;
         if (mBackgroundPreview != null) {
             mBackgroundPreview.setImageResource(R.drawable.banner_home);
-            CSAnimationEngine.animateImageSwap(mBackgroundPreview);
+            ProfileEditorMotion.bannerChanged(mBackgroundPreview);
         }
     }
 
@@ -377,34 +571,28 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
      *         (the editor stays open and shows the reason)
      */
     private boolean save() {
-        if (mInstance == null) return false;
+        if (mInstance == null || mName == null) return false;
 
-        String newName = mDefaultName.getText().toString().trim();
-        if (newName.isEmpty()) {
-            mDefaultName.setError(getString(R.string.profile_name_empty_error));
-            mDefaultName.requestFocus();
-            return false;
-        }
-        if (newName.length() > MAX_NAME_LENGTH) {
-            mDefaultName.setError(getString(R.string.profile_name_too_long));
-            mDefaultName.requestFocus();
+        String newName = mName.getText().toString().trim();
+        if (newName.isEmpty() || newName.length() > MAX_NAME_LENGTH) {
+            mName.setError(getString(newName.isEmpty() ? R.string.profile_name_empty_error : R.string.profile_name_too_long));
+            mName.requestFocus();
+            ProfileEditorMotion.invalid(mNameField);
             return false;
         }
 
-        // Existing profile configuration fields, unchanged save semantics
         mInstance.name = newName;
-        mInstance.versionId = mDefaultVersion.getText().toString();
-        mInstance.controlLayout = mDefaultControl.getText().toString();
-        mInstance.jvmArgs = mDefaultJvmArgument.getText().toString();
-        if (mInstance.controlLayout.isEmpty()) mInstance.controlLayout = null;
-        if (mInstance.jvmArgs.isEmpty()) mInstance.jvmArgs = null;
+        mInstance.versionId = mVersionId;
+        mInstance.controlLayout = mControlLayout == null || mControlLayout.isEmpty() ? null : mControlLayout;
+        mInstance.jvmArgs = mJvmArgs == null || mJvmArgs.trim().isEmpty() ? null : mJvmArgs.trim();
+        mInstance.sharedData = mSharedData;
 
-        Runtime selectedRuntime = (Runtime) mDefaultRuntime.getSelectedItem();
-        mInstance.selectedRuntime = (selectedRuntime.name.equals("<Default>") || selectedRuntime.versionString == null)
-                ? null : selectedRuntime.name;
+        Runtime runtime = mRuntimeIndex >= 0 && mRuntimeIndex < mRuntimes.size() ? mRuntimes.get(mRuntimeIndex) : null;
+        mInstance.selectedRuntime = runtime == null || runtime.name.equals("<Default>") || runtime.versionString == null
+                ? null : runtime.name;
 
-        if (mDefaultRenderer.getSelectedItemPosition() == mRenderNames.size()) mInstance.renderer = null;
-        else mInstance.renderer = mRenderNames.get(mDefaultRenderer.getSelectedItemPosition());
+        if (mRendererIndex < 0 || mRendererIndex >= mRenderNames.size()) mInstance.renderer = null;
+        else mInstance.renderer = mRenderNames.get(mRendererIndex);
 
         try {
             boolean iconChanged = false;
@@ -435,6 +623,12 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
         }
     }
 
+    private static String nullToEmpty(String in) {
+        return in == null ? "" : in;
+    }
+
+    // ─── Icon cropper ───────────────────────────────────────────────────────
+
     @Override
     public float getAspectRatio() {
         return 1f;
@@ -451,8 +645,9 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
         mPendingIcon = contentBitmap;
         mPendingStaticIcon = null;
         updateStaticIconSelection(null);
+        if (mInstanceIcon == null) return;
         mInstanceIcon.setImageBitmap(contentBitmap);
-        CSAnimationEngine.animateImageSwap(mInstanceIcon);
+        ProfileEditorMotion.iconChanged(mInstanceIcon);
     }
 
     @Override

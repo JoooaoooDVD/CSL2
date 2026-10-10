@@ -78,25 +78,39 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Content type selector -->
-            <LinearLayout
-                android:id="@+id/library_type_tabs"
+            <!-- Content type selector: the pill indicator glides under the selected tab -->
+            <FrameLayout
+                android:id="@+id/library_type_tabs_frame"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
                 android:background="@drawable/bg_lib_field"
-                android:orientation="horizontal"
                 android:padding="4dp">
+
+                <View
+                    android:id="@+id/library_tab_indicator"
+                    android:layout_width="0dp"
+                    android:layout_height="34dp"
+                    android:background="@drawable/bg_lib_tab_indicator"
+                    android:visibility="invisible" />
+
+            <LinearLayout
+                android:id="@+id/library_type_tabs"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
 
                 <TextView
                     android:id="@+id/library_tab_mods"
                     style="@style/Library.Segment"
+                    android:background="@drawable/bg_lib_segment_tab"
                     android:drawableStart="@drawable/ic_lib_cube"
                     android:text="@string/lib_tab_mods" />
 
                 <TextView
                     android:id="@+id/library_tab_resourcepacks"
                     style="@style/Library.Segment"
+                    android:background="@drawable/bg_lib_segment_tab"
                     android:layout_marginStart="2dp"
                     android:drawableStart="@drawable/ic_lib_image"
                     android:text="@string/lib_tab_resourcepacks" />
@@ -104,10 +118,12 @@
                 <TextView
                     android:id="@+id/library_tab_shaders"
                     style="@style/Library.Segment"
+                    android:background="@drawable/bg_lib_segment_tab"
                     android:layout_marginStart="2dp"
                     android:drawableStart="@drawable/ic_lib_sun"
                     android:text="@string/lib_tab_shaders" />
             </LinearLayout>
+            </FrameLayout>
         </LinearLayout>
 
         <!-- Search, categories and sort stay pinned while the grid scrolls -->
@@ -222,6 +238,7 @@
                     android:textStyle="bold" />
 
                 <ImageView
+                    android:id="@+id/library_sort_chevron"
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:layout_marginStart="10dp"

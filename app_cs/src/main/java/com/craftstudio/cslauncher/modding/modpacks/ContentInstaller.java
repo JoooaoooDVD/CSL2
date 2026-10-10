@@ -203,6 +203,91 @@ public final class ContentInstaller {
         }
     }
 
+    /** One screenshot of a project gallery */
+    public static final class GalleryImage {
+        @NonNull public final String url;
+        @NonNull public final String thumbnailUrl;
+        @Nullable public final String title;
+        @Nullable public final String description;
+
+        GalleryImage(@NonNull String url, @Nullable String thumbnailUrl, @Nullable String title, @Nullable String description) {
+            this.url = url;
+            this.thumbnailUrl = thumbnailUrl == null || thumbnailUrl.isEmpty() ? url : thumbnailUrl;
+            this.title = title;
+            this.description = description;
+        }
+    }
+
+    /**
+     * Fetches the screenshot gallery of a project (featured image first). Never throws,
+     * returns an empty list when the project has no gallery or the request fails.
+     * Blocking, call it off the UI thread.
+     */
+    @NonNull
+    public static List<GalleryImage> fetchGallery(@NonNull ModItem item, @Nullable String curseforgeKey) {
+        List<GalleryImage> images = new java.util.ArrayList<>();
+        try {
+            if (item.apiSource == Constants.SOURCE_CURSEFORGE) {
+                if (curseforgeKey == null || curseforgeKey.isEmpty()) return images;
+                JsonObject response = new ApiHandler("https://api.curseforge.com/v1", curseforgeKey)
+                        .get("mods/" + item.id, JsonObject.class);
+                if (response == null || !response.has("data") || !response.get("data").isJsonObject()) return images;
+                JsonElement screenshots = response.getAsJsonObject("data").get("screenshots");
+                if (screenshots == null || !screenshots.isJsonArray()) return images;
+                for (JsonElement element : screenshots.getAsJsonArray()) {
+                    if (!element.isJsonObject()) continue;
+                    JsonObject shot = element.getAsJsonObject();
+                    String url = string(shot, "url");
+                    if (url == null || url.isEmpty()) continue;
+                    images.add(new GalleryImage(url, string(shot, "thumbnailUrl"),
+                            string(shot, "title"), string(shot, "description")));
+                }
+            } else {
+                JsonObject project = new ApiHandler("https://api.modrinth.com/v2")
+                        .get("project/" + item.id, JsonObject.class);
+                if (project == null) return images;
+                JsonElement gallery = project.get("gallery");
+                if (gallery == null || !gallery.isJsonArray()) return images;
+                List<JsonObject> entries = new java.util.ArrayList<>();
+                for (JsonElement element : gallery.getAsJsonArray()) {
+                    if (element.isJsonObject()) entries.add(element.getAsJsonObject());
+                }
+                java.util.Collections.sort(entries, (a, b) -> {
+                    boolean fa = isTrue(a, "featured"), fb = isTrue(b, "featured");
+                    if (fa != fb) return fa ? -1 : 1;
+                    return Long.compare(number(a, "ordering"), number(b, "ordering"));
+                });
+                for (JsonObject entry : entries) {
+                    String url = string(entry, "url");
+                    if (url == null || url.isEmpty()) url = string(entry, "raw_url");
+                    if (url == null || url.isEmpty()) continue;
+                    images.add(new GalleryImage(url, url, string(entry, "title"), string(entry, "description")));
+                }
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Gallery unavailable for " + item.id, e);
+        }
+        return images;
+    }
+
+    private static boolean isTrue(JsonObject object, String key) {
+        JsonElement element = object.get(key);
+        try {
+            return element != null && element.isJsonPrimitive() && element.getAsBoolean();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private static long number(JsonObject object, String key) {
+        JsonElement element = object.get(key);
+        try {
+            return element != null && element.isJsonPrimitive() ? element.getAsLong() : 0L;
+        } catch (Exception e) {
+            return 0L;
+        }
+    }
+
     @Nullable
     private static String string(JsonObject object, String key) {
         JsonElement element = object.get(key);

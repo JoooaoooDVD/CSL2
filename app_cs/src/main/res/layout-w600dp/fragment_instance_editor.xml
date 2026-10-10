@@ -1,0 +1,791 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Edit Profile: header, scrollable cards and a fixed Delete / Cancel / Save bar.
+     Wide (landscape tablet / phone) arrangement, matches the mockup. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/pe_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/pe_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="12dp">
+
+        <FrameLayout
+            android:id="@+id/vprof_editor_back"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:background="@drawable/bg_pe_round_button"
+            android:clickable="true"
+            android:contentDescription="@string/pe_back"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_pe_back"
+                android:tint="@color/pe_icon" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="18dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/pe_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/minecraft_ten"
+                android:maxLines="1"
+                android:text="@string/pe_title"
+                android:textColor="@color/pe_text_primary"
+                android:textSize="30sp" />
+
+            <TextView
+                android:id="@+id/pe_subtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:maxLines="2"
+                android:text="@string/pe_subtitle"
+                android:textColor="@color/pe_text_secondary"
+                android:textSize="15sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/pe_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:fadingEdgeLength="16dp"
+        android:overScrollMode="ifContentScrolls"
+        android:requiresFadingEdge="vertical"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/pe_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="6dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:id="@+id/pe_card_identity"
+                    style="@style/PE.Card"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1.15">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            style="@style/PE.CardIcon"
+                            android:src="@drawable/ic_pe_person" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/PE.CardTitle"
+                                android:text="@string/profile_editor_identity" />
+
+                            <TextView
+                                style="@style/PE.CardSub"
+                                android:text="@string/pe_identity_sub" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/PE.FieldLabel"
+                                android:layout_marginStart="2dp"
+                                android:text="@string/pe_name_label" />
+
+                            <FrameLayout
+                                android:id="@+id/pe_name_field"
+                                android:layout_width="match_parent"
+                                android:layout_height="56dp"
+                                android:layout_marginTop="6dp">
+
+                                <EditText
+                                    android:id="@+id/vprof_editor_instance_name"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:background="@drawable/bg_pe_field"
+                                    android:hint="@string/pe_name_hint"
+                                    android:imeOptions="actionDone|flagNoExtractUi"
+                                    android:importantForAutofill="no"
+                                    android:inputType="textCapSentences"
+                                    android:maxLength="64"
+                                    android:maxLines="1"
+                                    android:paddingStart="16dp"
+                                    android:paddingEnd="48dp"
+                                    android:textColor="@color/pe_text_primary"
+                                    android:textColorHint="@color/pe_text_secondary"
+                                    android:textSize="17sp" />
+
+                                <ImageView
+                                    android:id="@+id/pe_name_edit"
+                                    android:layout_width="22dp"
+                                    android:layout_height="22dp"
+                                    android:layout_gravity="end|center_vertical"
+                                    android:layout_marginEnd="16dp"
+                                    android:importantForAccessibility="no"
+                                    android:src="@drawable/ic_pe_edit"
+                                    android:tint="@color/pe_icon" />
+                            </FrameLayout>
+                        </LinearLayout>
+
+                        <FrameLayout
+                            android:layout_width="124dp"
+                            android:layout_height="124dp"
+                            android:layout_marginStart="20dp">
+
+                            <FrameLayout
+                                android:id="@+id/pe_icon_preview_box"
+                                android:layout_width="112dp"
+                                android:layout_height="112dp"
+                                android:background="@drawable/bg_pe_icon_preview"
+                                android:padding="12dp">
+
+                                <ImageView
+                                    android:id="@+id/vprof_editor_instance_icon"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:background="@drawable/bg_pe_icon_image"
+                                    android:contentDescription="@string/pe_icon_title"
+                                    android:padding="4dp"
+                                    android:scaleType="fitCenter" />
+                            </FrameLayout>
+
+                            <FrameLayout
+                                android:id="@+id/pe_icon_edit_badge"
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:layout_gravity="bottom|end"
+                                android:layout_margin="0dp"
+                                android:background="@drawable/bg_pe_badge"
+                                android:clickable="true"
+                                android:contentDescription="@string/pe_edit"
+                                android:elevation="2dp"
+                                android:focusable="true">
+
+                                <ImageView
+                                    android:layout_width="18dp"
+                                    android:layout_height="18dp"
+                                    android:layout_gravity="center"
+                                    android:importantForAccessibility="no"
+                                    android:src="@drawable/ic_pe_edit"
+                                    android:tint="@color/pe_badge_icon" />
+                            </FrameLayout>
+                        </FrameLayout>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/pe_card_icon"
+                    style="@style/PE.Card"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="14dp"
+                    android:layout_weight="1">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            style="@style/PE.CardIcon"
+                            android:src="@drawable/ic_pe_image" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/PE.CardTitle"
+                                android:text="@string/pe_icon_title" />
+
+                            <TextView
+                                style="@style/PE.CardSub"
+                                android:text="@string/pe_icon_sub" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <HorizontalScrollView
+                            android:id="@+id/pe_icon_scroll"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:fadingEdgeLength="20dp"
+                            android:overScrollMode="never"
+                            android:requiresFadingEdge="horizontal"
+                            android:scrollbars="none">
+
+                            <LinearLayout
+                                android:id="@+id/vprof_editor_icon_choices"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:paddingTop="2dp"
+                                android:paddingBottom="2dp">
+
+                                <ImageView
+                                    style="@style/PE.IconChip"
+                                    android:contentDescription="fox"
+                                    android:src="@drawable/ic_pe_px_fox"
+                                    android:tag="fox" />
+
+                                <ImageView
+                                    style="@style/PE.IconChip"
+                                    android:contentDescription="grass"
+                                    android:src="@drawable/ic_pe_px_grass"
+                                    android:tag="grass" />
+
+                                <ImageView
+                                    style="@style/PE.IconChip"
+                                    android:contentDescription="creeper"
+                                    android:src="@drawable/ic_pe_px_creeper"
+                                    android:tag="creeper" />
+
+                                <ImageView
+                                    style="@style/PE.IconChip"
+                                    android:contentDescription="sword"
+                                    android:src="@drawable/ic_pe_px_sword"
+                                    android:tag="sword" />
+
+                                <ImageView
+                                    style="@style/PE.IconChip"
+                                    android:contentDescription="enderman"
+                                    android:src="@drawable/ic_pe_px_enderman"
+                                    android:tag="enderman" />
+
+                                <ImageView
+                                    style="@style/PE.IconChip"
+                                    android:contentDescription="default"
+                                    android:src="@drawable/ic_cs_full"
+                                    android:tag="default" />
+
+                                <ImageView
+                                    style="@style/PE.IconChip"
+                                    android:contentDescription="fabric"
+                                    android:src="@drawable/ic_fabric"
+                                    android:tag="fabric" />
+
+                                <ImageView
+                                    style="@style/PE.IconChip"
+                                    android:contentDescription="quilt"
+                                    android:src="@drawable/ic_quilt"
+                                    android:tag="quilt" />
+
+                                <ImageView
+                                    style="@style/PE.IconChip"
+                                    android:contentDescription="forge"
+                                    android:src="@drawable/ic_forge"
+                                    android:tag="forge" />
+
+                                <ImageView
+                                    style="@style/PE.IconChip"
+                                    android:contentDescription="neoforge"
+                                    android:src="@drawable/ic_neoforge"
+                                    android:tag="neoforge" />
+                            </LinearLayout>
+                        </HorizontalScrollView>
+
+                        <ImageView
+                            android:id="@+id/pe_icon_add"
+                            style="@style/PE.IconChip"
+                            android:layout_marginStart="2dp"
+                            android:layout_marginEnd="0dp"
+                            android:contentDescription="@string/pe_icon_add"
+                            android:padding="16dp"
+                            android:src="@drawable/ic_pe_plus"
+                            android:tint="@color/pe_icon" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/vprof_editor_icon_gallery"
+                        style="@style/PE.Button.Light"
+                        android:layout_width="match_parent"
+                        android:layout_height="46dp"
+                        android:layout_marginTop="12dp"
+                        android:text="@string/profile_icon_from_storage"
+                        android:textSize="15sp"
+                        app:icon="@drawable/ic_pe_image_filled" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/pe_card_banner"
+                style="@style/PE.Card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            style="@style/PE.CardIcon"
+                            android:src="@drawable/ic_pe_image" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/PE.CardTitle"
+                                android:text="@string/pe_banner_title" />
+
+                            <TextView
+                                style="@style/PE.CardSub"
+                                android:text="@string/pe_banner_sub" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp">
+
+                        <ImageView
+                            android:id="@+id/vprof_editor_bg_preview"
+                            android:layout_width="match_parent"
+                            android:layout_height="118dp"
+                            android:background="@drawable/bg_pe_banner"
+                            android:contentDescription="@string/pe_banner_title"
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/banner_home" />
+
+                        <FrameLayout
+                            android:id="@+id/pe_banner_edit_badge"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:layout_gravity="bottom|end"
+                            android:layout_margin="10dp"
+                            android:background="@drawable/bg_pe_badge"
+                            android:clickable="true"
+                            android:contentDescription="@string/pe_edit"
+                            android:elevation="2dp"
+                            android:focusable="true">
+
+                            <ImageView
+                                android:layout_width="18dp"
+                                android:layout_height="18dp"
+                                android:layout_gravity="center"
+                                android:importantForAccessibility="no"
+                                android:src="@drawable/ic_pe_edit"
+                                android:tint="@color/pe_badge_icon" />
+                        </FrameLayout>
+                    </FrameLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="260dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="18dp"
+                    android:layout_gravity="center_vertical"
+                    android:orientation="vertical">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/vprof_editor_bg_choose"
+                        style="@style/PE.Button.Light"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:text="@string/pe_banner_change"
+                        app:icon="@drawable/ic_pe_image_filled" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/vprof_editor_bg_reset"
+                        style="@style/PE.Button.Dark"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="10dp"
+                        android:text="@string/profile_background_reset"
+                        app:icon="@drawable/ic_pe_refresh" />
+
+                    <TextView
+                        android:id="@+id/pe_banner_hint"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:text="@string/pe_banner_hint"
+                        android:textColor="@color/pe_text_secondary"
+                        android:textSize="12.5sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/pe_card_config"
+                style="@style/PE.Card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        style="@style/PE.CardIcon"
+                        android:src="@drawable/ic_pe_gear" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/PE.CardTitle"
+                            android:text="@string/profile_editor_game_config" />
+
+                        <TextView
+                            style="@style/PE.CardSub"
+                            android:text="@string/pe_config_sub" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/pe_config_rows"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:id="@+id/pe_row_version"
+                            style="@style/PE.Row">
+
+                            <ImageView
+                                style="@style/PE.RowIcon"
+                                android:src="@drawable/ic_pe_cube" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="14dp"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    style="@style/PE.RowLabel"
+                                    android:text="@string/pe_version" />
+
+                                <TextView
+                                    android:id="@+id/vprof_editor_version_spinner"
+                                    style="@style/PE.RowValue"
+                                    android:text="@string/pe_no_version" />
+                            </LinearLayout>
+
+                            <ImageView
+                                style="@style/PE.RowChevron" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/pe_row_control_group"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:layout_marginTop="10dp"
+                            android:orientation="horizontal">
+
+                            <LinearLayout
+                                android:id="@+id/pe_row_control"
+                                style="@style/PE.Row"
+                                android:layout_width="0dp"
+                                android:layout_weight="1">
+
+                                <ImageView
+                                    style="@style/PE.RowIcon"
+                                    android:src="@drawable/ic_pe_gamepad" />
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="14dp"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical">
+
+                                    <TextView
+                                        style="@style/PE.RowLabel"
+                                        android:text="@string/pe_controlmap" />
+
+                                    <TextView
+                                        android:id="@+id/vprof_editor_ctrl_spinner"
+                                        style="@style/PE.RowValue"
+                                        android:text="@string/pe_use_global" />
+                                </LinearLayout>
+
+                                <ImageView
+                                    style="@style/PE.RowChevron" />
+                            </LinearLayout>
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/vprof_editor_ctrl_button"
+                                style="@style/PE.Button.Light"
+                                android:layout_width="wrap_content"
+                                android:layout_height="52dp"
+                                android:layout_marginStart="10dp"
+                                android:minWidth="104dp"
+                                android:text="@string/global_select"
+                                android:textSize="15sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/pe_row_renderer"
+                            style="@style/PE.Row"
+                            android:layout_marginTop="10dp">
+
+                            <ImageView
+                                style="@style/PE.RowIcon"
+                                android:src="@drawable/ic_pe_layers" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="14dp"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    style="@style/PE.RowLabel"
+                                    android:text="@string/pedit_renderer" />
+
+                                <TextView
+                                    android:id="@+id/pe_renderer_value"
+                                    style="@style/PE.RowValue"
+                                    android:text="@string/global_default" />
+                            </LinearLayout>
+
+                            <ImageView
+                                style="@style/PE.RowChevron" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:id="@+id/pe_row_runtime"
+                            style="@style/PE.Row">
+
+                            <ImageView
+                                style="@style/PE.RowIcon"
+                                android:src="@drawable/ic_pe_java" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="14dp"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    style="@style/PE.RowLabel"
+                                    android:text="@string/pedit_java_runtime" />
+
+                                <TextView
+                                    android:id="@+id/pe_runtime_value"
+                                    style="@style/PE.RowValue"
+                                    android:text="@string/pe_default_runtime" />
+                            </LinearLayout>
+
+                            <ImageView
+                                style="@style/PE.RowChevron" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/pe_row_jvm"
+                            style="@style/PE.Row"
+                            android:layout_marginTop="10dp">
+
+                            <ImageView
+                                style="@style/PE.RowIcon"
+                                android:src="@drawable/ic_pe_terminal" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="14dp"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    style="@style/PE.RowLabel"
+                                    android:text="@string/pe_jvm_args" />
+
+                                <TextView
+                                    android:id="@+id/pe_jvm_value"
+                                    style="@style/PE.RowValue"
+                                    android:text="@string/pe_use_global" />
+                            </LinearLayout>
+
+                            <ImageView
+                                style="@style/PE.RowChevron" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/pe_row_shared"
+                            style="@style/PE.Row"
+                            android:layout_marginTop="10dp">
+
+                            <ImageView
+                                style="@style/PE.RowIcon"
+                                android:src="@drawable/ic_pe_folder" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="14dp"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    style="@style/PE.RowLabel"
+                                    android:text="@string/pe_shared_data" />
+
+                                <TextView
+                                    android:id="@+id/pe_shared_value"
+                                    style="@style/PE.RowValue"
+                                    android:text="@string/instance_shared_data_off" />
+                            </LinearLayout>
+
+                            <com.google.android.material.materialswitch.MaterialSwitch
+                                android:id="@+id/vprof_editor_shared_switch"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <LinearLayout
+        android:id="@+id/pe_action_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="14dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/vprof_editor_delete_button"
+            style="@style/PE.Button.Delete"
+            android:layout_width="0dp"
+            android:layout_height="54dp"
+            android:layout_weight="1"
+            android:text="@string/global_delete"
+            android:textSize="17sp"
+            app:icon="@drawable/ic_pe_trash" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/vprof_editor_cancel_button"
+            style="@style/PE.Button.Dark"
+            android:layout_width="0dp"
+            android:layout_height="54dp"
+            android:layout_marginStart="14dp"
+            android:layout_weight="1"
+            android:text="@string/pe_cancel"
+            android:textSize="17sp"
+            app:icon="@drawable/ic_pe_close" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/vprof_editor_save_button"
+            style="@style/PE.Button.Light"
+            android:layout_width="0dp"
+            android:layout_height="54dp"
+            android:layout_marginStart="14dp"
+            android:layout_weight="1"
+            android:text="@string/global_save"
+            android:textSize="17sp"
+            app:icon="@drawable/ic_pe_check" />
+    </LinearLayout>
+</LinearLayout>

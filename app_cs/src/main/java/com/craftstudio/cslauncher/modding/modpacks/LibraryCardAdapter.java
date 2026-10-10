@@ -6,7 +6,6 @@ import android.graphics.Bitmap;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -23,8 +22,8 @@ import com.craftstudio.cslauncher.modding.modpacks.imagecache.ModIconCache;
 import com.craftstudio.cslauncher.modding.modpacks.models.Constants;
 import com.craftstudio.cslauncher.modding.modpacks.models.ContentType;
 import com.craftstudio.cslauncher.modding.modpacks.models.ModItem;
-import com.craftstudio.cslauncher.utils.AnimationManager;
 import com.craftstudio.cslauncher.utils.CSAnimationEngine;
+import com.craftstudio.cslauncher.utils.motion.LibraryMotion;
 import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
@@ -35,7 +34,10 @@ import java.util.List;
  * selected profile, the description, three pills (category, loader, version line) and one
  * action button whose meaning follows the installed state: Install, Update or Uninstall.
  */
-public class LibraryCardAdapter extends RecyclerView.Adapter<LibraryCardAdapter.CardHolder> {
+public class LibraryCardAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+
+    private static final int VIEW_CARD = 0;
+    private static final int VIEW_SKELETON = 1;
 
     public enum CardState { INSTALL, UPDATE, UNINSTALL }
 
@@ -56,6 +58,11 @@ public class LibraryCardAdapter extends RecyclerView.Adapter<LibraryCardAdapter.
     private boolean mActionsEnabled = true;
     /** Positions below this were already animated in, so rebinding never replays it */
     private int mAnimatedUpTo = -1;
+    /** Number of breathing placeholder cards shown instead of results, 0 when showing results */
+    private int mSkeletonCount;
+    private int mSpanCount = 3;
+    /** Cards below this position belong to the first page and sweep in diagonally */
+    private int mFirstPageSize;
 
     public LibraryCardAdapter(@NonNull ModIconCache iconCache, @NonNull Listener listener) {
         mIconCache = iconCache;
@@ -72,14 +79,35 @@ public class LibraryCardAdapter extends RecyclerView.Adapter<LibraryCardAdapter.
         mActiveCategory = activeCategory;
     }
 
+    /** Replaces the results with {@code count} skeleton cards while the first page loads */
+    public void showSkeleton(int count) {
+        mItems.clear();
+        mSkeletonCount = count;
+        notifyDataSetChanged();
+    }
+
+    public boolean isShowingSkeleton() {
+        return mSkeletonCount > 0;
+    }
+
+    public void setSpanCount(int spanCount) {
+        mSpanCount = Math.max(1, spanCount);
+    }
+
     public void setItems(@NonNull List<ModItem> items, boolean animate) {
+        mSkeletonCount = 0;
         mItems.clear();
         mItems.addAll(items);
+        mFirstPageSize = animate ? items.size() : 0;
         mAnimatedUpTo = animate ? -1 : Integer.MAX_VALUE;
         notifyDataSetChanged();
     }
 
     public void appendItems(@NonNull List<ModItem> items) {
+        if (mSkeletonCount > 0) {
+            setItems(items, true);
+            return;
+        }
         int start = mItems.size();
         mItems.addAll(items);
         notifyItemRangeInserted(start, items.size());
@@ -117,40 +145,74 @@ public class LibraryCardAdapter extends RecyclerView.Adapter<LibraryCardAdapter.
         return update ? CardState.UPDATE : CardState.UNINSTALL;
     }
 
+    @Override
+    public int getItemViewType(int position) {
+        return mSkeletonCount > 0 ? VIEW_SKELETON : VIEW_CARD;
+    }
+
     @NonNull
     @Override
-    public CardHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_library_card, parent, false);
-        return new CardHolder(view);
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+        if (viewType == VIEW_SKELETON) {
+            return new SkeletonHolder(inflater.inflate(R.layout.item_library_skeleton, parent, false));
+        }
+        return new CardHolder(inflater.inflate(R.layout.item_library_card, parent, false));
     }
 
     @Override
-    public void onBindViewHolder(@NonNull CardHolder holder, int position, @NonNull List<Object> payloads) {
-        if (!payloads.isEmpty()) {
-            holder.bindAction(mItems.get(position));
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position, @NonNull List<Object> payloads) {
+        if (!payloads.isEmpty() && holder instanceof CardHolder) {
+            ((CardHolder) holder).bindActionAnimated(mItems.get(position));
             return;
         }
         super.onBindViewHolder(holder, position, payloads);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull CardHolder holder, int position) {
-        holder.bind(mItems.get(position));
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+        if (holder instanceof SkeletonHolder) {
+            ((SkeletonHolder) holder).position = position;
+            return;
+        }
+        CardHolder card = (CardHolder) holder;
+        card.bind(mItems.get(position));
         if (position > mAnimatedUpTo) {
             mAnimatedUpTo = position;
-            holder.animateIn(position);
+            card.animateIn(position);
         }
         if (position >= mItems.size() - 6) mListener.onNearEnd();
     }
 
     @Override
-    public void onViewRecycled(@NonNull CardHolder holder) {
-        holder.recycle();
+    public void onViewAttachedToWindow(@NonNull RecyclerView.ViewHolder holder) {
+        if (holder instanceof SkeletonHolder) {
+            LibraryMotion.startSkeleton(holder.itemView, ((SkeletonHolder) holder).position);
+        }
+    }
+
+    @Override
+    public void onViewDetachedFromWindow(@NonNull RecyclerView.ViewHolder holder) {
+        if (holder instanceof SkeletonHolder) LibraryMotion.stopSkeleton(holder.itemView);
+    }
+
+    @Override
+    public void onViewRecycled(@NonNull RecyclerView.ViewHolder holder) {
+        if (holder instanceof CardHolder) ((CardHolder) holder).recycle();
+        else LibraryMotion.stopSkeleton(holder.itemView);
     }
 
     @Override
     public int getItemCount() {
-        return mItems.size();
+        return mSkeletonCount > 0 ? mSkeletonCount : mItems.size();
+    }
+
+    static final class SkeletonHolder extends RecyclerView.ViewHolder {
+        int position;
+
+        SkeletonHolder(@NonNull View view) {
+            super(view);
+        }
     }
 
     public class CardHolder extends RecyclerView.ViewHolder {
@@ -198,6 +260,11 @@ public class LibraryCardAdapter extends RecyclerView.Adapter<LibraryCardAdapter.
             mDescription.setText(item.description);
 
             mIcon.setImageDrawable(null);
+            mIcon.animate().cancel();
+            mIcon.setAlpha(1f);
+            mIcon.setScaleX(1f);
+            mIcon.setScaleY(1f);
+            final long boundAt = android.os.SystemClock.uptimeMillis();
             final float radius = context.getResources().getDisplayMetrics().density * 8f;
             mReceiver = new ImageReceiver() {
                 @Override
@@ -207,6 +274,8 @@ public class LibraryCardAdapter extends RecyclerView.Adapter<LibraryCardAdapter.
                     drawable.setCornerRadius(radius);
                     drawable.setFilterBitmap(image.getWidth() >= 64);
                     mIcon.setImageDrawable(drawable);
+                    // Cached icons show instantly, downloaded ones pop in
+                    if (android.os.SystemClock.uptimeMillis() - boundAt > 120) LibraryMotion.iconLoaded(mIcon);
                 }
             };
             if (item.imageUrl != null && !item.imageUrl.isEmpty()) {
@@ -310,20 +379,17 @@ public class LibraryCardAdapter extends RecyclerView.Adapter<LibraryCardAdapter.
             mAction.setAlpha(mActionsEnabled ? 1f : 0.5f);
         }
 
+        /** Rebinds the action after an install-state change, morphing when its meaning changes */
+        void bindActionAnimated(@NonNull ModItem item) {
+            CharSequence before = mAction.getText();
+            bindAction(item);
+            if (before != null && !before.toString().contentEquals(mAction.getText())) {
+                LibraryMotion.actionMorph(mAction);
+            }
+        }
+
         void animateIn(int position) {
-            Context context = itemView.getContext();
-            if (!AnimationManager.isEnabled(context, AnimationManager.TYPE_CONTENT)) return;
-            float rise = 14f * context.getResources().getDisplayMetrics().density;
-            itemView.animate().cancel();
-            itemView.setAlpha(0f);
-            itemView.setTranslationY(rise);
-            itemView.animate()
-                    .alpha(1f)
-                    .translationY(0f)
-                    .setStartDelay(Math.min(position % 12, 8) * 35L)
-                    .setDuration(260L)
-                    .setInterpolator(new DecelerateInterpolator(1.6f))
-                    .start();
+            LibraryMotion.cardIn(itemView, position, mSpanCount, position < mFirstPageSize);
         }
 
         void recycle() {
@@ -334,6 +400,8 @@ public class LibraryCardAdapter extends RecyclerView.Adapter<LibraryCardAdapter.
             itemView.animate().cancel();
             itemView.setAlpha(1f);
             itemView.setTranslationY(0f);
+            itemView.setScaleX(1f);
+            itemView.setScaleY(1f);
         }
     }
 

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Profile editor palette (dark theme, as in the mockup) -->
+<resources>
+    <color name="pe_card_bg">#14171C</color>
+    <color name="pe_card_stroke">#262A31</color>
+    <color name="pe_field_bg">#1D2127</color>
+    <color name="pe_field_pressed">#272C34</color>
+    <color name="pe_field_stroke">#2A2F37</color>
+    <color name="pe_text_primary">#F2F4F7</color>
+    <color name="pe_text_secondary">#A3AAB5</color>
+    <color name="pe_icon">#E6E9EE</color>
+    <color name="pe_btn_primary_bg">#DCE0E7</color>
+    <color name="pe_btn_primary_text">#14171C</color>
+    <color name="pe_btn_dark_bg">#1B1F25</color>
+    <color name="pe_btn_dark_stroke">#3A404A</color>
+    <color name="pe_btn_dark_text">#F2F4F7</color>
+    <color name="pe_delete_bg">#2A1316</color>
+    <color name="pe_delete_stroke">#E5484D</color>
+    <color name="pe_delete_text">#FF6B6B</color>
+    <color name="pe_chip_bg">#1D2127</color>
+    <color name="pe_chip_selected_stroke">#FFFFFF</color>
+    <color name="pe_badge_bg">#22262D</color>
+    <color name="pe_badge_stroke">#3A404A</color>
+    <color name="pe_badge_icon">#FFFFFF</color>
+    <color name="pe_round_button_bg">#1B1F25</color>
+</resources>

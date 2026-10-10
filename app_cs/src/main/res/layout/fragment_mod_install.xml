@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Install screen: project info on the left, profile + version + install on the right -->
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Install screen, narrow panes: one scroll with the install controls first -->
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/install_scroll"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?android:attr/colorBackground"
     android:fillViewport="true"
+    android:overScrollMode="ifContentScrolls"
     android:scrollbars="none">
 
     <LinearLayout
@@ -15,7 +16,6 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Back + breadcrumb -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -56,147 +56,15 @@
                 android:textStyle="normal" />
         </LinearLayout>
 
-        <LinearLayout
-            android:id="@+id/install_columns"
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:orientation="horizontal">
+            android:layout_marginTop="14dp">
 
-            <!-- ═════════ Project info ═════════ -->
-            <LinearLayout
-                android:id="@+id/install_info_panel"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1.35"
-                android:background="@drawable/bg_lib_card"
-                android:orientation="vertical"
-                android:padding="18dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <FrameLayout
-                        android:layout_width="92dp"
-                        android:layout_height="92dp"
-                        android:background="@drawable/bg_lib_icon_box"
-                        android:padding="7dp">
-
-                        <ImageView
-                            android:id="@+id/install_icon"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:importantForAccessibility="no"
-                            android:scaleType="fitCenter" />
-                    </FrameLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="16dp"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/install_title"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:ellipsize="end"
-                            android:fontFamily="@font/noto_sans_bold"
-                            android:includeFontPadding="false"
-                            android:maxLines="2"
-                            android:textColor="?attr/colorOnSurface"
-                            android:textSize="26sp" />
-
-                        <TextView
-                            android:id="@+id/install_author"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:maxLines="1"
-                            android:textColor="?attr/colorOnSurfaceVariant"
-                            android:textSize="13sp" />
-
-                        <LinearLayout
-                            android:id="@+id/install_tags"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
-                            android:orientation="horizontal" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/install_description"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:lineSpacingExtra="3dp"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    android:textSize="14sp" />
-
-                <LinearLayout
-                    android:id="@+id/install_stats"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/install_stat_downloads"
-                        style="@style/Library.Stat"
-                        android:drawableStart="@drawable/ic_lib_download" />
-
-                    <TextView
-                        android:id="@+id/install_stat_follows"
-                        style="@style/Library.Stat"
-                        android:drawableStart="@drawable/ic_lib_heart" />
-
-                    <TextView
-                        android:id="@+id/install_stat_updated"
-                        style="@style/Library.Stat"
-                        android:drawableStart="@drawable/ic_lib_clock" />
-                </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginTop="18dp"
-                    android:layout_marginBottom="16dp"
-                    android:background="?attr/colorOutlineVariant" />
-
-                <TextView
-                    style="@style/Library.SectionLabel"
-                    android:text="@string/lib_dependencies" />
-
-                <LinearLayout
-                    android:id="@+id/install_deps_list"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:orientation="vertical" />
-
-                <TextView
-                    android:id="@+id/install_deps_empty"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:text="@string/lib_dep_resolving"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    android:textSize="13sp" />
-            </LinearLayout>
-
-            <!-- ═════════ Profile, version and actions ═════════ -->
             <LinearLayout
                 android:id="@+id/install_action_panel"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="14dp"
-                android:layout_weight="1"
                 android:orientation="vertical">
 
                 <LinearLayout
@@ -469,6 +337,175 @@
                     app:iconTint="@color/lib_danger"
                     app:strokeColor="@color/lib_danger" />
             </LinearLayout>
-        </LinearLayout>
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp">
+
+            <LinearLayout
+                android:id="@+id/install_info_panel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_lib_card"
+                android:orientation="vertical"
+                android:padding="18dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <FrameLayout
+                        android:layout_width="92dp"
+                        android:layout_height="92dp"
+                        android:background="@drawable/bg_lib_icon_box"
+                        android:padding="7dp">
+
+                        <ImageView
+                            android:id="@+id/install_icon"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:importantForAccessibility="no"
+                            android:scaleType="fitCenter" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/install_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:fontFamily="@font/noto_sans_bold"
+                            android:includeFontPadding="false"
+                            android:maxLines="2"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="26sp" />
+
+                        <TextView
+                            android:id="@+id/install_author"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:maxLines="1"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="13sp" />
+
+                        <LinearLayout
+                            android:id="@+id/install_tags"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:orientation="horizontal" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/install_description"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:lineSpacingExtra="3dp"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="14sp" />
+
+                <LinearLayout
+                    android:id="@+id/install_stats"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/install_stat_downloads"
+                        style="@style/Library.Stat"
+                        android:drawableStart="@drawable/ic_lib_download" />
+
+                    <TextView
+                        android:id="@+id/install_stat_follows"
+                        style="@style/Library.Stat"
+                        android:drawableStart="@drawable/ic_lib_heart" />
+
+                    <TextView
+                        android:id="@+id/install_stat_updated"
+                        style="@style/Library.Stat"
+                        android:drawableStart="@drawable/ic_lib_clock" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/install_gallery_section"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            style="@style/Library.SectionLabel"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:text="@string/lib_gallery" />
+
+                        <TextView
+                            android:id="@+id/install_gallery_count"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/install_gallery"
+                        android:layout_width="match_parent"
+                        android:layout_height="128dp"
+                        android:layout_marginTop="10dp"
+                        android:clipToPadding="false"
+                        android:overScrollMode="never"
+                        android:scrollbars="none" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="18dp"
+                    android:layout_marginBottom="16dp"
+                    android:background="?attr/colorOutlineVariant" />
+
+                <TextView
+                    style="@style/Library.SectionLabel"
+                    android:text="@string/lib_dependencies" />
+
+                <LinearLayout
+                    android:id="@+id/install_deps_list"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="vertical" />
+
+                <TextView
+                    android:id="@+id/install_deps_empty"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/lib_dep_resolving"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="13sp" />
+            </LinearLayout>
+        </FrameLayout>
     </LinearLayout>
-</ScrollView>
+</androidx.core.widget.NestedScrollView>

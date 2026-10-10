@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Profile editor palette (light theme) -->
+<resources>
+    <color name="pe_card_bg">#FFFFFF</color>
+    <color name="pe_card_stroke">#DDE1E7</color>
+    <color name="pe_field_bg">#F1F3F6</color>
+    <color name="pe_field_pressed">#E4E7EC</color>
+    <color name="pe_field_stroke">#E1E4E9</color>
+    <color name="pe_text_primary">#15181D</color>
+    <color name="pe_text_secondary">#5D6470</color>
+    <color name="pe_icon">#2A2F37</color>
+    <color name="pe_btn_primary_bg">#1E232A</color>
+    <color name="pe_btn_primary_text">#F4F6F9</color>
+    <color name="pe_btn_dark_bg">#F1F3F6</color>
+    <color name="pe_btn_dark_stroke">#CDD2DA</color>
+    <color name="pe_btn_dark_text">#15181D</color>
+    <color name="pe_delete_bg">#FDECEC</color>
+    <color name="pe_delete_stroke">#E5484D</color>
+    <color name="pe_delete_text">#D93036</color>
+    <color name="pe_chip_bg">#EEF0F3</color>
+    <color name="pe_chip_selected_stroke">#15181D</color>
+    <color name="pe_badge_bg">#1E232A</color>
+    <color name="pe_badge_stroke">#FFFFFF</color>
+    <color name="pe_badge_icon">#FFFFFF</color>
+    <color name="pe_round_button_bg">#FFFFFF</color>
+</resources>

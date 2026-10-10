@@ -22,7 +22,9 @@ import androidx.core.graphics.drawable.RoundedBitmapDrawable;
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 import androidx.core.widget.TextViewCompat;
 import androidx.fragment.app.Fragment;
+import androidx.viewpager2.widget.ViewPager2;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.LinearSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.craftstudio.cslauncher.R;
@@ -44,6 +46,9 @@ import com.craftstudio.cslauncher.modding.modpacks.models.ModItem;
 import com.craftstudio.cslauncher.prefs.LauncherPreferences;
 import com.craftstudio.cslauncher.progresskeeper.ProgressKeeper;
 import com.craftstudio.cslauncher.utils.ThemeColors;
+import com.craftstudio.cslauncher.utils.motion.InstallMotion;
+import com.craftstudio.cslauncher.utils.motion.Motion;
+import com.craftstudio.cslauncher.modding.modpacks.imagecache.GalleryImageLoader;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.checkbox.MaterialCheckBox;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -75,7 +80,6 @@ public class ModInstallFragment extends Fragment {
     public static final String ARG_LIBRARY_TITLE = "library_title";
 
     private static final ExecutorService sExecutor = Executors.newFixedThreadPool(3);
-    private static final float NARROW_DP = 620f;
 
     private ModItem mItem;
     private ContentType mType = ContentType.MOD;
@@ -102,6 +106,9 @@ public class ModInstallFragment extends Fragment {
     private int mLoadGeneration;
     private final Map<String, String[]> mDependencyInfo = new HashMap<>();
     private int mDependencyGeneration;
+    @Nullable private List<ContentInstaller.GalleryImage> mGallery;
+    private boolean mGalleryLoading;
+    private boolean mEntrancePlayed;
 
     // Views
     private TextView mVersionLabel, mVersionBadge, mVersionName, mVersionMeta, mVersionExtra, mVersionWarning, mStatus;
@@ -110,6 +117,9 @@ public class ModInstallFragment extends Fragment {
     private View mProgress;
     private LinearLayout mDepsList;
     private TextView mDepsEmpty;
+    private View mVersionBox, mGallerySection;
+    private RecyclerView mGalleryList;
+    private TextView mGalleryCount;
     private final List<DependencyRow> mDependencyRows = new ArrayList<>();
 
     /** One dependency of the selected version */
@@ -166,11 +176,27 @@ public class ModInstallFragment extends Fragment {
         mUninstall = view.findViewById(R.id.install_uninstall);
         mDepsList = view.findViewById(R.id.install_deps_list);
         mDepsEmpty = view.findViewById(R.id.install_deps_empty);
+        mVersionBox = view.findViewById(R.id.install_version_box);
+        mGallerySection = view.findViewById(R.id.install_gallery_section);
+        mGalleryList = view.findViewById(R.id.install_gallery);
+        mGalleryCount = view.findViewById(R.id.install_gallery_count);
 
-        view.findViewById(R.id.install_back).setOnClickListener(v -> Tools.removeCurrentFragment(requireActivity()));
+        View back = view.findViewById(R.id.install_back);
+        back.setOnClickListener(v -> Tools.removeCurrentFragment(requireActivity()));
+        com.craftstudio.cslauncher.utils.CSAnimationEngine.attachPressFeedback(back);
+        com.craftstudio.cslauncher.utils.CSAnimationEngine.attachPressFeedback(mPrimary);
+        com.craftstudio.cslauncher.utils.CSAnimationEngine.attachPressFeedback(mChangeVersion);
         bindProjectInfo(view);
         bindProfile(view);
-        view.post(() -> adaptToWidth(view));
+        setupGallery();
+
+        if (!mEntrancePlayed) {
+            mEntrancePlayed = true;
+            boolean wide = view.findViewById(R.id.install_columns) != null;
+            InstallMotion.playEntrance((View) back.getParent(), view.findViewById(R.id.install_info_panel),
+                    view.findViewById(R.id.install_action_panel), wide, view.findViewById(R.id.install_tags));
+            countStats(view);
+        }
 
         mChangeVersion.setOnClickListener(v -> showVersionPicker());
         mUseRecommended.setOnClickListener(v -> {
@@ -178,6 +204,7 @@ public class ModInstallFragment extends Fragment {
             mSelectedIndex = mRecommendedIndex;
             mUserPicked = false;
             renderVersion();
+            InstallMotion.versionChanged(mVersionBox);
             renderDependencies();
             renderActions();
         });
@@ -208,6 +235,10 @@ public class ModInstallFragment extends Fragment {
         mChangeVersion = mUseRecommended = mPrimary = mUninstall = null;
         mDepsList = null;
         mDepsEmpty = null;
+        if (mGalleryList != null) mGalleryList.setAdapter(null);
+        mVersionBox = mGallerySection = null;
+        mGalleryList = null;
+        mGalleryCount = null;
     }
 
     private boolean readArguments() {
@@ -373,27 +404,196 @@ public class ModInstallFragment extends Fragment {
         return loader.isEmpty() ? mProfileVersion : loader + " " + mProfileVersion;
     }
 
-    /** Stacks the two columns in narrow panes */
-    private void adaptToWidth(View root) {
-        if (getView() == null) return;
-        float density = getResources().getDisplayMetrics().density;
-        if (root.getWidth() <= 0 || root.getWidth() / density >= NARROW_DP) return;
-        LinearLayout columns = root.findViewById(R.id.install_columns);
-        columns.setOrientation(LinearLayout.VERTICAL);
-        View info = root.findViewById(R.id.install_info_panel);
-        View action = root.findViewById(R.id.install_action_panel);
-        // The install controls matter most, show them first
-        columns.removeView(action);
-        columns.addView(action, 0, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        info.setLayoutParams(withTopMargin(Math.round(14 * density)));
+    /** Download and follower numbers count up from zero on the first appearance */
+    private void countStats(View view) {
+        TextView downloads = view.findViewById(R.id.install_stat_downloads);
+        TextView follows = view.findViewById(R.id.install_stat_follows);
+        if (mItem.downloads > 0 && downloads.getVisibility() == View.VISIBLE) {
+            Motion.countUp(downloads, mItem.downloads, 380, value -> isAdded()
+                    ? getString(R.string.lib_stat_downloads, LibraryCatalog.compactNumber(value)) : "");
+        }
+        if (mItem.follows > 0 && follows.getVisibility() == View.VISIBLE) {
+            Motion.countUp(follows, mItem.follows, 460, value -> isAdded()
+                    ? getString(R.string.lib_stat_follows, LibraryCatalog.compactNumber(value)) : "");
+        }
     }
 
-    private static LinearLayout.LayoutParams withTopMargin(int margin) {
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        params.topMargin = margin;
-        return params;
+    // ─── Gallery ─────────────────────────────────────────────────────────────
+
+    private void setupGallery() {
+        if (mGalleryList == null) return;
+        mGalleryList.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false));
+        mGalleryList.setNestedScrollingEnabled(false);
+        mGalleryList.setHasFixedSize(true);
+        mGalleryList.setItemAnimator(null);
+        if (mGalleryList.getOnFlingListener() == null) new LinearSnapHelper().attachToRecyclerView(mGalleryList);
+        if (mGallery != null) {
+            renderGallery(false);
+        } else if (!mGalleryLoading) {
+            loadGallery();
+        }
+    }
+
+    private void loadGallery() {
+        mGalleryLoading = true;
+        final ModItem item = mItem;
+        final String key = mCurseforgeKey;
+        sExecutor.execute(() -> {
+            List<ContentInstaller.GalleryImage> images = ContentInstaller.fetchGallery(item, key);
+            Tools.runOnUiThread(() -> {
+                mGalleryLoading = false;
+                mGallery = images;
+                if (getView() != null) renderGallery(true);
+            });
+        });
+    }
+
+    private void renderGallery(boolean animate) {
+        if (mGallerySection == null || mGalleryList == null) return;
+        if (mGallery == null || mGallery.isEmpty()) {
+            mGallerySection.setVisibility(View.GONE);
+            return;
+        }
+        mGalleryCount.setText(getString(R.string.lib_gallery_count, mGallery.size()));
+        mGalleryList.setAdapter(new GalleryAdapter(mGallery, animate));
+        if (animate) {
+            mGallerySection.setVisibility(View.GONE);
+            Motion.reveal(mGallerySection);
+        } else {
+            mGallerySection.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private final class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.Holder> {
+        private final List<ContentInstaller.GalleryImage> mImages;
+        private int mAnimatedUpTo;
+
+        GalleryAdapter(List<ContentInstaller.GalleryImage> images, boolean animate) {
+            mImages = images;
+            mAnimatedUpTo = animate ? -1 : Integer.MAX_VALUE;
+        }
+
+        final class Holder extends RecyclerView.ViewHolder {
+            final ImageView image;
+
+            Holder(View view) {
+                super(view);
+                image = view.findViewById(R.id.gallery_thumb_image);
+                view.setClipToOutline(true);
+            }
+        }
+
+        @NonNull
+        @Override
+        public Holder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_lib_gallery_thumb, parent, false);
+            return new Holder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull Holder holder, int position) {
+            ContentInstaller.GalleryImage image = mImages.get(position);
+            holder.image.setImageDrawable(null);
+            holder.image.setAlpha(1f);
+            int width = Math.round(216 * holder.itemView.getResources().getDisplayMetrics().density);
+            GalleryImageLoader.get(holder.itemView.getContext()).load(holder.image, image.thumbnailUrl, width,
+                    (view, fromMemory) -> {
+                        if (!fromMemory) InstallMotion.imageLoaded(view);
+                    });
+            holder.itemView.setContentDescription(image.title);
+            holder.itemView.setOnClickListener(v -> openGalleryViewer(holder.getAdapterPosition()));
+            if (position > mAnimatedUpTo) {
+                mAnimatedUpTo = position;
+                InstallMotion.galleryItemIn(holder.itemView, position);
+            }
+        }
+
+        @Override
+        public void onViewRecycled(@NonNull Holder holder) {
+            GalleryImageLoader.get(holder.itemView.getContext()).cancel(holder.image);
+            holder.itemView.animate().cancel();
+            holder.itemView.setAlpha(1f);
+            holder.itemView.setTranslationX(0f);
+        }
+
+        @Override
+        public int getItemCount() {
+            return mImages.size();
+        }
+    }
+
+    /** Full screen, swipeable screenshot viewer */
+    private void openGalleryViewer(int start) {
+        if (mGallery == null || mGallery.isEmpty() || start < 0 || !isAdded()) return;
+        final List<ContentInstaller.GalleryImage> images = mGallery;
+        android.app.Dialog dialog = new android.app.Dialog(requireContext(), android.R.style.Theme_Black_NoTitleBar_Fullscreen);
+        View content = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_lib_gallery, null, false);
+        dialog.setContentView(content);
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setWindowAnimations(android.R.style.Animation_Dialog);
+        }
+        ViewPager2 pager = content.findViewById(R.id.gallery_pager);
+        TextView counter = content.findViewById(R.id.gallery_counter);
+        TextView title = content.findViewById(R.id.gallery_title);
+        TextView description = content.findViewById(R.id.gallery_description);
+        View caption = content.findViewById(R.id.gallery_caption);
+        View close = content.findViewById(R.id.gallery_close);
+        close.setOnClickListener(v -> dialog.dismiss());
+        com.craftstudio.cslauncher.utils.CSAnimationEngine.attachPressFeedback(close);
+
+        final int screenWidth = getResources().getDisplayMetrics().widthPixels;
+        pager.setOffscreenPageLimit(1);
+        pager.setAdapter(new RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+            @NonNull
+            @Override
+            public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+                View page = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_lib_gallery_page, parent, false);
+                return new RecyclerView.ViewHolder(page) {};
+            }
+
+            @Override
+            public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+                ImageView image = holder.itemView.findViewById(R.id.gallery_page_image);
+                View loading = holder.itemView.findViewById(R.id.gallery_page_loading);
+                image.setImageDrawable(null);
+                loading.setVisibility(View.VISIBLE);
+                GalleryImageLoader.get(image.getContext()).load(image, images.get(position).url, screenWidth,
+                        (view, fromMemory) -> {
+                            loading.setVisibility(View.GONE);
+                            if (!fromMemory) InstallMotion.imageLoaded(view);
+                        });
+            }
+
+            @Override
+            public int getItemCount() {
+                return images.size();
+            }
+        });
+        // Pages slide with a light depth effect
+        pager.setPageTransformer((page, position) -> {
+            float abs = Math.abs(position);
+            page.setAlpha(1f - Math.min(abs, 1f) * 0.5f);
+            float scale = 1f - Math.min(abs, 1f) * 0.08f;
+            page.setScaleX(scale);
+            page.setScaleY(scale);
+        });
+        pager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                ContentInstaller.GalleryImage image = images.get(position);
+                counter.setText(getString(R.string.lib_gallery_counter, position + 1, images.size()));
+                boolean hasTitle = !TextUtils.isEmpty(image.title);
+                boolean hasDescription = !TextUtils.isEmpty(image.description);
+                title.setText(image.title);
+                title.setVisibility(hasTitle ? View.VISIBLE : View.GONE);
+                description.setText(image.description);
+                description.setVisibility(hasDescription ? View.VISIBLE : View.GONE);
+                caption.setVisibility(hasTitle || hasDescription ? View.VISIBLE : View.GONE);
+            }
+        });
+        pager.setCurrentItem(start, false);
+        dialog.show();
+        InstallMotion.viewerOpen(pager);
     }
 
     // ─── Loading ─────────────────────────────────────────────────────────────
@@ -459,6 +659,8 @@ public class ModInstallFragment extends Fragment {
         renderVersion();
         renderDependencies();
         renderActions();
+        InstallMotion.versionLoaded(mVersionBox);
+        InstallMotion.dependenciesIn(mDepsList);
     }
 
     // ─── Version logic ───────────────────────────────────────────────────────
@@ -796,6 +998,8 @@ public class ModInstallFragment extends Fragment {
     private void styleInstallButton(int label, int icon) {
         Context context = mPrimary.getContext();
         int text = ContextCompat.getColor(context, R.color.lib_update_text);
+        Object previous = mPrimary.getTag();
+        if (previous != null && !previous.equals(label)) InstallMotion.buttonStateChanged(mPrimary);
         mPrimary.setText(label);
         mPrimary.setIconResource(icon);
         mPrimary.setTextColor(text);
@@ -807,6 +1011,8 @@ public class ModInstallFragment extends Fragment {
     private void styleUninstallButton() {
         Context context = mPrimary.getContext();
         int white = 0xFFFFFFFF;
+        Object previous = mPrimary.getTag();
+        if (previous != null && !previous.equals(R.string.lib_uninstall)) InstallMotion.buttonStateChanged(mPrimary);
         mPrimary.setText(R.string.lib_uninstall);
         mPrimary.setIconResource(R.drawable.ic_lib_trash);
         mPrimary.setTextColor(white);
@@ -1131,6 +1337,8 @@ public class ModInstallFragment extends Fragment {
             renderVersion();
             renderDependencies();
             renderActions();
+            InstallMotion.versionChanged(mVersionBox);
+            InstallMotion.dependenciesIn(mDepsList);
             dialog.dismiss();
         });
         list.setLayoutManager(new LinearLayoutManager(requireContext()));

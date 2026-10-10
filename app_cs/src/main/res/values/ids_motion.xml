@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- View tags used by the motion engines and the gallery image loader -->
+<resources>
+    <item name="motion_tint_animator" type="id" />
+    <item name="motion_count_animator" type="id" />
+    <item name="motion_pulse_animator" type="id" />
+    <item name="lib_image_url_tag" type="id" />
+</resources>

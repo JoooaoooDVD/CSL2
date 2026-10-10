@@ -48,6 +48,8 @@ import com.craftstudio.cslauncher.progresskeeper.ProgressKeeper;
 import com.craftstudio.cslauncher.progresskeeper.TaskCountListener;
 import com.craftstudio.cslauncher.utils.CSAnimationEngine;
 import com.craftstudio.cslauncher.utils.ThemeColors;
+import com.craftstudio.cslauncher.utils.motion.LibraryMotion;
+import com.craftstudio.cslauncher.utils.motion.Motion;
 import com.craftstudio.cslauncher.utils.profiles.VersionSelectorDialog;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
@@ -121,6 +123,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
     private View mStateContainer, mStateLoading, mStateRetry;
     private ImageView mStateIcon;
     private TextView mStateText;
+    private View mTabIndicator, mTypeTabsFrame, mToolbar, mSearchBox, mSortChevron;
 
     private final TaskCountListener mTaskCountListener = taskCount -> {
         Tools.runOnUiThread(() -> {
@@ -164,6 +167,11 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         mStateIcon = view.findViewById(R.id.library_state_icon);
         mStateText = view.findViewById(R.id.library_state_text);
         mStateRetry = view.findViewById(R.id.library_state_retry);
+        mTabIndicator = view.findViewById(R.id.library_tab_indicator);
+        mTypeTabsFrame = view.findViewById(R.id.library_type_tabs_frame);
+        mToolbar = view.findViewById(R.id.library_toolbar);
+        mSearchBox = view.findViewById(R.id.library_search_box);
+        mSortChevron = view.findViewById(R.id.library_sort_chevron);
 
         if (!mInitialized) resolveProfile();
 
@@ -204,6 +212,8 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
 
         mLastTaskCount = ProgressKeeper.getTaskCount();
         ProgressKeeper.addTaskCountListener(mTaskCountListener, false);
+
+        LibraryMotion.playEntrance(mTitle, mSubtitle, mTypeTabsFrame, mToolbar, mChips);
     }
 
     @Override
@@ -219,6 +229,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         mAdapter = null;
         mStateContainer = mStateLoading = mStateRetry = null;
         mStateIcon = null;
+        mTabIndicator = mTypeTabsFrame = mToolbar = mSearchBox = mSortChevron = null;
     }
 
     // ─── Setup ───────────────────────────────────────────────────────────────
@@ -256,6 +267,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
             ContentType type = v == mTabResourcePacks ? ContentType.RESOURCE_PACK
                     : v == mTabShaders ? ContentType.SHADER_PACK : ContentType.MOD;
             if (type == mFilters.contentType) return;
+            mItems.clear();
             applyContentType(type, true);
             startSearch();
             refreshInstalled();
@@ -290,10 +302,14 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
             @Override
             public void afterTextChanged(Editable s) {
-                clear.setAlpha(s.length() > 0 ? 1f : 0.55f);
+                LibraryMotion.clearButton(clear, s.length() > 0);
             }
         });
-        clear.setAlpha(mSearchInput.getText().length() > 0 ? 1f : 0.55f);
+        boolean hasText = mSearchInput.getText().length() > 0;
+        clear.setAlpha(hasText ? 1f : 0.35f);
+        clear.setScaleX(hasText ? 1f : 0.75f);
+        clear.setScaleY(hasText ? 1f : 0.75f);
+        mSearchInput.setOnFocusChangeListener((v, focused) -> LibraryMotion.searchFocus(mSearchBox, focused));
     }
 
     private void submitSearchText() {
@@ -344,6 +360,8 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
                 }
                 return true;
             });
+            popup.setOnDismissListener(menu1 -> LibraryMotion.chevron(mSortChevron, false));
+            LibraryMotion.chevron(mSortChevron, true);
             popup.show();
         });
     }
@@ -362,7 +380,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
             View titles = header.getChildAt(0);
             titles.setLayoutParams(new LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-            View tabs = root.findViewById(R.id.library_type_tabs);
+            View tabs = root.findViewById(R.id.library_type_tabs_frame);
             LinearLayout.LayoutParams tabParams = new LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             tabParams.topMargin = Math.round(12 * density);
@@ -389,6 +407,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         float usable = (widthPx - mGrid.getPaddingLeft() - mGrid.getPaddingRight()) / density;
         int span = Math.max(1, (int) (usable / MIN_CARD_WIDTH_DP));
         if (span != mGridLayout.getSpanCount()) mGridLayout.setSpanCount(span);
+        if (mAdapter != null) mAdapter.setSpanCount(span);
     }
 
     // ─── Content type, chips and header ──────────────────────────────────────
@@ -401,23 +420,31 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         mTabMods.setSelected(type == ContentType.MOD);
         mTabResourcePacks.setSelected(type == ContentType.RESOURCE_PACK);
         mTabShaders.setSelected(type == ContentType.SHADER_PACK);
-        tintTab(mTabMods);
-        tintTab(mTabResourcePacks);
-        tintTab(mTabShaders);
+        tintTab(mTabMods, userAction);
+        tintTab(mTabResourcePacks, userAction);
+        tintTab(mTabShaders, userAction);
+        TextView selectedTab = type == ContentType.RESOURCE_PACK ? mTabResourcePacks
+                : type == ContentType.SHADER_PACK ? mTabShaders : mTabMods;
+        LibraryMotion.moveIndicator(mTabIndicator, selectedTab, userAction);
+        if (userAction) {
+            LibraryMotion.selectChip(selectedTab);
+            Motion.swapText(mTitle, getString(type == ContentType.RESOURCE_PACK ? R.string.lib_title_resourcepacks
+                    : type == ContentType.SHADER_PACK ? R.string.lib_title_shaders : R.string.lib_title_mods));
+        }
 
         switch (type) {
             case RESOURCE_PACK:
-                mTitle.setText(R.string.lib_title_resourcepacks);
+                if (!userAction) mTitle.setText(R.string.lib_title_resourcepacks);
                 mSubtitle.setText(R.string.lib_subtitle_resourcepacks);
                 mSearchInput.setHint(R.string.lib_search_resourcepacks);
                 break;
             case SHADER_PACK:
-                mTitle.setText(R.string.lib_title_shaders);
+                if (!userAction) mTitle.setText(R.string.lib_title_shaders);
                 mSubtitle.setText(R.string.lib_subtitle_shaders);
                 mSearchInput.setHint(R.string.lib_search_shaders);
                 break;
             default:
-                mTitle.setText(R.string.lib_title_mods);
+                if (!userAction) mTitle.setText(R.string.lib_title_mods);
                 mSubtitle.setText(R.string.lib_subtitle_mods);
                 mSearchInput.setHint(R.string.lib_search_mods);
                 break;
@@ -430,12 +457,11 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         if (userAction && mGrid != null) mGrid.scrollToPosition(0);
     }
 
-    private void tintTab(TextView tab) {
+    private void tintTab(TextView tab, boolean animate) {
         int color = tab.isSelected()
                 ? androidx.core.content.ContextCompat.getColor(tab.getContext(), R.color.lib_chip_selected_text)
                 : ThemeColors.get(tab.getContext(), com.google.android.material.R.attr.colorOnSurfaceVariant);
-        tab.setTextColor(color);
-        TextViewCompat.setCompoundDrawableTintList(tab, ColorStateList.valueOf(color));
+        LibraryMotion.tintTab(tab, color, animate);
         int size = Math.round(16 * tab.getResources().getDisplayMetrics().density);
         android.graphics.drawable.Drawable[] drawables = tab.getCompoundDrawablesRelative();
         if (drawables[0] != null) {
@@ -466,11 +492,13 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
                     child.setSelected(isSelected);
                     styleChip((TextView) child, isSelected);
                 }
+                LibraryMotion.selectChip(v);
                 updateAdapterContext();
                 startSearch();
             });
             mChips.addView(chip);
         }
+        if (getView() != null && mInitialized) LibraryMotion.cascadeChips(mChips, 60);
     }
 
     private void styleChip(TextView chip, boolean selected) {
@@ -526,8 +554,12 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         mLoadingMore = false;
         mSearchFailed = false;
 
-        if (mItems.isEmpty() || mAdapter == null) showLoading();
-        else if (mProgress != null) mProgress.setVisibility(View.VISIBLE);
+        if (mItems.isEmpty() || mAdapter == null) {
+            showLoading();
+        } else {
+            if (mProgress != null) mProgress.setVisibility(View.VISIBLE);
+            LibraryMotion.dimGrid(mGrid, true);
+        }
 
         mSearchTask = sLibraryExecutor.submit(() -> {
             SearchResult result = mApi.searchMod(query, null);
@@ -547,6 +579,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         mSearchFailed = result == null;
         if (mAdapter == null) return;
         if (mProgress != null) mProgress.setVisibility(View.INVISIBLE);
+        LibraryMotion.dimGrid(mGrid, false);
         updateAdapterContext();
         mAdapter.setItems(mItems, true);
         if (mGrid != null) mGrid.scrollToPosition(0);
@@ -581,14 +614,15 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         });
     }
 
+    /** Skeleton cards breathe in the grid while the first page loads */
     private void showLoading() {
-        if (mStateContainer == null) return;
-        mGrid.setVisibility(View.INVISIBLE);
-        mStateContainer.setVisibility(View.VISIBLE);
-        mStateLoading.setVisibility(View.VISIBLE);
-        mStateIcon.setVisibility(View.GONE);
-        mStateText.setVisibility(View.GONE);
-        mStateRetry.setVisibility(View.GONE);
+        if (mStateContainer == null || mAdapter == null) return;
+        mStateContainer.setVisibility(View.GONE);
+        mGrid.animate().cancel();
+        mGrid.setAlpha(1f);
+        mGrid.setVisibility(View.VISIBLE);
+        mAdapter.showSkeleton(Math.max(6, mGridLayout.getSpanCount() * 3));
+        mGrid.scrollToPosition(0);
         mProgress.setVisibility(View.INVISIBLE);
     }
 
@@ -602,12 +636,15 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         mStateText.setVisibility(View.VISIBLE);
         mStateText.setText(text);
         mStateRetry.setVisibility(retry ? View.VISIBLE : View.GONE);
+        mStateContainer.setVisibility(View.GONE);
+        LibraryMotion.showState(mStateContainer);
     }
 
     private void showContent() {
         if (mStateContainer == null) return;
         mStateContainer.setVisibility(View.GONE);
         mGrid.setVisibility(View.VISIBLE);
+        LibraryMotion.dimGrid(mGrid, false);
     }
 
     // ─── Installed state ─────────────────────────────────────────────────────
