@@ -1,60 +1,116 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical"
     android:background="?attr/colorSurface"
-    android:paddingHorizontal="@dimen/fragment_padding_medium">
+    android:orientation="vertical">
 
-
-    <TextView
-        android:id="@+id/title_textview"
-        style="@style/TextAppearance.AppCompat.Title"
+    <!-- Top Horizontal Banner -->
+    <FrameLayout
+        android:id="@+id/mod_version_banner"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textAlignment="center"
-        android:gravity="center"
-        android:layout_marginTop="@dimen/padding_large"
-        android:text="@string/forge_dl_select_version" />
+        android:layout_height="66dp"
+        android:layout_marginHorizontal="10dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="6dp"
+        android:background="@drawable/bg_banner_card"
+        android:clipToOutline="true">
 
-    <View
-        android:id="@+id/view"
-        style="@style/ThickDivider"
-        android:layout_width="match_parent"
-        android:layout_marginTop="@dimen/padding_large"
-        app:layout_constraintTop_toBottomOf="@+id/title_textview"
-        android:paddingBottom="@dimen/fragment_padding_medium"
-        />
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:scaleType="centerCrop"
+            android:src="@drawable/banner_gradient_installer" />
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text=""
-        android:textColor="?attr/colorOnSurface" />
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/settings_header_scrim" />
 
-    <ExpandableListView
-        android:scrollbarThumbVertical="?attr/colorPrimary"
-        android:id="@+id/mod_dl_expandable_version_list"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="14dp">
+
+            <ImageView
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:background="@drawable/bg_settings_icon_box"
+                android:contentDescription="@null"
+                android:padding="7dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_nav_versions" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/title_textview"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:singleLine="true"
+                    android:text="@string/forge_dl_select_version"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="1dp"
+                    android:ellipsize="end"
+                    android:singleLine="true"
+                    android:text="Select Minecraft release build"
+                    android:textColor="#B3FFFFFF"
+                    android:textSize="11sp" />
+            </LinearLayout>
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- Version List Card -->
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:layout_marginHorizontal="10dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/bg_card_home"
+        android:clipToOutline="true"
+        android:padding="6dp">
 
-    </ExpandableListView>
+        <ExpandableListView
+            android:id="@+id/mod_dl_expandable_version_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:divider="@null"
+            android:dividerHeight="0dp"
+            android:scrollbarThumbVertical="?attr/colorPrimary" />
+
+    </FrameLayout>
 
     <LinearLayout
         android:id="@+id/mod_dl_retry_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginHorizontal="10dp"
         android:orientation="horizontal"
-        android:paddingTop="@dimen/fragment_padding_medium"
-        android:paddingBottom="@dimen/fragment_padding_medium"
+        android:paddingVertical="8dp"
         android:visibility="gone">
 
         <TextView
             android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
             android:layout_weight="1"
             android:gravity="center_vertical"
@@ -73,6 +129,7 @@
         android:id="@+id/mod_dl_list_progress"
         style="@style/Widget.AppCompat.ProgressBar.Horizontal"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="4dp"
         android:indeterminate="true" />
+
 </LinearLayout>

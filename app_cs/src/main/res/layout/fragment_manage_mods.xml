@@ -7,80 +7,137 @@
     android:orientation="vertical"
     android:background="?attr/colorSurface">
 
-    <!-- Header bar: back | title | update check | import | add -->
-    <LinearLayout
+    <!-- Top Horizontal Banner -->
+    <FrameLayout
+        android:id="@+id/manage_mods_banner"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/_52sdp"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingHorizontal="@dimen/padding_medium">
+        android:layout_height="66dp"
+        android:layout_marginHorizontal="10dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="6dp"
+        android:background="@drawable/bg_banner_card"
+        android:clipToOutline="true">
 
-        <ImageButton
-            android:id="@+id/manage_mods_back"
-            android:layout_width="@dimen/_38sdp"
-            android:layout_height="@dimen/_38sdp"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_arrow_back_white"
-            android:tint="?attr/colorOnSurfaceVariant"
-            android:contentDescription="@string/global_back" />
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:scaleType="centerCrop"
+            android:src="@drawable/card_manager" />
 
-        <TextView
-            android:id="@+id/manage_mods_title"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginHorizontal="@dimen/padding_moderate"
-            android:textAppearance="?attr/textAppearanceTitleLarge"
-            android:textColor="?attr/colorOnSurface"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:text="@string/mcl_button_manage_mods" />
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/settings_header_scrim" />
 
-        <!-- Shown in place of the refresh button while an update check is running -->
-        <com.google.android.material.progressindicator.CircularProgressIndicator
-            android:id="@+id/manage_mods_update_progress"
-            android:layout_width="@dimen/_38sdp"
-            android:layout_height="@dimen/_38sdp"
-            android:layout_marginEnd="@dimen/padding_small"
-            android:indeterminate="true"
-            android:visibility="gone"
-            app:indicatorSize="@dimen/_20sdp"
-            app:trackThickness="2dp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="12dp">
 
-        <ImageButton
-            android:id="@+id/manage_mods_refresh"
-            android:layout_width="@dimen/_38sdp"
-            android:layout_height="@dimen/_38sdp"
-            android:layout_marginEnd="@dimen/padding_small"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_refresh"
-            android:tint="?attr/colorOnSurfaceVariant"
-            android:contentDescription="@string/mod_check_updates" />
+            <ImageButton
+                android:id="@+id/manage_mods_back"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/bg_icon_button_home"
+                android:contentDescription="@string/global_back"
+                android:padding="8dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_arrow_back_white"
+                android:stateListAnimator="?attr/csPressAnimator" />
 
-        <ImageButton
-            android:id="@+id/manage_mods_import"
-            android:layout_width="@dimen/_38sdp"
-            android:layout_height="@dimen/_38sdp"
-            android:layout_marginEnd="@dimen/padding_small"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_folder"
-            android:tint="?attr/colorOnSurfaceVariant"
-            android:contentDescription="@string/content_import_from_storage" />
+            <ImageView
+                android:id="@+id/manage_mods_header_icon"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:background="@drawable/bg_settings_icon_box"
+                android:contentDescription="@null"
+                android:padding="7dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_nav_manager" />
 
-        <ImageButton
-            android:id="@+id/manage_mods_add"
-            android:layout_width="@dimen/_38sdp"
-            android:layout_height="@dimen/_38sdp"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_add"
-            android:tint="?attr/colorOnSurfaceVariant"
-            android:contentDescription="@string/global_add" />
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
 
-    </LinearLayout>
+                <TextView
+                    android:id="@+id/manage_mods_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:singleLine="true"
+                    android:text="@string/mcl_button_manage_mods"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
 
-    <com.google.android.material.divider.MaterialDivider
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+                <TextView
+                    android:id="@+id/manage_mods_subtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="1dp"
+                    android:ellipsize="end"
+                    android:singleLine="true"
+                    android:text="@string/content_picker_title_manage"
+                    android:textColor="#B3FFFFFF"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <!-- Action buttons in modern glass pills with press animator -->
+            <com.google.android.material.progressindicator.CircularProgressIndicator
+                android:id="@+id/manage_mods_update_progress"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginEnd="6dp"
+                android:indeterminate="true"
+                android:visibility="gone"
+                app:indicatorSize="20dp"
+                app:trackThickness="2dp" />
+
+            <ImageButton
+                android:id="@+id/manage_mods_refresh"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_icon_button_home"
+                android:contentDescription="@string/mod_check_updates"
+                android:padding="8dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_refresh_home"
+                android:stateListAnimator="?attr/csPressAnimator" />
+
+            <ImageButton
+                android:id="@+id/manage_mods_import"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_icon_button_home"
+                android:contentDescription="@string/content_import_from_storage"
+                android:padding="8dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_folder"
+                android:stateListAnimator="?attr/csPressAnimator" />
+
+            <ImageButton
+                android:id="@+id/manage_mods_add"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_icon_button_home"
+                android:contentDescription="@string/global_add"
+                android:padding="8dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_add"
+                android:stateListAnimator="?attr/csPressAnimator" />
+
+        </LinearLayout>
+    </FrameLayout>
 
     <!-- Mod list -->
     <androidx.recyclerview.widget.RecyclerView
@@ -88,8 +145,8 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:paddingHorizontal="@dimen/fragment_padding_medium"
-        android:paddingVertical="@dimen/padding_medium"
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="4dp"
         android:clipToPadding="false" />
 
     <!-- Empty state -->

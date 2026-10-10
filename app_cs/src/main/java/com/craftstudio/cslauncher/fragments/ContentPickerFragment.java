@@ -15,6 +15,9 @@ import com.craftstudio.cslauncher.R;
 import com.craftstudio.cslauncher.modding.modpacks.models.ContentType;
 import com.craftstudio.cslauncher.prefs.LauncherPreferences;
 
+import android.view.ViewGroup;
+import com.craftstudio.cslauncher.utils.CSAnimationEngine;
+
 /**
  * Landscape two-pane replacement for the old {@code dialog_content_picker} AlertDialog.
  * Lives in {@link MainMenuFragment}'s {@code left_pane_container}, replacing the normal
@@ -32,6 +35,14 @@ public class ContentPickerFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        if (view instanceof ViewGroup) {
+            CSAnimationEngine.staggerChildren((ViewGroup) view);
+        }
+        CSAnimationEngine.attachPressFeedback(view.findViewById(R.id.content_picker_back));
+        CSAnimationEngine.attachPressFeedback(view.findViewById(R.id.content_picker_mods));
+        CSAnimationEngine.attachPressFeedback(view.findViewById(R.id.content_picker_resourcepacks));
+        CSAnimationEngine.attachPressFeedback(view.findViewById(R.id.content_picker_shaderpacks));
+
         boolean manage = getArguments() != null && getArguments().getBoolean(ARG_MANAGE, false);
 
         TextView title = view.findViewById(R.id.content_picker_title);
@@ -42,6 +53,7 @@ public class ContentPickerFragment extends Fragment {
 
         ImageButton filterButton = view.findViewById(R.id.content_picker_filter);
         if (filterButton != null) {
+            CSAnimationEngine.attachPressFeedback(filterButton);
             filterButton.setVisibility(View.VISIBLE);
             if (manage) {
                 filterButton.setOnClickListener(v -> {

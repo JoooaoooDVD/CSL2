@@ -13,6 +13,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 
 import com.craftstudio.cslauncher.R;
+import com.craftstudio.cslauncher.utils.CSAnimationEngine;
 import com.craftstudio.cslauncher.utils.profiles.VersionSelectorDialog;
 
 /**
@@ -65,10 +66,13 @@ public final class ContentFilterDialog {
                 .create();
 
         dialog.setOnShowListener(di -> {
+            CSAnimationEngine.animateDialogContentView(dialog.findViewById(R.id.dialog_mod_filters_banner));
             TextView versionText   = dialog.findViewById(R.id.search_mod_selected_mc_version_textview);
             Button   selectVersion = dialog.findViewById(R.id.search_mod_mc_version_button);
             Button   applyButton   = dialog.findViewById(R.id.search_mod_apply_filters);
             Spinner  loaderSpinner = dialog.findViewById(R.id.search_mod_loader_spinner);
+            CSAnimationEngine.attachPressFeedback(selectVersion);
+            CSAnimationEngine.attachPressFeedback(applyButton);
 
             // This dialog is shared with the mod/modpack search screens, which also
             // show a Modrinth/CurseForge/Both engine picker — not applicable here,

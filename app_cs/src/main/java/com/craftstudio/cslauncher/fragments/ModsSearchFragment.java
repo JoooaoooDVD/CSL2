@@ -42,6 +42,7 @@ import com.craftstudio.cslauncher.modding.modpacks.models.Constants;
 import com.craftstudio.cslauncher.modding.modpacks.models.ContentType;
 import com.craftstudio.cslauncher.prefs.LauncherPreferences;
 import com.craftstudio.cslauncher.progresskeeper.ProgressKeeper;
+import com.craftstudio.cslauncher.utils.CSAnimationEngine;
 import com.craftstudio.cslauncher.utils.profiles.VersionSelectorDialog;
 import com.craftstudio.cslauncher.utils.DownloadUtils;
 
@@ -127,6 +128,8 @@ public class ModsSearchFragment extends Fragment implements ModItemAdapter.Searc
         mRecyclerview.setLayoutManager(new LinearLayoutManager(getContext()));
         mRecyclerview.setAdapter(mModItemAdapter);
         mRecyclerview.addOnScrollListener(mOverlayPositionListener);
+        CSAnimationEngine.applyListEntrance(mRecyclerview);
+        CSAnimationEngine.attachPressFeedback(mFilterButton);
 
         mSearchEditText.setOnEditorActionListener((v, actionId, event) -> {
             searchMods(mSearchEditText.getText().toString());

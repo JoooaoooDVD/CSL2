@@ -21,6 +21,7 @@ import com.craftstudio.cslauncher.R;
 import com.craftstudio.cslauncher.Tools;
 import com.craftstudio.cslauncher.extra.ExtraConstants;
 import com.craftstudio.cslauncher.extra.ExtraCore;
+import com.craftstudio.cslauncher.utils.CSAnimationEngine;
 
 import java.io.File;
 public class FileSelectorFragment extends Fragment {
@@ -49,7 +50,10 @@ public class FileSelectorFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        CSAnimationEngine.animateDialogContentView(view.findViewById(R.id.file_selector_banner));
         bindViews(view);
+        CSAnimationEngine.attachPressFeedback(mSelectFolderButton);
+        CSAnimationEngine.attachPressFeedback(mCreateFolderButton);
         parseBundle();
         if(!mSelectFolder) mSelectFolderButton.setVisibility(View.GONE);
         else mSelectFolderButton.setVisibility(View.VISIBLE);

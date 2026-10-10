@@ -25,6 +25,8 @@ import com.craftstudio.cslauncher.utils.CropperUtils;
 import java.io.IOException;
 
 
+import com.craftstudio.cslauncher.utils.CSAnimationEngine;
+
 public class CustomControlsActivity extends BaseActivity implements EditorExitable, CropperUtils.CropperReceiver {
 	private DrawerLayout mDrawerLayout;
 	private ListView mDrawerNavigationView;
@@ -44,11 +46,13 @@ public class CustomControlsActivity extends BaseActivity implements EditorExitab
 		mDrawerLayout = findViewById(R.id.customctrl_drawerlayout);
 		mDrawerNavigationView = findViewById(R.id.customctrl_navigation_view);
 		View mPullDrawerButton = findViewById(R.id.drawer_button);
+		CSAnimationEngine.attachPressFeedback(mPullDrawerButton);
 
 		mPullDrawerButton.setOnClickListener(v -> mDrawerLayout.openDrawer(mDrawerNavigationView));
 		mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
 
 		mDrawerNavigationView.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_list_item_1,getResources().getStringArray(R.array.menu_customcontrol_customactivity)));
+		CSAnimationEngine.applyListEntrance(mDrawerNavigationView);
 		mDrawerNavigationView.setOnItemClickListener((parent, view, position, id) -> {
 			switch(position) {
 				case 0: mControlLayout.addControlButton(new ControlData("New")); break;

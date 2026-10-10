@@ -5,11 +5,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/background_card"
-    android:layout_marginVertical="@dimen/padding_medium"
-    android:foreground="?attr/selectableItemBackground"
+    android:background="@drawable/bg_card_home"
+    android:layout_marginVertical="4dp"
     android:clickable="true"
-    android:focusable="true">
+    android:focusable="true"
+    android:stateListAnimator="?attr/csPressAnimator">
 
     <!-- Mod icon -->
     <ImageView

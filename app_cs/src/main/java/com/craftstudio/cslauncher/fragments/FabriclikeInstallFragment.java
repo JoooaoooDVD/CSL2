@@ -29,6 +29,7 @@ import com.craftstudio.cslauncher.modding.ModloaderDownloadListener;
 import com.craftstudio.cslauncher.modding.ModloaderListenerProxy;
 import com.craftstudio.cslauncher.modding.modpacks.SelfReferencingFuture;
 import com.craftstudio.cslauncher.progresskeeper.ProgressKeeper;
+import com.craftstudio.cslauncher.utils.CSAnimationEngine;
 
 import java.io.File;
 import java.io.IOException;
@@ -64,7 +65,9 @@ public abstract class FabriclikeInstallFragment extends Fragment implements Modl
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        CSAnimationEngine.animateDialogContentView(view.findViewById(R.id.fabric_installer_banner));
         mStartButton = view.findViewById(R.id.fabric_installer_start_button);
+        CSAnimationEngine.attachPressFeedback(mStartButton);
         mStartButton.setOnClickListener(this::onClickStart);
         mGameVersionSpinner = view.findViewById(R.id.fabric_installer_game_ver_spinner);
         mGameVersionSpinner.setOnItemSelectedListener(new GameVersionSelectedListener());

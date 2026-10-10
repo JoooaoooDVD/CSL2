@@ -36,6 +36,7 @@ import com.craftstudio.cslauncher.modding.modpacks.api.ApiHandler;
 import com.craftstudio.cslauncher.modding.modpacks.imagecache.ImageReceiver;
 import com.craftstudio.cslauncher.modding.modpacks.imagecache.ModIconCache;
 import com.craftstudio.cslauncher.modding.modpacks.models.ContentType;
+import com.craftstudio.cslauncher.utils.CSAnimationEngine;
 import com.craftstudio.cslauncher.utils.DownloadUtils;
 import com.craftstudio.cslauncher.utils.Murmur2;
 
@@ -444,8 +445,12 @@ public class InstalledModAdapter extends RecyclerView.Adapter<InstalledModAdapte
         TextView toggleIncompatible = dialogView.findViewById(R.id.switch_version_toggle_incompatible);
         titleView.setText(context.getString(R.string.switch_mod_version_title) + " — " + entry.displayName());
         closeButton.setOnClickListener(v -> dialog.dismiss());
+        CSAnimationEngine.animateDialogContentView(dialogView);
+        CSAnimationEngine.attachPressFeedback(closeButton);
+        CSAnimationEngine.attachPressFeedback(retryButton);
 
         listView.setLayoutManager(new LinearLayoutManager(context));
+        CSAnimationEngine.applyListEntrance(listView);
         VersionRowAdapter adapter = new VersionRowAdapter(chosen -> {
             String message = chosen.isCurrent
                     ? context.getString(R.string.switch_mod_version_confirm_reinstall_message, entry.displayName())

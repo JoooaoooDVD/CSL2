@@ -17,6 +17,8 @@ import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
 
+import com.craftstudio.cslauncher.utils.CSAnimationEngine;
+
 /**
  * Shows the tail of the launcher's own log file (latestlog.txt) so the user can read crash
  * output without leaving the launcher, and share it with one tap. The read happens on the
@@ -33,8 +35,13 @@ public class LogsFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        view.findViewById(R.id.logs_reload_button).setOnClickListener(v -> loadLog());
-        view.findViewById(R.id.logs_share_button).setOnClickListener(v -> Tools.shareLog(requireContext()));
+        CSAnimationEngine.animateDialogContentView(view.findViewById(R.id.logs_banner));
+        View reload = view.findViewById(R.id.logs_reload_button);
+        View share = view.findViewById(R.id.logs_share_button);
+        CSAnimationEngine.attachPressFeedback(reload);
+        CSAnimationEngine.attachPressFeedback(share);
+        reload.setOnClickListener(v -> loadLog());
+        share.setOnClickListener(v -> Tools.shareLog(requireContext()));
         loadLog();
     }
 

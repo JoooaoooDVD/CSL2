@@ -14,6 +14,8 @@ import com.craftstudio.cslauncher.instances.Instances;
 
 import java.io.IOException;
 
+import com.craftstudio.cslauncher.utils.CSAnimationEngine;
+
 public class ProfileTypeSelectFragment extends Fragment {
     public static final String TAG = "ProfileTypeSelectFragment";
     public ProfileTypeSelectFragment() {
@@ -23,6 +25,8 @@ public class ProfileTypeSelectFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        CSAnimationEngine.animateDialogContentView(view.findViewById(R.id.profile_type_banner));
+        CSAnimationEngine.staggerChildren(view.findViewById(R.id.profile_type_cards_container));
         view.findViewById(R.id.vanilla_profile).setOnClickListener(v -> {
             try {
                 Instance instance = Instances.createDefaultInstance();

@@ -21,6 +21,7 @@ import androidx.annotation.StringRes;
 import androidx.core.content.res.ResourcesCompat;
 
 import com.craftstudio.cslauncher.R;
+import com.craftstudio.cslauncher.utils.CSAnimationEngine;
 
 /**
  * The base class for side dialog views
@@ -118,6 +119,9 @@ public abstract class SideDialogView {
         if (mTitleStringId != 0) setTitle(mTitleStringId);
         if (mStartButtonStringId != 0) setStartButtonListener(mStartButtonStringId, mStartButtonListener);
         if (mEndButtonStringId != 0) setEndButtonListener(mEndButtonStringId, mEndButtonListener);
+        CSAnimationEngine.attachPressFeedback(mStartButton);
+        CSAnimationEngine.attachPressFeedback(mEndButton);
+        CSAnimationEngine.animateDialogContentView(mDialogContent);
     }
 
     /** Destroy the layout, cleanup variables */

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:fillViewport="true">
@@ -8,56 +9,109 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="@dimen/padding_large">
+        android:padding="8dp">
 
-        <!-- Header: title + close button -->
-        <LinearLayout
+        <!-- Top Horizontal Banner -->
+        <FrameLayout
+            android:id="@+id/switch_version_banner"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:layout_height="56dp"
+            android:layout_marginBottom="6dp"
+            android:background="@drawable/bg_banner_card"
+            android:clipToOutline="true">
 
-            <TextView
-                android:id="@+id/switch_version_title"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/switch_mod_version_title"
-                android:textAppearance="?attr/textAppearanceHeadlineSmall"
-                android:textColor="?attr/colorOnSurface"
-                android:singleLine="true"
-                android:ellipsize="end" />
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null"
+                android:scaleType="centerCrop"
+                android:src="@drawable/banner_gradient_installer" />
 
-            <ImageButton
-                android:id="@+id/switch_version_close"
-                android:layout_width="@dimen/_32sdp"
-                android:layout_height="@dimen/_32sdp"
-                android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_close"
-                android:tint="?attr/colorOnSurfaceVariant"
-                android:padding="@dimen/padding_small"
-                android:contentDescription="@android:string/cancel" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/settings_header_scrim" />
 
-        </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="12dp">
+
+                <ImageView
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:background="@drawable/bg_settings_icon_box"
+                    android:contentDescription="@null"
+                    android:padding="6dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_swap_horiz" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/switch_version_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:singleLine="true"
+                        android:text="@string/switch_mod_version_title"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="1dp"
+                        android:ellipsize="end"
+                        android:singleLine="true"
+                        android:text="Select compatible mod release"
+                        android:textColor="#B3FFFFFF"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <ImageButton
+                    android:id="@+id/switch_version_close"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:background="@drawable/bg_icon_button_home"
+                    android:contentDescription="@android:string/cancel"
+                    android:padding="7dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_close"
+                    android:stateListAnimator="?attr/csPressAnimator" />
+
+            </LinearLayout>
+        </FrameLayout>
 
         <!-- Toggle + warning always visible above the list -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_moderate"
+            android:background="@drawable/bg_card_home"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="8dp">
 
             <TextView
                 android:id="@+id/switch_version_toggle_incompatible"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="?android:attr/selectableItemBackground"
-                android:paddingVertical="@dimen/padding_small"
-                android:paddingEnd="@dimen/padding_heavy"
-                android:textAppearance="?attr/textAppearanceLabelLarge"
+                android:paddingVertical="4dp"
+                android:paddingEnd="12dp"
+                android:text="@string/switch_mod_version_show_incompatible"
+                android:textAppearance="?attr/textAppearanceLabelMedium"
                 android:textColor="?attr/colorPrimary"
-                android:text="@string/switch_mod_version_show_incompatible" />
+                android:textStyle="bold" />
 
             <TextView
                 android:layout_width="0dp"
@@ -69,19 +123,14 @@
 
         </LinearLayout>
 
-        <com.google.android.material.divider.MaterialDivider
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_medium" />
-
         <!-- Progress bar while fetching versions -->
         <com.google.android.material.progressindicator.CircularProgressIndicator
             android:id="@+id/switch_version_progress"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:indeterminate="true"
             android:layout_gravity="center_horizontal"
-            android:layout_marginVertical="@dimen/padding_large"
+            android:layout_marginVertical="16dp"
+            android:indeterminate="true"
             android:visibility="visible" />
 
         <!-- Error / empty state -->
@@ -89,35 +138,37 @@
             android:id="@+id/switch_version_error_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
             android:gravity="center"
-            android:paddingVertical="@dimen/padding_large"
+            android:orientation="vertical"
+            android:paddingVertical="16dp"
             android:visibility="gone">
 
             <TextView
                 android:id="@+id/switch_version_error_textview"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="?attr/textAppearanceBodyMedium"
-                android:textColor="?attr/colorOnSurfaceVariant"
+                android:text="@string/switch_mod_version_no_versions"
                 android:textAlignment="center"
-                android:text="@string/switch_mod_version_no_versions" />
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnSurfaceVariant" />
 
             <com.kdt.mcgui.MineButton
                 android:id="@+id/switch_version_retry_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/padding_moderate"
+                android:layout_marginTop="10dp"
+                android:stateListAnimator="?attr/csPressAnimator"
                 android:text="@string/switch_mod_version_retry" />
 
         </LinearLayout>
 
-        <!-- Version list, fixed height so the dialog does not resize while loading -->
+        <!-- Version list -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/switch_version_list"
             android:layout_width="match_parent"
             android:layout_height="240dp"
-            android:layout_marginBottom="@dimen/padding_medium"
+            android:layout_marginTop="4dp"
+            android:clipToPadding="false"
             android:scrollbars="vertical"
             android:visibility="gone" />
 

@@ -17,6 +17,8 @@ import com.craftstudio.cslauncher.extra.ExtraCore;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.craftstudio.cslauncher.utils.CSAnimationEngine;
+
 public class LocalLoginFragment extends Fragment {
     public static final String TAG = "LOCAL_LOGIN_FRAGMENT";
 
@@ -30,6 +32,8 @@ public class LocalLoginFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        CSAnimationEngine.animateDialogContentView(view.findViewById(R.id.local_login_banner));
+        CSAnimationEngine.attachPressFeedback(view.findViewById(R.id.login_button));
         mUsernameEditText = view.findViewById(R.id.login_edit_email);
         view.findViewById(R.id.login_button).setOnClickListener(v -> {
             if(!checkEditText()) {

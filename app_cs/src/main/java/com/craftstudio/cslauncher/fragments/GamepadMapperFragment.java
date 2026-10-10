@@ -26,6 +26,8 @@ import com.craftstudio.cslauncher.input.gamepad.GamepadMapperAdapter;
 import fr.spse.gamepad_remapper.RemapperManager;
 import fr.spse.gamepad_remapper.RemapperView;
 
+import com.craftstudio.cslauncher.utils.CSAnimationEngine;
+
 public class GamepadMapperFragment extends Fragment implements
         View.OnKeyListener, View.OnGenericMotionListener, AdapterView.OnItemSelectedListener {
     public static final String TAG = "GamepadMapperFragment";
@@ -59,6 +61,7 @@ public class GamepadMapperFragment extends Fragment implements
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        CSAnimationEngine.animateDialogContentView(view.findViewById(R.id.gamepad_banner));
         RecyclerView buttonRecyclerView = view.findViewById(R.id.gamepad_remapper_recycler);
         mMapperAdapter = new GamepadMapperAdapter(view.getContext());
         buttonRecyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));

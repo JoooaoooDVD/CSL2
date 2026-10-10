@@ -124,8 +124,14 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        CSAnimationEngine.animateDialogContentView(view.findViewById(R.id.instance_editor_banner));
         bindViews(view);
         bindIconChoices(view);
+        CSAnimationEngine.attachPressFeedback(mSaveButton);
+        CSAnimationEngine.attachPressFeedback(mCancelButton);
+        CSAnimationEngine.attachPressFeedback(mDeleteButton);
+        CSAnimationEngine.attachPressFeedback(mControlSelectButton);
+        CSAnimationEngine.attachPressFeedback(mVersionSelectButton);
 
         RendererCache list = RendererCache.getCompatibleRenderers(view.getContext());
         mRenderNames = list.rendererIds;

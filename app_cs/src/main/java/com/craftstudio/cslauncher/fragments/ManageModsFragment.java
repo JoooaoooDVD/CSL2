@@ -27,6 +27,7 @@ import com.craftstudio.cslauncher.contracts.OpenDocumentWithExtension;
 import com.craftstudio.cslauncher.modding.optifine.InstalledModAdapter;
 import com.craftstudio.cslauncher.modding.modpacks.models.ContentType;
 import com.craftstudio.cslauncher.prefs.LauncherPreferences;
+import com.craftstudio.cslauncher.utils.CSAnimationEngine;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -125,6 +126,12 @@ public class ManageModsFragment extends Fragment {
 
         recycler.setLayoutManager(new LinearLayoutManager(requireContext()));
         recycler.setAdapter(mAdapter);
+        CSAnimationEngine.applyListEntrance(recycler);
+        CSAnimationEngine.attachPressFeedback(mRefreshButton);
+        CSAnimationEngine.attachPressFeedback(importButton);
+        CSAnimationEngine.attachPressFeedback(addButton);
+        CSAnimationEngine.attachPressFeedback(backButton);
+        CSAnimationEngine.animateDialogContentView(view.findViewById(R.id.manage_mods_banner));
 
         // Auto-check for updates as soon as the screen opens, in addition to
         // the manual refresh button. Silent (no "checking…" toast, and no

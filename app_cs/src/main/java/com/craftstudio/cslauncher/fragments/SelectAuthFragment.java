@@ -15,6 +15,8 @@ import com.craftstudio.cslauncher.R;
 import com.craftstudio.cslauncher.Tools;
 import com.craftstudio.cslauncher.progresskeeper.ProgressKeeper;
 
+import com.craftstudio.cslauncher.utils.CSAnimationEngine;
+
 public class SelectAuthFragment extends Fragment {
     public static final String TAG = "AUTH_SELECT_FRAGMENT";
 
@@ -24,9 +26,16 @@ public class SelectAuthFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        Button mMicrosoftButton = view.findViewById(R.id.button_microsoft_authentication);
-        Button mLocalButton = view.findViewById(R.id.button_local_authentication);
-        Button mElyByButton = view.findViewById(R.id.button_elyby_authentication);
+        CSAnimationEngine.animateDialogContentView(view.findViewById(R.id.select_auth_banner));
+        CSAnimationEngine.staggerChildren(view.findViewById(R.id.select_auth_cards_container));
+
+        View mMicrosoftButton = view.findViewById(R.id.button_microsoft_authentication);
+        View mLocalButton = view.findViewById(R.id.button_local_authentication);
+        View mElyByButton = view.findViewById(R.id.button_elyby_authentication);
+
+        CSAnimationEngine.attachPressFeedback(mMicrosoftButton);
+        CSAnimationEngine.attachPressFeedback(mLocalButton);
+        CSAnimationEngine.attachPressFeedback(mElyByButton);
 
         mMicrosoftButton.setOnClickListener(v -> launchAuthFragment(MicrosoftLoginFragment.class, MicrosoftLoginFragment.TAG));
         mLocalButton.setOnClickListener(v -> launchAuthFragment(LocalLoginFragment.class, LocalLoginFragment.TAG));
