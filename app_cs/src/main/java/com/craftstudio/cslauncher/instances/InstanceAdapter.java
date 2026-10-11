@@ -131,7 +131,7 @@ public class InstanceAdapter extends BaseAdapter {
      * only, so any trailing technical suffix is trimmed. Names without a suffix
      * ("Spunky Boost", "Vanilla", …) pass through untouched.
      */
-    static String plainProfileName(String name, String versionId) {
+    public static String plainProfileName(String name, String versionId) {
         if (name == null) return null;
         String n = name.trim();
         if (versionId != null && !versionId.isEmpty() && n.endsWith(versionId))

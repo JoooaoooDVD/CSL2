@@ -61,9 +61,7 @@ public class mcVersionSpinner extends ExtendedTextView {
     }
 
     /* The class is in charge of displaying its own list with adapter content being known in advance */
-    private ListView mListView = null;
-    private PopupWindow mPopupWindow = null;
-    private Object mPopupAnimation;
+    private ProfilePickerDialog mPickerDialog;
     private int mSelectedIndex;
 
     private final InstanceAdapter mProfileAdapter = new InstanceAdapter(new InstanceAdapterExtra[]{
@@ -80,7 +78,6 @@ public class mcVersionSpinner extends ExtendedTextView {
     }
 
     public void setSelection(int position){
-        if(mListView != null) mListView.setSelection(position);
         mProfileAdapter.setView(this, position, false);
         mSelectedIndex = position;
         mProfileAdapter.applySelectionIndex(mSelectedIndex);
@@ -133,24 +130,43 @@ public class mcVersionSpinner extends ExtendedTextView {
         addOnAttachStateChangeListener(new ExtraAttachListener());
         setSelection(0);
 
-        // Popup window behavior
-        setOnClickListener(new OnClickListener() {
-            final int offset = -getContext().getResources().getDimensionPixelOffset(R.dimen._4sdp);
-            @Override
-            public void onClick(View v) {
-                if(mPopupWindow == null) getPopupWindow();
+        // Profile list: a centered popup (ProfilePickerDialog) instead of a drop-down
+        setOnClickListener(v -> showProfilePicker());
+    }
 
-                if(mPopupWindow.isShowing()){
-                    mPopupWindow.dismiss();
-                    return;
-                }
-                // Match the spinner, it does not span the whole screen in the two-pane layout
-                mPopupWindow.setWidth(getWidth());
-                mPopupWindow.showAsDropDown(mcVersionSpinner.this, 0, offset);
-                // Post() is required for the layout inflation phase
-                post(() -> mListView.setSelection(mSelectedIndex));
+    /** Opens the profile picker popup, also used by the home version chip / PLAY chevron */
+    public void showProfilePicker() {
+        if (mPickerDialog != null && mPickerDialog.isShowing()) return;
+        java.util.List<DisplayInstance> instances = new java.util.ArrayList<>();
+        int extraIndex = -1;
+        for (int i = 0; i < mProfileAdapter.getCount(); i++) {
+            Object item = mProfileAdapter.getItem(i);
+            if (item instanceof DisplayInstance) instances.add((DisplayInstance) item);
+            else if (item instanceof InstanceAdapterExtra && extraIndex < 0) extraIndex = i;
+        }
+        // Instances come first in the adapter, so list positions == adapter positions
+        final int createIndex = extraIndex;
+        int selected = mSelectedIndex < instances.size() ? mSelectedIndex : -1;
+        mPickerDialog = new ProfilePickerDialog(getContext(), instances, selected, new ProfilePickerDialog.Callback() {
+            @Override
+            public void onProfileSelected(int position) {
+                if (position != mSelectedIndex) setProfileSelection(position);
+            }
+
+            @Override
+            public void onProfileEdit(int position) {
+                if (position != mSelectedIndex) setProfileSelection(position);
+                if (getContext() instanceof FragmentActivity) openProfileEditor((FragmentActivity) getContext());
+            }
+
+            @Override
+            public void onCreateInstance() {
+                Object item = createIndex >= 0 ? mProfileAdapter.getItem(createIndex) : null;
+                if (item instanceof InstanceAdapterExtra) performExtraAction((InstanceAdapterExtra) item);
             }
         });
+        mPickerDialog.setOnDismissListener(d -> mPickerDialog = null);
+        mPickerDialog.show();
     }
 
     private void performExtraAction(InstanceAdapterExtra extra) {
@@ -162,57 +178,6 @@ public class mcVersionSpinner extends ExtendedTextView {
     }
 
 
-    /** Create the listView and popup window for the interface, and set up the click behavior */
-    @SuppressLint("ClickableViewAccessibility")
-    private void getPopupWindow(){
-        mListView = (ListView) inflate(getContext(), R.layout.spinner_mc_version, null);
-        mListView.setAdapter(mProfileAdapter);
-        AnimationManager.applyListAnimation(mListView);
-        mListView.setOnItemClickListener((parent, view, position, id) -> {
-            Object item = mProfileAdapter.getItem(position);
-            if(item instanceof DisplayInstance) {
-                hidePopup(true);
-                setProfileSelection(position);
-            }else if(item instanceof InstanceAdapterExtra) {
-                hidePopup(false);
-                performExtraAction((InstanceAdapterExtra) item);
-            }
-        });
-
-        mPopupWindow = new PopupWindow(mListView, MATCH_PARENT, getContext().getResources().getDimensionPixelOffset(R.dimen._184sdp));
-        mPopupWindow.setElevation(5);
-        mPopupWindow.setClippingEnabled(false);
-
-        // Block clicking outside of the popup window
-        mPopupWindow.setOutsideTouchable(true);
-        mPopupWindow.setFocusable(true);
-        mPopupWindow.setTouchInterceptor((v, event) -> {
-            if(event.getAction() == MotionEvent.ACTION_OUTSIDE){
-                mPopupWindow.dismiss();
-                return true;
-            }
-            return false;
-        });
-
-
-        // Shared popup entrance/dismissal from the animation engine; the returned
-        // transition (null when popup animations are off) is kept for hidePopup(false)
-        mPopupAnimation = CSAnimationEngine.applyPopupTransition(getContext(), mPopupWindow);
-    }
-
-    private void hidePopup(boolean animate) {
-        if(mPopupWindow == null) return;
-        if(!animate && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            mPopupWindow.setEnterTransition(null);
-            mPopupWindow.setExitTransition(null);
-            mPopupWindow.dismiss();
-            mPopupWindow.setEnterTransition((Transition) mPopupAnimation);
-            mPopupWindow.setExitTransition((Transition) mPopupAnimation);
-        }else {
-            mPopupWindow.dismiss();
-        }
-    }
-
     class ExtraAttachListener implements OnAttachStateChangeListener, ExtraListener<Void> {
         @Override
         public void onViewAttachedToWindow(@NonNull View view) {
@@ -222,6 +187,8 @@ public class mcVersionSpinner extends ExtendedTextView {
 
         @Override
         public void onViewDetachedFromWindow(@NonNull View view) {
+            // Screen going away (activity finishing / fragment replaced): no leaked popup window
+            if (mPickerDialog != null && mPickerDialog.isShowing()) mPickerDialog.dismiss();
             ExtraCore.removeExtraListenerFromValue(ExtraConstants.REFRESH_VERSION_SPINNER, this);
         }
 

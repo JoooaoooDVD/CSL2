@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pp_label">PROFILES</string>
+    <string name="pp_title">Select Profile</string>
+    <string name="pp_count_one">1 instance</string>
+    <string name="pp_count_many">%d instances</string>
+    <string name="pp_current">CURRENT</string>
+    <string name="pp_all">All instances</string>
+    <string name="pp_active">ACTIVE</string>
+    <string name="pp_create">Create New Instance</string>
+    <string name="pp_empty">No instances yet.\nCreate one to start playing.</string>
+    <string name="pp_none">No profile selected</string>
+    <string name="pp_close">Close</string>
+    <string name="pp_edit">Edit profile</string>
+</resources>

@@ -70,13 +70,11 @@
             android:layout_height="match_parent"
             android:layout_weight="1.35"
             android:clipToPadding="false"
-            android:fadingEdgeLength="18dp"
             android:overScrollMode="ifContentScrolls"
             android:paddingStart="16dp"
             android:paddingTop="14dp"
             android:paddingEnd="7dp"
             android:paddingBottom="16dp"
-            android:requiresFadingEdge="vertical"
             android:scrollbars="none">
 
             <LinearLayout
@@ -249,13 +247,11 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:clipToPadding="false"
-            android:fadingEdgeLength="18dp"
             android:overScrollMode="ifContentScrolls"
             android:paddingStart="7dp"
             android:paddingTop="14dp"
             android:paddingEnd="16dp"
             android:paddingBottom="16dp"
-            android:requiresFadingEdge="vertical"
             android:scrollbars="none">
 
             <LinearLayout

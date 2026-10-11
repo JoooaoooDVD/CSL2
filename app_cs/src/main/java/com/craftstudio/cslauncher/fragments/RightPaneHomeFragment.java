@@ -113,7 +113,7 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         });
         // Version chip on the banner + chevron of PLAY: open the profile list
         View.OnClickListener openProfiles = v -> {
-            if (mVersionSpinner != null) mVersionSpinner.performClick();
+            if (mVersionSpinner != null) mVersionSpinner.showProfilePicker();
         };
         view.findViewById(R.id.home_banner_version_chip).setOnClickListener(openProfiles);
         view.findViewById(R.id.home_play_more).setOnClickListener(openProfiles);

@@ -19,4 +19,14 @@
     <color name="hm_tile_purple_stroke">#5A3C92</color>
     <color name="hm_cube">#8CD8FF</color>
     <color name="hm_servers">#E596FF</color>
+    <!-- Profile picker -->
+    <color name="hm_dialog">#0F182B</color>
+    <color name="hm_accent">#6FB1FF</color>
+    <color name="hm_accent_fill">#264C8DFF</color>
+    <color name="hm_accent_stroke">#996FB1FF</color>
+    <color name="hm_green_fill">#1B3A2A</color>
+    <color name="hm_green_text">#7CE3A2</color>
+    <color name="hm_scrim">#B3030712</color>
+    <color name="hm_side_start">#16325E</color>
+    <color name="hm_side_end">#0F182B</color>
 </resources>

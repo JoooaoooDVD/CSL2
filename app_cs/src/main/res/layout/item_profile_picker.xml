@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One instance in the profile picker list -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingBottom="8dp">
+
+    <LinearLayout
+        android:id="@+id/pp_row"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:background="@drawable/bg_pp_row"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="9dp"
+        android:paddingEnd="9dp">
+
+        <FrameLayout
+            android:id="@+id/pp_row_tile"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
+            android:background="@drawable/bg_pp_icon_tile">
+
+            <ImageView
+                android:id="@+id/pp_row_icon"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null"
+                android:padding="5dp"
+                android:scaleType="fitCenter" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/pp_row_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textColor="@color/hm_text"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                tools:text="Fabulously Optimized" />
+
+            <TextView
+                android:id="@+id/pp_row_sub"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textColor="@color/hm_text_dim"
+                android:textSize="12sp"
+                tools:text="26.3 • Fabric" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/pp_row_active"
+            android:layout_width="wrap_content"
+            android:layout_height="24dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_pp_active_pill"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="7dp"
+            android:paddingEnd="9dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="13dp"
+                android:layout_height="13dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_pp_check" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:letterSpacing="0.12"
+                android:text="@string/pp_active"
+                android:textColor="@color/hm_green_text"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/pp_row_edit"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_pp_round_btn"
+            android:contentDescription="@string/pp_edit"
+            android:padding="10dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_pp_edit" />
+    </LinearLayout>
+</FrameLayout>
