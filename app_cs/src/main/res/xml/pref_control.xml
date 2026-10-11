@@ -8,7 +8,7 @@
     <Preference android:layout="@layout/item_setting_row"
         android:title="@string/preference_edit_controls_title"
         android:summary="@string/preference_edit_controls_summary"
-        app2:icon="@drawable/ic_px_gamepad"
+        android:icon="@drawable/ic_px_gamepad"
         >
         <intent android:targetPackage="@string/application_package" android:targetClass="com.craftstudio.cslauncher.CustomControlsActivity" android:action=".CustomControlsActivity"/>
     </Preference>
@@ -62,6 +62,7 @@
             />
         <com.craftstudio.cslauncher.prefs.CustomSeekBarPreference
             android:key="buttonTransparency"
+            android:icon="@drawable/ic_px_image"
             android:title="@string/preference_button_transparency"
             android:summary="@string/preference_button_transparency_summary"
             app2:showSeekBarValue="true"
@@ -122,10 +123,12 @@
         <SwitchPreferenceCompat android:layout="@layout/item_setting_row"
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:key="enableGyro"
+            android:icon="@drawable/ic_px_dynamic"
             android:title="@string/preference_enable_gyro_title"
             android:summary="@string/preference_enable_gyro_description"/>
         <com.craftstudio.cslauncher.prefs.CustomSeekBarPreference
             android:key="gyroSensitivity"
+            android:icon="@drawable/ic_px_zap"
             android:title="@string/preference_gyro_sensitivity_title"
             android:summary="@string/preference_gyro_sensitivity_description"
             app2:selectable="false"
@@ -135,6 +138,7 @@
             app2:showSeekBarValue="true"/>
         <com.craftstudio.cslauncher.prefs.CustomSeekBarPreference
             android:key="gyroSampleRate"
+            android:icon="@drawable/ic_px_hash"
             android:title="@string/preference_gyro_sample_rate_title"
             android:summary="@string/preference_gyro_sample_rate_description"
             app2:min="@integer/gyro_rate_seekbar_min"
@@ -144,6 +148,7 @@
         <SwitchPreferenceCompat android:layout="@layout/item_setting_row"
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:key="gyroSmoothing"
+            android:icon="@drawable/ic_px_move"
             android:title="@string/preference_gyro_smoothing_title"
             android:summary="@string/preference_gyro_smoothing_description"
             android:defaultValue="true"
@@ -151,11 +156,13 @@
         <SwitchPreferenceCompat android:layout="@layout/item_setting_row"
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:key="gyroInvertX"
+            android:icon="@drawable/ic_px_switch_arrows_x"
             android:title="@string/preference_gyro_invert_x_axis"
             android:summary="@string/preference_gyro_invert_x_axis_description"/>
         <SwitchPreferenceCompat android:layout="@layout/item_setting_row"
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:key="gyroInvertY"
+            android:icon="@drawable/ic_px_sliders"
             android:title="@string/preference_gyro_invert_y_axis"
             android:summary="@string/preference_gyro_invert_y_axis_description"/>
 
@@ -166,15 +173,18 @@
         >
         <Preference android:layout="@layout/item_setting_row"
             android:title="@string/preference_remap_controller_title"
+            android:icon="@drawable/ic_px_edit"
             android:summary="@string/preference_remap_controller_description"
             android:fragment="com.craftstudio.cslauncher.fragments.GamepadMapperFragment"
             android:widgetLayout="@layout/view_chevron" />
         <com.craftstudio.cslauncher.prefs.GamepadRemapPreference android:layout="@layout/item_setting_row"
             android:title="@string/preference_wipe_controller_title"
+            android:icon="@drawable/ic_px_trash"
             android:summary="@string/preference_wipe_controller_description"
             />
         <com.craftstudio.cslauncher.prefs.CustomSeekBarPreference
             android:key="gamepad_deadzone_scale"
+            android:icon="@drawable/ic_px_mouse"
             android:title="@string/preference_deadzone_scale_title"
             android:summary="@string/preference_deadzone_scale_description"
             app2:showSeekBarValue="true"
@@ -189,6 +199,7 @@
         <SwitchPreferenceCompat android:layout="@layout/item_setting_row"
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:key="keyboardAutoPanning"
+            android:icon="@drawable/ic_px_letters"
             android:title="@string/preference_keyboard_autopan_title"
             android:summary="@string/preference_keyboard_autopan_summary"
             />

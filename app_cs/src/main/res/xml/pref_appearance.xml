@@ -9,6 +9,7 @@
         <androidx.preference.ListPreference android:layout="@layout/item_setting_row"
             android:defaultValue="system"
             android:key="theme_mode"
+            android:icon="@drawable/ic_px_dynamic"
             android:entries="@array/theme_mode_names"
             android:entryValues="@array/theme_mode_values"
             android:title="@string/preference_theme_mode_title"
@@ -17,6 +18,7 @@
         <androidx.preference.ListPreference android:layout="@layout/item_setting_row"
             android:defaultValue="default"
             android:key="color_source"
+            android:icon="@drawable/ic_px_sliders"
             android:entries="@array/color_source_names"
             android:entryValues="@array/color_source_values"
             android:title="@string/preference_color_source_title"
@@ -24,6 +26,7 @@
             app:useSimpleSummaryProvider="true"  android:widgetLayout="@layout/view_chevron"/>
         <com.craftstudio.cslauncher.prefs.ThemeColorPreference android:layout="@layout/item_setting_row"
             android:key="theme_custom_color"
+            android:icon="@drawable/ic_px_edit"
             android:title="@string/preference_theme_color_title"
             app:iconSpaceReserved="false" />
     </PreferenceCategory>
@@ -35,11 +38,13 @@
     <PreferenceCategory android:layout="@layout/item_settings_section" android:title="@string/preference_category_background">
         <Preference android:layout="@layout/item_setting_row"
             android:key="set_custom_launcher_bg"
+            android:icon="@drawable/ic_px_image"
             android:title="@string/preference_set_custom_bg_title"
             android:summary="@string/preference_set_custom_bg_summary"
             app:iconSpaceReserved="false" />
         <Preference android:layout="@layout/item_setting_row"
             android:key="remove_custom_launcher_bg"
+            android:icon="@drawable/ic_px_trash"
             android:title="@string/preference_remove_custom_bg_title"
             android:summary="@string/preference_remove_custom_bg_summary"
             app:iconSpaceReserved="false" />
@@ -52,6 +57,7 @@
             android:entries="@array/animation_type_names"
             android:entryValues="@array/animation_type_values"
             android:key="animation_types"
+            android:icon="@drawable/ic_px_move"
             android:title="@string/preference_animations_title"
             app:iconSpaceReserved="false" />
     </PreferenceCategory>

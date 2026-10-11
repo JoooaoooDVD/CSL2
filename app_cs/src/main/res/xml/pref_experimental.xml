@@ -7,6 +7,7 @@
         <SwitchPreferenceCompat android:layout="@layout/item_setting_row"
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:key="dump_shaders"
+            android:icon="@drawable/ic_px_image_renderer"
             android:title="@string/preference_shader_dump_title"
             android:summary="@string/preference_shader_dump_description"
             />
@@ -14,12 +15,14 @@
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:defaultValue="false"
             android:key="bigCoreAffinity"
+            android:icon="@drawable/ic_px_zap"
             android:title="@string/preference_force_big_core_title"
             android:summary="@string/preference_force_big_core_desc" />
         <SwitchPreferenceCompat android:layout="@layout/item_setting_row"
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:defaultValue="false"
             android:key="freedrenoSysmem"
+            android:icon="@drawable/ic_px_ram"
             android:title="@string/preference_sysmem_title"
             android:summary="@string/preference_sysmem_summary"
             />
@@ -34,10 +37,13 @@
         <SwitchPreferenceCompat android:layout="@layout/item_setting_row"
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:key="disableCurseforgeApi"
+            android:icon="@drawable/ic_px_nogestures"
             android:defaultValue="false"
             android:title="@string/preference_disable_curseforge_title"
             android:summary="@string/preference_disable_curseforge_desc" />
         <EditTextPreference
+            android:layout="@layout/item_setting_row"
+            android:icon="@drawable/ic_px_letters"
             android:key="curseforgeApiKeyOverride"
             android:title="@string/preference_curseforge_api_key_title"
             android:summary="@string/preference_curseforge_api_key_desc"
@@ -47,6 +53,7 @@
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:defaultValue="false"
             android:key="ubwcWorkaround"
+            android:icon="@drawable/ic_px_viewport_expand"
             android:title="@string/preference_ubwc_title"
             android:summary="@string/preference_ubwc_summary"
             />

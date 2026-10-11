@@ -9,6 +9,7 @@ import android.graphics.PathMeasure;
 import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.LinearInterpolator;
 
 import androidx.annotation.NonNull;
@@ -31,10 +32,14 @@ import com.craftstudio.cslauncher.utils.ThemeColors;
 public class OutlineArcProgressView extends View {
 
     private static final long TRAVEL_DURATION_MS = 1300L;
+    private static final long PROGRESS_ANIM_MS = 350L;
 
     private final Paint mTrackPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint mProgressPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint mSegmentPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint mGlowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint mHeadPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final float[] mHeadPos = new float[2];
     private final Path mOutlinePath = new Path();
     private final PathMeasure mMeasure = new PathMeasure();
 
@@ -43,12 +48,15 @@ public class OutlineArcProgressView extends View {
 
     private boolean mDownloading;
     private int mProgress = -1;
+    private float mDisplayedProgress = -1f;
     private float mPhase;
     private float mMotionFraction = 1f;
     private boolean mMotionAllowed = true;
 
     @Nullable
     private ValueAnimator mAnimator;
+    @Nullable
+    private ValueAnimator mProgressAnimator;
 
     public OutlineArcProgressView(@NonNull Context context) {
         this(context, null);
@@ -82,6 +90,15 @@ public class OutlineArcProgressView extends View {
         mSegmentPaint.setStrokeWidth(mStrokeWidthPx + density);
         mSegmentPaint.setColor(color);
         mSegmentPaint.setAlpha(255);
+
+        mGlowPaint.setStyle(Paint.Style.STROKE);
+        mGlowPaint.setStrokeCap(Paint.Cap.ROUND);
+        mGlowPaint.setStrokeWidth(mStrokeWidthPx + 5f * density);
+        mGlowPaint.setColor(color);
+        mGlowPaint.setAlpha(55);
+
+        mHeadPaint.setStyle(Paint.Style.FILL);
+        mHeadPaint.setColor(0xFFFFFFFF);
     }
 
     /** Enters/leaves the downloading state: starts or stops the traveling segment. */
@@ -98,11 +115,25 @@ public class OutlineArcProgressView extends View {
         invalidate();
     }
 
-    /** Overall percent (0-100) or -1 while unknown - only affects the solid arc. */
+    /** Overall percent (0-100) or -1 while unknown - the solid arc animates towards it. */
     public void setProgress(int progress) {
         if (mProgress == progress) return;
         mProgress = progress;
-        invalidate();
+        if (mProgressAnimator != null) mProgressAnimator.cancel();
+        float from = mDisplayedProgress < 0f ? 0f : mDisplayedProgress;
+        if (progress < 0 || !mMotionAllowed || !isAttachedToWindow()) {
+            mDisplayedProgress = progress;
+            invalidate();
+            return;
+        }
+        mProgressAnimator = ValueAnimator.ofFloat(from, progress);
+        mProgressAnimator.setDuration(PROGRESS_ANIM_MS);
+        mProgressAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
+        mProgressAnimator.addUpdateListener(animation -> {
+            mDisplayedProgress = (float) animation.getAnimatedValue();
+            invalidate();
+        });
+        mProgressAnimator.start();
     }
 
     private void startTravel() {
@@ -145,6 +176,7 @@ public class OutlineArcProgressView extends View {
     @Override
     protected void onDetachedFromWindow() {
         stopTravel();
+        if (mProgressAnimator != null) mProgressAnimator.cancel();
         super.onDetachedFromWindow();
     }
 
@@ -171,9 +203,9 @@ public class OutlineArcProgressView extends View {
         canvas.drawPath(mOutlinePath, mTrackPaint);
         mOutlinePath.rewind();
 
-        // Solid arc for the known percent (determinate feedback)
-        if (mProgress >= 0) {
-            float done = total * Math.min(Math.max(mProgress, 0), 100) / 100f;
+        // Solid arc for the known percent (determinate feedback, smoothly animated)
+        if (mDisplayedProgress >= 0) {
+            float done = total * Math.min(Math.max(mDisplayedProgress, 0), 100) / 100f;
             if (done > 1f) {
                 mMeasure.getSegment(0f, done, mOutlinePath, true);
                 canvas.drawPath(mOutlinePath, mProgressPaint);
@@ -181,15 +213,26 @@ public class OutlineArcProgressView extends View {
             }
         }
 
-        // Traveling segment: the "spinning" part
+        // Traveling segment: soft glow underneath, bright core on top
         float segment = total * 0.28f;
         float start = mPhase * total;
+        float front = (start + segment) % total;
         if (start + segment > total) {
             mMeasure.getSegment(start, total, mOutlinePath, true);
             mMeasure.getSegment(0f, (start + segment) - total, mOutlinePath, true);
         } else {
             mMeasure.getSegment(start, start + segment, mOutlinePath, true);
         }
+        canvas.drawPath(mOutlinePath, mGlowPaint);
         canvas.drawPath(mOutlinePath, mSegmentPaint);
+        mOutlinePath.rewind();
+        // Bright head dot leading the segment
+        if (mMeasure.getPosTan(front, mHeadPos, null)) {
+            float r = mStrokeWidthPx * 0.9f;
+            mHeadPaint.setAlpha(90);
+            canvas.drawCircle(mHeadPos[0], mHeadPos[1], r * 1.9f, mHeadPaint);
+            mHeadPaint.setAlpha(255);
+            canvas.drawCircle(mHeadPos[0], mHeadPos[1], r, mHeadPaint);
+        }
     }
 }
