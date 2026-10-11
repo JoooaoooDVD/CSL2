@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- OpenSL ES audio backend: waves coming out of a device -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M4,9h3l4,-3.5v13L7,15H4z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M14.5,9.5l3,-2l1.5,2.5l-3,2zM14.5,15l3,2l1.5,-2.5l-3,-2zM17,11.5h4v2h-4z" />
+</vector>

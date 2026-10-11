@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Gyro smoothing: a curve passing through filter dots -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M3,18h2v-4h2v-4h2V6h2V4h4v2h2v2h2v4h2v4h2v2h-2v-4h-2v-4h-2V8h-2V6h-4v2H7v2H5v4H3z" />
+</vector>

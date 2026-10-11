@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Upscaling: small square enlarged to a bigger square -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M4,4h9v9H4zM6,6v5h5V6z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M13,11l4,-4l4,4zM18,10v9h-9v-4h-2v6h13V10z" />
+</vector>

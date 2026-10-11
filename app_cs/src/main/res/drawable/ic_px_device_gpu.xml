@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- System ANGLE: a phone feeding an external GPU stack -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M7,4h7a1,1 0 0 1 1,1v14a1,1 0 0 1 -1,1H7a1,1 0 0 1 -1,-1V5a1,1 0 0 1 1,-1zM9,6v12h3V6z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M17,7h4v2h-4zM21,9l2,1.5l-2,1.5z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M17,15h4v2h-4z" />
+</vector>

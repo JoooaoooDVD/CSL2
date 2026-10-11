@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Invert Y axis: arrows pointing at a horizontal axis, vertical flip -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,3.5l4,4l-1.4,1.4l-1.6,-1.6V13h-2V7.3l-1.6,1.6L8,7.5z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M3.5,16h17v2h-17z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M7,20.5h10v2H7z" />
+</vector>

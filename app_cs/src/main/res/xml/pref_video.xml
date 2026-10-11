@@ -9,13 +9,13 @@
             android:title="@string/mcl_setting_category_renderer"
             android:key="renderer"
             android:defaultValue="opengles2"
-            android:icon="@drawable/ic_px_image_renderer"
+            android:icon="@drawable/ic_px_renderer_source"
             app2:useSimpleSummaryProvider="true" android:widgetLayout="@layout/view_chevron"/>
 
         <Preference android:layout="@layout/item_setting_row"
             android:key="renderer_settings"
             android:title="@string/mcl_setting_title_renderer_settings"
-            android:icon="@drawable/ic_mg_renderer"
+            android:icon="@drawable/ic_px_layers_buffer"
             android:summary="@string/mcl_setting_title_renderer_subtitle"
             android:fragment="com.craftstudio.cslauncher.prefs.screens.LauncherPreferenceRendererSettingsFragment"
             android:visible="false"
@@ -47,7 +47,7 @@
             android:title="@string/preference_sustained_performance_title"
             android:summary="@string/preference_sustained_performance_description"
             android:key="sustainedPerformance"
-            android:icon="@drawable/ic_px_zap"
+            android:icon="@drawable/ic_px_thermal_cap"
             android:defaultValue="false"
             />
 
@@ -55,7 +55,7 @@
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:defaultValue="false"
             android:key="alternate_surface"
-            android:icon="@drawable/ic_px_sliders"
+            android:icon="@drawable/ic_px_surface_swap"
             android:summary="@string/mcl_setting_subtitle_use_surface_view"
             android:title="@string/mcl_setting_title_use_surface_view"
             />
@@ -63,7 +63,7 @@
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:defaultValue="false"
             android:key="force_vsync"
-            android:icon="@drawable/ic_px_switch_arrows_x"
+            android:icon="@drawable/ic_px_vsync"
             android:summary="@string/preference_force_vsync_description"
             android:title="@string/preference_force_vsync_title"
             />
@@ -71,7 +71,7 @@
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:defaultValue="false"
             android:key="use_angle"
-            android:icon="@drawable/ic_px_image"
+            android:icon="@drawable/ic_px_gpu_bridge"
             android:summary="@string/preference_use_angle_description"
             android:title="@string/preference_use_angle_title"
             />
@@ -79,7 +79,7 @@
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:defaultValue="false"
             android:key="use_system_angle"
-            android:icon="@drawable/ic_px_dynamic"
+            android:icon="@drawable/ic_px_device_gpu"
             android:summary="@string/preference_use_angle_description"
             android:title="@string/preference_use_system_angle_title"
             />

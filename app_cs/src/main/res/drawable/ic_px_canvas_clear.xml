@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Depth clear fix: a framebuffer with a clearing sweep -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M4,4h16v16H4zM6,6v12h12V6z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M6,6l12,12h-2L6,8zM6,11l7,7H6z" />
+</vector>

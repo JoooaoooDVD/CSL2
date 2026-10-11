@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Remove background image: a picture with a cross -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M4,4h16v16H4zM6,6v12h12V6z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M7,7h10v7H7zM8.5,8.5v4h7v-4z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M15,16.5h4V21h-4z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M16.4,18.4l1,-1l1,1l-1,1zM18.6,18.4l1,-1l1,1l-1,1z" />
+</vector>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Gyro sample rate: a pulse train waveform -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M3,10h3l2,-4l4,8l2,-4h7v2h-5.4l-3,6l-4,-8l-1.6,3.2H3z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M17,7h4v2h-4z" />
+</vector>

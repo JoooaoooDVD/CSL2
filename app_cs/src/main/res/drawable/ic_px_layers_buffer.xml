@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Render buffer settings: layered framebuffer planes -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,3l8,4.5l-8,4.5l-8,-4.5z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M4,12.5l8,4.5l8,-4.5v2L12,19l-8,-4.5z" />
+</vector>

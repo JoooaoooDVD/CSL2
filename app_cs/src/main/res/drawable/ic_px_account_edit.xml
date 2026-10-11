@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Account edit: a person with a pencil -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M5,20a4,4 0 0 1 8,0zM9,4a3.5,3.5 0 1 0 0,7a3.5,3.5 0 0 0 0,-7z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M15,15l5,-5l2,2l-5,5l-2.5,0.5z" />
+</vector>

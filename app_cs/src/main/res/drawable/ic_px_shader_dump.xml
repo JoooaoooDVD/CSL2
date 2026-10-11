@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shader dump: a code sheet with an export arrow -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M6,3h8l5,5v13H6zM14,3.5V9h4.5z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M8.5,12l2.5,-2.5l2.5,2.5l-1,1l-0.5,-0.5V17h-2v-4.5l-0.5,0.5z" />
+</vector>

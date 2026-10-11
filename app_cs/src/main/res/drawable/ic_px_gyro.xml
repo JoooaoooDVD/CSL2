@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Gyroscope: a rotating device with a level axis -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,3.5A8.5,8.5 0 1 0 20.5,12h-2A6.5,6.5 0 1 1 5.5,12A6.5,6.5 0 0 1 12,5.5z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M10.2,7.2l0,-3.4l1,-1l1,1l0,3.4l1,0l0,-3.4A2,2 0 0 0 9.2,3.8l0,3.4z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M18.6,7.4l3,-1.6l0.5,1l-3,1.6l-0.5,-0.6l0,1.2l-0.9,-0.5l0.5,0.9l-1.5,0.8l-0.5,-0.9l1.5,-0.8l0.5,0.9l0.9,0.5l0,-1.2z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M14,20.5l1,0l0,-1.4l0.9,0.5l0.5,-0.9l-0.9,-0.5l0.9,-0.5l-0.5,-1l-1.9,1.1l0,1.7z" />
+</vector>
