@@ -150,17 +150,16 @@ public class ThemeColorPreference extends Preference {
             }
         });
 
-        new MaterialAlertDialogBuilder(context)
-                .setTitle(getTitle())
-                .setView(content)
-                .setPositiveButton(android.R.string.ok, (d, w) -> save(selected[0]))
-                .setNegativeButton(android.R.string.cancel, null)
-                .setNeutralButton(R.string.preference_theme_color_reset,
-                        (d, w) -> save(ThemeManager.DEFAULT_CUSTOM_COLOR))
+        // The launcher's XML settings popup (same look + motion as every other settings popup)
+        new SettingsPopup(context)
+                .title(getTitle())
+                .icon(getIcon())
+                .customView(content)
+                .positive(android.R.string.ok, () -> save(selected[0]))
+                .negative(android.R.string.cancel, null)
+                .neutral(context.getText(R.string.preference_theme_color_reset),
+                        () -> save(ThemeManager.DEFAULT_CUSTOM_COLOR), true)
                 .show();
-        // Shared dialog content entrance from the animation engine: the theme picker
-        // animates like every other dialog in the launcher
-        CSAnimationEngine.animateDialogContentView(content);
     }
 
     private static void setRounded(View view, int color, float density) {

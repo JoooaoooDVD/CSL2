@@ -120,6 +120,13 @@ public class LauncherPreferenceFragment extends PreferenceFragmentCompat impleme
         activity.getWindow().getDecorView().post(activity::recreate);
     }
 
+    /** Lists, multi choices and text fields open in the launcher's own XML popup */
+    @Override
+    public void onDisplayPreferenceDialog(@NonNull Preference preference) {
+        if (getContext() != null && com.craftstudio.cslauncher.prefs.SettingsPopups.show(requireContext(), preference)) return;
+        super.onDisplayPreferenceDialog(preference);
+    }
+
     protected Preference requirePreference(CharSequence key) {
         Preference preference = findPreference(key);
         if(preference != null) return preference;

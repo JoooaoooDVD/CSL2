@@ -277,7 +277,9 @@ public final class Motion {
         prepare(view);
         view.setScaleX(0.86f);
         view.setScaleY(0.86f);
-        view.animate().scaleX(1f).scaleY(1f).setDuration(MEDIUM + 60).setInterpolator(SPRING_STRONG).start();
+        // alpha too: a bounce can interrupt a pending pop-in that already set alpha to 0
+        view.animate().alpha(1f).scaleX(1f).scaleY(1f).setStartDelay(0).setDuration(MEDIUM + 60)
+                .setInterpolator(SPRING_STRONG).start();
     }
 
     /** Short attention pulse (grows a little and settles) */
@@ -286,7 +288,7 @@ public final class Motion {
         prepare(view);
         view.setScaleX(1f);
         view.setScaleY(1f);
-        view.animate().scaleX(1.06f).scaleY(1.06f).setDuration(110).setInterpolator(STANDARD)
+        view.animate().alpha(1f).scaleX(1.06f).scaleY(1.06f).setStartDelay(0).setDuration(110).setInterpolator(STANDARD)
                 .withEndAction(() -> view.animate().scaleX(1f).scaleY(1f).setDuration(220)
                         .setInterpolator(SPRING).start())
                 .start();

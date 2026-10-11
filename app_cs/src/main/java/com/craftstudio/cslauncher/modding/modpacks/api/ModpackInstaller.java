@@ -25,6 +25,14 @@ import java.util.Locale;
 public class ModpackInstaller {
 
     public static LoaderInstaller installModpack(String modpackName, String title, File modpackFile, String icon, InstallFunction installFunction) throws IOException {
+        return installModpack(modpackName, title, modpackFile, icon, null, installFunction);
+    }
+
+    /**
+     * @param iconUrl public URL of the modpack icon (kept on the profile: Discord presence shows it)
+     */
+    public static LoaderInstaller installModpack(String modpackName, String title, File modpackFile, String icon,
+                                                 String iconUrl, InstallFunction installFunction) throws IOException {
         // Build a new minecraft instance, folder first
         LoaderInstaller loaderInstaller;
         Instance instance = Instances.createInstance(i-> i.name = title, modpackName.substring(0, Math.min(16,modpackName.length())));
@@ -43,6 +51,7 @@ public class ModpackInstaller {
                 if(versionId == null) throw new IOException("Unknown mod loader version");
                 instance.versionId = versionId;
             }
+            if (iconUrl != null && iconUrl.startsWith("https://")) instance.iconUrl = iconUrl;
             instance.write();
             ModIconCache.writeInstanceImage(instance, icon);
 
@@ -93,7 +102,7 @@ public class ModpackInstaller {
             throw e;
         }
 
-        return installModpack(modpackName, name, modpackFile, icon, installFunction);
+        return installModpack(modpackName, name, modpackFile, icon, modDetail.imageUrl, installFunction);
     }
 
     public interface InstallFunction {

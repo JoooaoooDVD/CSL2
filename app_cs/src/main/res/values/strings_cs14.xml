@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Settings popups -->
+    <string name="sp_save">Save</string>
+
+    <!-- Local account skins -->
+    <string name="preference_category_skins">Skins</string>
+    <string name="preference_local_skins_title">Skins on offline accounts</string>
+    <string name="preference_local_skins_description">Show the skin and cape picked in the Skin editor in game for local (offline) accounts. Uses authlib-injector with a skin server that runs on this device only.</string>
+    <string name="skin_editor_local_hint">Local account: the skin and cape you pick here are shown in game by the launcher\'s own skin server on this device. Players on other devices will not see them.</string>
+    <string name="skin_editor_local_applied">Skin saved. It will be used the next time you start the game.</string>
+    <string name="skin_editor_invalid_cape">That is not a valid cape. Use a PNG of 64×32 pixels (or a multiple of it).</string>
+    <string name="skin_editor_delete_cape_title">Delete this cape?</string>
+    <string name="skin_editor_add_cape">Add a cape</string>
+
+    <!-- Discord Rich Presence -->
+    <string name="preference_category_discord">Discord</string>
+    <string name="preference_discord_rpc_title">Discord game status</string>
+    <string name="preference_discord_rpc_description">Show \"Playing Minecraft\" with your profile, version and play time on your Discord profile while the game runs. Turn off to hide it.</string>
+    <string name="preference_discord_account_title">Discord account</string>
+    <string name="preference_discord_account_logged_out">Not connected. Tap to log in to Discord.</string>
+    <string name="preference_discord_account_logged_in">Connected as %1$s. Tap to log out.</string>
+    <string name="preference_discord_details_title">Show profile details</string>
+    <string name="preference_discord_details_description">Show the profile name, Minecraft version, loader and modpack icon. When off, only \"Playing Minecraft\" is shown.</string>
+    <string name="preference_discord_app_id_title">Discord Application ID</string>
+    <string name="preference_discord_app_id_description">Needed for the CS logo and the modpack icon images. Create an application on the Discord Developer Portal and paste its ID here.</string>
+    <string name="preference_discord_app_id_invalid">An Application ID only has digits (17–20 of them).</string>
+    <string name="preference_discord_login_title">Connect Discord</string>
+    <string name="preference_discord_login_subtitle">For the game status only</string>
+    <string name="preference_discord_login_message">Android has no Discord Rich Presence for apps, so the launcher shows your status by keeping a small Discord session open while the game runs (the same way other mobile status apps do it).\n\nYou log in on the real Discord page. Your login is stored only on this device and only sent to discord.com.\n\nImportant: Discord does not officially allow third party clients to use user accounts. It is rare, but your account could be limited. Continue only if you accept that.</string>
+    <string name="preference_discord_login">Continue</string>
+    <string name="preference_discord_logout_title">Disconnect Discord?</string>
+    <string name="preference_discord_logout_message">%1$s will be disconnected and your game status will no longer be shown.</string>
+    <string name="preference_discord_logout">Disconnect</string>
+    <string name="discord_login_title">Log in to Discord</string>
+    <string name="discord_login_subtitle">Only used to show your game status</string>
+    <string name="discord_login_checking">Checking your login…</string>
+    <string name="discord_login_done">Connected as %1$s</string>
+</resources>

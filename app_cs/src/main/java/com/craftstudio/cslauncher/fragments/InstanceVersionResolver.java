@@ -15,11 +15,11 @@ public final class InstanceVersionResolver {
 
     private InstanceVersionResolver() {}
 
-    static final class Info {
+    public static final class Info {
         /** May be null if it couldn't be determined at all. */
-        final String mcVersion;
+        public final String mcVersion;
         /** "", "fabric", "forge", "quilt", or "neoforge". */
-        final String loader;
+        public final String loader;
 
         public Info(String mcVersion, String loader) {
             this.mcVersion = mcVersion;

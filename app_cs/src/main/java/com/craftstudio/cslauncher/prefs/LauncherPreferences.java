@@ -80,6 +80,12 @@ public class LauncherPreferences {
     public static boolean PREF_MIGRATION_NOTICE = true;
     public static boolean PREF_ALSOFT_FORCE_OPENSL = false;
     public static boolean PREF_SHOW_MEMORY_WARNING_DIALOG = true;
+    /** Local accounts: give the game the skin/cape picked in the launcher (local Yggdrasil server) */
+    public static boolean PREF_LOCAL_SKINS = true;
+    /** Discord Rich Presence while the game runs */
+    public static boolean PREF_DISCORD_RPC = true;
+    /** Discord Rich Presence: show the profile name and version (otherwise only "Minecraft") */
+    public static boolean PREF_DISCORD_RPC_DETAILS = true;
     public static short PREF_BUTTON_TRANSPARENCY = 100;
     public static boolean PREF_UBWC_WORKAROUND = false;
 
@@ -137,6 +143,9 @@ public class LauncherPreferences {
         PREF_MIGRATION_NOTICE = DEFAULT_PREF.getBoolean("migrationNotice", true);
         PREF_ALSOFT_FORCE_OPENSL = DEFAULT_PREF.getBoolean("alsoftForceOpenSL", false);
         PREF_SHOW_MEMORY_WARNING_DIALOG = DEFAULT_PREF.getBoolean("showMemoryWarning", true);
+        PREF_LOCAL_SKINS = DEFAULT_PREF.getBoolean("localSkins", true);
+        PREF_DISCORD_RPC = DEFAULT_PREF.getBoolean("discordRpc", true);
+        PREF_DISCORD_RPC_DETAILS = DEFAULT_PREF.getBoolean("discordRpcDetails", true);
         PREF_BUTTON_TRANSPARENCY = (short) DEFAULT_PREF.getInt("buttonTransparency", 100);
         PREF_UBWC_WORKAROUND = DEFAULT_PREF.getBoolean("ubwcWorkaround", false);
 

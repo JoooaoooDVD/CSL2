@@ -30,6 +30,8 @@ public class Instance extends DisplayInstance {
     public boolean sharedData;
     /** Per-instance memory in MB, 0 = use the global allocation */
     public int ramAllocation;
+    /** Public URL of the modpack icon (Modrinth / CurseForge), used by the Discord presence */
+    public String iconUrl;
 
     protected Instance() {
     }

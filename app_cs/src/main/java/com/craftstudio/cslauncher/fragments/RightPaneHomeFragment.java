@@ -154,6 +154,8 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
                     new View[]{view.findViewById(R.id.home_card_browser_art), view.findViewById(R.id.home_card_manager_art)});
             HomeMotion.profileDetails(mProfileTile, view.findViewById(R.id.home_profile_chevron),
                     view.findViewById(R.id.home_profile_dot));
+            // Safety net: a selection reload during the entrance must never leave the icon tile hidden
+            view.postDelayed(this::settleProfileTile, 1400);
         } else {
             // Coming back (closing a screen of the pane): a quick settle instead of the full show
             HomeMotion.playReturn(view.findViewById(R.id.home_root), view.findViewById(R.id.home_play_glint));
@@ -221,6 +223,15 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         super.onStart();
         // Coming back to the launcher: the card is mirrored again right away
         mirrorSpinner(false);
+        if (mProfileTile != null) mProfileTile.postDelayed(this::settleProfileTile, 900);
+    }
+
+    /** Brings the profile icon tile (and icon) back to full size / opacity if an animation got cut */
+    private void settleProfileTile() {
+        if (!isAdded()) return;
+        com.craftstudio.cslauncher.utils.motion.ManagerMotion.ensureAtRest(mProfileTile);
+        com.craftstudio.cslauncher.utils.motion.ManagerMotion.ensureAtRest(mProfileIcon);
+        if (mProfileIcon != null && mProfileIcon.getDrawable() == null) mirrorSpinner(false);
     }
 
     /** Own copy of the (cached, shared) profile icon; small pixel-art bitmaps stay crisp */

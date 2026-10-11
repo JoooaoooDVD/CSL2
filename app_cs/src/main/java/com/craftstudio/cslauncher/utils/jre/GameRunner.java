@@ -240,6 +240,8 @@ public class GameRunner {
 
         // Pre-process specific files
         disableSplash(gamedir);
+        // Local accounts with a launcher skin/cape: local Yggdrasil server (before the args: it sets the UUID)
+        com.craftstudio.cslauncher.authenticator.yggdrasil.LocalSkinBridge.prepare(account);
         List<String> launchArgs = getMoJsonClientArgs(account, versionInfo, gamedir);
 
         // Select the appropriate openGL version
@@ -315,6 +317,8 @@ public class GameRunner {
         String mainClass = versionInfo.mainClass;
 
         try {
+            // Discord status ("Playing Minecraft" + profile + time) while this game process lives
+            com.craftstudio.cslauncher.discord.DiscordPresence.startForGame(activity, instance);
             JavaRunner.nativeSetupExit(activity);
             JavaRunner.startJvm(runtime, javaArgList, launchClassPath, mainClass, launchArgs);
         }catch (VMLoadException e) {
@@ -353,7 +357,10 @@ public class GameRunner {
 
     private static void addAuthlibInjectorArgs(List<String> javaArgList, Account account) {
         String injectorUrl = account.authType.injectorUrl;
-        if(injectorUrl == null) return;
+        if(injectorUrl == null) {
+            com.craftstudio.cslauncher.authenticator.yggdrasil.LocalSkinBridge.appendJvmArgs(javaArgList);
+            return;
+        }
         javaArgList.add("-javaagent:"+Tools.DIR_DATA+"/authlib-injector/authlib-injector.jar="+injectorUrl);
     }
 

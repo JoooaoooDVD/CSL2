@@ -3,27 +3,19 @@ package com.craftstudio.cslauncher.prefs;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.WindowManager;
+import android.text.InputType;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
-
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
+import androidx.core.content.ContextCompat;
 
 import com.craftstudio.cslauncher.R;
 import com.craftstudio.cslauncher.Tools;
-import com.craftstudio.cslauncher.utils.CSAnimationEngine;
 
 /**
- * Dialog that lets the user type the amount of RAM to allocate, instead of dragging the slider.
- * Shows the amount of RAM that is currently free on the device, refreshed while the dialog is open.
+ * Popup that lets the user type the amount of RAM to allocate, instead of dragging the slider.
+ * Shows the amount of RAM that is currently free on the device, refreshed while it is open.
+ * Uses the launcher's XML settings popup ({@link SettingsPopup}).
  */
 public final class RamInputDialog {
     private static final long FREE_RAM_REFRESH_MS = 1000L;
@@ -37,65 +29,42 @@ public final class RamInputDialog {
 
     public static void show(@NonNull Context context, int current, int min, int max,
                             @NonNull OnRamSelectedListener listener) {
-        View view = LayoutInflater.from(context).inflate(R.layout.dialog_ram_input, null);
-        TextView freeRamView = view.findViewById(R.id.ram_dialog_free);
-        TextInputLayout inputLayout = view.findViewById(R.id.ram_dialog_input_layout);
-        TextInputEditText input = view.findViewById(R.id.ram_dialog_input);
-
-        inputLayout.setHelperText(context.getString(R.string.mcl_memory_allocation_dialog_helper, min, max));
-        input.setText(String.valueOf(current));
-        input.setSelection(input.length());
-
-        AlertDialog dialog = new MaterialAlertDialogBuilder(context)
-                .setTitle(R.string.mcl_memory_allocation)
-                .setView(view)
-                .setNegativeButton(android.R.string.cancel, null)
-                .setPositiveButton(android.R.string.ok, null) // real handler set below, so invalid input doesn't dismiss
-                .create();
-        dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
-
-        // Keep the "free RAM" line up to date while the dialog is visible
         final Handler handler = new Handler(Looper.getMainLooper());
-        final Runnable refresher = new Runnable() {
+        final SettingsPopup popup = new SettingsPopup(context);
+        final Runnable[] refresher = new Runnable[1];
+
+        popup.title(R.string.mcl_memory_allocation)
+                .icon(ContextCompat.getDrawable(context, R.drawable.ic_px_ram))
+                .subtitle(context.getString(R.string.mcl_memory_allocation_dialog_free, Tools.getFreeDeviceMemory(context)))
+                .input(String.valueOf(current), context.getString(R.string.mcl_memory_allocation_dialog_hint), text -> {
+                    int value = parse(text);
+                    if (value < min || value > max) {
+                        popup.setError(context.getString(R.string.mcl_memory_allocation_dialog_error, min, max));
+                        return false;
+                    }
+                    listener.onRamSelected(value);
+                    return true;
+                })
+                .inputType(InputType.TYPE_CLASS_NUMBER)
+                .inputHelper(context.getString(R.string.mcl_memory_allocation_dialog_helper, min, max))
+                .onClosed(() -> handler.removeCallbacks(refresher[0]));
+
+        // Keep the "free RAM" line up to date while the popup is visible
+        refresher[0] = new Runnable() {
             @Override
             public void run() {
-                freeRamView.setText(context.getString(R.string.mcl_memory_allocation_dialog_free,
-                        Tools.getFreeDeviceMemory(context)));
+                if (!popup.isShowing()) return;
+                TextView subtitle = popup.findViewById(R.id.sp_subtitle);
+                if (subtitle != null) {
+                    subtitle.setText(context.getString(R.string.mcl_memory_allocation_dialog_free,
+                            Tools.getFreeDeviceMemory(context)));
+                }
                 handler.postDelayed(this, FREE_RAM_REFRESH_MS);
             }
         };
-        dialog.setOnShowListener(d -> {
-            refresher.run();
-            // Shared dialog content entrance from the animation engine
-            CSAnimationEngine.animateDialogContentView(view);
-
-            View okButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
-            Runnable submit = () -> {
-                int value = parse(input.getText());
-                if (value < min || value > max) {
-                    inputLayout.setError(context.getString(R.string.mcl_memory_allocation_dialog_error, min, max));
-                    return;
-                }
-                listener.onRamSelected(value);
-                dialog.dismiss();
-            };
-            okButton.setOnClickListener(v -> submit.run());
-            input.setOnEditorActionListener((v, actionId, event) -> {
-                submit.run();
-                return true;
-            });
-        });
-        dialog.setOnDismissListener(d -> handler.removeCallbacks(refresher));
-
-        input.addTextChangedListener(new TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
-            @Override public void afterTextChanged(Editable s) {
-                inputLayout.setError(null);
-            }
-        });
-
-        dialog.show();
+        popup.setOnDismissListener(d -> handler.removeCallbacks(refresher[0]));
+        popup.show();
+        handler.postDelayed(refresher[0], FREE_RAM_REFRESH_MS);
     }
 
     /** @return the parsed value, or -1 if the text is empty or not a valid number */

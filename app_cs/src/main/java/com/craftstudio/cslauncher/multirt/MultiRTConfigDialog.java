@@ -1,28 +1,47 @@
 package com.craftstudio.cslauncher.multirt;
 
-import com.craftstudio.cslauncher.utils.AnimationManager;
-import com.craftstudio.cslauncher.utils.CSAnimationEngine;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import androidx.appcompat.app.AlertDialog;
 import android.content.Context;
-import android.widget.Button;
 
 import androidx.activity.result.ActivityResultLauncher;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.craftstudio.cslauncher.R;
+import com.craftstudio.cslauncher.prefs.SettingsPopup;
+import com.craftstudio.cslauncher.utils.AnimationManager;
 
+/** Java runtimes list, shown in the launcher's XML settings popup */
 public class MultiRTConfigDialog {
-    private AlertDialog mDialog;
     private RecyclerView mDialogView;
+    private RTRecyclerViewAdapter mAdapter;
+    private ActivityResultLauncher<Object> mInstallLauncher;
+    private Context mContext;
+    private SettingsPopup mPopup;
 
-    /** Show the dialog, refreshes the adapter data before showing it */
-    public void show(){
+    /** Show the popup, refreshes the adapter data before showing it */
+    public void show() {
+        if (mPopup != null && mPopup.isShowing()) return;
         refresh();
-        mDialog.show();
+        if (mAdapter.getIsEditing()) mAdapter.setIsEditing(false);
+        // A popup is single-use (its exit animation leaves it hidden): a fresh one every time
+        mPopup = new SettingsPopup(mContext)
+                .title(R.string.multirt_config_title)
+                .icon(ContextCompat.getDrawable(mContext, R.drawable.ic_px_runtime_mgr))
+                .customView(mDialogView)
+                .positive(R.string.multirt_config_add, () -> mInstallLauncher.launch(null))
+                .neutral(mContext.getText(R.string.multirt_delete_runtime), this::toggleEditing, false);
+        mPopup.show();
+    }
+
+    private void toggleEditing() {
+        boolean isEditing = !mAdapter.getIsEditing();
+        mAdapter.setIsEditing(isEditing);
+        if (mPopup != null) {
+            mPopup.setNeutralText(mContext.getText(isEditing ? R.string.multirt_config_setdefault : R.string.multirt_delete_runtime));
+        }
     }
 
     @SuppressLint("NotifyDataSetChanged") //only used to completely refresh the list, it is necessary
@@ -31,34 +50,19 @@ public class MultiRTConfigDialog {
         if(adapter != null) adapter.notifyDataSetChanged();
     }
 
-    /** Build the dialog behavior and style */
+    /** Build the list behavior */
     public void prepare(Context activity, ActivityResultLauncher<Object> installJvmLauncher) {
+        mContext = activity;
+        mInstallLauncher = installJvmLauncher;
         mDialogView = new RecyclerView(activity);
         mDialogView.setLayoutManager(new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false));
-        RTRecyclerViewAdapter adapter = new RTRecyclerViewAdapter();
+        mDialogView.setOverScrollMode(RecyclerView.OVER_SCROLL_NEVER);
+        mDialogView.setNestedScrollingEnabled(false);
+        mAdapter = new RTRecyclerViewAdapter();
         if(activity instanceof Activity) {
-            adapter.setActivity((Activity) activity);
+            mAdapter.setActivity((Activity) activity);
         }
-        mDialogView.setAdapter(adapter);
+        mDialogView.setAdapter(mAdapter);
         AnimationManager.applyListAnimation(mDialogView);
-
-        mDialog = new MaterialAlertDialogBuilder(activity)
-                .setTitle(R.string.multirt_config_title)
-                .setView(mDialogView)
-                .setPositiveButton(R.string.multirt_config_add, (dialog, which) -> installJvmLauncher.launch(null))
-                .setNeutralButton(R.string.multirt_delete_runtime, null)
-                .create();
-
-        // Custom button behavior without dismiss
-        mDialog.setOnShowListener(dialog -> {
-            // Shared dialog content entrance from the animation engine
-            CSAnimationEngine.animateDialogContentView(mDialogView);
-            Button button = ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_NEUTRAL);
-            button.setOnClickListener(view -> {
-                boolean isEditing = !adapter.getIsEditing();
-                adapter.setIsEditing(isEditing);
-                button.setText(isEditing ? R.string.multirt_config_setdefault : R.string.multirt_delete_runtime);
-            });
-        });
     }
 }

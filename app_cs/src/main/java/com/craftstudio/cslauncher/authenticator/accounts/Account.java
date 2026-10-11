@@ -81,8 +81,10 @@ public class Account {
      }
 
     public Bitmap getSkinFace(){
-        if(isLocal()) return null;
-        File skinFaceFile = getSkinFaceFile();
+        // Local accounts: the head of the skin picked in the skin editor (if any)
+        File skinFaceFile = isLocal()
+                ? com.craftstudio.cslauncher.skins.LocalSkinStore.faceFile(this)
+                : getSkinFaceFile();
         if(!skinFaceFile.exists()) return null;
         if(mFaceCache == null) {
             mFaceCache = BitmapFactory.decodeFile(skinFaceFile.getAbsolutePath());

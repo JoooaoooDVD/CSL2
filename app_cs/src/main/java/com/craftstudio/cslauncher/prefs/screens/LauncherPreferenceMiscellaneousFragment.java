@@ -13,6 +13,9 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.preference.Preference;
 
 import com.craftstudio.cslauncher.R;
+import com.craftstudio.cslauncher.discord.DiscordAccount;
+import com.craftstudio.cslauncher.discord.DiscordLoginActivity;
+import com.craftstudio.cslauncher.prefs.SettingsPopup;
 
 import com.craftstudio.cslauncher.LauncherActivity;
 import com.craftstudio.cslauncher.CSLauncherApplication;
@@ -30,11 +33,12 @@ public class LauncherPreferenceMiscellaneousFragment extends LauncherPreferenceF
     private final ActivityResultLauncher<Uri> mMigrateLauncher = registerForActivityResult(
             new ActivityResultContracts.OpenDocumentTree(), (uri) -> {
                 if(uri != null) {
-                    new MaterialAlertDialogBuilder(getLauncherActivity())
-                            .setTitle(R.string.migration_progress_warning_title)
-                            .setMessage(R.string.migration_progress_warning_summary)
-                            .setPositiveButton(android.R.string.ok, (d, w) -> new DataMigrator(getLauncherActivity(), uri).migrateData())
-                            .setNegativeButton(android.R.string.cancel, null)
+                    new com.craftstudio.cslauncher.prefs.SettingsPopup(getLauncherActivity())
+                            .title(R.string.migration_progress_warning_title)
+                            .icon(androidx.core.content.ContextCompat.getDrawable(getLauncherActivity(), R.drawable.ic_px_data_import))
+                            .message(R.string.migration_progress_warning_summary)
+                            .positive(android.R.string.ok, () -> new DataMigrator(getLauncherActivity(), uri).migrateData())
+                            .negative(android.R.string.cancel, null)
                             .show();
                 }
             }
@@ -55,7 +59,67 @@ public class LauncherPreferenceMiscellaneousFragment extends LauncherPreferenceF
         });
         setupCacheClearPreference();
         setupMicrophoneRequestPreference();
+        setupDiscordPreferences();
         updateVisibility();
+    }
+
+    private final ActivityResultLauncher<android.content.Intent> mDiscordLoginLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(), result -> updateDiscordAccountSummary());
+
+    private void setupDiscordPreferences() {
+        Preference account = requirePreference("discordAccount");
+        updateDiscordAccountSummary();
+        account.setOnPreferenceClickListener(preference -> {
+            android.content.Context context = requireContext();
+            android.graphics.drawable.Drawable icon = androidx.core.content.ContextCompat.getDrawable(context, R.drawable.ic_discord_mark);
+            if (DiscordAccount.isLoggedIn(context)) {
+                new SettingsPopup(context)
+                        .title(R.string.preference_discord_logout_title)
+                        .icon(icon)
+                        .message(getString(R.string.preference_discord_logout_message, DiscordAccount.getDisplayName(context)))
+                        .positive(R.string.preference_discord_logout, () -> {
+                            DiscordAccount.logout(context);
+                            updateDiscordAccountSummary();
+                        })
+                        .negative(android.R.string.cancel, null)
+                        .show();
+            } else {
+                // Explain what the login is for (and the risk) before opening Discord's page
+                new SettingsPopup(context)
+                        .title(R.string.preference_discord_login_title)
+                        .subtitle(getString(R.string.preference_discord_login_subtitle))
+                        .icon(icon)
+                        .message(R.string.preference_discord_login_message)
+                        .positive(R.string.preference_discord_login, () -> mDiscordLoginLauncher.launch(
+                                new android.content.Intent(context, DiscordLoginActivity.class)))
+                        .negative(android.R.string.cancel, null)
+                        .show();
+            }
+            return true;
+        });
+
+        Preference appId = requirePreference(DiscordAccount.PREF_APPLICATION_ID);
+        appId.setSummaryProvider(preference -> {
+            String value = ((androidx.preference.EditTextPreference) preference).getText();
+            return value == null || value.trim().isEmpty()
+                    ? getString(R.string.preference_discord_app_id_description) : value.trim();
+        });
+        appId.setOnPreferenceChangeListener((preference, newValue) -> {
+            String value = newValue == null ? "" : newValue.toString().trim();
+            if (value.isEmpty() || value.matches("\\d{15,22}")) return true;
+            Toast.makeText(requireContext(), R.string.preference_discord_app_id_invalid, Toast.LENGTH_SHORT).show();
+            return false;
+        });
+    }
+
+    private void updateDiscordAccountSummary() {
+        if (getContext() == null) return;
+        Preference account = findPreference("discordAccount");
+        if (account == null) return;
+        String name = DiscordAccount.getDisplayName(requireContext());
+        account.setSummary(DiscordAccount.isLoggedIn(requireContext())
+                ? getString(R.string.preference_discord_account_logged_in, name == null ? "Discord" : name)
+                : getString(R.string.preference_discord_account_logged_out));
     }
 
     private void updateVisibility(){

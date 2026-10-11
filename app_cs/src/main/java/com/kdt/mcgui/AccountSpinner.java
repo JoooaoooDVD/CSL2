@@ -360,8 +360,9 @@ public class AccountSpinner extends AppCompatSpinner implements LoginListener, A
 
             Account account = Objects.requireNonNull(getItem(position));
 
-            // Skins and capes live on the Minecraft account, so only Microsoft ones can edit them
-            if(account.authType == AuthType.MICROSOFT) {
+            // Microsoft: skins/capes live on the Minecraft account. Local: kept in the launcher and
+            // given to the game by the local Yggdrasil server (authlib-injector). Ely.by uses its site.
+            if(account.authType == AuthType.MICROSOFT || account.authType == AuthType.LOCAL) {
                 editButton.setVisibility(View.VISIBLE);
                 editButton.setOnClickListener(v -> openSkinEditor(account));
             }else {

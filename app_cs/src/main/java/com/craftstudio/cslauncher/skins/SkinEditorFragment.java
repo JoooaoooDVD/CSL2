@@ -77,6 +77,9 @@ public class SkinEditorFragment extends Fragment {
     private final Handler mHandler = new Handler(Looper.getMainLooper());
     private final ActivityResultLauncher<String> mPickSkin =
             registerForActivityResult(new ActivityResultContracts.GetContent(), this::onSkinPicked);
+    /** Local accounts only: any cape PNG can be added */
+    private final ActivityResultLauncher<String> mPickCape =
+            registerForActivityResult(new ActivityResultContracts.GetContent(), this::onCapePicked);
 
     private PlayerPreviewView mPreview;
     private SwitchCompat mSlimSwitch;
@@ -86,6 +89,8 @@ public class SkinEditorFragment extends Fragment {
     private TileAdapter mAdapter;
 
     private Account mAccount;
+    /** Local (offline) account: nothing is uploaded, the launcher's Yggdrasil server serves the textures */
+    private boolean mLocal;
     private boolean mLoaded;
     private int mTab = TAB_SKINS;
     private int mBusy;
@@ -163,6 +168,9 @@ public class SkinEditorFragment extends Fragment {
         final Map<String, Bitmap> capeTextures = new HashMap<>();
         Throwable error;
         boolean notMicrosoft;
+        boolean local;
+        final List<MinecraftSkinApi.Cape> localCapes = new ArrayList<>();
+        String selectedCapeId;
     }
 
     private void loadData() {
@@ -173,7 +181,10 @@ public class SkinEditorFragment extends Fragment {
             LoadResult result = new LoadResult();
             try {
                 result.account = findAccount(accountFile);
-                if (result.account == null || result.account.authType != AuthType.MICROSOFT) {
+                if (result.account != null && result.account.authType == AuthType.LOCAL) {
+                    result.local = true;
+                    loadLocal(result);
+                } else if (result.account == null || result.account.authType != AuthType.MICROSOFT) {
                     result.notMicrosoft = true;
                 } else {
                     loadInBackground(result, seedName);
@@ -183,6 +194,37 @@ public class SkinEditorFragment extends Fragment {
             }
             runIfAttached(() -> onLoaded(result));
         });
+    }
+
+    /** Local account: the shared skin library + the local cape library, all offline */
+    private static void loadLocal(LoadResult result) {
+        result.skins = SkinLibrary.list();
+        result.selectedSkinId = SkinLibrary.getSelected(LocalSkinStore.keyOf(result.account));
+        result.selectedCapeId = LocalSkinStore.getSelectedCape(result.account);
+        for (LocalSkinStore.Cape local : LocalSkinStore.listCapes()) {
+            MinecraftSkinApi.Cape cape = localCapeOf(local);
+            result.localCapes.add(cape);
+            Bitmap texture = loadLocalCapeTexture(local);
+            if (texture != null) result.capeTextures.put(cape.id, texture);
+        }
+    }
+
+    @NonNull
+    private static MinecraftSkinApi.Cape localCapeOf(@NonNull LocalSkinStore.Cape local) {
+        MinecraftSkinApi.Cape cape = new MinecraftSkinApi.Cape();
+        cape.id = local.id;
+        cape.alias = local.name;
+        cape.url = LocalSkinStore.capeFile(local).getAbsolutePath();
+        return cape;
+    }
+
+    @Nullable
+    private static Bitmap loadLocalCapeTexture(@NonNull LocalSkinStore.Cape local) {
+        Bitmap raw = BitmapFactory.decodeFile(LocalSkinStore.capeFile(local).getAbsolutePath());
+        if (raw == null) return null;
+        Bitmap normalized = SkinTextures.normalizeCape(raw);
+        raw.recycle();
+        return normalized;
     }
 
     private static void loadInBackground(LoadResult result, String seedName) throws IOException {
@@ -258,6 +300,7 @@ public class SkinEditorFragment extends Fragment {
             return;
         }
         if (result.account != null) mAccount = result.account;
+        mLocal = result.local;
         mLoaded = true;
 
         mSkins.clear();
@@ -267,7 +310,11 @@ public class SkinEditorFragment extends Fragment {
         mCapes.clear();
         mCapeTextures.clear();
         mSelectedCapeId = null;
-        if (result.profile != null) {
+        if (mLocal) {
+            mCapes.addAll(result.localCapes);
+            mCapeTextures.putAll(result.capeTextures);
+            mSelectedCapeId = LocalSkinStore.findCape(result.selectedCapeId) != null ? result.selectedCapeId : null;
+        } else if (result.profile != null) {
             mCapes.addAll(result.profile.capes);
             mCapeTextures.putAll(result.capeTextures);
             mSelectedCapeId = result.profile.activeCapeId();
@@ -290,6 +337,12 @@ public class SkinEditorFragment extends Fragment {
     }
 
     private void updateHint() {
+        if (mLocal) {
+            // Local accounts: a short note on where the skin shows up instead of "no capes owned"
+            mHint.setText(R.string.skin_editor_local_hint);
+            mHint.setVisibility(mLoaded ? View.VISIBLE : View.GONE);
+            return;
+        }
         mHint.setVisibility(mLoaded && mTab == TAB_CAPES && mCapes.isEmpty() ? View.VISIBLE : View.GONE);
     }
 
@@ -328,6 +381,10 @@ public class SkinEditorFragment extends Fragment {
         final Account account = mAccount;
         final boolean slim = entry.slim;
         final String skinId = entry.id;
+        if (mLocal) {
+            applyLocalSkin(account, skinId);
+            return;
+        }
         beginBusy();
         CSLauncherApplication.sExecutorService.execute(() -> {
             Account fresh = account;
@@ -354,6 +411,32 @@ public class SkinEditorFragment extends Fragment {
                     mAdapter.notifyDataSetChanged();
                 }
                 showError(finalError);
+            });
+        });
+    }
+
+    /** Local account: only the selection is stored; the game gets it from the local skin server */
+    private void applyLocalSkin(@NonNull Account account, @Nullable String skinId) {
+        beginBusy();
+        CSLauncherApplication.sExecutorService.execute(() -> {
+            Throwable error = null;
+            try {
+                SkinLibrary.setSelected(LocalSkinStore.keyOf(account), skinId);
+                LocalSkinStore.updateFace(account);
+            } catch (Exception e) {
+                error = e;
+            }
+            final Throwable finalError = error;
+            runIfAttached(() -> {
+                endBusy();
+                if (finalError != null) {
+                    showError(finalError);
+                    return;
+                }
+                Toast.makeText(requireContext(), R.string.skin_editor_local_applied, Toast.LENGTH_SHORT).show();
+                // The account pill / list re-reads the head of the new skin
+                com.craftstudio.cslauncher.extra.ExtraCore.setValue(
+                        com.craftstudio.cslauncher.extra.ExtraConstants.REFRESH_ACCOUNT_SPINNER, true);
             });
         });
     }
@@ -495,6 +578,10 @@ public class SkinEditorFragment extends Fragment {
         mAdapter.notifyDataSetChanged();
 
         final Account account = mAccount;
+        if (mLocal) {
+            applyLocalCape(account, newId, previous);
+            return;
+        }
         beginBusy();
         CSLauncherApplication.sExecutorService.execute(() -> {
             Account fresh = account;
@@ -520,6 +607,106 @@ public class SkinEditorFragment extends Fragment {
                 mPreview.setCape(mCapeTextures.get(previous));
                 mAdapter.notifyDataSetChanged();
                 showError(finalError);
+            });
+        });
+    }
+
+    private void applyLocalCape(@NonNull Account account, @Nullable String newId, @Nullable String previous) {
+        beginBusy();
+        CSLauncherApplication.sExecutorService.execute(() -> {
+            Throwable error = null;
+            try {
+                LocalSkinStore.setSelectedCape(account, newId);
+            } catch (Exception e) {
+                error = e;
+            }
+            final Throwable finalError = error;
+            runIfAttached(() -> {
+                endBusy();
+                if (finalError == null) {
+                    Toast.makeText(requireContext(),
+                            newId == null ? R.string.skin_editor_cape_removed : R.string.skin_editor_cape_applied,
+                            Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                mSelectedCapeId = previous;
+                mPreview.setCape(mCapeTextures.get(previous));
+                mAdapter.notifyDataSetChanged();
+                showError(finalError);
+            });
+        });
+    }
+
+    private void onCapePicked(@Nullable Uri uri) {
+        if (uri == null || !mLocal) return;
+        final Context appContext = requireContext().getApplicationContext();
+        beginBusy();
+        CSLauncherApplication.sExecutorService.execute(() -> {
+            LocalSkinStore.Cape added = null;
+            Bitmap texture = null;
+            Throwable error = null;
+            boolean invalid = false;
+            try {
+                byte[] data = readLimited(appContext, uri);
+                Bitmap bitmap = isPng(data) ? BitmapFactory.decodeByteArray(data, 0, data.length) : null;
+                if (bitmap == null || !LocalSkinStore.isValidCapeSize(bitmap.getWidth(), bitmap.getHeight())) {
+                    invalid = true;
+                } else {
+                    added = LocalSkinStore.addCape(data, displayName(appContext, uri));
+                    texture = SkinTextures.normalizeCape(bitmap);
+                    bitmap.recycle();
+                }
+            } catch (Exception e) {
+                error = e;
+            }
+            final LocalSkinStore.Cape finalAdded = added;
+            final Bitmap finalTexture = texture;
+            final Throwable finalError = error;
+            final boolean finalInvalid = invalid;
+            runIfAttached(() -> {
+                endBusy();
+                if (finalInvalid) {
+                    Toast.makeText(requireContext(), R.string.skin_editor_invalid_cape, Toast.LENGTH_LONG).show();
+                } else if (finalError != null) {
+                    showError(finalError);
+                } else if (finalAdded != null) {
+                    MinecraftSkinApi.Cape cape = localCapeOf(finalAdded);
+                    mCapes.add(cape);
+                    if (finalTexture != null) mCapeTextures.put(cape.id, finalTexture);
+                    mAdapter.notifyDataSetChanged();
+                    onCapeTileClicked(cape);
+                }
+            });
+        });
+    }
+
+    private void confirmDeleteCape(@NonNull MinecraftSkinApi.Cape cape) {
+        new com.craftstudio.cslauncher.prefs.SettingsPopup(requireContext())
+                .title(R.string.skin_editor_delete_cape_title)
+                .subtitle(cape.alias)
+                .icon(androidx.core.content.ContextCompat.getDrawable(requireContext(), R.drawable.ic_px_trash))
+                .positive(R.string.global_delete, () -> deleteLocalCape(cape))
+                .negative(android.R.string.cancel, null)
+                .show();
+    }
+
+    private void deleteLocalCape(@NonNull MinecraftSkinApi.Cape cape) {
+        CSLauncherApplication.sExecutorService.execute(() -> {
+            try {
+                LocalSkinStore.deleteCape(cape.id);
+            } catch (IOException e) {
+                runIfAttached(() -> showError(e));
+                return;
+            }
+            runIfAttached(() -> {
+                mCapes.remove(cape);
+                mCapeTextures.remove(cape.id);
+                mThumbs.remove("cape:" + cape.id);
+                if (cape.id.equals(mSelectedCapeId)) {
+                    mSelectedCapeId = null;
+                    mPreview.setCape(null);
+                }
+                mAdapter.notifyDataSetChanged();
             });
         });
     }
@@ -626,7 +813,8 @@ public class SkinEditorFragment extends Fragment {
         @Override
         public int getItemCount() {
             // skins: every skin + the "add" tile; capes: "none" + every cape (no add tile)
-            return (mTab == TAB_SKINS ? mSkins.size() : mCapes.size()) + 1;
+            // local accounts also get an "add" tile at the end of the capes
+            return (mTab == TAB_SKINS ? mSkins.size() : mCapes.size() + (mLocal ? 1 : 0)) + 1;
         }
 
         @Override
@@ -675,7 +863,21 @@ public class SkinEditorFragment extends Fragment {
                 tile.setOnClickListener(v -> onCapeTileClicked(null));
                 return;
             }
+            if (mLocal && position == mCapes.size() + 1) {
+                holder.image.setImageResource(R.drawable.ic_add);
+                tile.setContentDescription(getString(R.string.skin_editor_add_cape));
+                tile.setOnClickListener(v -> {
+                    if (mBusy == 0) mPickCape.launch("image/*");
+                });
+                return;
+            }
             MinecraftSkinApi.Cape cape = mCapes.get(position - 1);
+            if (mLocal) {
+                tile.setOnLongClickListener(v -> {
+                    confirmDeleteCape(cape);
+                    return true;
+                });
+            }
             Bitmap thumb = capeThumb(cape);
             if (thumb != null) holder.image.setImageDrawable(new BitmapDrawable(getResources(), thumb));
             tile.setContentDescription(cape.alias);
