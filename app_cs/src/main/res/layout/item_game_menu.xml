@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="56dp"
+    android:layout_height="64dp"
     android:background="@drawable/bg_gm_row"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:paddingStart="9dp"
-    android:paddingEnd="12dp">
+    android:paddingStart="10dp"
+    android:paddingEnd="14dp">
 
     <FrameLayout
         android:id="@+id/gm_icon_tile"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:background="@drawable/bg_gm_icon_tile">
 
         <ImageView
             android:id="@+id/gm_icon"
-            android:layout_width="18dp"
-            android:layout_height="18dp"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
             android:layout_gravity="center"
             android:importantForAccessibility="no"
             android:src="@drawable/ic_gm_chevron" />
@@ -27,19 +27,19 @@
         android:id="@+id/gm_label"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
+        android:layout_marginStart="14dp"
         android:layout_weight="1"
         android:ellipsize="end"
         android:fontFamily="sans-serif-medium"
         android:singleLine="true"
         android:textColor="#FFF2F5FA"
-        android:textSize="14sp" />
+        android:textSize="15sp" />
 
     <ImageView
         android:id="@+id/gm_chevron"
-        android:layout_width="16dp"
-        android:layout_height="16dp"
+        android:layout_width="14dp"
+        android:layout_height="14dp"
         android:importantForAccessibility="no"
         android:src="@drawable/ic_gm_chevron"
-        android:tint="#FF8E8E96" />
+        android:tint="#FF6E6E76" />
 </LinearLayout>

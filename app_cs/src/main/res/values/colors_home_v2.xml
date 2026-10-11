@@ -1,50 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Home redesign (light). Night values are the navy palette of the mockup -->
+<!-- Home redesign (light). Neutral grey palette, no blue -->
 <resources>
-    <color name="hm_backdrop_top">#F2F5FB</color>
-    <color name="hm_backdrop_bottom">#E4EAF5</color>
+    <color name="hm_backdrop_top">#F4F4F6</color>
+    <color name="hm_backdrop_bottom">#E6E6EA</color>
     <color name="hm_card">#FFFFFF</color>
-    <color name="hm_card_pressed">#EEF2FA</color>
-    <color name="hm_card_stroke">#D8DFEC</color>
-    <color name="hm_inner">#F3F6FC</color>
-    <color name="hm_inner_clear">#00F3F6FC</color>
-    <color name="hm_inner_stroke">#CBD4E5</color>
+    <color name="hm_card_pressed">#EDEDEF</color>
+    <color name="hm_card_stroke">#DADAE0</color>
+    <color name="hm_inner">#F4F4F6</color>
+    <color name="hm_inner_clear">#00F4F4F6</color>
+    <color name="hm_inner_stroke">#C9CDD4</color>
     <color name="hm_text">#0E1525</color>
     <color name="hm_text_dim">#5B6578</color>
     <color name="hm_icon">#1A2336</color>
-    <color name="hm_tile_blue_start">#DCEBFF</color>
-    <color name="hm_tile_blue_end">#C7DDFB</color>
-    <color name="hm_tile_blue_stroke">#9CC3F2</color>
-    <color name="hm_tile_purple_start">#EEE3FF</color>
-    <color name="hm_tile_purple_end">#E0D0FA</color>
-    <color name="hm_tile_purple_stroke">#BFA2EE</color>
-    <color name="hm_cube">#2F86D6</color>
-    <color name="hm_servers">#A04CD8</color>
+    <color name="hm_tile_blue_start">#E2E2E7</color>
+    <color name="hm_tile_blue_end">#CFCFD6</color>
+    <color name="hm_tile_blue_stroke">#A9A9B3</color>
+    <color name="hm_tile_purple_start">#E6E6EA</color>
+    <color name="hm_tile_purple_end">#D5D5DB</color>
+    <color name="hm_tile_purple_stroke">#B0B0B9</color>
+    <color name="hm_cube">#55555C</color>
+    <color name="hm_servers">#6B6B73</color>
     <!-- Profile picker -->
     <color name="hm_dialog">#FFFFFF</color>
-    <color name="hm_accent">#2F7BEA</color>
-    <color name="hm_accent_fill">#1A2F7BEA</color>
-    <color name="hm_accent_stroke">#802F7BEA</color>
-    <color name="hm_accent_clear">#002F7BEA</color>
-    <color name="hm_accent_soft">#0F2F7BEA</color>
+    <color name="hm_accent">#54545B</color>
+    <color name="hm_accent_fill">#1A54545B</color>
+    <color name="hm_accent_stroke">#8054545B</color>
+    <color name="hm_accent_clear">#0054545B</color>
+    <color name="hm_accent_soft">#0F54545B</color>
     <color name="hm_profile_active">#22B35A</color>
     <color name="hm_green_fill">#DDF5E6</color>
     <color name="hm_green_text">#1C8A4A</color>
     <color name="hm_scrim">#730A1222</color>
-    <color name="hm_side_start">#E3EEFF</color>
-    <color name="hm_side_end">#F6F9FF</color>
+    <color name="hm_side_start">#E9E9ED</color>
+    <color name="hm_side_end">#F7F7F9</color>
     <!-- Home cards with artwork -->
     <color name="hm_card_fade_start">#F7FFFFFF</color>
     <color name="hm_card_fade_center">#C2FFFFFF</color>
     <color name="hm_card_fade_end">#14FFFFFF</color>
     <color name="hm_text_shadow">#00000000</color>
     <color name="hm_chevron_bg">#CCFFFFFF</color>
-    <color name="hm_chevron_stroke">#D8DFEC</color>
+    <color name="hm_chevron_stroke">#DADAE0</color>
     <!-- Create instance popups -->
     <color name="hm_amber">#B26A00</color>
     <color name="hm_amber_fill">#26FFB547</color>
     <color name="hm_amber_stroke">#99D08A00</color>
     <color name="hm_busy_scrim">#EBFFFFFF</color>
-    <color name="hm_field">#F3F6FB</color>
-    <color name="hm_divider">#DDE3EE</color>
+    <color name="hm_field">#F4F4F6</color>
+    <color name="hm_divider">#DFDFE4</color>
 </resources>

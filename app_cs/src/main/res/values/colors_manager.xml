@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Content manager / manage popup / control editor: ONE neutral navy look, no per-type colours -->
 <resources>
-    <color name="mm_mods_start">#16233C</color>
-    <color name="mm_mods_end">#0E1729</color>
-    <color name="mm_mods_stroke">#2E3D5C</color>
+    <color name="mm_mods_start">#1E1E23</color>
+    <color name="mm_mods_end">#121215</color>
+    <color name="mm_mods_stroke">#34343A</color>
     <color name="mm_mods_glyph">#E8EDF6</color>
-    <color name="mm_rp_start">#16233C</color>
-    <color name="mm_rp_end">#0E1729</color>
-    <color name="mm_rp_stroke">#2E3D5C</color>
+    <color name="mm_rp_start">#1E1E23</color>
+    <color name="mm_rp_end">#121215</color>
+    <color name="mm_rp_stroke">#34343A</color>
     <color name="mm_rp_glyph">#E8EDF6</color>
-    <color name="mm_sh_start">#16233C</color>
-    <color name="mm_sh_end">#0E1729</color>
-    <color name="mm_sh_stroke">#2E3D5C</color>
+    <color name="mm_sh_start">#1E1E23</color>
+    <color name="mm_sh_end">#121215</color>
+    <color name="mm_sh_stroke">#34343A</color>
     <color name="mm_sh_glyph">#E8EDF6</color>
     <color name="mm_danger">#FF8A8A</color>
     <color name="mm_danger_fill">#2EFF5A5A</color>
     <color name="mm_danger_stroke">#80FF7A7A</color>
     <color name="mm_on_fill">#1F3DDC84</color>
     <color name="mm_on_stroke">#663DDC84</color>
-    <color name="mm_off_fill">#14A3AEC2</color>
-    <color name="mm_off_stroke">#40A3AEC2</color>
+    <color name="mm_off_fill">#149C9CA4</color>
+    <color name="mm_off_stroke">#409C9CA4</color>
     <color name="ce_panel">#F51B1B1F</color>
     <color name="ce_handle">#D91B1B1F</color>
     <color name="ce_row_pressed">#1AFFFFFF</color>
-    <color name="ce_btn_light">#E8EDF6</color>
-    <color name="ce_btn_light_pressed">#C9D2E2</color>
+    <color name="ce_btn_light">#ECECF0</color>
+    <color name="ce_btn_light_pressed">#CFCFD6</color>
     <color name="ce_btn_dark_text">#0E1525</color>
 </resources>

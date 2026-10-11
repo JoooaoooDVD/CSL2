@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Rounded outline used to clip the PLAY texture -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="#C4D8FF" />
+    <solid android:color="#CFCFD6" />
     <corners android:radius="16dp" />
 </shape>

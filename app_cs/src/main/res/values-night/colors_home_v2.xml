@@ -1,50 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Home redesign (night): navy palette of the mockup -->
+<!-- Home redesign (night): charcoal grey palette, no blue -->
 <resources>
-    <color name="hm_backdrop_top">#0B1322</color>
-    <color name="hm_backdrop_bottom">#080D18</color>
-    <color name="hm_card">#E60F1729</color>
-    <color name="hm_card_pressed">#F2172036</color>
-    <color name="hm_card_stroke">#1F2B44</color>
-    <color name="hm_inner">#0F1A2E</color>
-    <color name="hm_inner_clear">#000F1A2E</color>
-    <color name="hm_inner_stroke">#2A3754</color>
+    <color name="hm_backdrop_top">#101014</color>
+    <color name="hm_backdrop_bottom">#0B0B0E</color>
+    <color name="hm_card">#E616161A</color>
+    <color name="hm_card_pressed">#F2202026</color>
+    <color name="hm_card_stroke">#2A2A30</color>
+    <color name="hm_inner">#17171B</color>
+    <color name="hm_inner_clear">#0017171B</color>
+    <color name="hm_inner_stroke">#37373D</color>
     <color name="hm_text">#F2F5FA</color>
-    <color name="hm_text_dim">#A3AEC2</color>
+    <color name="hm_text_dim">#9C9CA4</color>
     <color name="hm_icon">#E8EDF6</color>
-    <color name="hm_tile_blue_start">#12305A</color>
-    <color name="hm_tile_blue_end">#0B1C38</color>
-    <color name="hm_tile_blue_stroke">#2B5E97</color>
-    <color name="hm_tile_purple_start">#2D1A52</color>
-    <color name="hm_tile_purple_end">#1B1033</color>
-    <color name="hm_tile_purple_stroke">#5A3C92</color>
-    <color name="hm_cube">#8CD8FF</color>
-    <color name="hm_servers">#E596FF</color>
+    <color name="hm_tile_blue_start">#232329</color>
+    <color name="hm_tile_blue_end">#17171C</color>
+    <color name="hm_tile_blue_stroke">#3A3A42</color>
+    <color name="hm_tile_purple_start">#232329</color>
+    <color name="hm_tile_purple_end">#17171C</color>
+    <color name="hm_tile_purple_stroke">#3A3A42</color>
+    <color name="hm_cube">#C9C9D1</color>
+    <color name="hm_servers">#B9B9C2</color>
     <!-- Profile picker -->
-    <color name="hm_dialog">#0F182B</color>
-    <color name="hm_accent">#6FB1FF</color>
-    <color name="hm_accent_fill">#264C8DFF</color>
-    <color name="hm_accent_stroke">#996FB1FF</color>
-    <color name="hm_accent_clear">#004C8DFF</color>
-    <color name="hm_accent_soft">#144C8DFF</color>
+    <color name="hm_dialog">#141417</color>
+    <color name="hm_accent">#C6C6CE</color>
+    <color name="hm_accent_fill">#26C6C6CE</color>
+    <color name="hm_accent_stroke">#99C6C6CE</color>
+    <color name="hm_accent_clear">#00C6C6CE</color>
+    <color name="hm_accent_soft">#14C6C6CE</color>
     <color name="hm_profile_active">#3DDC84</color>
     <color name="hm_green_fill">#1B3A2A</color>
     <color name="hm_green_text">#7CE3A2</color>
-    <color name="hm_scrim">#B3030712</color>
-    <color name="hm_side_start">#16325E</color>
-    <color name="hm_side_end">#0F182B</color>
+    <color name="hm_scrim">#B3070708</color>
+    <color name="hm_side_start">#1D1D22</color>
+    <color name="hm_side_end">#141417</color>
     <!-- Home cards with artwork -->
-    <color name="hm_card_fade_start">#FA0F1729</color>
-    <color name="hm_card_fade_center">#C40F1729</color>
-    <color name="hm_card_fade_end">#1A0F1729</color>
+    <color name="hm_card_fade_start">#FA141417</color>
+    <color name="hm_card_fade_center">#C4141417</color>
+    <color name="hm_card_fade_end">#1A141417</color>
     <color name="hm_text_shadow">#A6000000</color>
-    <color name="hm_chevron_bg">#8C0B1322</color>
+    <color name="hm_chevron_bg">#8C101014</color>
     <color name="hm_chevron_stroke">#33FFFFFF</color>
     <!-- Create instance popups -->
     <color name="hm_amber">#FFC862</color>
     <color name="hm_amber_fill">#33FFB547</color>
     <color name="hm_amber_stroke">#99FFC862</color>
-    <color name="hm_busy_scrim">#EB0F182B</color>
-    <color name="hm_field">#0B1424</color>
-    <color name="hm_divider">#1C2840</color>
+    <color name="hm_busy_scrim">#EB141417</color>
+    <color name="hm_field">#101014</color>
+    <color name="hm_divider">#2A2A30</color>
 </resources>

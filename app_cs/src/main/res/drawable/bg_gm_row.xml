@@ -4,29 +4,29 @@
     android:exitFadeDuration="140"
     android:enterFadeDuration="60">
     <item android:state_pressed="true">
-        <inset android:insetTop="3dp" android:insetBottom="3dp">
+        <inset android:insetTop="4dp" android:insetBottom="4dp">
             <shape android:shape="rectangle">
-                <solid android:color="#FF2E2E34" />
-                <corners android:radius="14dp" />
-                <stroke android:width="1dp" android:color="#FF4C4C55" />
+                <solid android:color="#FF333339" />
+                <corners android:radius="16dp" />
+                <stroke android:width="1dp" android:color="#FF54545E" />
             </shape>
         </inset>
     </item>
     <item android:state_focused="true">
-        <inset android:insetTop="3dp" android:insetBottom="3dp">
+        <inset android:insetTop="4dp" android:insetBottom="4dp">
             <shape android:shape="rectangle">
-                <solid android:color="#FF26262C" />
-                <corners android:radius="14dp" />
-                <stroke android:width="1dp" android:color="#FF4C4C55" />
+                <solid android:color="#FF28282E" />
+                <corners android:radius="16dp" />
+                <stroke android:width="1dp" android:color="#FF54545E" />
             </shape>
         </inset>
     </item>
     <item>
-        <inset android:insetTop="3dp" android:insetBottom="3dp">
+        <inset android:insetTop="4dp" android:insetBottom="4dp">
             <shape android:shape="rectangle">
-                <solid android:color="#FF1D1D21" />
-                <corners android:radius="14dp" />
-                <stroke android:width="1dp" android:color="#FF2A2A30" />
+                <solid android:color="#FF1B1B20" />
+                <corners android:radius="16dp" />
+                <stroke android:width="1dp" android:color="#FF2C2C33" />
             </shape>
         </inset>
     </item>

@@ -44,7 +44,7 @@
                     android:layout_gravity="center"
                     android:importantForAccessibility="no"
                     android:src="@drawable/ic_gm_terminal"
-                    android:tint="#FF0F182B" />
+                    android:tint="#FF1B1B1F" />
 
                 <View
                     android:id="@+id/log_live_dot"
@@ -83,7 +83,7 @@
                     android:layout_marginTop="1dp"
                     android:ellipsize="end"
                     android:singleLine="true"
-                    android:textColor="#FFA3AEC2"
+                    android:textColor="#FF9C9CA4"
                     android:textSize="11sp" />
             </LinearLayout>
 
@@ -191,7 +191,7 @@
                 android:paddingEnd="12dp"
                 android:singleLine="true"
                 android:text="@string/log_filter_all"
-                android:textColor="#FFD5DCE8"
+                android:textColor="#FFD9D9DE"
                 android:textSize="11.5sp" />
 
             <TextView
@@ -207,7 +207,7 @@
                 android:paddingEnd="12dp"
                 android:singleLine="true"
                 android:text="@string/log_filter_errors"
-                android:textColor="#FFD5DCE8"
+                android:textColor="#FFD9D9DE"
                 android:textSize="11.5sp" />
 
             <TextView
@@ -223,7 +223,7 @@
                 android:paddingEnd="12dp"
                 android:singleLine="true"
                 android:text="@string/log_filter_warnings"
-                android:textColor="#FFD5DCE8"
+                android:textColor="#FFD9D9DE"
                 android:textSize="11.5sp" />
 
             <TextView
@@ -239,7 +239,7 @@
                 android:paddingEnd="12dp"
                 android:singleLine="true"
                 android:text="@string/log_filter_success"
-                android:textColor="#FFD5DCE8"
+                android:textColor="#FFD9D9DE"
                 android:textSize="11.5sp" />
             </LinearLayout>
         </HorizontalScrollView>
@@ -247,7 +247,7 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#FF1C2840" />
+            android:background="#FF2A2A30" />
 
         <FrameLayout
             android:layout_width="match_parent"
@@ -287,7 +287,7 @@
                         android:layout_gravity="center"
                         android:importantForAccessibility="no"
                         android:src="@drawable/ic_gm_eye_off"
-                        android:tint="#FFA3AEC2" />
+                        android:tint="#FF9C9CA4" />
                 </FrameLayout>
 
                 <TextView
@@ -308,7 +308,7 @@
                     android:gravity="center"
                     android:maxWidth="320dp"
                     android:text="@string/log_page_paused_text"
-                    android:textColor="#FFA3AEC2"
+                    android:textColor="#FF9C9CA4"
                     android:textSize="12sp" />
             </LinearLayout>
 
@@ -327,7 +327,7 @@
                 android:paddingStart="12dp"
                 android:paddingEnd="14dp"
                 android:text="@string/log_page_jump"
-                android:textColor="#FF0F182B"
+                android:textColor="#FF1B1B1F"
                 android:textSize="12sp"
                 android:visibility="gone" />
         </FrameLayout>

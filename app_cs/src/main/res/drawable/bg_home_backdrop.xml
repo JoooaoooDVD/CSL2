@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Launcher backdrop: deep navy gradient with a soft blue glow (mockup) -->
+<!-- Launcher backdrop: deep charcoal gradient with a soft grey glow (mockup) -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
         <shape android:shape="rectangle">
@@ -9,7 +9,7 @@
     <item>
         <shape android:shape="rectangle">
             <gradient android:type="radial" android:centerX="0.75" android:centerY="0.0"
-                android:gradientRadius="1400" android:startColor="#142C5C9E" android:endColor="#00000000" />
+                android:gradientRadius="1400" android:startColor="#142B2B2E" android:endColor="#00000000" />
         </shape>
     </item>
 </layer-list>

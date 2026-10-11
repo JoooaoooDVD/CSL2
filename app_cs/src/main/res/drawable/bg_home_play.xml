@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- PLAY: soft blue glow ring + bright edge (the pixel texture is drawn inside) -->
+<!-- PLAY: soft grey glow ring + bright edge (the pixel texture is drawn inside) -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
         <shape android:shape="rectangle">
             <corners android:radius="19dp" />
-            <stroke android:width="3dp" android:color="#3D8AB4FF" />
+            <stroke android:width="3dp" android:color="#3D8A8A8E" />
         </shape>
     </item>
     <item android:bottom="3dp" android:left="3dp" android:right="3dp" android:top="3dp">
         <shape android:shape="rectangle">
-            <gradient android:angle="0" android:startColor="#E2ECFF" android:endColor="#96BAFA" />
+            <gradient android:angle="0" android:startColor="#E4E4E8" android:endColor="#A2A2AB" />
             <corners android:radius="16dp" />
         </shape>
     </item>

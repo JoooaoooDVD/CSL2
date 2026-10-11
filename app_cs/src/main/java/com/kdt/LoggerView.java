@@ -64,12 +64,12 @@ public class LoggerView extends ConstraintLayout {
     static final byte LEVEL_NORMAL = 0, LEVEL_ERROR = 1, LEVEL_WARN = 2, LEVEL_OK = 3;
     private static final int FILTER_ALL = 0;
 
-    private static final int COLOR_NORMAL = 0xFFD5DCE8;
+    private static final int COLOR_NORMAL = 0xFFD9D9DE;
     private static final int COLOR_ERROR = 0xFFFF6B6B;
     private static final int COLOR_WARN = 0xFFFFD166;
     private static final int COLOR_OK = 0xFF5BE49B;
-    private static final int COLOR_GUTTER = 0xFF5D6B85;
-    private static final int COLOR_COUNT = 0xFF8D9BB5;
+    private static final int COLOR_GUTTER = 0xFF7C7C84;
+    private static final int COLOR_COUNT = 0xFF9A9AA2;
     private static final int ROW_ERROR_BG = 0x14FF6B6B;
     private static final int ROW_WARN_BG = 0x0FFFD166;
 

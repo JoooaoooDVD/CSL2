@@ -1,42 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Static CS Launcher Plus palette (dark): premium charcoal + silver, seed #C9CFD8.
+<!-- Static CS Launcher Plus palette (dark): premium charcoal + silver.
      Used when the color source is "default"; dynamic/hue overlays replace it at runtime. -->
 <resources>
-    <!-- Dark palette tuned to the navy of the home screen so every page shares one colour -->
-    <color name="md_primary">#C9CFD8</color>
-    <color name="md_on_primary">#32373F</color>
-    <color name="md_primary_container">#DDE2EA</color>
+    <!-- Dark palette in neutral charcoal so every page shares one colour -->
+    <color name="md_primary">#C9C9D1</color>
+    <color name="md_on_primary">#333338</color>
+    <color name="md_primary_container">#DDDDE3</color>
     <color name="md_on_primary_container">#101317</color>
-    <color name="md_secondary">#BEC6D2</color>
-    <color name="md_on_secondary">#28303A</color>
-    <color name="md_secondary_container">#2A303A</color>
-    <color name="md_on_secondary_container">#DAE1EA</color>
-    <color name="md_tertiary">#AAB4C6</color>
-    <color name="md_on_tertiary">#161F2C</color>
-    <color name="md_tertiary_container">#1D2A40</color>
-    <color name="md_on_tertiary_container">#C9D2E0</color>
+    <color name="md_secondary">#BEC0C7</color>
+    <color name="md_on_secondary">#2A2A30</color>
+    <color name="md_secondary_container">#232329</color>
+    <color name="md_on_secondary_container">#DADAE0</color>
+    <color name="md_tertiary">#A9A9B2</color>
+    <color name="md_on_tertiary">#1B1B1F</color>
+    <color name="md_tertiary_container">#232329</color>
+    <color name="md_on_tertiary_container">#C9C9D1</color>
     <color name="md_error">#FFB4AB</color>
     <color name="md_on_error">#690005</color>
     <color name="md_error_container">#93000A</color>
     <color name="md_on_error_container">#FFDAD6</color>
-    <color name="md_background">#0A1220</color>
+    <color name="md_background">#0C0C0F</color>
     <color name="md_on_background">#F1F3F5</color>
-    <color name="md_surface">#0E1727</color>
+    <color name="md_surface">#101013</color>
     <color name="md_on_surface">#F1F3F5</color>
-    <color name="md_surface_variant">#2A3754</color>
-    <color name="md_on_surface_variant">#A3AEC2</color>
-    <color name="md_outline">#6F7D96</color>
-    <color name="md_outline_variant">#223049</color>
+    <color name="md_surface_variant">#2A2A30</color>
+    <color name="md_on_surface_variant">#9C9CA4</color>
+    <color name="md_outline">#71717A</color>
+    <color name="md_outline_variant">#26262C</color>
     <color name="md_inverse_surface">#F1F3F5</color>
-    <color name="md_inverse_on_surface">#111A2B</color>
+    <color name="md_inverse_on_surface">#141417</color>
     <color name="md_inverse_primary">#454B54</color>
-    <color name="md_surface_dim">#070C17</color>
-    <color name="md_surface_bright">#C6CCD4</color>
-    <color name="md_surface_container_lowest">#070C17</color>
-    <color name="md_surface_container_low">#0E1627</color>
-    <color name="md_surface_container">#121C30</color>
-    <color name="md_surface_container_high">#172339</color>
-    <color name="md_surface_container_highest">#1E2C46</color>
+    <color name="md_surface_dim">#08080A</color>
+    <color name="md_surface_bright">#C6C6CE</color>
+    <color name="md_surface_container_lowest">#08080A</color>
+    <color name="md_surface_container_low">#101013</color>
+    <color name="md_surface_container">#141417</color>
+    <color name="md_surface_container_high">#1B1B1F</color>
+    <color name="md_surface_container_highest">#232329</color>
     <color name="md_scrim">#000000</color>
     <color name="md_shadow">#000000</color>
 </resources>
