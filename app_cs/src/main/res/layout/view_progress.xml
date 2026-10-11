@@ -1,57 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Download dock content: live-status header + expandable per-task bars -->
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <ProgressBar
-        android:id="@+id/progress_generic_progressbar"
-        android:layout_width="@dimen/_40sdp"
-        android:layout_height="@dimen/_30sdp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <TextView
-        android:id="@+id/progress_textview"
+    <LinearLayout
+        android:id="@+id/progress_header"
         android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:gravity="center"
-        android:textSize="@dimen/_12ssp"
-        android:textColor="?attr/colorOnSurface"
-        android:paddingEnd="@dimen/_40sdp"
-
-        tools:text="5 tasks in progress"
-
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/progress_flip_arrow"
-        app:layout_constraintStart_toEndOf="@+id/progress_generic_progressbar"
-        app:layout_constraintTop_toTopOf="@+id/progress_generic_progressbar"
-        tools:ignore="RtlSymmetry" />
-
-    <ImageView
-        android:id="@+id/progress_flip_arrow"
-        android:layout_width="@dimen/padding_extra_large"
-        android:layout_height="@dimen/padding_extra_large"
-        android:layout_marginEnd="@dimen/_8sdp"
-        app:layout_constraintBottom_toBottomOf="@id/progress_generic_progressbar"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:minHeight="48dp"
+        android:orientation="horizontal"
+        android:paddingStart="14dp"
+        android:paddingTop="6dp"
+        android:paddingEnd="8dp"
+        android:paddingBottom="6dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/progress_generic_progressbar"
-        app:srcCompat="@drawable/spinner_arrow" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <View
+            android:id="@+id/progress_dot"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/bg_dl_dot" />
+
+        <TextView
+            android:id="@+id/progress_textview"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:textColor="#FFF2F5FA"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            tools:text="3 tasks in progress" />
+
+        <ImageView
+            android:id="@+id/progress_flip_arrow"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:contentDescription="@null"
+            android:padding="6dp"
+            app:srcCompat="@drawable/spinner_arrow" />
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/progress_linear_layout"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="vertical"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="12dp"
         android:visibility="gone"
-        android:paddingHorizontal="@dimen/padding_heavy"
-        android:paddingTop="@dimen/padding_heavy"
-        android:weightSum="3"
-
-
-        app:layout_constraintBottom_toTopOf="@+id/progress_generic_progressbar"
-        tools:layout_height="@dimen/_100sdp"
-        tools:visibility="visible"
-        >
-    </LinearLayout>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/progress_header"
+        tools:visibility="visible" />
 
 </merge>

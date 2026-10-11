@@ -1,11 +1,14 @@
 package com.kdt.mcgui;
 
 
-import com.craftstudio.cslauncher.utils.ThemeColors;
+import com.craftstudio.cslauncher.utils.AnimationManager;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -14,6 +17,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.content.res.ResourcesCompat;
 
 import com.craftstudio.cslauncher.R;
 
@@ -61,6 +65,8 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
     private LinearLayout mLinearLayout;
     private TextView mTaskNumberDisplayer;
     private ImageView mFlipArrow;
+    private View mDot;
+    private ObjectAnimator mPulse;
 
 
 
@@ -84,8 +90,32 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
         mLinearLayout = findViewById(R.id.progress_linear_layout);
         mTaskNumberDisplayer = findViewById(R.id.progress_textview);
         mFlipArrow = findViewById(R.id.progress_flip_arrow);
-        setBackgroundColor(ThemeColors.surfaceContainerHigh(getContext()));
+        mDot = findViewById(R.id.progress_dot);
+        setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.bg_dl_dock, getContext().getTheme()));
         setOnClickListener(this);
+    }
+
+    private void startPulse() {
+        if (mDot == null || !AnimationManager.isEnabled(getContext(), AnimationManager.TYPE_CONTENT)) return;
+        if (mPulse == null) {
+            mPulse = ObjectAnimator.ofFloat(mDot, "alpha", 1f, 0.3f);
+            mPulse.setDuration(900L);
+            mPulse.setRepeatCount(ValueAnimator.INFINITE);
+            mPulse.setRepeatMode(ValueAnimator.REVERSE);
+            mPulse.setInterpolator(new AccelerateDecelerateInterpolator());
+        }
+        if (!mPulse.isRunning()) mPulse.start();
+    }
+
+    private void stopPulse() {
+        if (mPulse != null) mPulse.cancel();
+        if (mDot != null) mDot.setAlpha(1f);
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        stopPulse();
+        super.onDetachedFromWindow();
     }
 
 
@@ -127,16 +157,31 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
     }
 
     private void applyVisibility(int tc) {
-        if (mHiddenByHost) {
-            setVisibility(GONE);
+        boolean motion = AnimationManager.isEnabled(getContext(), AnimationManager.TYPE_CONTENT);
+        if (mHiddenByHost || tc <= 0) {
+            stopPulse();
+            if (getVisibility() == GONE) return;
+            if (!motion || !isAttachedToWindow()) {
+                setVisibility(GONE);
+                return;
+            }
+            animate().alpha(0f).translationY(-16f).setDuration(220L).withEndAction(() -> {
+                setVisibility(GONE);
+                setAlpha(1f);
+                setTranslationY(0f);
+            }).start();
             return;
         }
-        if (tc > 0) {
-            mTaskNumberDisplayer.setText(getContext().getString(R.string.progresslayout_tasks_in_progress, tc));
+        mTaskNumberDisplayer.setText(getContext().getString(R.string.progresslayout_tasks_in_progress, tc));
+        if (getVisibility() != VISIBLE) {
             setVisibility(VISIBLE);
-        } else {
-            setVisibility(GONE);
+            if (motion && isAttachedToWindow()) {
+                setAlpha(0f);
+                setTranslationY(-16f);
+                animate().alpha(1f).translationY(0f).setDuration(300L).start();
+            }
         }
+        startPulse();
     }
 
     @Override
