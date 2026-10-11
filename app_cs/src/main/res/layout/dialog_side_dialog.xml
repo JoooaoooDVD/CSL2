@@ -25,7 +25,7 @@
         <FrameLayout
             android:layout_width="34dp"
             android:layout_height="34dp"
-            android:background="@drawable/bg_pp_icon_tile">
+            android:background="@drawable/bg_gm_dialog_tile">
 
             <ImageView
                 android:layout_width="18dp"
@@ -33,7 +33,7 @@
                 android:layout_gravity="center"
                 android:contentDescription="@null"
                 android:src="@drawable/ic_cc_sliders"
-                app:tint="@color/hm_icon" />
+                app:tint="#FFE8EDF6" />
         </FrameLayout>
 
         <LinearLayout
@@ -49,7 +49,7 @@
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:singleLine="true"
-                android:textColor="@color/hm_text"
+                android:textColor="#FFF2F5FA"
                 android:textSize="15sp"
                 android:textStyle="bold"
                 tools:text="Edit control" />
@@ -63,7 +63,7 @@
         android:layout_marginStart="10dp"
         android:layout_marginEnd="10dp"
         android:layout_marginBottom="4dp"
-        android:background="@color/hm_divider"
+        android:background="#FF2E2E34"
         android:visibility="gone" />
 
     <com.kdt.DefocusableScrollView
@@ -92,7 +92,7 @@
             android:background="@drawable/bg_ci_button_outline"
             android:stateListAnimator="?attr/csPressAnimator"
             android:textAllCaps="false"
-            android:textColor="@color/hm_text"
+            android:textColor="#FFE8EDF6"
             android:textSize="13.5sp"
             android:textStyle="bold"
             android:visibility="gone"

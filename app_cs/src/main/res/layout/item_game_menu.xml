@@ -41,5 +41,5 @@
         android:layout_height="16dp"
         android:importantForAccessibility="no"
         android:src="@drawable/ic_gm_chevron"
-        android:tint="#FF5D6B85" />
+        android:tint="#FF8E8E96" />
 </LinearLayout>

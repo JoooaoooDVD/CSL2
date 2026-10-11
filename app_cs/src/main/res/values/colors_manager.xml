@@ -20,8 +20,8 @@
     <color name="mm_on_stroke">#663DDC84</color>
     <color name="mm_off_fill">#14A3AEC2</color>
     <color name="mm_off_stroke">#40A3AEC2</color>
-    <color name="ce_panel">#F20F182B</color>
-    <color name="ce_handle">#D90F182B</color>
+    <color name="ce_panel">#F51B1B1F</color>
+    <color name="ce_handle">#D91B1B1F</color>
     <color name="ce_row_pressed">#1AFFFFFF</color>
     <color name="ce_btn_light">#E8EDF6</color>
     <color name="ce_btn_light_pressed">#C9D2E2</color>
