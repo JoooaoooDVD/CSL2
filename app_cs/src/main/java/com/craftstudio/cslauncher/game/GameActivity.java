@@ -28,10 +28,12 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import com.craftstudio.cslauncher.prefs.SettingsPopup;
 import android.view.ViewPropertyAnimator;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -95,6 +97,9 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
     private LoggerView loggerView;
     private DrawerLayout drawerLayout;
     private ListView navDrawer;
+    private View mDrawerPanel, mDrawerLogo, mDrawerTitles;
+    private TextView mDrawerTitle, mDrawerSubtitle;
+    private CharSequence mGameSubtitle = "";
     private View mDrawerPullButton;
     private GyroControl mGyroControl = null;
     private ControlLayout mControlLayout;
@@ -196,9 +201,10 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
             return insets;
         });
 
-        ingameControlsEditorArrayAdapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_list_item_1, getResources().getStringArray(R.array.menu_customcontrol));
+        ingameControlsEditorArrayAdapter = new GameMenuAdapter(this,
+                getResources().getStringArray(R.array.menu_customcontrol), GameMenuAdapter.EDITOR_ICONS);
         ingameControlsEditorListener = (parent, view, position, id) -> {
+            GameMenuMotion.tap(view);
             switch(position) {
                 case 0: mControlLayout.addControlButton(new ControlData("New")); break;
                 case 1: mControlLayout.addDrawer(new ControlDrawerData()); break;
@@ -251,9 +257,13 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
             setTitle("CS Launcher Plus (" + version + ")");
 
             // Menu
-            gameActionArrayAdapter = new ArrayAdapter<>(this,
-                    android.R.layout.simple_list_item_1, getResources().getStringArray(R.array.menu_ingame));
+            gameActionArrayAdapter = new GameMenuAdapter(this,
+                    getResources().getStringArray(R.array.menu_ingame), GameMenuAdapter.INGAME_ICONS);
+            mGameSubtitle = (instance != null && instance.name != null && !instance.name.trim().isEmpty()
+                    ? instance.name.trim() + "  \u2022  " : "") + (version == null ? "" : version);
+            setDrawerHeader(false);
             gameActionClickListener = (parent, view, position, id) -> {
+                GameMenuMotion.tap(view);
                 switch(position) {
                      case 0: dialogForceClose(GameActivity.this); break;
                      case 1: openLogOutput(); break;
@@ -320,6 +330,11 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         launcherGLView = findViewById(R.id.main_game_render_view);
         drawerLayout = findViewById(R.id.main_drawer_options);
         navDrawer = findViewById(R.id.main_navigation_view);
+        mDrawerPanel = findViewById(R.id.main_drawer_panel);
+        mDrawerLogo = findViewById(R.id.main_drawer_logo);
+        mDrawerTitle = findViewById(R.id.main_drawer_title);
+        mDrawerSubtitle = findViewById(R.id.main_drawer_subtitle);
+        mDrawerTitles = (View) mDrawerTitle.getParent();
         loggerView = findViewById(R.id.mainLoggerView);
         touchCharInput = findViewById(R.id.mainTouchCharInput);
         mDrawerPullButton = findViewById(R.id.drawer_button);
@@ -428,10 +443,23 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
     }
 
     private void dialogSendCustomKey() {
-        AlertDialog.Builder dialog = new MaterialAlertDialogBuilder(this);
-        dialog.setTitle(R.string.control_customkey);
-        dialog.setItems(KeycodeUtils.generateKeyName(), (dInterface, position) -> KeycodeUtils.execKeyIndex(position));
-        dialog.show();
+        new SettingsPopup(this)
+                .title(R.string.control_customkey)
+                .subtitle(getString(R.string.gm_customkey_subtitle))
+                .singleChoice(KeycodeUtils.generateKeyName(), -1, KeycodeUtils::execKeyIndex)
+                .negative(android.R.string.cancel, null)
+                .show();
+    }
+
+    /** Title + subtitle of the in-game menu card (game menu or control editor) */
+    private void setDrawerHeader(boolean editor) {
+        if (mDrawerTitle == null) return;
+        mDrawerTitle.setText(editor ? R.string.gm_title_editor : R.string.gm_title_game);
+        mDrawerSubtitle.setText(editor ? getText(R.string.gm_subtitle_editor) : mGameSubtitle);
+        if (mDrawerLogo instanceof ViewGroup && ((ViewGroup) mDrawerLogo).getChildCount() > 0) {
+            ((ImageView) ((ViewGroup) mDrawerLogo).getChildAt(0))
+                    .setImageResource(editor ? R.drawable.ic_gm_sliders : R.drawable.ic_gm_gamepad);
+        }
     }
 
     boolean isInEditor;
@@ -441,6 +469,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         mControlLayout.setModifiable(true);
         navDrawer.setAdapter(ingameControlsEditorArrayAdapter);
         navDrawer.setOnItemClickListener(ingameControlsEditorListener);
+        setDrawerHeader(true);
         mDrawerPullButton.setVisibility(View.VISIBLE);
         isInEditor = true;
     }
@@ -546,8 +575,9 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
 
     @Override
     public void onClickedMenu() {
-        drawerLayout.openDrawer(navDrawer);
+        drawerLayout.openDrawer(mDrawerPanel);
         navDrawer.requestLayout();
+        GameMenuMotion.enter(mDrawerLogo, mDrawerTitles, navDrawer);
     }
 
     @Override
@@ -564,6 +594,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
 
         navDrawer.setAdapter(gameActionArrayAdapter);
         navDrawer.setOnItemClickListener(gameActionClickListener);
+        setDrawerHeader(false);
         isInEditor = false;
     }
 

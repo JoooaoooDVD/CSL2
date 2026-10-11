@@ -113,13 +113,121 @@
 
 	</FrameLayout>
 
-	<ListView
-		android:layout_width="200dp"
+	<!-- In-game menu: the drawer child is the transparent frame (DrawerLayout ignores the right
+	     margin of a right drawer), the card inside floats away from the screen edges -->
+	<FrameLayout
+		android:id="@+id/main_drawer_panel"
+		android:layout_width="288dp"
 		android:layout_height="match_parent"
 		android:layout_gravity="right"
-		android:background="?attr/colorBackgroundFloating"
+		android:clickable="true"
+		android:focusable="false"
 		android:fitsSystemWindows="false"
-		android:id="@+id/main_navigation_view"/>
+		android:paddingStart="6dp"
+		android:paddingTop="10dp"
+		android:paddingEnd="10dp"
+		android:paddingBottom="10dp">
+
+		<LinearLayout
+			android:id="@+id/main_drawer_card"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:background="@drawable/bg_gm_panel"
+			android:elevation="12dp"
+			android:orientation="vertical">
+
+			<LinearLayout
+				android:id="@+id/main_drawer_header"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:gravity="center_vertical"
+				android:orientation="horizontal"
+				android:paddingStart="14dp"
+				android:paddingTop="14dp"
+				android:paddingEnd="14dp"
+				android:paddingBottom="12dp">
+
+				<FrameLayout
+					android:id="@+id/main_drawer_logo"
+					android:layout_width="40dp"
+					android:layout_height="40dp"
+					android:background="@drawable/bg_gm_header_tile">
+
+					<ImageView
+						android:id="@+id/main_drawer_logo_icon"
+						android:layout_width="22dp"
+						android:layout_height="22dp"
+						android:layout_gravity="center"
+						android:importantForAccessibility="no"
+						android:src="@drawable/ic_gm_gamepad"
+						android:tint="#FF0F182B" />
+				</FrameLayout>
+
+				<LinearLayout
+					android:layout_width="0dp"
+					android:layout_height="wrap_content"
+					android:layout_marginStart="12dp"
+					android:layout_weight="1"
+					android:orientation="vertical">
+
+					<TextView
+						android:id="@+id/main_drawer_title"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:fontFamily="sans-serif-medium"
+						android:singleLine="true"
+						android:text="@string/gm_title_game"
+						android:textColor="#FFF2F5FA"
+						android:textSize="16sp"
+						android:textStyle="bold" />
+
+					<TextView
+						android:id="@+id/main_drawer_subtitle"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:layout_marginTop="2dp"
+						android:ellipsize="end"
+						android:singleLine="true"
+						android:textColor="#FFA3AEC2"
+						android:textSize="11.5sp" />
+				</LinearLayout>
+			</LinearLayout>
+
+			<View
+				android:layout_width="match_parent"
+				android:layout_height="1dp"
+				android:layout_marginStart="14dp"
+				android:layout_marginEnd="14dp"
+				android:background="#FF1C2840" />
+
+			<ListView
+				android:id="@+id/main_navigation_view"
+				android:layout_width="match_parent"
+				android:layout_height="0dp"
+				android:layout_weight="1"
+				android:clipToPadding="false"
+				android:divider="@null"
+				android:dividerHeight="0dp"
+				android:listSelector="@android:color/transparent"
+				android:overScrollMode="never"
+				android:paddingStart="10dp"
+				android:paddingTop="7dp"
+				android:paddingEnd="10dp"
+				android:paddingBottom="7dp"
+				android:scrollbars="none" />
+
+			<TextView
+				android:id="@+id/main_drawer_footer"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:gravity="center"
+				android:paddingTop="6dp"
+				android:paddingBottom="10dp"
+				android:text="@string/gm_footer"
+				android:textColor="#FF5D6B85"
+				android:textSize="10.5sp" />
+		</LinearLayout>
+	</FrameLayout>
 
 </androidx.drawerlayout.widget.DrawerLayout>
 

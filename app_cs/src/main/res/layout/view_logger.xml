@@ -1,114 +1,335 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<!-- Game log page (com.kdt.LoggerView). Fixed dark palette: it floats above the game. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/log_root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
-
-    <!-- Header. A normal top item in the column, not an overlay - the console below is laid
-         out strictly underneath it, so it can never sit behind/under the header. -->
-    <LinearLayout
-        android:id="@+id/log_header"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:background="?attr/colorSurfaceContainer"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="16dp"
-        android:paddingEnd="4dp">
-
-        <TextView
-            android:id="@+id/log_title"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:ellipsize="end"
-            android:singleLine="true"
-            android:text="@string/log_view_label_log_output"
-            android:textAppearance="?attr/textAppearanceTitleSmall"
-            android:textColor="?attr/colorOnSurface" />
-
-        <com.google.android.material.chip.Chip
-            android:id="@+id/content_log_toggle_log"
-            style="@style/Widget.Material3.Chip.Filter"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:text="@string/log_view_toggle_output_label"
-            app:ensureMinTouchTargetSize="false" />
-
-        <com.google.android.material.chip.Chip
-            android:id="@+id/content_log_toggle_autoscroll"
-            style="@style/Widget.Material3.Chip.Filter"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="4dp"
-            android:text="@string/log_view_toggle_autoscroll_label"
-            app:ensureMinTouchTargetSize="false" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/content_log_share"
-            style="@style/Widget.Material3.Button.IconButton"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:contentDescription="@string/share_log_dialog_title"
-            app:icon="@drawable/ic_share"
-            app:iconTint="?attr/colorOnSurfaceVariant" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/log_view_cancel"
-            style="@style/Widget.Material3.Button.IconButton"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:contentDescription="@string/log_view_close_description"
-            app:icon="@drawable/ic_close"
-            app:iconTint="?attr/colorOnSurfaceVariant" />
-
-    </LinearLayout>
+    android:layout_height="match_parent">
 
     <View
+        android:id="@+id/log_scrim"
         android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="?attr/colorOutlineVariant" />
+        android:layout_height="match_parent"
+        android:background="#E6050913"
+        android:clickable="true"
+        android:focusable="false" />
 
-    <!-- Console panel. Its translucent surface-colored background is applied in LoggerView so
-         it follows light/dark mode and the dynamic color palette. -->
-    <FrameLayout
-        android:id="@+id/log_content_panel"
+    <LinearLayout
+        android:id="@+id/log_card"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_height="match_parent"
+        android:layout_margin="10dp"
+        android:background="@drawable/bg_log_card"
+        android:elevation="10dp"
+        android:orientation="vertical">
 
-        <com.kdt.DefocusableScrollView
-            android:id="@+id/content_log_scroll"
+        <!-- Header -->
+        <LinearLayout
+            android:id="@+id/log_header"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:overScrollMode="never">
+            android:layout_height="58dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="12dp"
+            android:paddingEnd="10dp">
+
+            <FrameLayout
+                android:id="@+id/log_icon_tile"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:background="@drawable/bg_gm_header_tile">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_gm_terminal"
+                    android:tint="#FF0F182B" />
+
+                <View
+                    android:id="@+id/log_live_dot"
+                    android:layout_width="9dp"
+                    android:layout_height="9dp"
+                    android:layout_gravity="top|end"
+                    android:layout_marginTop="3dp"
+                    android:layout_marginEnd="3dp"
+                    android:background="@drawable/dot_log_live" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:id="@+id/log_titles"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="11dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/log_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
+                    android:singleLine="true"
+                    android:text="@string/log_page_title"
+                    android:textColor="#FFF2F5FA"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/log_stats"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="1dp"
+                    android:ellipsize="end"
+                    android:singleLine="true"
+                    android:textColor="#FFA3AEC2"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/log_actions"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/content_log_view"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:lineSpacingExtra="2dp"
-                android:padding="12dp"
-                android:textColor="?attr/colorOnSurface"
-                android:textIsSelectable="true"
-                android:textSize="11sp" />
+                android:id="@+id/content_log_toggle_log"
+                android:layout_width="wrap_content"
+                android:layout_height="34dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_log_pill"
+                android:drawableStart="@drawable/ic_log_eye"
+                android:drawablePadding="6dp"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:paddingStart="11dp"
+                android:paddingEnd="13dp"
+                android:singleLine="true"
+                android:text="@string/log_page_live"
+                android:textColor="#FFF2F5FA"
+                android:textSize="12sp" />
 
-        </com.kdt.DefocusableScrollView>
+            <TextView
+                android:id="@+id/content_log_toggle_autoscroll"
+                android:layout_width="wrap_content"
+                android:layout_height="34dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_log_pill"
+                android:drawableStart="@drawable/ic_log_scroll_end"
+                android:drawablePadding="6dp"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:paddingStart="11dp"
+                android:paddingEnd="13dp"
+                android:singleLine="true"
+                android:text="@string/log_page_autoscroll"
+                android:textColor="#FFF2F5FA"
+                android:textSize="12sp" />
 
-        <!-- Shown while output is toggled off -->
-        <TextView
-            android:id="@+id/content_log_empty"
-            android:layout_width="wrap_content"
+            <ImageButton
+                android:id="@+id/log_clear"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_log_icon_btn"
+                android:contentDescription="@string/log_page_clear"
+                android:padding="9dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_gm_trash" />
+
+            <ImageButton
+                android:id="@+id/content_log_share"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_log_icon_btn"
+                android:contentDescription="@string/log_page_share"
+                android:padding="9dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_gm_share" />
+
+            <ImageButton
+                android:id="@+id/log_view_cancel"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_marginEnd="0dp"
+                android:background="@drawable/bg_log_icon_btn"
+                android:contentDescription="@string/log_view_close_description"
+                android:padding="9dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_gm_close" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Level filters -->
+        <HorizontalScrollView
+            android:id="@+id/log_filters_scroll"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:gravity="center"
-            android:padding="24dp"
-            android:text="@string/log_view_empty_state"
-            android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            android:overScrollMode="never"
+            android:scrollbars="none">
 
-    </FrameLayout>
+            <LinearLayout
+                android:id="@+id/log_filters"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="10dp">
 
-</LinearLayout>
+            <TextView
+                android:id="@+id/log_filter_all"
+                android:layout_width="wrap_content"
+                android:layout_height="30dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_log_pill"
+                android:gravity="center"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:singleLine="true"
+                android:text="@string/log_filter_all"
+                android:textColor="#FFD5DCE8"
+                android:textSize="11.5sp" />
+
+            <TextView
+                android:id="@+id/log_filter_error"
+                android:layout_width="wrap_content"
+                android:layout_height="30dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_log_pill"
+                android:drawableStart="@drawable/dot_log_error"
+                android:drawablePadding="7dp"
+                android:gravity="center"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:singleLine="true"
+                android:text="@string/log_filter_errors"
+                android:textColor="#FFD5DCE8"
+                android:textSize="11.5sp" />
+
+            <TextView
+                android:id="@+id/log_filter_warn"
+                android:layout_width="wrap_content"
+                android:layout_height="30dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_log_pill"
+                android:drawableStart="@drawable/dot_log_warn"
+                android:drawablePadding="7dp"
+                android:gravity="center"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:singleLine="true"
+                android:text="@string/log_filter_warnings"
+                android:textColor="#FFD5DCE8"
+                android:textSize="11.5sp" />
+
+            <TextView
+                android:id="@+id/log_filter_ok"
+                android:layout_width="wrap_content"
+                android:layout_height="30dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_log_pill"
+                android:drawableStart="@drawable/dot_log_ok"
+                android:drawablePadding="7dp"
+                android:gravity="center"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:singleLine="true"
+                android:text="@string/log_filter_success"
+                android:textColor="#FFD5DCE8"
+                android:textSize="11.5sp" />
+            </LinearLayout>
+        </HorizontalScrollView>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#FF1C2840" />
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/content_log_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:overScrollMode="never"
+                android:paddingTop="6dp"
+                android:paddingBottom="10dp"
+                android:scrollbarSize="3dp"
+                android:scrollbarThumbVertical="@drawable/bg_log_scroll_thumb"
+                android:scrollbars="vertical" />
+
+            <LinearLayout
+                android:id="@+id/content_log_empty"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <FrameLayout
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
+                    android:background="@drawable/bg_log_icon_btn">
+
+                    <ImageView
+                        android:id="@+id/content_log_empty_icon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_gm_eye_off"
+                        android:tint="#FFA3AEC2" />
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/content_log_empty_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="@string/log_page_paused_title"
+                    android:textColor="#FFF2F5FA"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/content_log_empty_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center"
+                    android:maxWidth="320dp"
+                    android:text="@string/log_page_paused_text"
+                    android:textColor="#FFA3AEC2"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/log_jump"
+                android:layout_width="wrap_content"
+                android:layout_height="34dp"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="14dp"
+                android:background="@drawable/bg_log_jump"
+                android:drawableStart="@drawable/ic_log_arrow_down_dark"
+                android:drawablePadding="6dp"
+                android:elevation="6dp"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:paddingStart="12dp"
+                android:paddingEnd="14dp"
+                android:text="@string/log_page_jump"
+                android:textColor="#FF0F182B"
+                android:textSize="12sp"
+                android:visibility="gone" />
+        </FrameLayout>
+    </LinearLayout>
+</FrameLayout>

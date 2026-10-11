@@ -85,7 +85,20 @@ public class AsyncAssetManager {
             tryUnpackComponent(ctx, "forge_installer", true);
             tryUnpackComponent(ctx, "authlib-injector", true);
             ProgressLayout.clearProgress(ProgressLayout.EXTRACT_COMPONENTS);
+            // New Minecraft versions can need a newer authlib-injector (skins on local accounts, Ely.by)
+            com.craftstudio.cslauncher.authenticator.yggdrasil.AuthlibInjectorUpdater.checkForUpdate();
         });
+    }
+
+    /**
+     * Same version, or (for components with "b<build>" versions, like authlib-injector) an
+     * installed build that is newer than the built-in one because it was updated online.
+     */
+    private static boolean isInstalledUpToDate(String installed, String builtin) {
+        if (installed.equals(builtin)) return true;
+        int installedBuild = com.craftstudio.cslauncher.authenticator.yggdrasil.AuthlibInjectorUpdater.buildOf(installed);
+        int builtinBuild = com.craftstudio.cslauncher.authenticator.yggdrasil.AuthlibInjectorUpdater.buildOf(builtin);
+        return installedBuild > 0 && builtinBuild > 0 && installedBuild >= builtinBuild;
     }
 
     private static String readInstalledComponentVersion(File componentRoot) {
@@ -118,7 +131,7 @@ public class AsyncAssetManager {
         File componentTarget = new File(rootDir, component);
         String installedVersion = readInstalledComponentVersion(componentTarget);
         String builtinVersion = readBuiltinComponentVersion(am, component);
-        if(installedVersion != null && installedVersion.equals(builtinVersion)) {
+        if(installedVersion != null && isInstalledUpToDate(installedVersion, builtinVersion)) {
             Log.i("AssetUnpacker", "Component "+component+" is up-to-date, continuing...");
             return;
         }

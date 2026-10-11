@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- In-game menu -->
+    <string name="gm_title_game">Game menu</string>
+    <string name="gm_title_editor">Control editor</string>
+    <string name="gm_subtitle_editor">Drag controls to move them, tap one to edit</string>
+    <string name="gm_footer">CS Launcher Plus  •  tap outside to close</string>
+    <string name="gm_customkey_subtitle">The key is sent to the game once</string>
+
+    <!-- Game log page -->
+    <string name="log_page_title">Game log</string>
+    <string name="log_page_live">Live</string>
+    <string name="log_page_autoscroll">Auto-scroll</string>
+    <string name="log_page_clear">Clear the log view</string>
+    <string name="log_page_share">Share the log</string>
+    <string name="log_page_jump">Latest</string>
+    <string name="log_page_paused_title">Log is paused</string>
+    <string name="log_page_paused_text">Turn on Live to load the log and follow new lines</string>
+    <string name="log_page_waiting_title">Waiting for output</string>
+    <string name="log_page_waiting_text">New lines from the game appear here</string>
+    <string name="log_page_nothing_title">Nothing here</string>
+    <string name="log_page_nothing_text">No lines match this filter yet</string>
+    <string name="log_page_loading">Loading the log…</string>
+    <string name="log_page_paused_stats">Paused</string>
+    <string name="log_page_copied">Line copied</string>
+    <string name="log_filter_all">All</string>
+    <string name="log_filter_errors">Errors</string>
+    <string name="log_filter_warnings">Warnings</string>
+    <string name="log_filter_success">Success</string>
+    <plurals name="log_page_lines">
+        <item quantity="one">%s line</item>
+        <item quantity="other">%s lines</item>
+    </plurals>
+    <plurals name="log_page_errors">
+        <item quantity="one">%s error</item>
+        <item quantity="other">%s errors</item>
+    </plurals>
+    <plurals name="log_page_warnings">
+        <item quantity="one">%s warning</item>
+        <item quantity="other">%s warnings</item>
+    </plurals>
+</resources>

@@ -997,10 +997,11 @@ public final class Tools {
     }
 
     public static void dialogForceClose(Context ctx) {
-        new MaterialAlertDialogBuilder(ctx)
-                .setMessage(R.string.mcn_exit_confirm)
-                .setNegativeButton(android.R.string.cancel, null)
-                .setPositiveButton(android.R.string.ok, (p1, p2) -> {
+        new com.craftstudio.cslauncher.prefs.SettingsPopup(ctx)
+                .title(R.string.control_forceclose)
+                .message(R.string.mcn_exit_confirm)
+                .negative(android.R.string.cancel, null)
+                .positive(R.string.control_forceclose, () -> {
                     try {
                         Tools.restartLauncherActivity(ctx);
                         Tools.fullyExit();

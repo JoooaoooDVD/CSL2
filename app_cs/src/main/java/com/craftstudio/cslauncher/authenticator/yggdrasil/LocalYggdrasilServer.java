@@ -59,12 +59,34 @@ public final class LocalYggdrasilServer {
     private static final int MAX_BODY = 64 * 1024;
 
     @Nullable private static LocalYggdrasilServer sRunning;
+    @Nullable private static volatile EventLog sEventLog;
+
+    /** Receives short, human readable notes about what the game asked for (shown in the game log) */
+    public interface EventLog {
+        void log(@NonNull String message);
+    }
+
+    public static void setEventLog(@Nullable EventLog log) {
+        sEventLog = log;
+    }
+
+    private final java.util.Set<String> mLoggedEvents = java.util.Collections.synchronizedSet(new java.util.HashSet<>());
+
+    /** Logs each kind of event once, so the game log is not flooded */
+    private void logOnce(@NonNull String key, @NonNull String message) {
+        EventLog log = sEventLog;
+        if (log == null || !mLoggedEvents.add(key)) return;
+        try {
+            log.log(message);
+        } catch (Throwable ignored) {}
+    }
 
     private final ServerSocket mServer;
     private final ExecutorService mWorkers;
     private final KeyPair mKeys;
     private final String mName;
     private final String mUuid;         // unhyphenated
+    private final String mOfflineUuid;  // unhyphenated offline-mode UUID of mName (may equal mUuid)
     private final boolean mSlim;
     private final Map<String, byte[]> mTextures = new HashMap<>(); // hash -> png
     @Nullable private final String mSkinHash;
@@ -100,6 +122,7 @@ public final class LocalYggdrasilServer {
         mKeys = keys;
         mName = name;
         mUuid = uuid.replace("-", "").toLowerCase(Locale.ROOT);
+        mOfflineUuid = offlineUuid(name).replace("-", "").toLowerCase(Locale.ROOT);
         mSlim = slim;
         mSkinHash = skinPng == null ? null : putTexture(skinPng);
         mCapeHash = capePng == null ? null : putTexture(capePng);
@@ -220,8 +243,13 @@ public final class LocalYggdrasilServer {
 
     @NonNull
     private JsonObject profile(boolean withTextures, boolean signed) {
+        return profile(mUuid, withTextures, signed);
+    }
+
+    @NonNull
+    private JsonObject profile(@NonNull String id, boolean withTextures, boolean signed) {
         JsonObject profile = new JsonObject();
-        profile.addProperty("id", mUuid);
+        profile.addProperty("id", id);
         profile.addProperty("name", mName);
         if (!withTextures) return profile;
 
@@ -244,7 +272,7 @@ public final class LocalYggdrasilServer {
         }
         JsonObject payload = new JsonObject();
         payload.addProperty("timestamp", System.currentTimeMillis());
-        payload.addProperty("profileId", mUuid);
+        payload.addProperty("profileId", id);
         payload.addProperty("profileName", mName);
         payload.add("textures", textures);
         String value = Base64.encodeToString(payload.toString().getBytes(StandardCharsets.UTF_8), Base64.NO_WRAP);
@@ -367,8 +395,11 @@ public final class LocalYggdrasilServer {
         if (get && (path.equals("/") || path.isEmpty())) return Response.json(metadata());
 
         if (get && path.startsWith("/textures/")) {
-            byte[] png = mTextures.get(path.substring("/textures/".length()));
+            String hash = path.substring("/textures/".length());
+            byte[] png = mTextures.get(hash);
             if (png == null) return Response.error(404, "NotFound", "No such texture");
+            if (hash.equals(mSkinHash)) logOnce("skin", "[CS Skins] Game downloaded the skin texture successfully");
+            if (hash.equals(mCapeHash)) logOnce("cape", "[CS Skins] Game downloaded the cape texture successfully");
             Response response = new Response();
             response.type = "image/png";
             response.body = png;
@@ -388,13 +419,24 @@ public final class LocalYggdrasilServer {
         // --- session server
         if (post && path.equals("/sessionserver/session/minecraft/join")) return Response.noContent();
         if (get && path.equals("/sessionserver/session/minecraft/hasJoined")) {
-            return isOurName(r.query.get("username")) ? Response.json(profile(true, true)) : Response.noContent();
+            if (!isOurName(r.query.get("username"))) return Response.noContent();
+            logOnce("hasJoined", "[CS Skins] Server checked the player, sent the signed skin profile");
+            return Response.json(profile(true, true));
         }
         if (get && path.startsWith("/sessionserver/session/minecraft/profile/")) {
-            String uuid = path.substring("/sessionserver/session/minecraft/profile/".length()).replace("-", "");
-            if (!mUuid.equalsIgnoreCase(uuid)) return Response.noContent();
-            boolean signed = "false".equalsIgnoreCase(r.query.get("unsigned"));
-            return Response.json(profile(true, signed));
+            String uuid = path.substring("/sessionserver/session/minecraft/profile/".length())
+                    .replace("-", "").toLowerCase(Locale.ROOT);
+            // The player's UUID, plus the offline-mode UUID of the name and the nil UUID in case the
+            // game (or a mod) asks with one of those. Always signed: newer authlib versions
+            // ignore unsigned textures.
+            boolean ours = uuid.equals(mUuid) || uuid.equals(mOfflineUuid) || uuid.matches("0{32}");
+            if (!ours) {
+                logOnce("profile-other", "[CS Skins] Game asked for another player's profile (" + uuid + "), not ours");
+                return Response.noContent();
+            }
+            logOnce("profile", "[CS Skins] Game asked for the player profile, sent skin"
+                    + (mSkinHash != null ? "" : " (default)") + (mCapeHash != null ? " + cape" : ""));
+            return Response.json(profile(uuid.equals(mOfflineUuid) || uuid.equals(mUuid) ? uuid : mUuid, true, true));
         }
 
         // --- name lookups (api.mojang.com / api.minecraftservices.com namespaces)
@@ -438,6 +480,7 @@ public final class LocalYggdrasilServer {
             return Response.json(root);
         }
 
+        logOnce("404 " + path, "[CS Skins] WARN unhandled request " + r.method + " " + path);
         return Response.error(404, "NotFound", "Not supported by the local skin server");
     }
 
