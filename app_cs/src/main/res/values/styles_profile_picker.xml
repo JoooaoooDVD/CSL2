@@ -13,7 +13,7 @@
     </style>
 
     <!-- Dropdown lists of the create instance form -->
-    <style name="CS.DropdownAnimation">
+    <style name="CS.DropdownAnimation" parent="">
         <item name="android:windowEnterAnimation">@anim/ci_dropdown_enter</item>
         <item name="android:windowExitAnimation">@anim/ci_dropdown_exit</item>
     </style>
