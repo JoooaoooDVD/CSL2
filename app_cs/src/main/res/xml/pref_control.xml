@@ -42,7 +42,6 @@
             app2:min="@integer/gesture_delay_seekbar_min"
             android:max="@integer/gesture_delay_seekbar_max"
             app2:seekBarIncrement="@integer/gesture_delay_seekbar_increment"
-            android:icon="@drawable/ic_px_gestures"
             />
 
     </PreferenceCategory>
