@@ -13,9 +13,12 @@ import androidx.annotation.Nullable;
 import androidx.core.content.res.ResourcesCompat;
 
 import com.craftstudio.cslauncher.R;
+import com.craftstudio.cslauncher.Tools;
 import com.craftstudio.cslauncher.input.buttons.ControlInterface;
 
 public class ControlHandleView extends View {
+    /** Smallest size the resize handle can produce, so controls never become stray lines. */
+    private static final float MIN_RESIZE_DP = 24;
     public ControlHandleView(Context context) {
         super(context);
         init();
@@ -79,8 +82,8 @@ public class ControlHandleView extends View {
                 System.out.println(getY() - mView.getControlView().getY());
 
 
-                mView.getProperties().setWidth(getX() - mView.getControlView().getX());
-                mView.getProperties().setHeight(getY() - mView.getControlView().getY());
+                mView.getProperties().setWidth(Math.max(getX() - mView.getControlView().getX(), Tools.dpToPx(MIN_RESIZE_DP)));
+                mView.getProperties().setHeight(Math.max(getY() - mView.getControlView().getY(), Tools.dpToPx(MIN_RESIZE_DP)));
                 mView.regenerateDynamicCoordinates();
                 break;
         }

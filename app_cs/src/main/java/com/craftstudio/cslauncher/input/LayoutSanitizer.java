@@ -1,17 +1,30 @@
 package com.craftstudio.cslauncher.input;
 
+import com.craftstudio.cslauncher.Tools;
+
 import java.util.Iterator;
 import java.util.List;
 
 public class LayoutSanitizer {
 
+    /** Controls smaller than this are unusable touch targets and render as stray lines. */
+    private static final float MIN_SANE_SIZE_DP = 8;
+
     // Maybe add more conditions here later?
     private static boolean isValidFormula(String formula) {
-        return !formula.contains("Infinity") && !formula.contains("NaN");
+        return formula != null && !formula.contains("Infinity") && !formula.contains("NaN");
+    }
+
+    private static boolean isValidSize(float sizePx) {
+        if (Float.isNaN(sizePx) || Float.isInfinite(sizePx)) return false;
+        float minPx = Tools.currentDisplayMetrics != null
+                ? Tools.dpToPx(MIN_SANE_SIZE_DP) : 24;
+        return sizePx >= minPx;
     }
 
     private static boolean isSaneData(ControlData controlData) {
-        if(controlData.getWidth() == 0 || controlData.getHeight() == 0) return false;
+        if (controlData == null) return false;
+        if (!isValidSize(controlData.getWidth()) || !isValidSize(controlData.getHeight())) return false;
         return isValidFormula(controlData.dynamicX) && isValidFormula(controlData.dynamicY);
     }
 
