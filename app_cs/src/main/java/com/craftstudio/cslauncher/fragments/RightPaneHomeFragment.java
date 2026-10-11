@@ -178,14 +178,8 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         }));
         CSAnimationEngine.attachPressFeedback(card);
         if (mVersionSpinner == null) return;
-        // The spinner sets its icon first, then its text: one watcher catches every change
-        mVersionSpinner.addTextChangedListener(new TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
-            @Override public void afterTextChanged(Editable s) {
-                mirrorSpinner(true);
-            }
-        });
+        // Every selection change (also a reload after the app comes back) re-mirrors the card
+        mVersionSpinner.setSelectionListener(() -> mirrorSpinner(true));
         mirrorSpinner(false);
     }
 
@@ -199,8 +193,34 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         } else {
             mProfileName.setText(name);
         }
-        Drawable icon = mVersionSpinner.getCompoundDrawablesRelative()[0];
-        mProfileIcon.setImageDrawable(copyIcon(icon));
+        // Icon straight from the selected entry (cached by InstanceIconProvider). The spinner's
+        // compound drawable is only a fallback: the hidden spinner may not have applied it yet,
+        // which left the card without an icon after the app was reopened.
+        Drawable icon = null;
+        Object item = mVersionSpinner.getSelectedItem();
+        try {
+            if (item instanceof com.craftstudio.cslauncher.instances.DisplayInstance) {
+                icon = com.craftstudio.cslauncher.instances.InstanceIconProvider.fetchIcon(getResources(),
+                        (com.craftstudio.cslauncher.instances.DisplayInstance) item);
+            } else if (item instanceof com.craftstudio.cslauncher.instances.InstanceAdapterExtra) {
+                icon = ((com.craftstudio.cslauncher.instances.InstanceAdapterExtra) item).icon;
+            }
+        } catch (RuntimeException ignored) {
+            // fall back to the spinner drawable below
+        }
+        if (icon == null) icon = mVersionSpinner.getCompoundDrawablesRelative()[0];
+        if (icon == null) icon = androidx.core.content.ContextCompat.getDrawable(requireContext(), R.drawable.ic_cs_full);
+        Drawable copy = copyIcon(icon);
+        boolean hadIcon = mProfileIcon.getDrawable() != null;
+        mProfileIcon.setImageDrawable(copy);
+        if (!hadIcon && copy != null && animate) Motion.popIn(mProfileIcon, 0, 0.7f);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        // Coming back to the launcher: the card is mirrored again right away
+        mirrorSpinner(false);
     }
 
     /** Own copy of the (cached, shared) profile icon; small pixel-art bitmaps stay crisp */
@@ -410,6 +430,7 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         setImageAnimation(false);
         mWallpaper = null;
         mVideo = null;
+        if (mVersionSpinner != null) mVersionSpinner.setSelectionListener(null);
         mVersionSpinner = null;
         mBackgroundKey = null;
         mPlayIcon = null;

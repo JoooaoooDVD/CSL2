@@ -10,61 +10,60 @@
     android:layout_gravity="center_vertical"
     android:background="@drawable/background_control_editor">
 
-    <!-- Horizontal Banner Header for Side Dialog -->
-    <FrameLayout
-        android:id="@+id/side_dialog_banner"
+    <!-- Header: icon tile + title (no banner) -->
+    <LinearLayout
+        android:id="@+id/side_dialog_header"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:layout_margin="6dp"
-        android:background="@drawable/bg_banner_card"
-        android:clipToOutline="true">
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="10dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="10dp"
+        android:paddingBottom="8dp">
 
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:contentDescription="@null"
-            android:scaleType="centerCrop"
-            android:src="@drawable/banner_gradient_gamepad" />
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@drawable/settings_header_scrim" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingHorizontal="12dp">
+        <FrameLayout
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="@drawable/bg_pp_icon_tile">
 
             <ImageView
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:background="@drawable/bg_settings_icon_box"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_gravity="center"
                 android:contentDescription="@null"
-                android:padding="6dp"
-                android:src="@drawable/ic_px_alt_sliders" />
+                android:src="@drawable/ic_cc_sliders"
+                app:tint="@color/hm_accent" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
             <TextView
                 android:id="@+id/side_dialog_title_textview"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_weight="1"
                 android:ellipsize="end"
                 android:singleLine="true"
-                android:textColor="#FFFFFFFF"
-                android:textSize="14sp"
+                android:textColor="@color/hm_text"
+                android:textSize="15sp"
                 android:textStyle="bold"
-                tools:text="Quick settings" />
+                tools:text="Edit control" />
         </LinearLayout>
-    </FrameLayout>
+    </LinearLayout>
 
     <View
         android:id="@+id/side_dialog_title_divider"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="1dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="4dp"
+        android:background="@color/hm_divider"
         android:visibility="gone" />
 
     <com.kdt.DefocusableScrollView
@@ -73,7 +72,7 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:paddingHorizontal="6dp"
-        tools:background="?attr/colorSurfaceContainer">
+        tools:background="@color/hm_dialog">
         <!-- The content is inflated here -->
     </com.kdt.DefocusableScrollView>
 
@@ -90,8 +89,12 @@
             android:layout_height="40dp"
             android:layout_marginEnd="4dp"
             android:layout_weight="1"
-            android:background="@drawable/bg_icon_button_home"
+            android:background="@drawable/bg_ci_button_outline"
             android:stateListAnimator="?attr/csPressAnimator"
+            android:textAllCaps="false"
+            android:textColor="@color/hm_text"
+            android:textSize="13.5sp"
+            android:textStyle="bold"
             android:visibility="gone"
             tools:visibility="visible"
             tools:text="Cancel" />
@@ -102,8 +105,12 @@
             android:layout_height="40dp"
             android:layout_marginStart="4dp"
             android:layout_weight="1"
-            android:background="@drawable/bg_icon_button_home"
+            android:background="@drawable/bg_mm_tab_indicator"
             android:stateListAnimator="?attr/csPressAnimator"
+            android:textAllCaps="false"
+            android:textColor="@color/hm_text"
+            android:textSize="13.5sp"
+            android:textStyle="bold"
             android:visibility="gone"
             tools:text="Confirm"
             tools:visibility="visible" />

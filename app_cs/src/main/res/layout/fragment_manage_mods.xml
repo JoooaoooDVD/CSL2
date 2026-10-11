@@ -1,164 +1,507 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<!--
+    Content manager (full screen, no banner): header with type tabs, search + state filter
+    chips with live counts, list/grid of installed content, rich empty state.
+-->
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/manage_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@android:color/transparent">
+    android:clickable="true"
+    android:focusable="true">
 
-    <!-- Top Horizontal Banner -->
-    <FrameLayout
-        android:id="@+id/manage_mods_banner"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="66dp"
-        android:layout_marginHorizontal="10dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="6dp"
-        android:background="@drawable/bg_banner_card"
-        android:clipToOutline="true">
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingStart="16dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="16dp">
 
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:contentDescription="@null"
-            android:scaleType="centerCrop"
-            android:src="@drawable/card_manager" />
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@drawable/settings_header_scrim" />
-
+        <!-- ═══ Header ═══ -->
         <LinearLayout
+            android:id="@+id/manage_header"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingHorizontal="12dp">
+            android:orientation="horizontal">
 
             <ImageButton
                 android:id="@+id/manage_mods_back"
-                android:layout_width="38dp"
-                android:layout_height="38dp"
-                android:layout_marginEnd="8dp"
-                android:background="@drawable/bg_icon_button_home"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_pp_round_btn"
                 android:contentDescription="@string/global_back"
-                android:padding="8dp"
+                android:padding="10dp"
                 android:scaleType="fitCenter"
-                android:src="@drawable/ic_arrow_back_white"
-                android:stateListAnimator="?attr/csPressAnimator" />
+                android:src="@drawable/ic_ci_back"
+                app:tint="@color/hm_icon" />
 
-            <ImageView
-                android:id="@+id/manage_mods_header_icon"
-                android:layout_width="34dp"
-                android:layout_height="34dp"
-                android:background="@drawable/bg_settings_icon_box"
-                android:contentDescription="@null"
-                android:padding="7dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_nav_manager" />
+            <!-- Type tile: gradient + glyph, recolored per content type -->
+            <FrameLayout
+                android:id="@+id/manage_type_tile"
+                android:layout_width="46dp"
+                android:layout_height="46dp"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/bg_mm_type_mods">
+
+                <ImageView
+                    android:id="@+id/manage_mods_header_icon"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_lib_cube"
+                    app:tint="@color/mm_mods_glyph" />
+            </FrameLayout>
 
             <LinearLayout
+                android:id="@+id/manage_title_block"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_marginEnd="8dp"
+                android:layout_marginStart="12dp"
+                android:layout_marginEnd="12dp"
                 android:layout_weight="1"
                 android:orientation="vertical">
 
                 <TextView
-                    android:id="@+id/manage_mods_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:ellipsize="end"
-                    android:singleLine="true"
-                    android:text="@string/mcl_button_manage_mods"
-                    android:textColor="#FFFFFFFF"
-                    android:textSize="15sp"
+                    android:letterSpacing="0.14"
+                    android:maxLines="1"
+                    android:text="@string/mm_eyebrow"
+                    android:textColor="@color/hm_accent"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
-                    android:id="@+id/manage_mods_subtitle"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/manage_mods_title"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="1dp"
                     android:ellipsize="end"
-                    android:singleLine="true"
-                    android:text="@string/content_picker_title_manage"
-                    android:textColor="#B3FFFFFF"
-                    android:textSize="11sp" />
+                    android:fontFamily="@font/minecraft_ten"
+                    android:maxLines="1"
+                    android:shadowColor="@color/hm_text_shadow"
+                    android:shadowDx="0"
+                    android:shadowDy="2"
+                    android:shadowRadius="4"
+                    android:textColor="@color/hm_text"
+                    android:textSize="24sp"
+                    tools:text="Mods" />
+
+                <TextView
+                    android:id="@+id/manage_mods_subtitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/hm_text_dim"
+                    android:textSize="12sp"
+                    tools:text="My Survival  ·  1.21.4 Fabric" />
             </LinearLayout>
 
-            <!-- Action buttons in modern glass pills with press animator -->
-            <com.google.android.material.progressindicator.CircularProgressIndicator
-                android:id="@+id/manage_mods_update_progress"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_marginEnd="6dp"
-                android:indeterminate="true"
-                android:visibility="gone"
-                app:indicatorSize="20dp"
-                app:trackThickness="2dp" />
+            <!-- Type tabs: switch in place -->
+            <FrameLayout
+                android:id="@+id/manage_tabs"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_mm_tabs"
+                android:padding="4dp">
 
-            <ImageButton
-                android:id="@+id/manage_mods_refresh"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_marginEnd="6dp"
-                android:background="@drawable/bg_icon_button_home"
-                android:contentDescription="@string/mod_check_updates"
-                android:padding="8dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_refresh_home"
-                android:stateListAnimator="?attr/csPressAnimator" />
+                <View
+                    android:id="@+id/manage_tab_indicator"
+                    android:layout_width="0dp"
+                    android:layout_height="34dp"
+                    android:background="@drawable/bg_mm_tab_indicator"
+                    android:visibility="invisible" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/manage_tab_mods"
+                        style="@style/Library.Segment"
+                        android:background="@drawable/bg_lib_segment_tab"
+                        android:drawableStart="@drawable/ic_lib_cube"
+                        android:text="@string/lib_tab_mods" />
+
+                    <TextView
+                        android:id="@+id/manage_tab_resourcepacks"
+                        style="@style/Library.Segment"
+                        android:background="@drawable/bg_lib_segment_tab"
+                        android:drawableStart="@drawable/ic_lib_image"
+                        android:text="@string/lib_tab_resourcepacks" />
+
+                    <TextView
+                        android:id="@+id/manage_tab_shaders"
+                        style="@style/Library.Segment"
+                        android:background="@drawable/bg_lib_segment_tab"
+                        android:drawableStart="@drawable/ic_lib_sun"
+                        android:text="@string/lib_tab_shaders" />
+                </LinearLayout>
+            </FrameLayout>
+        </LinearLayout>
+
+        <!-- ═══ Toolbar: search · state filters · actions ═══ -->
+        <LinearLayout
+            android:id="@+id/manage_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:id="@+id/manage_search_box"
+                android:layout_width="0dp"
+                android:layout_height="42dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_mm_search"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="12dp"
+                android:paddingEnd="4dp">
+
+                <ImageView
+                    android:id="@+id/manage_search_icon"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_lib_search"
+                    app:tint="@color/hm_text_dim" />
+
+                <EditText
+                    android:id="@+id/manage_search_input"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:background="@android:color/transparent"
+                    android:hint="@string/mm_search_mods"
+                    android:imeOptions="actionSearch|flagNoExtractUi|flagNoFullscreen"
+                    android:importantForAutofill="no"
+                    android:inputType="text"
+                    android:maxLines="1"
+                    android:textColor="@color/hm_text"
+                    android:textColorHint="@color/hm_text_dim"
+                    android:textSize="13.5sp" />
+
+                <ImageButton
+                    android:id="@+id/manage_search_clear"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:background="@drawable/bg_mm_btn"
+                    android:contentDescription="@string/mm_clear_search"
+                    android:padding="8dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_lib_close"
+                    android:visibility="gone"
+                    app:tint="@color/hm_icon" />
+            </LinearLayout>
+
+            <HorizontalScrollView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_weight="1.4"
+                android:overScrollMode="never"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/manage_filter_chips"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/manage_filter_all"
+                        style="@style/Manager.Chip"
+                        android:text="@string/mm_filter_all" />
+
+                    <TextView
+                        android:id="@+id/manage_filter_enabled"
+                        style="@style/Manager.Chip"
+                        android:text="@string/mm_filter_enabled" />
+
+                    <TextView
+                        android:id="@+id/manage_filter_disabled"
+                        style="@style/Manager.Chip"
+                        android:text="@string/mm_filter_disabled" />
+
+                    <TextView
+                        android:id="@+id/manage_filter_updates"
+                        style="@style/Manager.Chip"
+                        android:text="@string/mm_filter_updates" />
+                </LinearLayout>
+            </HorizontalScrollView>
+
+            <FrameLayout
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:layout_marginStart="4dp">
+
+                <ImageButton
+                    android:id="@+id/manage_mods_refresh"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_mm_field_btn"
+                    android:contentDescription="@string/mm_refresh"
+                    android:padding="11dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_lib_update"
+                    app:tint="@color/hm_icon" />
+
+                <com.google.android.material.progressindicator.CircularProgressIndicator
+                    android:id="@+id/manage_mods_update_progress"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:indeterminate="true"
+                    android:visibility="gone"
+                    app:indicatorColor="@color/hm_accent"
+                    app:indicatorSize="22dp"
+                    app:trackThickness="2.5dp" />
+            </FrameLayout>
 
             <ImageButton
                 android:id="@+id/manage_mods_import"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_marginEnd="6dp"
-                android:background="@drawable/bg_icon_button_home"
-                android:contentDescription="@string/content_import_from_storage"
-                android:padding="8dp"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_mm_field_btn"
+                android:contentDescription="@string/mm_import"
+                android:padding="11dp"
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_folder"
-                android:stateListAnimator="?attr/csPressAnimator" />
+                app:tint="@color/hm_icon" />
 
-            <ImageButton
+            <!-- Browse: same pixel texture as PLAY -->
+            <FrameLayout
                 android:id="@+id/manage_mods_add"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:background="@drawable/bg_icon_button_home"
-                android:contentDescription="@string/global_add"
-                android:padding="8dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_add"
-                android:stateListAnimator="?attr/csPressAnimator" />
+                android:layout_width="wrap_content"
+                android:layout_height="42dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_home_play_clip"
+                android:clickable="true"
+                android:contentDescription="@string/mm_browse"
+                android:focusable="true">
 
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@null"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/home_play_texture" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_home_play_edge"
+                    android:duplicateParentState="true" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="18dp">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_pp_plus_dark" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:singleLine="true"
+                        android:text="@string/mm_browse"
+                        android:textColor="#FF0E1525"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </FrameLayout>
         </LinearLayout>
-    </FrameLayout>
 
-    <!-- Mod list -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/manage_mods_recycler"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:paddingHorizontal="10dp"
-        android:paddingVertical="4dp"
-        android:clipToPadding="false" />
+        <!-- ═══ Content ═══ -->
+        <FrameLayout
+            android:id="@+id/manage_content"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="8dp"
+            android:layout_weight="1">
 
-    <!-- Empty state -->
-    <TextView
-        android:id="@+id/manage_mods_empty"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:gravity="center"
-        android:textAppearance="?attr/textAppearanceBodyLarge"
-        android:textColor="?attr/colorOnSurfaceVariant"
-        android:visibility="gone"
-        android:text="@string/manage_mods_empty" />
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/manage_mods_recycler"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:overScrollMode="never"
+                android:paddingBottom="16dp"
+                android:scrollbars="none" />
 
-</LinearLayout>
+            <!-- Empty folder -->
+            <LinearLayout
+                android:id="@+id/manage_mods_empty"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:paddingBottom="12dp"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <FrameLayout
+                    android:layout_width="120dp"
+                    android:layout_height="96dp">
+
+                    <View
+                        android:id="@+id/manage_empty_glow"
+                        android:layout_width="120dp"
+                        android:layout_height="96dp"
+                        android:alpha="0.35"
+                        android:background="@drawable/bg_mm_glow_mods" />
+
+                    <FrameLayout
+                        android:id="@+id/manage_empty_tile"
+                        android:layout_width="68dp"
+                        android:layout_height="68dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/bg_mm_type_mods">
+
+                        <ImageView
+                            android:id="@+id/manage_empty_icon"
+                            android:layout_width="34dp"
+                            android:layout_height="34dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_lib_cube"
+                            app:tint="@color/mm_mods_glyph" />
+                    </FrameLayout>
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/manage_empty_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:fontFamily="@font/minecraft_ten"
+                    android:textColor="@color/hm_text"
+                    android:textSize="20sp"
+                    tools:text="No mods yet" />
+
+                <TextView
+                    android:id="@+id/manage_empty_desc"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center"
+                    android:lineSpacingExtra="2dp"
+                    android:maxWidth="420dp"
+                    android:textColor="@color/hm_text_dim"
+                    android:textSize="13sp"
+                    tools:text="Mods add new items, mobs, mechanics and performance boosts." />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/manage_empty_import"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_ci_button_outline"
+                        android:drawableStart="@drawable/ic_folder"
+                        app:drawableTint="@color/hm_icon"
+                        android:drawablePadding="8dp"
+                        android:gravity="center"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="18dp"
+                        android:text="@string/mm_import"
+                        android:textColor="@color/hm_text"
+                        android:textSize="13.5sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/manage_empty_browse"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:layout_marginStart="10dp"
+                        android:background="@drawable/bg_mm_tab_indicator"
+                        android:drawableStart="@drawable/ic_lib_search"
+                        app:drawableTint="@color/hm_icon"
+                        android:drawablePadding="8dp"
+                        android:gravity="center"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="18dp"
+                        android:text="@string/mm_browse"
+                        android:textColor="@color/hm_text"
+                        android:textSize="13.5sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Search / filter has no match -->
+            <LinearLayout
+                android:id="@+id/manage_no_results"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:alpha="0.7"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_lib_search"
+                    app:tint="@color/hm_text_dim" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/mm_no_results"
+                    android:textColor="@color/hm_text"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/mm_no_results_desc"
+                    android:textColor="@color/hm_text_dim"
+                    android:textSize="12.5sp" />
+
+                <TextView
+                    android:id="@+id/manage_show_all"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_ci_button_outline"
+                    android:gravity="center"
+                    android:paddingStart="18dp"
+                    android:paddingEnd="18dp"
+                    android:text="@string/mm_show_all"
+                    android:textColor="@color/hm_text"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </FrameLayout>
+    </LinearLayout>
+</FrameLayout>

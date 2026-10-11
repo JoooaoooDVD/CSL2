@@ -79,9 +79,30 @@ public class mcVersionSpinner extends ExtendedTextView {
     }
 
     public void setSelection(int position){
-        mProfileAdapter.setView(this, position, false);
+        // Index first: listeners triggered while the view updates read the new selection
         mSelectedIndex = position;
+        mProfileAdapter.setView(this, position, false);
         mProfileAdapter.applySelectionIndex(mSelectedIndex);
+        if (mSelectionListener != null) mSelectionListener.run();
+    }
+
+    @Nullable private Runnable mSelectionListener;
+
+    /** Called after every selection change (also a reload that keeps the same profile) */
+    public void setSelectionListener(@Nullable Runnable listener) {
+        mSelectionListener = listener;
+    }
+
+    /**
+     * The selected entry: a {@link DisplayInstance}, an {@link InstanceAdapterExtra}
+     * ("create new") or null when the list is empty. The home profile card reads its icon
+     * from here instead of from the compound drawable, which ExtendedTextView may not have
+     * applied yet while this view is hidden.
+     */
+    @Nullable
+    public Object getSelectedItem() {
+        if (mSelectedIndex < 0 || mSelectedIndex >= mProfileAdapter.getCount()) return null;
+        return mProfileAdapter.getItem(mSelectedIndex);
     }
 
     public void openProfileEditor(FragmentActivity fragmentActivity) {

@@ -67,7 +67,21 @@ public class InstalledModAdapter extends RecyclerView.Adapter<InstalledModAdapte
         void onEmptyStateChanged(boolean isEmpty);
     }
 
+    /** Counts shown by the Manager page (filter chips), over every entry, not only the visible ones */
+    public interface StatsListener {
+        void onStatsChanged(int total, int enabled, int disabled, int updates);
+    }
+
+    /** Visible-list filters of the Manager page */
+    public static final int FILTER_ALL = 0, FILTER_ENABLED = 1, FILTER_DISABLED = 2, FILTER_UPDATES = 3;
+
+    /** Every entry of the content folder (update checks run over this one) */
+    private final List<ModEntry> mAll = new ArrayList<>();
+    /** The entries currently shown (search text + state filter applied to mAll) */
     private final List<ModEntry> mMods = new ArrayList<>();
+    private String mQuery = "";
+    private int mStateFilter = FILTER_ALL;
+    @Nullable private StatsListener mStatsListener;
     private final EmptyStateListener mEmptyListener;
     private final Handler mMainHandler = new Handler(Looper.getMainLooper());
 
@@ -140,10 +154,72 @@ public class InstalledModAdapter extends RecyclerView.Adapter<InstalledModAdapte
                     (f.getName().endsWith(ext) || f.getName().endsWith(ext + ".disabled")));
             if (files != null) {
                 Arrays.sort(files, (a, b) -> a.getName().compareToIgnoreCase(b.getName()));
-                for (File f : files) mMods.add(new ModEntry(f));
+                for (File f : files) mAll.add(new ModEntry(f));
+                mMods.addAll(mAll);
             }
         }
+        // Any row change (update found, update applied, version switched ...) refreshes the counts
+        registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override public void onChanged() { notifyStats(); }
+            @Override public void onItemRangeChanged(int positionStart, int itemCount) { notifyStats(); }
+            @Override public void onItemRangeInserted(int positionStart, int itemCount) { notifyStats(); }
+            @Override public void onItemRangeRemoved(int positionStart, int itemCount) { notifyStats(); }
+        });
         notifyEmptyState();
+    }
+
+    // ── Search / filter / stats (Manager page) ─────────────────────────────
+
+    public void setStatsListener(@Nullable StatsListener listener) {
+        mStatsListener = listener;
+        notifyStats();
+    }
+
+    /** Total number of entries in the folder, whatever the filter */
+    public int getTotalCount() {
+        return mAll.size();
+    }
+
+    /** Applies a search text (name or file name) and a state filter to the visible list */
+    @SuppressLint("NotifyDataSetChanged")
+    public void setQuery(@Nullable String query, int stateFilter) {
+        String normalized = query == null ? "" : query.trim().toLowerCase(java.util.Locale.ROOT);
+        if (normalized.equals(mQuery) && stateFilter == mStateFilter) return;
+        mQuery = normalized;
+        mStateFilter = stateFilter;
+        mMods.clear();
+        for (ModEntry entry : mAll) if (matches(entry)) mMods.add(entry);
+        notifyDataSetChanged();
+        notifyEmptyState();
+    }
+
+    private boolean matches(@NonNull ModEntry entry) {
+        switch (mStateFilter) {
+            case FILTER_ENABLED: if (!entry.enabled) return false; break;
+            case FILTER_DISABLED: if (entry.enabled) return false; break;
+            case FILTER_UPDATES: if (entry.updateUrl == null) return false; break;
+            default: break;
+        }
+        if (mQuery.isEmpty()) return true;
+        return entry.displayName().toLowerCase(java.util.Locale.ROOT).contains(mQuery)
+                || entry.file.getName().toLowerCase(java.util.Locale.ROOT).contains(mQuery);
+    }
+
+    private void notifyStats() {
+        if (mStatsListener == null) return;
+        int enabled = 0, updates = 0;
+        for (ModEntry entry : mAll) {
+            if (entry.enabled) enabled++;
+            if (entry.updateUrl != null) updates++;
+        }
+        mStatsListener.onStatsChanged(mAll.size(), enabled, mAll.size() - enabled, updates);
+    }
+
+    /** Rebinds the row of {@code entry} if it is currently visible */
+    private void notifyEntryChanged(@NonNull ModEntry entry) {
+        int index = mMods.indexOf(entry);
+        if (index >= 0) notifyItemChanged(index);
+        else notifyStats();
     }
 
     /** Called by ManageModsFragment to inject the saved per-instance filter. */
@@ -159,13 +235,23 @@ public class InstalledModAdapter extends RecyclerView.Adapter<InstalledModAdapte
      */
     public void addContentFile(File f) {
         ModEntry entry = new ModEntry(f);
-        int index = 0;
-        while (index < mMods.size() &&
-                mMods.get(index).file.getName().compareToIgnoreCase(f.getName()) < 0) {
-            index++;
+        int allIndex = 0;
+        while (allIndex < mAll.size() &&
+                mAll.get(allIndex).file.getName().compareToIgnoreCase(f.getName()) < 0) {
+            allIndex++;
         }
-        mMods.add(index, entry);
-        notifyItemInserted(index);
+        mAll.add(allIndex, entry);
+        if (matches(entry)) {
+            int index = 0;
+            while (index < mMods.size() &&
+                    mMods.get(index).file.getName().compareToIgnoreCase(f.getName()) < 0) {
+                index++;
+            }
+            mMods.add(index, entry);
+            notifyItemInserted(index);
+        } else {
+            notifyStats();
+        }
         notifyEmptyState();
     }
 
@@ -187,12 +273,12 @@ public class InstalledModAdapter extends RecyclerView.Adapter<InstalledModAdapte
         // would rebind every visible row and (without the icon cache) cause
         // icons to flash. The icon cache makes this safe either way now, but
         // this is still cheaper.
-        for (int i = 0; i < mMods.size(); i++) {
-            ModEntry e = mMods.get(i);
+        for (int i = 0; i < mAll.size(); i++) {
+            ModEntry e = mAll.get(i);
             if (e.updateUrl != null || e.updateFileName != null) {
                 e.updateUrl      = null;
                 e.updateFileName = null;
-                notifyItemChanged(i);
+                notifyEntryChanged(e);
             }
         }
 
@@ -202,7 +288,9 @@ public class InstalledModAdapter extends RecyclerView.Adapter<InstalledModAdapte
             return;
         }
 
-        final int total = mMods.size();
+        // Snapshot: the visible list may change (search) while the checks run
+        final List<ModEntry> entries = new ArrayList<>(mAll);
+        final int total = entries.size();
         if (total == 0) {
             mMainHandler.post(onComplete);
             return;
@@ -211,8 +299,7 @@ public class InstalledModAdapter extends RecyclerView.Adapter<InstalledModAdapte
         final int[] done = {0};
 
         for (int i = 0; i < total; i++) {
-            final int index = i;
-            final ModEntry entry = mMods.get(i);
+            final ModEntry entry = entries.get(i);
 
             sUpdateCheckExecutor.execute(() -> {
                 boolean updateFound = false;
@@ -227,7 +314,7 @@ public class InstalledModAdapter extends RecyclerView.Adapter<InstalledModAdapte
                         // Only rebind this row if it actually changed — avoids
                         // rebinding every mod's row (and its icon) for checks
                         // that found nothing.
-                        if (finalUpdateFound && index < mMods.size()) notifyItemChanged(index);
+                        if (finalUpdateFound) notifyEntryChanged(entry);
                         done[0]++;
                         if (done[0] >= total) onComplete.run();
                     });
@@ -329,7 +416,7 @@ public class InstalledModAdapter extends RecyclerView.Adapter<InstalledModAdapte
         // Flip the spinner on immediately so the update button disappears
         // before the download even starts.
         entry.isUpdating = true;
-        if (position < mMods.size()) notifyItemChanged(position);
+        notifyEntryChanged(entry);
 
         sUpdateCheckExecutor.execute(() -> {
             try {
@@ -345,7 +432,7 @@ public class InstalledModAdapter extends RecyclerView.Adapter<InstalledModAdapte
                     entry.updateUrl   = null;
                     entry.updateFileName = null;
                     entry.isUpdating  = false;
-                    if (position < mMods.size()) notifyItemChanged(position);
+                    notifyEntryChanged(entry);
                     Toast.makeText(context,
                             context.getString(R.string.mod_update_done, entry.displayName()),
                             Toast.LENGTH_SHORT).show();
@@ -354,7 +441,7 @@ public class InstalledModAdapter extends RecyclerView.Adapter<InstalledModAdapte
                 Log.e(TAG, "Update download failed: " + e.getMessage());
                 mMainHandler.post(() -> {
                     entry.isUpdating = false;
-                    if (position < mMods.size()) notifyItemChanged(position);
+                    notifyEntryChanged(entry);
                     Toast.makeText(context,
                             context.getString(R.string.mod_update_failed, entry.displayName()),
                             Toast.LENGTH_SHORT).show();
@@ -642,7 +729,7 @@ public class InstalledModAdapter extends RecyclerView.Adapter<InstalledModAdapte
                     mIconResolving.remove(oldPath);
                     mModNameResolving.remove(oldPath);
 
-                    if (position < mMods.size()) notifyItemChanged(position);
+                    notifyEntryChanged(entry);
                     Toast.makeText(context,
                             context.getString(R.string.switch_mod_version_done, entry.displayName(), versionLabel),
                             Toast.LENGTH_SHORT).show();
@@ -844,9 +931,14 @@ public class InstalledModAdapter extends RecyclerView.Adapter<InstalledModAdapte
         final ProgressBar updateProgress;
         final ImageButton delete;
         final ImageButton switchVersion;
+        @Nullable final TextView state;
+        @Nullable final View iconTile;
 
         ModViewHolder(@NonNull View itemView) {
             super(itemView);
+            state = itemView.findViewById(R.id.installed_mod_state);
+            iconTile = itemView.findViewById(R.id.installed_mod_icon_tile);
+            if (iconTile != null) iconTile.setClipToOutline(true);
             icon   = itemView.findViewById(R.id.installed_mod_icon);
             name   = itemView.findViewById(R.id.installed_mod_name);
             version= itemView.findViewById(R.id.installed_mod_version);
@@ -855,6 +947,42 @@ public class InstalledModAdapter extends RecyclerView.Adapter<InstalledModAdapte
             updateProgress = itemView.findViewById(R.id.installed_mod_update_progress);
             delete = itemView.findViewById(R.id.installed_mod_delete);
             switchVersion = itemView.findViewById(R.id.installed_mod_switch_version);
+            CSAnimationEngine.attachPressFeedback(update);
+            CSAnimationEngine.attachPressFeedback(delete);
+            CSAnimationEngine.attachPressFeedback(switchVersion);
+        }
+
+        /**
+         * Manager row look: disabled entries are dimmed, the state pill says Enabled /
+         * Disabled / Update available.
+         */
+        void applyEnabledLook(@NonNull ModEntry entry, boolean animate) {
+            float alpha = entry.enabled ? 1f : 0.5f;
+            for (View view : new View[]{iconTile != null ? iconTile : icon, name, version}) {
+                if (view == null) continue;
+                view.animate().cancel();
+                if (animate && com.craftstudio.cslauncher.utils.motion.Motion.content(view)) {
+                    view.animate().alpha(alpha).setDuration(com.craftstudio.cslauncher.utils.motion.Motion.MEDIUM)
+                            .setStartDelay(0).start();
+                } else {
+                    view.setAlpha(alpha);
+                }
+            }
+            if (state == null) return;
+            if (entry.updateUrl != null) {
+                state.setText(R.string.mm_state_update);
+                state.setBackgroundResource(R.drawable.bg_mm_state_update);
+                state.setTextColor(androidx.core.content.ContextCompat.getColor(state.getContext(), R.color.hm_amber));
+            } else if (entry.enabled) {
+                state.setText(R.string.mm_state_enabled);
+                state.setBackgroundResource(R.drawable.bg_mm_state_on);
+                state.setTextColor(androidx.core.content.ContextCompat.getColor(state.getContext(), R.color.hm_profile_active));
+            } else {
+                state.setText(R.string.mm_state_disabled);
+                state.setBackgroundResource(R.drawable.bg_mm_state_off);
+                state.setTextColor(androidx.core.content.ContextCompat.getColor(state.getContext(), R.color.hm_text_dim));
+            }
+            if (animate) com.craftstudio.cslauncher.utils.motion.Motion.pulse(state);
         }
 
         void bind(ModEntry entry) {
@@ -903,7 +1031,19 @@ public class InstalledModAdapter extends RecyclerView.Adapter<InstalledModAdapte
 
             toggle.setOnCheckedChangeListener(null);
             toggle.setChecked(entry.enabled);
-            toggle.setOnCheckedChangeListener((btn, checked) -> entry.setEnabled(checked));
+            applyEnabledLook(entry, false);
+            toggle.setOnCheckedChangeListener((btn, checked) -> {
+                entry.setEnabled(checked);
+                // A failed rename keeps the old state: put the switch back
+                if (entry.enabled != checked) {
+                    btn.setOnCheckedChangeListener(null);
+                    btn.setChecked(entry.enabled);
+                    bind(entry);
+                    return;
+                }
+                applyEnabledLook(entry, true);
+                notifyStats();
+            });
 
             // Update button — visible only when an update is available and not
             // currently being downloaded. While downloading, the spinner takes
@@ -937,12 +1077,13 @@ public class InstalledModAdapter extends RecyclerView.Adapter<InstalledModAdapte
                         .setNegativeButton(android.R.string.cancel, null)
                         .setPositiveButton(android.R.string.ok, (d, i) -> {
                             entry.file.delete();
-                            int p = getAdapterPosition();
-                            if (p != RecyclerView.NO_POSITION) {
+                            mAll.remove(entry);
+                            int p = mMods.indexOf(entry);
+                            if (p >= 0) {
                                 mMods.remove(p);
                                 notifyItemRemoved(p);
-                                notifyEmptyState();
                             }
+                            notifyEmptyState();
                         })
                         .show();
             });

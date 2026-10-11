@@ -61,13 +61,49 @@ public class ActionRow extends LinearLayout {
         actionButtons[1] = new CloneButton(getContext());
         actionButtons[2] = new AddSubButton(getContext());
 
+        // Navy pill with icon + label actions (Delete is red)
+        setBackgroundResource(R.drawable.bg_ce_action_row);
+        int pad = Math.round(4 * getResources().getDisplayMetrics().density);
+        setPadding(pad, pad, pad, pad);
+        styleAction((android.widget.Button) actionButtons[0], R.drawable.ic_cc_delete, R.color.mm_danger);
+        styleAction((android.widget.Button) actionButtons[1], R.drawable.ic_cc_copy, R.color.hm_text);
+        styleAction((android.widget.Button) actionButtons[2], R.drawable.ic_cc_sub, R.color.hm_text);
+
         // This is not pretty code, don't do this.
         for(ActionButtonInterface buttonInterface: actionButtons){
             View button = ((View)(buttonInterface));
-            addView(button, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1F));
+            addView(button, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT));
         }
 
         setElevation(5F);
+    }
+
+    /** Pill action look: transparent background, 16dp tinted icon, bold label */
+    private void styleAction(android.widget.Button button, int iconRes, int colorRes) {
+        float density = getResources().getDisplayMetrics().density;
+        int color = androidx.core.content.ContextCompat.getColor(getContext(), colorRes);
+        button.setBackgroundResource(R.drawable.bg_ce_action_btn);
+        button.setStateListAnimator(null);
+        button.setAllCaps(false);
+        button.setTextColor(color);
+        button.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 12.5f);
+        button.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        button.setMinWidth(0);
+        button.setMinimumWidth(0);
+        button.setMinHeight(0);
+        button.setMinimumHeight(0);
+        button.setPadding(Math.round(12 * density), 0, Math.round(14 * density), 0);
+        button.setGravity(android.view.Gravity.CENTER);
+        android.graphics.drawable.Drawable icon = androidx.core.content.ContextCompat.getDrawable(getContext(), iconRes);
+        if (icon != null) {
+            icon = androidx.core.graphics.drawable.DrawableCompat.wrap(icon.mutate());
+            androidx.core.graphics.drawable.DrawableCompat.setTint(icon, color);
+            int size = Math.round(16 * density);
+            icon.setBounds(0, 0, size, size);
+            button.setCompoundDrawablesRelative(icon, null, null, null);
+            button.setCompoundDrawablePadding(Math.round(6 * density));
+        }
+        com.craftstudio.cslauncher.utils.CSAnimationEngine.attachPressFeedback(button);
     }
 
     public void setFollowedButton(ControlInterface controlInterface){
@@ -79,7 +115,9 @@ public class ActionRow extends LinearLayout {
             ((View)(buttonInterface)).setVisibility(buttonInterface.shouldBeVisible() ? VISIBLE : GONE);
         }
 
+        boolean appearing = getVisibility() != VISIBLE && controlInterface != null;
         setVisibility(VISIBLE);
+        if (appearing) com.craftstudio.cslauncher.utils.motion.Motion.popIn(this, 0, 0.8f);
         mFollowedView = (View) controlInterface;
         if(mFollowedView != null)
             mFollowedView.getViewTreeObserver().addOnPreDrawListener(mFollowedViewListener);

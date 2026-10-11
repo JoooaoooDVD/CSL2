@@ -136,8 +136,33 @@ public class MainMenuFragment extends Fragment {
             openLibrary(ContentType.MOD);
             return;
         }
-        if (isTwoPane()) openContentPickerPane(manage);
-        else showContentPickerDialog(manage);
+        showManageChooser();
+    }
+
+    /**
+     * Manager button: a popup asks which content to manage (mods, resource packs or shader
+     * packs), then the full screen manager opens on that type.
+     */
+    private void showManageChooser() {
+        if (getContext() == null) return;
+        new com.kdt.mcgui.ManageChooserDialog(requireContext(), new com.kdt.mcgui.ManageChooserDialog.Callback() {
+            @Override
+            public void onTypeChosen(@NonNull ContentType type) {
+                if (getView() != null) onContentTypeChosen(true, type);
+            }
+
+            @Override
+            public void onFilterRequested() {
+                if (getContext() == null) return;
+                ContentFilterDialog.show(requireContext(), Instances.getSelectedInstanceKey(),
+                        (version, loader) -> {
+                            if (getContext() == null) return;
+                            Toast.makeText(requireContext(),
+                                    getString(R.string.manage_mods_filter_active, version, loader),
+                                    Toast.LENGTH_SHORT).show();
+                        });
+            }
+        }).show();
     }
 
     /**
@@ -159,40 +184,6 @@ public class MainMenuFragment extends Fragment {
         Bundle args = new Bundle();
         populateModStoreArgs(args, contentType);
         openPane(ModsSearchFragment.class, ModsSearchFragment.TAG, args);
-    }
-
-    /**
-     * Landscape: replaces the sidebar with ContentPickerFragment inside left_pane_container and
-     * loads the Mods section into the right pane, all in a single back stack entry, so one Back
-     * press undoes the whole action.
-     */
-    private void openContentPickerPane(boolean manage) {
-        if (isTagAlreadyOnTop(ContentPickerFragment.TAG)) return;
-
-        Bundle pickerArgs = new Bundle();
-        pickerArgs.putBoolean(ContentPickerFragment.ARG_MANAGE, manage);
-
-        Class<? extends Fragment> defaultFragmentClass;
-        Bundle defaultArgs = new Bundle();
-        String defaultTag;
-        if (manage) {
-            defaultFragmentClass = ManageModsFragment.class;
-            defaultArgs.putString(ManageModsFragment.ARG_CONTENT_TYPE, ContentType.MOD.name());
-            defaultTag = ManageModsFragment.TAG + ":" + ContentType.MOD.name();
-        } else {
-            defaultFragmentClass = ModsSearchFragment.class;
-            populateModStoreArgs(defaultArgs, ContentType.MOD);
-            defaultTag = ModsSearchFragment.TAG + ":" + ContentType.MOD.name();
-        }
-
-        getChildFragmentManager()
-                .beginTransaction()
-                .setReorderingAllowed(true)
-                .replace(R.id.left_pane_container, ContentPickerFragment.class, pickerArgs, ContentPickerFragment.TAG)
-                .replace(R.id.right_pane_container, defaultFragmentClass, defaultArgs, defaultTag)
-                .addToBackStack(ContentPickerFragment.TAG)
-                .commit();
-        // Visibility is updated by mBackStackListener once the transaction lands
     }
 
     /**
@@ -236,53 +227,6 @@ public class MainMenuFragment extends Fragment {
             if (tag.equals(manager.getBackStackEntryAt(i).getName())) return true;
         }
         return false;
-    }
-
-    private void showContentPickerDialog(boolean manage) {
-        AlertDialog dialog = new MaterialAlertDialogBuilder(requireContext())
-                .setView(R.layout.dialog_content_picker)
-                .create();
-
-        dialog.setOnShowListener(di -> {
-            android.widget.TextView title = dialog.findViewById(R.id.content_picker_title);
-            android.widget.ImageButton filterButton = dialog.findViewById(R.id.content_picker_filter);
-            View modsButton = dialog.findViewById(R.id.content_picker_mods);
-            View resourcepacksButton = dialog.findViewById(R.id.content_picker_resourcepacks);
-            View shaderpacksButton = dialog.findViewById(R.id.content_picker_shaderpacks);
-
-            if (title != null) {
-                title.setText(manage ? R.string.content_picker_title_manage
-                                     : R.string.content_picker_title_browse);
-            }
-
-            if (filterButton != null) {
-                if (manage) {
-                    filterButton.setVisibility(View.VISIBLE);
-                    filterButton.setOnClickListener(v ->
-                            ContentFilterDialog.show(requireContext(), Instances.getSelectedInstanceKey(),
-                                    (version, loader) -> Toast.makeText(requireContext(),
-                                            getString(R.string.manage_mods_filter_active, version, loader),
-                                            Toast.LENGTH_SHORT).show()));
-                } else {
-                    filterButton.setVisibility(View.GONE);
-                }
-            }
-
-            if (modsButton != null) modsButton.setOnClickListener(v -> {
-                dialog.dismiss();
-                onContentTypeChosen(manage, ContentType.MOD);
-            });
-            if (resourcepacksButton != null) resourcepacksButton.setOnClickListener(v -> {
-                dialog.dismiss();
-                onContentTypeChosen(manage, ContentType.RESOURCE_PACK);
-            });
-            if (shaderpacksButton != null) shaderpacksButton.setOnClickListener(v -> {
-                dialog.dismiss();
-                onContentTypeChosen(manage, ContentType.SHADER_PACK);
-            });
-        });
-
-        dialog.show();
     }
 
     private void onContentTypeChosen(boolean manage, ContentType contentType) {
@@ -387,7 +331,9 @@ public class MainMenuFragment extends Fragment {
         } else if (navId == R.id.mod_store_button) {
             showContentPicker(false);
         } else if (navId == R.id.open_files_button) {
+            // Only a popup for now: the dock is marked once the manager really opens
             showContentPicker(true);
+            return true;
         } else if (navId == R.id.nav_controls) {
             // Touch controls customization: its own activity, the dock keeps the current tab
             startActivity(new android.content.Intent(requireContext(), com.craftstudio.cslauncher.CustomControlsActivity.class));
@@ -424,6 +370,8 @@ public class MainMenuFragment extends Fragment {
         if (LogsFragment.TAG.equals(top)) setActiveNav(R.id.nav_logs);
         else if (top != null && (top.startsWith(ModsSearchFragment.TAG) || ModInstallFragment.TAG.equals(top)))
             setActiveNav(R.id.mod_store_button);
+        else if (top != null && top.startsWith(ManageModsFragment.TAG))
+            setActiveNav(R.id.open_files_button);
         else setActiveNav(android.view.View.NO_ID);
     }
 

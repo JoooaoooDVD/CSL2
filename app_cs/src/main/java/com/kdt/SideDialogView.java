@@ -103,8 +103,9 @@ public abstract class SideDialogView {
         // Attach layouts
         mParent.addView(mDialogLayout);
 
-        mSideDialogAnimator = ObjectAnimator.ofFloat(mDialogLayout, "x", 0).setDuration(600);
-        mSideDialogAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
+        // Snappy slide with a soft landing (same curve as the launcher's Motion.STANDARD)
+        mSideDialogAnimator = ObjectAnimator.ofFloat(mDialogLayout, "x", 0).setDuration(460);
+        mSideDialogAnimator.setInterpolator(androidx.core.view.animation.PathInterpolatorCompat.create(0.2f, 0f, 0f, 1f));
 
         mDialogLayout.setElevation(10);
         mDialogLayout.setTranslationZ(10);

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Content manager, manage popup and control editor (Change 11) -->
+<resources>
+    <!-- Manager page -->
+    <string name="mm_eyebrow">MANAGE CONTENT</string>
+    <string name="mm_state_enabled">Enabled</string>
+    <string name="mm_state_disabled">Disabled</string>
+    <string name="mm_state_update">Update</string>
+    <string name="mm_filter_all">All</string>
+    <string name="mm_filter_enabled">Enabled</string>
+    <string name="mm_filter_disabled">Disabled</string>
+    <string name="mm_filter_updates">Updates</string>
+    <string name="mm_chip_count">%1$s  %2$d</string>
+    <string name="mm_search_mods">Search installed mods</string>
+    <string name="mm_search_rp">Search resource packs</string>
+    <string name="mm_search_sh">Search shader packs</string>
+    <string name="mm_browse">Browse</string>
+    <string name="mm_import">Import a file</string>
+    <string name="mm_refresh">Check for updates</string>
+    <string name="mm_clear_search">Clear search</string>
+    <string name="mm_subtitle">%1$s  ·  %2$s</string>
+    <string name="mm_empty_title_mods">No mods yet</string>
+    <string name="mm_empty_title_rp">No resource packs yet</string>
+    <string name="mm_empty_title_sh">No shader packs yet</string>
+    <string name="mm_empty_desc_mods">Mods add new items, mobs, mechanics and performance boosts. Browse Modrinth and CurseForge, or import a .jar file.</string>
+    <string name="mm_empty_desc_rp">Resource packs change textures, models, sounds and menus. Browse the library, or import a .zip file.</string>
+    <string name="mm_empty_desc_sh">Shader packs add realistic lighting, shadows and water. They need Iris or OptiFine. Browse the library, or import a .zip file.</string>
+    <string name="mm_no_results">Nothing matches</string>
+    <string name="mm_no_results_desc">Try another name or show everything again.</string>
+    <string name="mm_show_all">Show all</string>
+
+    <!-- Manage popup -->
+    <string name="mc_title">What do you want to manage?</string>
+    <string name="mc_subtitle">Installed content of %1$s</string>
+    <string name="mc_desc_mods">Gameplay, items, mobs and performance</string>
+    <string name="mc_desc_rp">Textures, models, sounds and menus</string>
+    <string name="mc_desc_sh">Lighting, shadows, water and sky</string>
+    <string name="mc_count">%1$d installed</string>
+    <string name="mc_count_loading">Counting…</string>
+    <string name="mc_filters">Filters</string>
+
+    <!-- Control editor -->
+    <string name="ce_title">Controls editor</string>
+    <string name="ce_handle">Edit</string>
+    <string name="ce_section_add">ADD TO SCREEN</string>
+    <string name="ce_section_layout">LAYOUT</string>
+    <string name="ce_add_button">Button</string>
+    <string name="ce_add_drawer">Drawer</string>
+    <string name="ce_add_joystick">Joystick</string>
+    <string name="ce_load">Load a layout</string>
+    <string name="ce_load_desc">Open another saved control layout</string>
+    <string name="ce_save">Save layout</string>
+    <string name="ce_save_desc">Keep your changes in a file</string>
+    <string name="ce_default">Set as default</string>
+    <string name="ce_default_desc">Use a layout every time you play</string>
+    <string name="ce_export">Export layout</string>
+    <string name="ce_export_desc">Share the layout as a .json file</string>
+    <string name="ce_exit">Exit editor</string>
+    <string name="ce_layout_name">Layout: %1$s</string>
+    <string name="ce_hint">Tap Edit to add buttons, drawers and joysticks. Tap any control to change, resize or remap it.</string>
+    <string name="ce_added">Added. Drag it where you want.</string>
+    <string name="ce_edit_controls">Edit control</string>
+</resources>

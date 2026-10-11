@@ -1,145 +1,154 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<!-- Manager row: icon tile · name + state pill + file · actions -->
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/bg_card_home"
-    android:layout_marginVertical="4dp"
+    android:layout_margin="5dp"
+    android:background="@drawable/bg_mm_row"
     android:clickable="true"
     android:focusable="true"
-    android:stateListAnimator="?attr/csPressAnimator"
-    android:minHeight="@dimen/_70sdp">
+    android:gravity="center_vertical"
+    android:minHeight="74dp"
+    android:orientation="horizontal"
+    android:paddingStart="10dp"
+    android:paddingTop="10dp"
+    android:paddingEnd="8dp"
+    android:paddingBottom="10dp"
+    android:stateListAnimator="?attr/csPressAnimator">
 
-    <!-- Mod icon -->
-    <ImageView
-        android:id="@+id/installed_mod_icon"
-        android:layout_width="@dimen/_52sdp"
-        android:layout_height="@dimen/_52sdp"
-        android:layout_margin="@dimen/padding_moderate"
-        android:scaleType="fitCenter"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        tools:src="@mipmap/ic_launcher_foreground" />
+    <!-- Icon tile (clipped in code) -->
+    <FrameLayout
+        android:id="@+id/installed_mod_icon_tile"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:background="@drawable/bg_mm_icon_tile">
 
-    <!-- Mod name -->
-    <TextView
-        android:id="@+id/installed_mod_name"
+        <ImageView
+            android:id="@+id/installed_mod_icon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:padding="3dp"
+            android:scaleType="fitCenter"
+            tools:src="@mipmap/ic_launcher_foreground" />
+    </FrameLayout>
+
+    <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/padding_moderate"
-        android:layout_marginTop="@dimen/padding_moderate"
-        android:textAppearance="?attr/textAppearanceTitleMedium"
-        android:textColor="?attr/colorOnSurface"
-        android:maxLines="1"
-        android:ellipsize="end"
-        app:layout_constraintStart_toEndOf="@+id/installed_mod_icon"
-        app:layout_constraintEnd_toStartOf="@+id/installed_mod_update"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:text="EntityCulling" />
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="6dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
 
-    <!-- Mod version -->
-    <TextView
-        android:id="@+id/installed_mod_version"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/padding_moderate"
-        android:textAppearance="?attr/textAppearanceBodySmall"
-        android:textColor="?attr/colorOnSurfaceVariant"
-        android:maxLines="1"
-        android:ellipsize="end"
-        app:layout_constraintStart_toEndOf="@+id/installed_mod_icon"
-        app:layout_constraintEnd_toStartOf="@+id/installed_mod_update"
-        app:layout_constraintTop_toBottomOf="@+id/installed_mod_name"
-        tools:text="Version 1.8.0" />
+        <TextView
+            android:id="@+id/installed_mod_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/hm_text"
+            android:textSize="14.5sp"
+            android:textStyle="bold"
+            tools:text="Sodium" />
 
-    <!-- Mod description -->
-    <TextView
-        android:id="@+id/installed_mod_description"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/padding_moderate"
-        android:layout_marginBottom="@dimen/padding_moderate"
-        android:textAppearance="?attr/textAppearanceBodySmall"
-        android:textColor="?attr/colorOnSurfaceVariant"
-        android:maxLines="2"
-        android:ellipsize="end"
-        app:layout_constraintStart_toEndOf="@+id/installed_mod_icon"
-        app:layout_constraintEnd_toStartOf="@+id/installed_mod_update"
-        app:layout_constraintTop_toBottomOf="@+id/installed_mod_version"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintVertical_bias="0.0"
-        tools:text="This mod uses async path-tracing to hide Tiles/Entities that are not vi…" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-    <!-- Update/download button, hidden until an update is available -->
+            <TextView
+                android:id="@+id/installed_mod_state"
+                android:layout_width="wrap_content"
+                android:layout_height="19dp"
+                android:background="@drawable/bg_mm_state_on"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:textColor="@color/hm_profile_active"
+                android:textSize="10.5sp"
+                android:textStyle="bold"
+                tools:text="Enabled" />
+
+            <TextView
+                android:id="@+id/installed_mod_version"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:ellipsize="middle"
+                android:maxLines="1"
+                android:textColor="@color/hm_text_dim"
+                android:textSize="11.5sp"
+                tools:text="sodium-fabric-0.6.0.jar" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Update (only when one is available) -->
     <ImageButton
         android:id="@+id/installed_mod_update"
-        android:layout_width="@dimen/_38sdp"
-        android:layout_height="@dimen/_38sdp"
-        android:layout_marginEnd="@dimen/padding_small"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:src="@drawable/ic_download"
-        android:tint="?attr/colorOnSurfaceVariant"
-        android:padding="@dimen/padding_moderate"
-        android:visibility="gone"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:layout_marginEnd="6dp"
+        android:background="@drawable/bg_mm_btn_update"
         android:contentDescription="@string/mod_update"
-        app:layout_constraintEnd_toStartOf="@+id/installed_mod_switch_version"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        android:padding="8dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_lib_download"
+        android:visibility="gone"
+        app:tint="@color/hm_amber"
+        tools:visibility="visible" />
 
     <!-- Takes the update button's place while the update is downloading -->
     <com.google.android.material.progressindicator.CircularProgressIndicator
         android:id="@+id/installed_mod_update_progress"
-        android:layout_width="@dimen/_38sdp"
-        android:layout_height="@dimen/_38sdp"
-        android:layout_marginEnd="@dimen/padding_small"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:layout_marginEnd="6dp"
         android:indeterminate="true"
         android:visibility="gone"
-        app:indicatorSize="@dimen/_20sdp"
-        app:trackThickness="2dp"
-        app:layout_constraintEnd_toStartOf="@+id/installed_mod_switch_version"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:indicatorColor="@color/hm_amber"
+        app:indicatorSize="20dp"
+        app:trackThickness="2dp" />
 
-    <!-- Switch version button, opens the version picker for this mod -->
+    <!-- Switch version -->
     <ImageButton
         android:id="@+id/installed_mod_switch_version"
-        android:layout_width="@dimen/_38sdp"
-        android:layout_height="@dimen/_38sdp"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:src="@drawable/ic_swap_horiz"
-        android:tint="?attr/colorOnSurfaceVariant"
-        android:padding="@dimen/padding_moderate"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:layout_marginEnd="6dp"
+        android:background="@drawable/bg_mm_btn"
         android:contentDescription="@string/switch_mod_version_button_desc"
-        app:layout_constraintEnd_toStartOf="@+id/installed_mod_toggle"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        android:padding="8dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_lib_swap"
+        app:tint="@color/hm_icon" />
 
-    <!-- Enable/disable toggle -->
+    <!-- Delete -->
+    <ImageButton
+        android:id="@+id/installed_mod_delete"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:background="@drawable/bg_mm_btn_danger"
+        android:contentDescription="@string/delete"
+        android:padding="8dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_lib_trash"
+        app:tint="@color/mm_danger" />
+
+    <!-- Enable / disable -->
     <com.google.android.material.materialswitch.MaterialSwitch
         android:id="@+id/installed_mod_toggle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/padding_moderate"
-        android:checked="true"
-        app:layout_constraintEnd_toStartOf="@+id/installed_mod_delete"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        android:layout_marginStart="4dp"
+        android:checked="true" />
 
-    <!-- Delete button -->
-    <ImageButton
-        android:id="@+id/installed_mod_delete"
-        android:layout_width="@dimen/_38sdp"
-        android:layout_height="@dimen/_38sdp"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:src="@drawable/ic_menu_delete_forever"
-        android:tint="?attr/colorOnSurfaceVariant"
-        android:padding="@dimen/padding_moderate"
-        android:contentDescription="@string/delete"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

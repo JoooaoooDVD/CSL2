@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Content manager / manage popup / control editor accents -->
+<resources>
+    <color name="mm_mods_start">#1F6B3C</color>
+    <color name="mm_mods_end">#0E3520</color>
+    <color name="mm_mods_stroke">#45B26E</color>
+    <color name="mm_mods_glyph">#A6F2C2</color>
+    <color name="mm_rp_start">#7C4B14</color>
+    <color name="mm_rp_end">#3E250A</color>
+    <color name="mm_rp_stroke">#D68F38</color>
+    <color name="mm_rp_glyph">#FFD596</color>
+    <color name="mm_sh_start">#3E2573</color>
+    <color name="mm_sh_end">#1D1137</color>
+    <color name="mm_sh_stroke">#8D60E3</color>
+    <color name="mm_sh_glyph">#DCC0FF</color>
+    <color name="mm_danger">#FF8A8A</color>
+    <color name="mm_danger_fill">#2EFF5A5A</color>
+    <color name="mm_danger_stroke">#80FF7A7A</color>
+    <color name="mm_on_fill">#1F3DDC84</color>
+    <color name="mm_on_stroke">#663DDC84</color>
+    <color name="mm_off_fill">#14A3AEC2</color>
+    <color name="mm_off_stroke">#40A3AEC2</color>
+    <color name="ce_grid_backdrop">#0A111E</color>
+    <color name="ce_panel">#F20F182B</color>
+    <color name="ce_handle">#D90F182B</color>
+</resources>
