@@ -25,7 +25,8 @@ public final class HomeMotion {
     public static void playEntrance(@Nullable View banner, @Nullable View bannerArt, @Nullable View wordmark,
                                     @Nullable View versionChip, @Nullable View features,
                                     @Nullable View profileCard, @Nullable View editCard, @Nullable View play,
-                                    @Nullable View playGlint, @NonNull View[] cards, @NonNull View[] tiles) {
+                                    @Nullable View playGlint, @NonNull View[] cards, @NonNull View[] tiles,
+                                    @NonNull View[] cardArts) {
         Motion.riseIn(banner, 0, 16, Motion.LONG);
         Motion.settleZoom(bannerArt, 0);
         Motion.slideInX(wordmark, 120, -34);
@@ -40,6 +41,8 @@ public final class HomeMotion {
         for (int i = 0; i < cards.length; i++) {
             Motion.riseIn(cards[i], 380 + i * 90L, 22);
             if (i < tiles.length) Motion.popIn(tiles[i], 480 + i * 90L, 0.6f);
+            // The card artwork settles from a soft zoom while the card rises
+            if (i < cardArts.length) Motion.settleZoom(cardArts[i], 420 + i * 90L);
         }
     }
 

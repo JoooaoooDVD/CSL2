@@ -28,6 +28,8 @@ public class Instance extends DisplayInstance {
     public String selectedRuntime;
     public String controlLayout;
     public boolean sharedData;
+    /** Per-instance memory in MB, 0 = use the global allocation */
+    public int ramAllocation;
 
     protected Instance() {
     }

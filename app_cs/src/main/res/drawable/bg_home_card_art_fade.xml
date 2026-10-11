@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Card artwork fades into the card colour behind the title -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient android:angle="0" android:startColor="@color/hm_card_fade_start"
+        android:centerColor="@color/hm_card_fade_center" android:centerX="0.42"
+        android:endColor="@color/hm_card_fade_end" />
+</shape>

@@ -147,6 +147,11 @@ public class GameRunner {
 
     public static void launchGame(final AppCompatActivity activity, Account account,
                                   Instance instance, String versionId, File[] classpath, GameRenderer gameRenderer) throws Throwable {
+        // Per-instance memory (set in the Create Instance popup) wins over the global setting.
+        // Only this game process is affected, the stored preference is untouched.
+        if (instance != null && instance.ramAllocation > 0) {
+            LauncherPreferences.PREF_RAM_ALLOCATION = instance.ramAllocation;
+        }
         int freeDeviceMemory = Tools.getFreeDeviceMemory(activity);
         int localeString;
         int freeAddressSpace = Architecture.is32BitsDevice() ? Tools.getMaxContinuousAddressSpaceSize() : -1;

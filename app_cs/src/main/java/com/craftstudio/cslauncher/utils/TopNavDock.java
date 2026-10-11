@@ -11,7 +11,7 @@ import com.craftstudio.cslauncher.R;
 import com.craftstudio.cslauncher.utils.motion.MainMenuMotion;
 
 /**
- * The navigation dock of the launcher top bar (Home, Browse, Manage, Profiles, Versions, Logs).
+ * The navigation dock of the launcher top bar (Home, Browse, Manage, Controls, Logs).
  * It replaced the old left sidebar, so every screen gets the full width of the window.
  * <p>
  * A highlight slides behind the active button; inactive icons are dimmed. The dock itself only
@@ -22,7 +22,7 @@ public final class TopNavDock {
     /** The dock buttons, in order */
     public static final int[] ITEM_IDS = {
             R.id.nav_home, R.id.mod_store_button, R.id.open_files_button,
-            R.id.nav_profiles, R.id.nav_versions, R.id.nav_logs};
+            R.id.nav_controls, R.id.nav_logs};
 
     private static final float INACTIVE_ALPHA = 0.55f;
 

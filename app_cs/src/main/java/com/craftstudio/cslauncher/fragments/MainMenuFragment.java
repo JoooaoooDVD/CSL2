@@ -388,10 +388,10 @@ public class MainMenuFragment extends Fragment {
             showContentPicker(false);
         } else if (navId == R.id.open_files_button) {
             showContentPicker(true);
-        } else if (navId == R.id.nav_profiles) {
-            openPane(InstanceEditorFragment.class, InstanceEditorFragment.TAG, null);
-        } else if (navId == R.id.nav_versions) {
-            openPane(ProfileTypeSelectFragment.class, ProfileTypeSelectFragment.TAG, null);
+        } else if (navId == R.id.nav_controls) {
+            // Touch controls customization: its own activity, the dock keeps the current tab
+            startActivity(new android.content.Intent(requireContext(), com.craftstudio.cslauncher.CustomControlsActivity.class));
+            return true;
         } else if (navId == R.id.nav_logs) {
             openPane(LogsFragment.class, LogsFragment.TAG, null);
         } else {
@@ -421,9 +421,7 @@ public class MainMenuFragment extends Fragment {
             return;
         }
         String top = manager.getBackStackEntryAt(count - 1).getName();
-        if (InstanceEditorFragment.TAG.equals(top)) setActiveNav(R.id.nav_profiles);
-        else if (ProfileTypeSelectFragment.TAG.equals(top)) setActiveNav(R.id.nav_versions);
-        else if (LogsFragment.TAG.equals(top)) setActiveNav(R.id.nav_logs);
+        if (LogsFragment.TAG.equals(top)) setActiveNav(R.id.nav_logs);
         else if (top != null && (top.startsWith(ModsSearchFragment.TAG) || ModInstallFragment.TAG.equals(top)))
             setActiveNav(R.id.mod_store_button);
         else setActiveNav(android.view.View.NO_ID);

@@ -117,6 +117,11 @@ public class LauncherActivity extends BaseActivity {
      * screen above it (settings, account...) is closed first.
      */
     private void onDockItemClicked(int id) {
+        if(id == R.id.nav_controls) {
+            // Touch controls editor: separate activity, whatever screen is open stays as it is
+            startActivity(new Intent(this, CustomControlsActivity.class));
+            return;
+        }
         FragmentManager manager = getSupportFragmentManager();
         if(manager.isStateSaved()) return;
         Fragment current = manager.findFragmentById(R.id.container_fragment);

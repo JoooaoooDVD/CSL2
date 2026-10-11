@@ -19,6 +19,7 @@
     <string name="home_nav_servers">Servers</string>
     <string name="home_nav_directory">Directory</string>
     <string name="home_nav_logs">Logs</string>
+    <string name="home_nav_controls">Controls</string>
     <string name="home_banner_title">MINECRAFT</string>
     <string name="home_banner_subtitle">PLAY WITHOUT LIMITS</string>
     <string name="home_banner_fast">FAST</string>

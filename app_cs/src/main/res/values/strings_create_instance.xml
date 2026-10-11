@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Create chooser -->
+    <string name="cc_label">NEW INSTANCE</string>
+    <string name="cc_title">What do you want to create?</string>
+    <string name="cc_normal_title">Normal</string>
+    <string name="cc_normal_desc">Vanilla, Fabric, Forge, Quilt or NeoForge with your own settings</string>
+    <string name="cc_normal_badge">FABRIC • FORGE</string>
+    <string name="cc_cs_title">CS Client</string>
+    <string name="cc_cs_soon">Coming soon</string>
+    <string name="cc_cs_desc">You will be able to create CS Client profiles here too</string>
+    <string name="cc_cs_badge">COMING SOON</string>
+    <string name="cc_cs_toast">CS Client profiles are coming soon!</string>
+    <string name="cc_modpack_title">Modpack</string>
+    <string name="cc_modpack_desc">Browse modpacks and install one as a new profile</string>
+    <string name="cc_modpack_badge">MODRINTH • CURSEFORGE</string>
+    <string name="cc_more">Need OptiFine, BTA or Legacy Fabric? Open all loaders</string>
+
+    <!-- Create form -->
+    <string name="ci_title">Create Instance</string>
+    <string name="ci_subtitle">Normal profile</string>
+    <string name="ci_back">Back</string>
+    <string name="ci_name">NAME</string>
+    <string name="ci_name_hint">My instance</string>
+    <string name="ci_loader">LOADER</string>
+    <string name="ci_mc_version">MINECRAFT VERSION</string>
+    <string name="ci_loader_version">LOADER VERSION</string>
+    <string name="ci_memory">MEMORY (RAM)</string>
+    <string name="ci_memory_global">Use launcher default (%d MB)</string>
+    <string name="ci_memory_value">%d MB</string>
+    <string name="ci_java">JAVA RUNTIME</string>
+    <string name="ci_java_auto">Automatic (recommended)</string>
+    <string name="ci_renderer">RENDERER</string>
+    <string name="ci_renderer_default">Launcher default</string>
+    <string name="ci_shared">Shared game folder</string>
+    <string name="ci_shared_desc">Use the common worlds, resource packs and options</string>
+    <string name="ci_loading">Loading…</string>
+    <string name="ci_load_failed">Could not load versions. Tap to retry</string>
+    <string name="ci_no_versions">No versions available</string>
+    <string name="ci_latest">Latest (%s)</string>
+    <string name="ci_cancel">Cancel</string>
+    <string name="ci_create">Create</string>
+    <string name="ci_busy_title">Creating instance…</string>
+    <string name="ci_busy_vanilla">Setting up Minecraft %s</string>
+    <string name="ci_busy_loader">Installing %1$s for Minecraft %2$s</string>
+    <string name="ci_done">Instance \"%s\" created</string>
+    <string name="ci_done_installing">Instance \"%1$s\" created, installing %2$s…</string>
+    <string name="ci_pick_version">Pick a Minecraft version first</string>
+    <string name="ci_summary_ram_global">Default RAM</string>
+</resources>

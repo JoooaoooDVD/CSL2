@@ -32,6 +32,7 @@ import com.craftstudio.cslauncher.extra.ExtraCore;
 import com.craftstudio.cslauncher.extra.ExtraListener;
 import com.craftstudio.cslauncher.fragments.InstanceEditorFragment;
 import com.craftstudio.cslauncher.fragments.ProfileTypeSelectFragment;
+import com.craftstudio.cslauncher.fragments.SearchModFragment;
 import com.craftstudio.cslauncher.instances.DisplayInstance;
 import com.craftstudio.cslauncher.instances.Instances;
 import com.craftstudio.cslauncher.instances.InstanceAdapter;
@@ -62,6 +63,7 @@ public class mcVersionSpinner extends ExtendedTextView {
 
     /* The class is in charge of displaying its own list with adapter content being known in advance */
     private ProfilePickerDialog mPickerDialog;
+    private CSPopupDialog mCreateDialog;
     private int mSelectedIndex;
 
     private final InstanceAdapter mProfileAdapter = new InstanceAdapter(new InstanceAdapterExtra[]{
@@ -171,10 +173,40 @@ public class mcVersionSpinner extends ExtendedTextView {
 
     private void performExtraAction(InstanceAdapterExtra extra) {
         //Replace with switch-case if you want to add more extra actions
-        if (extra.id == VERSION_SPINNER_PROFILE_CREATE) {
-            Tools.swapFragment((FragmentActivity) getContext(), ProfileTypeSelectFragment.class,
-                    ProfileTypeSelectFragment.TAG, null);
-        }
+        if (extra.id == VERSION_SPINNER_PROFILE_CREATE) showCreateChooser();
+    }
+
+    /** Create New Instance: Normal / CS Client / Modpack chooser popup */
+    private void showCreateChooser() {
+        if (!(getContext() instanceof FragmentActivity)) return;
+        final FragmentActivity activity = (FragmentActivity) getContext();
+        if (mCreateDialog != null && mCreateDialog.isShowing()) return;
+        mCreateDialog = new CreateChooserDialog(activity, new CreateChooserDialog.Callback() {
+            @Override
+            public void onNormal() {
+                showCreateForm();
+            }
+
+            @Override
+            public void onModpack() {
+                if (activity.isFinishing()) return;
+                Tools.swapFragment(activity, SearchModFragment.class, SearchModFragment.TAG, null);
+            }
+
+            @Override
+            public void onAllLoaders() {
+                if (activity.isFinishing()) return;
+                Tools.swapFragment(activity, ProfileTypeSelectFragment.class, ProfileTypeSelectFragment.TAG, null);
+            }
+        });
+        mCreateDialog.show();
+    }
+
+    /** Normal profile form; its back button returns to the chooser */
+    private void showCreateForm() {
+        if (!(getContext() instanceof FragmentActivity) || ((FragmentActivity) getContext()).isFinishing()) return;
+        mCreateDialog = new CreateInstanceDialog(getContext(), this::showCreateChooser);
+        mCreateDialog.show();
     }
 
 
@@ -189,6 +221,7 @@ public class mcVersionSpinner extends ExtendedTextView {
         public void onViewDetachedFromWindow(@NonNull View view) {
             // Screen going away (activity finishing / fragment replaced): no leaked popup window
             if (mPickerDialog != null && mPickerDialog.isShowing()) mPickerDialog.dismiss();
+            if (mCreateDialog != null && mCreateDialog.isShowing()) mCreateDialog.dismiss();
             ExtraCore.removeExtraListenerFromValue(ExtraConstants.REFRESH_VERSION_SPINNER, this);
         }
 

@@ -22,8 +22,10 @@
     <LinearLayout
         android:id="@+id/pp_card"
         android:layout_width="660dp"
-        android:layout_height="340dp"
+        android:layout_height="match_parent"
         android:layout_gravity="center"
+        android:layout_marginTop="14dp"
+        android:layout_marginBottom="14dp"
         android:background="@drawable/bg_pp_card"
         android:clickable="true"
         android:elevation="16dp"
@@ -55,7 +57,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"
-                android:padding="18dp">
+                android:padding="16dp">
+
+                <!-- Title block takes what is left: the bottom group below is always fully visible -->
+                <LinearLayout
+                    android:id="@+id/pp_side_title_block"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -85,12 +95,7 @@
                     android:textColor="@color/hm_text_dim"
                     android:textSize="12.5sp"
                     tools:text="3 instances" />
-
-                <Space
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="1"
-                    android:minHeight="8dp" />
+                </LinearLayout>
 
                 <TextView
                     android:layout_width="wrap_content"

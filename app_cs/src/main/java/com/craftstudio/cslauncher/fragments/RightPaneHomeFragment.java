@@ -88,6 +88,8 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         // PLAY texture in code so every Android version gets the rounded corners
         view.findViewById(R.id.home_banner_frame).setClipToOutline(true);
         view.findViewById(R.id.home_play_face).setClipToOutline(true);
+        view.findViewById(R.id.home_card_browser).setClipToOutline(true);
+        view.findViewById(R.id.home_card_manager).setClipToOutline(true);
 
         mVersionSpinner = view.findViewById(R.id.mc_version_spinner);
         // The Change button opens the editor of the currently selected profile
@@ -138,7 +140,8 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
                     view.findViewById(R.id.home_play_container),
                     view.findViewById(R.id.home_play_glint),
                     new View[]{view.findViewById(R.id.home_card_browser), view.findViewById(R.id.home_card_manager)},
-                    new View[]{view.findViewById(R.id.home_card_browser_tile), view.findViewById(R.id.home_card_manager_tile)});
+                    new View[]{view.findViewById(R.id.home_card_browser_tile), view.findViewById(R.id.home_card_manager_tile)},
+                    new View[]{view.findViewById(R.id.home_card_browser_art), view.findViewById(R.id.home_card_manager_art)});
         } else {
             // Coming back (closing a screen of the pane): a quick settle instead of the full show
             HomeMotion.playReturn(view.findViewById(R.id.home_root), view.findViewById(R.id.home_play_glint));

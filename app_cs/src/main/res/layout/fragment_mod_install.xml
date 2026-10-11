@@ -5,7 +5,7 @@
     android:id="@+id/install_scroll"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:attr/colorBackground"
+    android:background="@android:color/transparent"
     android:fillViewport="true"
     android:overScrollMode="ifContentScrolls"
     android:scrollbars="none">

@@ -110,6 +110,18 @@ public final class Motion {
         view.animate().setListener(null).setStartDelay(0);
     }
 
+    /**
+     * Entrances start from a clean transform: a cancelled earlier entrance on the same view
+     * (e.g. a cascade followed by a pop) must not leave a translation / scale behind.
+     */
+    private static void prepareEntrance(@NonNull View view) {
+        prepare(view);
+        view.setTranslationX(0f);
+        view.setTranslationY(0f);
+        view.setScaleX(1f);
+        view.setScaleY(1f);
+    }
+
     // ─── Entrances ───────────────────────────────────────────────────────────
 
     /** Fades the view in while it rises from {@code riseDp} below its place */
@@ -123,7 +135,7 @@ public final class Motion {
             settle(view);
             return;
         }
-        prepare(view);
+        prepareEntrance(view);
         view.setAlpha(0f);
         view.setTranslationY(dp(view, riseDp));
         view.animate()
@@ -143,7 +155,7 @@ public final class Motion {
             settle(view);
             return;
         }
-        prepare(view);
+        prepareEntrance(view);
         view.setAlpha(0f);
         view.setTranslationX(dp(view, fromDp));
         view.animate()
@@ -163,7 +175,7 @@ public final class Motion {
             settle(view);
             return;
         }
-        prepare(view);
+        prepareEntrance(view);
         view.setAlpha(0f);
         view.setScaleX(fromScale);
         view.setScaleY(fromScale);
@@ -186,7 +198,7 @@ public final class Motion {
             view.setAlpha(1f);
             return;
         }
-        prepare(view);
+        prepareEntrance(view);
         view.setAlpha(0f);
         view.animate().alpha(1f).setStartDelay(delay).setDuration(duration).setInterpolator(STANDARD).start();
     }
@@ -417,7 +429,7 @@ public final class Motion {
             settle(view);
             return;
         }
-        prepare(view);
+        prepareEntrance(view);
         view.setScaleX(1.08f);
         view.setScaleY(1.08f);
         view.setAlpha(0.2f);

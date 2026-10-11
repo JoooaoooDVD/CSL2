@@ -118,10 +118,10 @@ public class ProfilePickerDialog extends Dialog {
         DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
         float d = metrics.density;
         int width = Math.min((int) (700 * d), metrics.widthPixels - (int) (40 * d));
-        int height = Math.min((int) (380 * d), metrics.heightPixels - (int) (28 * d));
         ViewGroup.LayoutParams params = mCard.getLayoutParams();
         params.width = width;
-        params.height = height;
+        // Height follows the real window (match_parent minus margins); only big screens get a cap
+        params.height = metrics.heightPixels > 480 * d ? (int) (420 * d) : ViewGroup.LayoutParams.MATCH_PARENT;
         mCard.setLayoutParams(params);
         View side = findViewById(R.id.pp_side);
         ViewGroup.LayoutParams sideParams = side.getLayoutParams();

@@ -1,0 +1,855 @@
+package com.kdt.mcgui;
+
+import android.content.Context;
+import android.util.DisplayMetrics;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.BaseAdapter;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.ListPopupWindow;
+import android.widget.SeekBar;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.craftstudio.cslauncher.Architecture;
+import com.craftstudio.cslauncher.CSLauncherApplication;
+import com.craftstudio.cslauncher.JVersionList;
+import com.craftstudio.cslauncher.R;
+import com.craftstudio.cslauncher.Tools;
+import com.craftstudio.cslauncher.extra.ExtraConstants;
+import com.craftstudio.cslauncher.extra.ExtraCore;
+import com.craftstudio.cslauncher.game.renderer.RendererCache;
+import com.craftstudio.cslauncher.instances.Instance;
+import com.craftstudio.cslauncher.instances.InstanceInstaller;
+import com.craftstudio.cslauncher.instances.InstanceSetter;
+import com.craftstudio.cslauncher.instances.Instances;
+import com.craftstudio.cslauncher.modding.fabric.FabricVersion;
+import com.craftstudio.cslauncher.modding.fabric.FabriclikeUtils;
+import com.craftstudio.cslauncher.modding.forge.ForgelikeUtils;
+import com.craftstudio.cslauncher.multirt.MultiRTUtils;
+import com.craftstudio.cslauncher.multirt.Runtime;
+import com.craftstudio.cslauncher.prefs.LauncherPreferences;
+import com.craftstudio.cslauncher.prefs.RamInputDialog;
+import com.craftstudio.cslauncher.progresskeeper.ProgressKeeper;
+import com.craftstudio.cslauncher.utils.CSAnimationEngine;
+import com.craftstudio.cslauncher.utils.motion.CreatePopupMotion;
+import com.craftstudio.cslauncher.utils.motion.Motion;
+import com.google.android.material.materialswitch.MaterialSwitch;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+/**
+ * "Normal" create instance popup: a two column landscape form.
+ * <ul>
+ *   <li>left: name, loader (Vanilla / Fabric / Forge / Quilt / NeoForge), Minecraft version,
+ *       loader version ("Latest" by default);</li>
+ *   <li>right: RAM (own value or launcher default), Java runtime, renderer, shared folder.</li>
+ * </ul>
+ * Create runs the install in the background (busy overlay inside the card), selects the new
+ * instance and closes. Forge-like installers keep running through the usual install progress.
+ */
+public class CreateInstanceDialog extends CSPopupDialog {
+
+    private static final int L_VANILLA = 0, L_FABRIC = 1, L_FORGE = 2, L_QUILT = 3, L_NEOFORGE = 4;
+    private static final String[] LOADER_NAMES = {"Vanilla", "Fabric", "Forge", "Quilt", "NeoForge"};
+    private static final int[] LOADER_ICONS = {R.drawable.ic_pe_px_grass, R.drawable.ic_fabric,
+            R.drawable.ic_forge, R.drawable.ic_quilt, R.drawable.ic_neoforge};
+    private static final String DEFAULT_RUNTIME = "<Default>";
+
+    @Nullable private final Runnable mOnBack;
+
+    // Views
+    private EditText mName;
+    private final View[] mChips = new View[5];
+    private View mMcField, mLoaderField, mLoaderBlock, mMcProgress, mLoaderProgress, mBusy, mCreate;
+    private TextView mMcValue, mLoaderValue, mJavaValue, mRendererValue, mRamValue, mSummary, mSubtitle;
+    private ImageView mHeaderIcon;
+    private SeekBar mRamSlider;
+    private MaterialSwitch mRamGlobalSwitch, mSharedSwitch;
+
+    // Loader / versions
+    private int mLoader = L_FABRIC;
+    private int mGameToken, mLoaderToken;
+    private boolean mGameLoading, mLoaderLoading, mGameFailed, mLoaderFailed;
+    private final List<String> mGameVersions = new ArrayList<>();
+    private int mGameIndex = -1;
+    @Nullable private String mPreferredGame;
+    /** Values passed to the installer, index 0 = latest */
+    private final List<String> mLoaderValues = new ArrayList<>();
+    private final List<String> mLoaderDisplay = new ArrayList<>();
+    private int mLoaderIndex = 0;
+    private Map<String, List<String>> mForgeVersions;
+
+    // Run settings
+    private int mRamMin, mRamMax, mRamStep, mRam;
+    private boolean mUseGlobalRam = true;
+    private final List<Runtime> mRuntimes = new ArrayList<>();
+    private int mRuntimeIndex;
+    private List<String> mRendererIds = new ArrayList<>();
+    private final List<String> mRendererDisplay = new ArrayList<>();
+    private int mRendererIndex;
+    private boolean mShared, mSharedTouched;
+
+    private boolean mBusyRunning;
+    @Nullable private ListPopupWindow mDropdown;
+
+    public CreateInstanceDialog(@NonNull Context context, @Nullable Runnable onBack) {
+        super(context);
+        mOnBack = onBack;
+    }
+
+    @Override
+    protected void onCreate(android.os.Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.dialog_create_instance);
+        View card = findViewById(R.id.ci_card);
+        setupPopup(findViewById(R.id.ci_scrim), card, true);
+        Window window = getWindow();
+        if (window != null) {
+            window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+                    | WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+        }
+        sizeCard(card);
+        bindViews();
+        initRunSettings();
+        selectLoader(L_FABRIC, false);
+
+        CreatePopupMotion.enter(mScrim, mCard);
+        CreatePopupMotion.formContent(findViewById(R.id.ci_header), findViewById(R.id.ci_left),
+                findViewById(R.id.ci_right), findViewById(R.id.ci_footer));
+    }
+
+    private void sizeCard(@NonNull View card) {
+        DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
+        float d = metrics.density;
+        ViewGroup.LayoutParams params = card.getLayoutParams();
+        params.width = Math.min((int) (780 * d), metrics.widthPixels - (int) (40 * d));
+        // Phones: full height minus margins (the body scrolls); tablets: a fixed comfortable height
+        params.height = metrics.heightPixels > 560 * d ? (int) (500 * d) : ViewGroup.LayoutParams.MATCH_PARENT;
+        card.setLayoutParams(params);
+    }
+
+    private void bindViews() {
+        mName = findViewById(R.id.ci_name);
+        mChips[L_VANILLA] = findViewById(R.id.ci_chip_vanilla);
+        mChips[L_FABRIC] = findViewById(R.id.ci_chip_fabric);
+        mChips[L_FORGE] = findViewById(R.id.ci_chip_forge);
+        mChips[L_QUILT] = findViewById(R.id.ci_chip_quilt);
+        mChips[L_NEOFORGE] = findViewById(R.id.ci_chip_neoforge);
+        mMcField = findViewById(R.id.ci_mc_field);
+        mMcValue = findViewById(R.id.ci_mc_value);
+        mMcProgress = findViewById(R.id.ci_mc_progress);
+        mLoaderBlock = findViewById(R.id.ci_loader_block);
+        mLoaderField = findViewById(R.id.ci_loader_field);
+        mLoaderValue = findViewById(R.id.ci_loader_value);
+        mLoaderProgress = findViewById(R.id.ci_loader_progress);
+        mJavaValue = findViewById(R.id.ci_java_value);
+        mRendererValue = findViewById(R.id.ci_renderer_value);
+        mRamValue = findViewById(R.id.ci_ram_value);
+        mRamSlider = findViewById(R.id.ci_ram_slider);
+        mRamGlobalSwitch = findViewById(R.id.ci_ram_global_switch);
+        mSharedSwitch = findViewById(R.id.ci_shared_switch);
+        mSummary = findViewById(R.id.ci_summary);
+        mSubtitle = findViewById(R.id.ci_subtitle);
+        mHeaderIcon = findViewById(R.id.ci_header_icon);
+        mBusy = findViewById(R.id.ci_busy);
+        mCreate = findViewById(R.id.ci_create);
+        mCreate.setClipToOutline(true);
+        findViewById(R.id.ci_header_tile).setClipToOutline(true);
+        mRamValue.setSelected(true);
+
+        View back = findViewById(R.id.ci_back);
+        View close = findViewById(R.id.ci_close);
+        View cancel = findViewById(R.id.ci_cancel);
+        back.setOnClickListener(v -> {
+            if (mBusyRunning) return;
+            hideKeyboard();
+            close(mOnBack);
+        });
+        close.setOnClickListener(v -> onDismissRequested());
+        cancel.setOnClickListener(v -> onDismissRequested());
+        mCreate.setOnClickListener(v -> onCreateClicked());
+        for (View view : new View[]{back, close, cancel, mCreate}) CSAnimationEngine.attachPressFeedback(view);
+
+        for (int i = 0; i < mChips.length; i++) {
+            final int loader = i;
+            mChips[i].setOnClickListener(v -> selectLoader(loader, true));
+        }
+
+        mName.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                hideKeyboard();
+                mName.clearFocus();
+                return true;
+            }
+            return false;
+        });
+
+        mMcField.setOnClickListener(v -> {
+            if (mGameFailed) {
+                loadGameVersions();
+                return;
+            }
+            if (mGameVersions.isEmpty()) return;
+            showDropdown(mMcField, mGameVersions, mGameIndex, index -> {
+                mGameIndex = index;
+                mPreferredGame = mGameVersions.get(index);
+                Motion.swapText(mMcValue, mPreferredGame);
+                onGameVersionChanged();
+            });
+        });
+        mLoaderField.setOnClickListener(v -> {
+            if (mLoaderFailed) {
+                loadLoaderVersions();
+                return;
+            }
+            if (mLoaderDisplay.isEmpty()) return;
+            showDropdown(mLoaderField, mLoaderDisplay, mLoaderIndex, index -> {
+                mLoaderIndex = index;
+                Motion.swapText(mLoaderValue, mLoaderDisplay.get(index));
+                updateSummary();
+            });
+        });
+    }
+
+    // ─── Run settings (right column) ─────────────────────────────────────────
+
+    private void initRunSettings() {
+        Context context = getContext();
+        // RAM: same bounds as the launcher's Java settings
+        mRamMin = context.getResources().getInteger(R.integer.memory_seekbar_min);
+        // 64 MB steps keep the slider values round (256, 320 ... 4096)
+        mRamStep = Math.max(64, context.getResources().getInteger(R.integer.memory_seekbar_increment));
+        int deviceRam = Tools.getTotalDeviceMemory(context);
+        if (Architecture.is32BitsDevice() || deviceRam < 2048) mRamMax = Math.min(1024, deviceRam);
+        else mRamMax = deviceRam - (deviceRam < 3064 ? 800 : 1024);
+        if (mRamMax < mRamMin) mRamMax = mRamMin;
+        mRam = clampRam(LauncherPreferences.PREF_RAM_ALLOCATION);
+        mRamSlider.setMax((mRamMax - mRamMin) / mRamStep);
+        mRamSlider.setProgress((mRam - mRamMin) / mRamStep);
+        mRamSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (!fromUser) return;
+                mRam = clampRam(mRamMin + progress * mRamStep);
+                updateRam(false);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+        mRamValue.setOnClickListener(v -> RamInputDialog.show(getContext(), mRam, mRamMin, mRamMax, megabytes -> {
+            mRam = clampRam(megabytes);
+            mUseGlobalRam = false;
+            mRamSlider.setProgress((mRam - mRamMin) / mRamStep);
+            updateRam(true);
+        }));
+        ((TextView) findViewById(R.id.ci_ram_global_title)).setText(String.format(Locale.getDefault(),
+                context.getString(R.string.ci_memory_global), LauncherPreferences.PREF_RAM_ALLOCATION));
+        findViewById(R.id.ci_ram_global_desc).setVisibility(View.GONE);
+        findViewById(R.id.ci_ram_global_row).setOnClickListener(v -> {
+            mUseGlobalRam = !mUseGlobalRam;
+            updateRam(true);
+        });
+        updateRam(false);
+
+        // Java runtimes (same semantics as the profile editor)
+        try {
+            mRuntimes.addAll(MultiRTUtils.getRuntimes());
+        } catch (Exception ignored) {
+            // No runtime folder yet: only the automatic entry is offered
+        }
+        mRuntimes.add(new Runtime(DEFAULT_RUNTIME));
+        mRuntimeIndex = mRuntimes.size() - 1;
+        mJavaValue.setText(runtimeLabel(mRuntimes.get(mRuntimeIndex)));
+        findViewById(R.id.ci_java_field).setOnClickListener(v -> {
+            List<String> labels = new ArrayList<>();
+            for (Runtime runtime : mRuntimes) labels.add(runtimeLabel(runtime));
+            showDropdown(findViewById(R.id.ci_java_field), labels, mRuntimeIndex, index -> {
+                mRuntimeIndex = index;
+                Motion.swapText(mJavaValue, labels.get(index));
+            });
+        });
+
+        // Renderers: compatible ones + "launcher default" (null)
+        try {
+            RendererCache renderers = RendererCache.getCompatibleRenderers(context);
+            mRendererIds = new ArrayList<>(renderers.rendererIds);
+            mRendererDisplay.addAll(Arrays.asList(renderers.rendererDisplayNames));
+        } catch (Exception ignored) {
+            mRendererIds = new ArrayList<>();
+        }
+        while (mRendererDisplay.size() > mRendererIds.size()) mRendererDisplay.remove(mRendererDisplay.size() - 1);
+        mRendererDisplay.add(context.getString(R.string.ci_renderer_default));
+        mRendererIndex = mRendererDisplay.size() - 1;
+        mRendererValue.setText(mRendererDisplay.get(mRendererIndex));
+        findViewById(R.id.ci_renderer_field).setOnClickListener(v ->
+                showDropdown(findViewById(R.id.ci_renderer_field), mRendererDisplay, mRendererIndex, index -> {
+                    mRendererIndex = index;
+                    Motion.swapText(mRendererValue, mRendererDisplay.get(index));
+                }));
+
+        // Shared game folder
+        ((TextView) findViewById(R.id.ci_shared_desc)).setText(R.string.ci_shared_desc);
+        findViewById(R.id.ci_shared_row).setOnClickListener(v -> {
+            mSharedTouched = true;
+            mShared = !mShared;
+            mSharedSwitch.setChecked(mShared);
+        });
+    }
+
+    private int clampRam(int value) {
+        return Math.max(mRamMin, Math.min(mRamMax, value));
+    }
+
+    private void updateRam(boolean animate) {
+        mRamGlobalSwitch.setChecked(mUseGlobalRam);
+        int shown = mUseGlobalRam ? LauncherPreferences.PREF_RAM_ALLOCATION : mRam;
+        String text = String.format(Locale.getDefault(), getContext().getString(R.string.ci_memory_value), shown);
+        if (animate) Motion.swapText(mRamValue, text);
+        else mRamValue.setText(text);
+        float alpha = mUseGlobalRam ? 0.45f : 1f;
+        if (animate && Motion.content(mRamSlider)) {
+            mRamSlider.animate().alpha(alpha).setStartDelay(0).setDuration(Motion.SHORT)
+                    .setInterpolator(Motion.STANDARD).start();
+        } else {
+            mRamSlider.setAlpha(alpha);
+        }
+        updateSummary();
+    }
+
+    @NonNull
+    private String runtimeLabel(@NonNull Runtime runtime) {
+        if (DEFAULT_RUNTIME.equals(runtime.name)) return getContext().getString(R.string.ci_java_auto);
+        String name = runtime.name.replace(".tar.xz", "");
+        return runtime.versionString == null ? name : name + " - " + runtime.versionString;
+    }
+
+    // ─── Loader / versions (left column) ─────────────────────────────────────
+
+    private void selectLoader(int loader, boolean animate) {
+        if (mBusyRunning) return;
+        boolean changed = loader != mLoader || !animate;
+        mLoader = loader;
+        for (int i = 0; i < mChips.length; i++) mChips[i].setSelected(i == loader);
+        mHeaderIcon.setImageResource(LOADER_ICONS[loader]);
+        mSubtitle.setText(getContext().getString(R.string.ci_subtitle) + " • " + LOADER_NAMES[loader]);
+        if (!mSharedTouched) {
+            // Vanilla shares the common folder by default, modded profiles keep their own mods
+            mShared = loader == L_VANILLA;
+            mSharedSwitch.setChecked(mShared);
+        }
+        if (animate) CreatePopupMotion.loaderChanged(mChips[loader], findViewById(R.id.ci_header_tile));
+        if (changed) loadGameVersions();
+    }
+
+    private boolean isFabricLike() {
+        return mLoader == L_FABRIC || mLoader == L_QUILT;
+    }
+
+    private boolean isForgeLike() {
+        return mLoader == L_FORGE || mLoader == L_NEOFORGE;
+    }
+
+    private FabriclikeUtils fabricUtils() {
+        return mLoader == L_QUILT ? FabriclikeUtils.QUILT_UTILS : FabriclikeUtils.FABRIC_UTILS;
+    }
+
+    private ForgelikeUtils forgeUtils() {
+        return mLoader == L_NEOFORGE ? ForgelikeUtils.NEOFORGE_UTILS : ForgelikeUtils.FORGE_UTILS;
+    }
+
+    private void loadGameVersions() {
+        final int token = ++mGameToken;
+        mLoaderToken++;
+        mGameVersions.clear();
+        mGameIndex = -1;
+        mLoaderValues.clear();
+        mLoaderDisplay.clear();
+        mGameFailed = false;
+        setGameLoading(true);
+
+        if (mLoader == L_VANILLA) {
+            setLoaderBlockVisible(false);
+            List<String> releases = new ArrayList<>();
+            Object table = ExtraCore.getValue(ExtraConstants.RELEASE_TABLE);
+            if (table instanceof JVersionList && ((JVersionList) table).versions != null) {
+                for (JVersionList.Version version : ((JVersionList) table).versions) {
+                    if (version != null && version.id != null && "release".equals(version.type)) releases.add(version.id);
+                }
+            }
+            onGameVersions(token, releases.isEmpty() ? null : releases);
+            return;
+        }
+
+        setLoaderBlockVisible(true);
+        setLoaderLoading(true);
+        final boolean fabricLike = isFabricLike();
+        final FabriclikeUtils fabric = fabricUtils();
+        final ForgelikeUtils forge = forgeUtils();
+        CSLauncherApplication.sExecutorService.execute(() -> {
+            List<String> result = null;
+            Map<String, List<String>> forgeMap = null;
+            try {
+                if (fabricLike) {
+                    FabricVersion[] versions = fabric.downloadGameVersions();
+                    if (versions != null) {
+                        result = new ArrayList<>();
+                        for (FabricVersion version : versions) {
+                            if (version != null && version.stable && version.version != null) result.add(version.version);
+                        }
+                    }
+                } else {
+                    List<String> all = forge.downloadVersions();
+                    if (all != null) {
+                        forgeMap = groupForgeVersions(all, forge);
+                        result = new ArrayList<>(forgeMap.keySet());
+                    }
+                }
+            } catch (Exception e) {
+                result = null;
+            }
+            final List<String> finalResult = result;
+            final Map<String, List<String>> finalMap = forgeMap;
+            Tools.runOnUiThread(() -> {
+                if (token != mGameToken) return;
+                mForgeVersions = finalMap;
+                onGameVersions(token, finalResult);
+            });
+        });
+    }
+
+    /** Same grouping as the Forge version list: game version -> loader builds, newest first */
+    @NonNull
+    private static Map<String, List<String>> groupForgeVersions(@NonNull List<String> all, @NonNull ForgelikeUtils utils) {
+        LinkedHashMap<String, List<String>> map = new LinkedHashMap<>();
+        for (String version : all) {
+            if (version == null || utils.shouldSkipVersion(version)) continue;
+            String game;
+            try {
+                game = utils.processVersionString(version);
+            } catch (RuntimeException e) {
+                continue;
+            }
+            List<String> list = map.get(game);
+            if (list == null) {
+                list = new ArrayList<>();
+                map.put(game, list);
+            }
+            list.add(version);
+        }
+        if (!utils.isVersionOrderInversed()) return map;
+        List<String> keys = new ArrayList<>(map.keySet());
+        Collections.reverse(keys);
+        LinkedHashMap<String, List<String>> reversed = new LinkedHashMap<>();
+        for (String key : keys) {
+            List<String> list = map.get(key);
+            if (list == null) continue;
+            Collections.reverse(list);
+            reversed.put(key, list);
+        }
+        return reversed;
+    }
+
+    private void onGameVersions(int token, @Nullable List<String> versions) {
+        if (token != mGameToken) return;
+        setGameLoading(false);
+        if (versions == null) {
+            mGameFailed = true;
+            mMcValue.setText(R.string.ci_load_failed);
+            if (mLoader != L_VANILLA) {
+                setLoaderLoading(false);
+                mLoaderValue.setText("");
+            }
+            updateSummary();
+            return;
+        }
+        mGameVersions.addAll(versions);
+        if (mGameVersions.isEmpty()) {
+            mMcValue.setText(R.string.ci_no_versions);
+            setLoaderLoading(false);
+            mLoaderValue.setText("");
+            updateSummary();
+            return;
+        }
+        // Keep the version the user picked when switching loader, if this loader has it
+        int preferred = mPreferredGame != null ? mGameVersions.indexOf(mPreferredGame) : -1;
+        mGameIndex = Math.max(preferred, 0);
+        mMcValue.setText(mGameVersions.get(mGameIndex));
+        CreatePopupMotion.valueLoaded(mMcValue);
+        onGameVersionChanged();
+    }
+
+    private void onGameVersionChanged() {
+        updateNameHint();
+        if (mLoader == L_VANILLA) {
+            updateSummary();
+            return;
+        }
+        loadLoaderVersions();
+    }
+
+    private void loadLoaderVersions() {
+        if (mGameIndex < 0 || mGameIndex >= mGameVersions.size()) return;
+        final int token = ++mLoaderToken;
+        final String game = mGameVersions.get(mGameIndex);
+        mLoaderValues.clear();
+        mLoaderDisplay.clear();
+        mLoaderIndex = 0;
+        mLoaderFailed = false;
+        setLoaderLoading(true);
+
+        if (isForgeLike()) {
+            List<String> builds = mForgeVersions != null ? mForgeVersions.get(game) : null;
+            List<String> labels = new ArrayList<>();
+            if (builds != null) {
+                for (String build : builds) labels.add(forgeLabel(build, game));
+            }
+            onLoaderVersions(token, builds, labels);
+            return;
+        }
+
+        final FabriclikeUtils fabric = fabricUtils();
+        CSLauncherApplication.sExecutorService.execute(() -> {
+            List<String> values = null;
+            try {
+                FabricVersion[] versions = fabric.downloadLoaderVersions(game);
+                if (versions != null) {
+                    values = new ArrayList<>();
+                    for (FabricVersion version : versions) {
+                        if (version != null && version.stable && version.version != null) values.add(version.version);
+                    }
+                    // Only betas for this game version: offer them rather than nothing
+                    if (values.isEmpty()) {
+                        for (FabricVersion version : versions) {
+                            if (version != null && version.version != null) values.add(version.version);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                values = null;
+            }
+            final List<String> finalValues = values;
+            Tools.runOnUiThread(() -> onLoaderVersions(token, finalValues, finalValues));
+        });
+    }
+
+    @NonNull
+    private static String forgeLabel(@NonNull String build, @NonNull String game) {
+        // Forge builds are "1.20.1-47.2.0": show only the loader part
+        return build.startsWith(game + "-") ? build.substring(game.length() + 1) : build;
+    }
+
+    private void onLoaderVersions(int token, @Nullable List<String> values, @Nullable List<String> labels) {
+        if (token != mLoaderToken) return;
+        setLoaderLoading(false);
+        if (values == null || labels == null) {
+            mLoaderFailed = true;
+            mLoaderValue.setText(R.string.ci_load_failed);
+            updateSummary();
+            return;
+        }
+        if (values.isEmpty()) {
+            mLoaderValue.setText(R.string.ci_no_versions);
+            updateSummary();
+            return;
+        }
+        mLoaderValues.addAll(values);
+        for (int i = 0; i < labels.size(); i++) {
+            mLoaderDisplay.add(i == 0 ? getContext().getString(R.string.ci_latest, labels.get(0)) : labels.get(i));
+        }
+        mLoaderIndex = 0;
+        mLoaderValue.setText(mLoaderDisplay.get(0));
+        CreatePopupMotion.valueLoaded(mLoaderValue);
+        updateSummary();
+    }
+
+    private void setGameLoading(boolean loading) {
+        mGameLoading = loading;
+        mMcProgress.setVisibility(loading ? View.VISIBLE : View.GONE);
+        if (loading) mMcValue.setText(R.string.ci_loading);
+        updateCreateEnabled();
+    }
+
+    private void setLoaderLoading(boolean loading) {
+        mLoaderLoading = loading;
+        mLoaderProgress.setVisibility(loading ? View.VISIBLE : View.GONE);
+        if (loading) mLoaderValue.setText(R.string.ci_loading);
+        updateCreateEnabled();
+    }
+
+    private void setLoaderBlockVisible(boolean visible) {
+        if (visible) Motion.reveal(mLoaderBlock);
+        else Motion.hide(mLoaderBlock, true);
+    }
+
+    private boolean isReady() {
+        if (mGameLoading || mGameIndex < 0 || mGameIndex >= mGameVersions.size()) return false;
+        if (mLoader == L_VANILLA) return true;
+        return !mLoaderLoading && mLoaderIndex >= 0 && mLoaderIndex < mLoaderValues.size();
+    }
+
+    private void updateCreateEnabled() {
+        float alpha = isReady() ? 1f : 0.55f;
+        if (mCreate.getAlpha() != alpha) mCreate.animate().alpha(alpha).setStartDelay(0).setDuration(Motion.SHORT).start();
+    }
+
+    private void updateNameHint() {
+        mName.setHint(defaultName());
+    }
+
+    @NonNull
+    private String defaultName() {
+        String game = mGameIndex >= 0 && mGameIndex < mGameVersions.size() ? mGameVersions.get(mGameIndex) : null;
+        return game == null ? getContext().getString(R.string.ci_name_hint) : LOADER_NAMES[mLoader] + " " + game;
+    }
+
+    private void updateSummary() {
+        updateCreateEnabled();
+        StringBuilder builder = new StringBuilder(LOADER_NAMES[mLoader]);
+        if (mLoader != L_VANILLA && mLoaderIndex >= 0 && mLoaderIndex < mLoaderValues.size()) {
+            String value = mLoaderValues.get(mLoaderIndex);
+            builder.append(' ').append(isForgeLike() && mGameIndex >= 0 && mGameIndex < mGameVersions.size()
+                    ? forgeLabel(value, mGameVersions.get(mGameIndex)) : value);
+        }
+        if (mGameIndex >= 0 && mGameIndex < mGameVersions.size()) {
+            builder.append("  •  Minecraft ").append(mGameVersions.get(mGameIndex));
+        }
+        builder.append("  •  ");
+        if (mUseGlobalRam) builder.append(getContext().getString(R.string.ci_summary_ram_global));
+        else builder.append(String.format(Locale.getDefault(), getContext().getString(R.string.ci_memory_value), mRam));
+        mSummary.setText(builder.toString());
+    }
+
+    // ─── Dropdowns ───────────────────────────────────────────────────────────
+
+    private interface OnPicked {
+        void onPicked(int index);
+    }
+
+    private void showDropdown(@NonNull View anchor, @NonNull List<String> items, int selected, @NonNull OnPicked onPicked) {
+        if (mBusyRunning || items.isEmpty()) return;
+        hideKeyboard();
+        if (mDropdown != null) mDropdown.dismiss();
+        float d = dp();
+        ListPopupWindow popup = new ListPopupWindow(getContext());
+        popup.setAnchorView(anchor);
+        popup.setModal(true);
+        popup.setInputMethodMode(ListPopupWindow.INPUT_METHOD_NOT_NEEDED);
+        popup.setBackgroundDrawable(androidx.core.content.ContextCompat.getDrawable(getContext(), R.drawable.bg_ci_popup));
+        popup.setAnimationStyle(R.style.CS_DropdownAnimation);
+        popup.setVerticalOffset((int) (4 * d));
+        popup.setWidth(Math.max(anchor.getWidth(), (int) (180 * d)));
+        popup.setHeight(items.size() > 6 ? (int) (6 * 42 * d + 12 * d) : ListPopupWindow.WRAP_CONTENT);
+        popup.setAdapter(new DropdownAdapter(items, selected));
+        popup.setOnItemClickListener((parent, view, position, id) -> {
+            popup.dismiss();
+            if (position != selected) onPicked.onPicked(position);
+        });
+        popup.setOnDismissListener(() -> {
+            if (mDropdown == popup) mDropdown = null;
+        });
+        mDropdown = popup;
+        popup.show();
+        if (popup.getListView() != null) {
+            popup.getListView().setDivider(null);
+            popup.getListView().setVerticalScrollBarEnabled(true);
+            if (selected > 2) popup.setSelection(selected);
+        }
+    }
+
+    private final class DropdownAdapter extends BaseAdapter {
+        private final List<String> mItems;
+        private final int mSelected;
+
+        DropdownAdapter(List<String> items, int selected) {
+            mItems = items;
+            mSelected = selected;
+        }
+
+        @Override
+        public int getCount() {
+            return mItems.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return mItems.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            View row = convertView != null ? convertView
+                    : LayoutInflater.from(parent.getContext()).inflate(R.layout.item_ci_dropdown, parent, false);
+            TextView text = row.findViewById(R.id.ci_row_text);
+            text.setText(mItems.get(position));
+            boolean chosen = position == mSelected;
+            row.setSelected(chosen);
+            text.setTypeface(null, chosen ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+            row.findViewById(R.id.ci_row_check).setVisibility(chosen ? View.VISIBLE : View.INVISIBLE);
+            return row;
+        }
+    }
+
+    // ─── Create ──────────────────────────────────────────────────────────────
+
+    private void onCreateClicked() {
+        if (mBusyRunning) return;
+        if (!isReady()) {
+            Motion.shake(mCreate);
+            if (!mGameLoading && !mLoaderLoading) {
+                Toast.makeText(getContext(), R.string.ci_pick_version, Toast.LENGTH_SHORT).show();
+            }
+            return;
+        }
+        if (ProgressKeeper.hasOngoingTasks()) {
+            Toast.makeText(getContext(), R.string.tasks_ongoing, Toast.LENGTH_LONG).show();
+            return;
+        }
+        hideKeyboard();
+
+        final int loader = mLoader;
+        final String game = mGameVersions.get(mGameIndex);
+        final String loaderValue = loader == L_VANILLA ? null : mLoaderValues.get(mLoaderIndex);
+        String typed = mName.getText() != null ? mName.getText().toString().trim() : "";
+        final String name = typed.isEmpty() ? defaultName() : typed;
+        final int ram = mUseGlobalRam ? 0 : mRam;
+        Runtime runtime = mRuntimeIndex >= 0 && mRuntimeIndex < mRuntimes.size() ? mRuntimes.get(mRuntimeIndex) : null;
+        final String runtimeName = runtime == null || DEFAULT_RUNTIME.equals(runtime.name) || runtime.versionString == null
+                ? null : runtime.name;
+        final String renderer = mRendererIndex >= 0 && mRendererIndex < mRendererIds.size() ? mRendererIds.get(mRendererIndex) : null;
+        final boolean shared = mShared;
+        final FabriclikeUtils fabric = fabricUtils();
+        final ForgelikeUtils forge = forgeUtils();
+        final Context context = getContext();
+
+        mBusyRunning = true;
+        ((TextView) findViewById(R.id.ci_busy_text)).setText(loader == L_VANILLA
+                ? context.getString(R.string.ci_busy_vanilla, game)
+                : context.getString(R.string.ci_busy_loader, LOADER_NAMES[loader], game));
+        CreatePopupMotion.showBusy(mBusy);
+
+        final InstanceSetter common = instance -> {
+            instance.name = name;
+            instance.ramAllocation = ram;
+            instance.selectedRuntime = runtimeName;
+            instance.renderer = renderer;
+            instance.sharedData = shared;
+        };
+
+        CSLauncherApplication.sExecutorService.execute(() -> {
+            try {
+                Instance created;
+                boolean installing = false;
+                if (loader == L_VANILLA) {
+                    created = Instances.createInstance(instance -> {
+                        common.setInstanceProperties(instance);
+                        instance.versionId = game;
+                    }, game);
+                } else if (loader == L_FABRIC || loader == L_QUILT) {
+                    final String versionId = fabric.install(game, loaderValue);
+                    if (versionId == null) {
+                        throw new java.io.IOException(context.getString(R.string.fabric_dl_cant_read_meta, fabric.getName()));
+                    }
+                    created = Instances.createInstance(instance -> {
+                        common.setInstanceProperties(instance);
+                        instance.icon = fabric.getIconName();
+                        instance.versionId = versionId;
+                    }, versionId);
+                } else {
+                    ProgressLayout.setProgress(ProgressLayout.INSTALL_MODPACK, 0);
+                    final InstanceInstaller installer;
+                    try {
+                        installer = forge.createInstaller(loaderValue);
+                    } finally {
+                        ProgressLayout.clearProgress(ProgressLayout.INSTALL_MODPACK);
+                    }
+                    created = Instances.createInstance(instance -> {
+                        common.setInstanceProperties(instance);
+                        instance.icon = forge.getIconName();
+                        instance.installer = installer;
+                    }, loaderValue);
+                    installer.start();
+                    installing = true;
+                }
+                final Instance result = created;
+                final boolean finalInstalling = installing;
+                Tools.runOnUiThread(() -> onCreated(context, result, name, loader, finalInstalling));
+            } catch (Exception e) {
+                Tools.runOnUiThread(() -> onCreateFailed(context, e));
+            }
+        });
+    }
+
+    private void onCreated(@NonNull Context context, @NonNull Instance instance, @NonNull String name,
+                           int loader, boolean installing) {
+        // Also refreshes the profile chip / spinner (REFRESH_VERSION_SPINNER)
+        Instances.setSelectedInstance(instance);
+        String message = installing
+                ? context.getString(R.string.ci_done_installing, name, LOADER_NAMES[loader])
+                : context.getString(R.string.ci_done, name);
+        Toast.makeText(context, message, Toast.LENGTH_LONG).show();
+        mBusyRunning = false;
+        if (isShowing()) close(null);
+    }
+
+    private void onCreateFailed(@NonNull Context context, @NonNull Exception e) {
+        mBusyRunning = false;
+        if (isShowing()) {
+            CreatePopupMotion.hideBusy(mBusy);
+            Tools.showError(context, e);
+        } else {
+            Tools.showErrorRemote(e);
+        }
+    }
+
+    // ─── Misc ────────────────────────────────────────────────────────────────
+
+    @Override
+    protected void onDismissRequested() {
+        if (mBusyRunning) {
+            CreatePopupMotion.nudge(mCard);
+            return;
+        }
+        hideKeyboard();
+        close(null);
+    }
+
+    @Override
+    public void dismiss() {
+        if (mDropdown != null) {
+            mDropdown.dismiss();
+            mDropdown = null;
+        }
+        super.dismiss();
+    }
+
+    private void hideKeyboard() {
+        if (mName == null) return;
+        InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null) imm.hideSoftInputFromWindow(mName.getWindowToken(), 0);
+    }
+}

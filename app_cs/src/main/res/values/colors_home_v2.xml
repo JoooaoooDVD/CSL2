@@ -29,4 +29,18 @@
     <color name="hm_scrim">#730A1222</color>
     <color name="hm_side_start">#E3EEFF</color>
     <color name="hm_side_end">#F6F9FF</color>
+    <!-- Home cards with artwork -->
+    <color name="hm_card_fade_start">#F7FFFFFF</color>
+    <color name="hm_card_fade_center">#C2FFFFFF</color>
+    <color name="hm_card_fade_end">#14FFFFFF</color>
+    <color name="hm_text_shadow">#00000000</color>
+    <color name="hm_chevron_bg">#CCFFFFFF</color>
+    <color name="hm_chevron_stroke">#D8DFEC</color>
+    <!-- Create instance popups -->
+    <color name="hm_amber">#B26A00</color>
+    <color name="hm_amber_fill">#26FFB547</color>
+    <color name="hm_amber_stroke">#99D08A00</color>
+    <color name="hm_busy_scrim">#EBFFFFFF</color>
+    <color name="hm_field">#F3F6FB</color>
+    <color name="hm_divider">#DDE3EE</color>
 </resources>

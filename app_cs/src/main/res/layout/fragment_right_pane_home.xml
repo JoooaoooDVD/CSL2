@@ -410,6 +410,7 @@
     </LinearLayout>
 
     <!-- ══════════════ BROWSER RESOURCES + MANAGER ══════════════ -->
+    <!-- Same card colour for both, each with its own artwork -->
     <LinearLayout
         android:id="@+id/home_cards_row"
         android:layout_width="match_parent"
@@ -419,7 +420,7 @@
         android:minHeight="58dp"
         android:orientation="horizontal">
 
-        <LinearLayout
+        <FrameLayout
             android:id="@+id/home_card_browser"
             android:layout_width="0dp"
             android:layout_height="match_parent"
@@ -427,65 +428,99 @@
             android:background="@drawable/bg_home_card_navy"
             android:clickable="true"
             android:focusable="true"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="12dp"
-            android:paddingEnd="10dp"
             android:tooltipText="@string/home_nav_browser">
 
-            <FrameLayout
-                android:id="@+id/home_card_browser_tile"
-                android:layout_width="@dimen/hm_tile_size"
-                android:layout_height="@dimen/hm_tile_size"
-                android:background="@drawable/bg_home_tile_blue">
+            <!-- Card artwork (right side), faded into the card colour on the left -->
+            <ImageView
+                android:id="@+id/home_card_browser_art"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null"
+                android:scaleType="centerCrop"
+                android:src="@drawable/banner_home_browser" />
 
-                <ImageView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:contentDescription="@null"
-                    android:padding="@dimen/hm_tile_padding"
-                    android:src="@drawable/ic_home_cube_glow" />
-            </FrameLayout>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_home_card_art_fade" />
 
             <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="14dp"
-                android:layout_weight="1"
-                android:orientation="vertical">
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="12dp"
+                android:paddingEnd="10dp">
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:ellipsize="end"
-                    android:letterSpacing="0.02"
-                    android:singleLine="true"
-                    android:text="@string/home_card_browser_title"
-                    android:textColor="@color/hm_text"
-                    android:textSize="@dimen/hm_card_title_size"
-                    android:textStyle="bold" />
+                <FrameLayout
+                    android:id="@+id/home_card_browser_tile"
+                    android:layout_width="@dimen/hm_tile_size"
+                    android:layout_height="@dimen/hm_tile_size"
+                    android:background="@drawable/bg_home_tile_blue">
 
-                <TextView
-                    android:layout_width="match_parent"
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:contentDescription="@null"
+                        android:padding="@dimen/hm_tile_padding"
+                        android:src="@drawable/ic_home_cube_glow" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="3dp"
-                    android:ellipsize="end"
-                    android:singleLine="true"
-                    android:text="@string/home_card_browser_desc"
-                    android:textColor="@color/hm_text_dim"
-                    android:textSize="@dimen/hm_card_desc_size" />
+                    android:layout_marginStart="14dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:letterSpacing="0.02"
+                        android:shadowColor="@color/hm_text_shadow"
+                        android:shadowDy="1"
+                        android:shadowRadius="4"
+                        android:singleLine="true"
+                        android:text="@string/home_card_browser_title"
+                        android:textColor="@color/hm_text"
+                        android:textSize="@dimen/hm_card_title_size"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:ellipsize="end"
+                        android:shadowColor="@color/hm_text_shadow"
+                        android:shadowDy="1"
+                        android:shadowRadius="4"
+                        android:singleLine="true"
+                        android:text="@string/home_card_browser_desc"
+                        android:textColor="@color/hm_text_dim"
+                        android:textSize="@dimen/hm_card_desc_size" />
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/home_card_browser_chevron"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_home_card_chevron"
+                    android:contentDescription="@null"
+                    android:padding="7dp"
+                    android:src="@drawable/ic_home_chevron_right" />
             </LinearLayout>
 
-            <ImageView
-                android:id="@+id/home_card_browser_chevron"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:layout_marginStart="8dp"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_home_chevron_right" />
-        </LinearLayout>
+            <!-- Hairline + pressed tint above the artwork -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_home_card_overlay"
+                android:duplicateParentState="true" />
+        </FrameLayout>
 
-        <LinearLayout
+        <FrameLayout
             android:id="@+id/home_card_manager"
             android:layout_width="0dp"
             android:layout_height="match_parent"
@@ -494,62 +529,97 @@
             android:background="@drawable/bg_home_card_navy"
             android:clickable="true"
             android:focusable="true"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="12dp"
-            android:paddingEnd="10dp"
             android:tooltipText="@string/home_nav_manager">
 
-            <FrameLayout
-                android:id="@+id/home_card_manager_tile"
-                android:layout_width="@dimen/hm_tile_size"
-                android:layout_height="@dimen/hm_tile_size"
-                android:background="@drawable/bg_home_tile_purple">
+            <!-- Card artwork (right side), faded into the card colour on the left -->
+            <ImageView
+                android:id="@+id/home_card_manager_art"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null"
+                android:scaleType="centerCrop"
+                android:src="@drawable/banner_home_manager" />
 
-                <ImageView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:contentDescription="@null"
-                    android:padding="@dimen/hm_tile_padding"
-                    android:src="@drawable/ic_home_servers" />
-            </FrameLayout>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_home_card_art_fade" />
 
             <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="14dp"
-                android:layout_weight="1"
-                android:orientation="vertical">
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="12dp"
+                android:paddingEnd="10dp">
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:ellipsize="end"
-                    android:letterSpacing="0.02"
-                    android:singleLine="true"
-                    android:text="@string/home_card_manager_title"
-                    android:textColor="@color/hm_text"
-                    android:textSize="@dimen/hm_card_title_size"
-                    android:textStyle="bold" />
+                <FrameLayout
+                    android:id="@+id/home_card_manager_tile"
+                    android:layout_width="@dimen/hm_tile_size"
+                    android:layout_height="@dimen/hm_tile_size"
+                    android:background="@drawable/bg_home_tile_blue">
 
-                <TextView
-                    android:layout_width="match_parent"
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:contentDescription="@null"
+                        android:padding="@dimen/hm_tile_padding"
+                        android:src="@drawable/ic_home_servers"
+                        android:tint="@color/hm_cube" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="3dp"
-                    android:ellipsize="end"
-                    android:singleLine="true"
-                    android:text="@string/home_card_manager_desc"
-                    android:textColor="@color/hm_text_dim"
-                    android:textSize="@dimen/hm_card_desc_size" />
+                    android:layout_marginStart="14dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:letterSpacing="0.02"
+                        android:shadowColor="@color/hm_text_shadow"
+                        android:shadowDy="1"
+                        android:shadowRadius="4"
+                        android:singleLine="true"
+                        android:text="@string/home_card_manager_title"
+                        android:textColor="@color/hm_text"
+                        android:textSize="@dimen/hm_card_title_size"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:ellipsize="end"
+                        android:shadowColor="@color/hm_text_shadow"
+                        android:shadowDy="1"
+                        android:shadowRadius="4"
+                        android:singleLine="true"
+                        android:text="@string/home_card_manager_desc"
+                        android:textColor="@color/hm_text_dim"
+                        android:textSize="@dimen/hm_card_desc_size" />
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/home_card_manager_chevron"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_home_card_chevron"
+                    android:contentDescription="@null"
+                    android:padding="7dp"
+                    android:src="@drawable/ic_home_chevron_right" />
             </LinearLayout>
 
-            <ImageView
-                android:id="@+id/home_card_manager_chevron"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:layout_marginStart="8dp"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_home_chevron_right" />
-        </LinearLayout>
+            <!-- Hairline + pressed tint above the artwork -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_home_card_overlay"
+                android:duplicateParentState="true" />
+        </FrameLayout>
     </LinearLayout>
 </LinearLayout>

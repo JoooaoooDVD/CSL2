@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Create chooser option card frame: accent glow while pressed -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/hm_accent_fill" />
+            <corners android:radius="18dp" />
+            <stroke android:width="1.5dp" android:color="@color/hm_accent" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+            <corners android:radius="18dp" />
+            <stroke android:width="1dp" android:color="@color/hm_inner_stroke" />
+        </shape>
+    </item>
+</selector>

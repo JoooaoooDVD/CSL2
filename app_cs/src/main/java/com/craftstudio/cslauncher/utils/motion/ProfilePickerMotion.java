@@ -40,8 +40,9 @@ public final class ProfilePickerMotion {
                 .setDuration(Motion.MEDIUM + 40).setInterpolator(Motion.ENTER).setListener(null)
                 .withLayer().start();
 
-        Motion.cascadeChildren(sideContent, 120, 40, 10);
-        Motion.popIn(create, 300, 0.9f);
+        // The Create button is part of the cascade (a second entrance on it would cancel the
+        // first one half way and leave it shifted down, partly outside the card)
+        Motion.cascadeChildren(sideContent, 120, 50, 10);
 
         if (list != null) {
             // Rows exist after the first layout pass

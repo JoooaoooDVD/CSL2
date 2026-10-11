@@ -11,4 +11,10 @@
         <item name="android:windowAnimationStyle">@null</item>
         <item name="android:windowContentOverlay">@null</item>
     </style>
+
+    <!-- Dropdown lists of the create instance form -->
+    <style name="CS.DropdownAnimation">
+        <item name="android:windowEnterAnimation">@anim/ci_dropdown_enter</item>
+        <item name="android:windowExitAnimation">@anim/ci_dropdown_exit</item>
+    </style>
 </resources>

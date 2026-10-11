@@ -101,7 +101,7 @@
                     android:contentDescription="@string/home_nav_browser"
                     android:padding="8dp"
                     android:scaleType="fitCenter"
-                    android:src="@drawable/ic_nav_browser"
+                    android:src="@drawable/ic_dock_browser"
                     android:tooltipText="@string/home_nav_browser" />
 
                 <ImageButton
@@ -112,30 +112,19 @@
                     android:contentDescription="@string/home_nav_manager"
                     android:padding="8dp"
                     android:scaleType="fitCenter"
-                    android:src="@drawable/ic_nav_manager"
+                    android:src="@drawable/ic_dock_manager"
                     android:tooltipText="@string/home_nav_manager" />
 
                 <ImageButton
-                    android:id="@+id/nav_profiles"
+                    android:id="@+id/nav_controls"
                     android:layout_width="@dimen/top_dock_item_width"
                     android:layout_height="@dimen/top_dock_item_height"
                     android:background="@drawable/bg_top_dock_item"
-                    android:contentDescription="@string/home_nav_profiles"
+                    android:contentDescription="@string/home_nav_controls"
                     android:padding="8dp"
                     android:scaleType="fitCenter"
-                    android:src="@drawable/ic_nav_profiles"
-                    android:tooltipText="@string/home_nav_profiles" />
-
-                <ImageButton
-                    android:id="@+id/nav_versions"
-                    android:layout_width="@dimen/top_dock_item_width"
-                    android:layout_height="@dimen/top_dock_item_height"
-                    android:background="@drawable/bg_top_dock_item"
-                    android:contentDescription="@string/home_nav_versions"
-                    android:padding="8dp"
-                    android:scaleType="fitCenter"
-                    android:src="@drawable/ic_nav_versions"
-                    android:tooltipText="@string/home_nav_versions" />
+                    android:src="@drawable/ic_dock_controls"
+                    android:tooltipText="@string/home_nav_controls" />
 
                 <ImageButton
                     android:id="@+id/nav_logs"
@@ -145,7 +134,7 @@
                     android:contentDescription="@string/home_nav_logs"
                     android:padding="8dp"
                     android:scaleType="fitCenter"
-                    android:src="@drawable/ic_nav_logs"
+                    android:src="@drawable/ic_dock_logs"
                     android:tooltipText="@string/home_nav_logs" />
             </LinearLayout>
         </FrameLayout>
