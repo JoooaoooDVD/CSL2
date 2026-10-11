@@ -10,6 +10,7 @@ import com.craftstudio.cslauncher.R;
 import com.craftstudio.cslauncher.Tools;
 import com.craftstudio.cslauncher.game.renderer.def.Renderers;
 import com.craftstudio.cslauncher.instances.Instance;
+import com.craftstudio.cslauncher.instances.InstanceSetter;
 import com.craftstudio.cslauncher.instances.Instances;
 import com.craftstudio.cslauncher.modding.ModloaderDownloadListener;
 import com.craftstudio.cslauncher.utils.jre.classfile.ClassFormatException;
@@ -91,21 +92,33 @@ public class BTADownloadTask implements Runnable {
         return heuristics;
     }
 
-    private void createProfile(String btaVersionId) throws IOException {
+    private Instance createProfile(String btaVersionId, InstanceSetter extra) throws IOException {
         // BTA 8.0+ uses Core context
         final boolean core = BTAUtils.isNightlyVersion(mBtaVersion) || BTAUtils.parseBTAVersion(mBtaVersion)[0] >= 8;
         Instance instance = Instances.createInstance(i -> {
-            i.versionId = btaVersionId;
-            if(core) i.renderer = Renderers.LTW_RENDERER;
             i.name = "Better than Adventure!";
+            if(extra != null) extra.setInstanceProperties(i);
+            i.versionId = btaVersionId;
+            // The user's renderer choice wins, "launcher default" still needs the Core context renderer
+            if(core && !Tools.isValidString(i.renderer)) i.renderer = Renderers.LTW_RENDERER;
         }, "BTA-"+btaVersionId);
         tryDownloadIcon(instance);
+        return instance;
     }
 
     public void runCatching() throws IOException, ClassFormatException {
+        install(null);
+    }
+
+    /**
+     * Installs this BTA version and creates its instance without any UI (used by the create popup).
+     * @param extra optional extra instance settings (name, RAM, runtime ...), applied before the version id
+     * @return the created instance
+     */
+    public Instance install(InstanceSetter extra) throws IOException, ClassFormatException {
         BTAHeuristics heuristics = installClient();
         String btaVersionId = "bta-"+mBtaVersion.versionName;
         createJson(btaVersionId, heuristics, heuristics.runtimeMajorVersion >= 17);
-        createProfile(btaVersionId);
+        return createProfile(btaVersionId, extra);
     }
 }

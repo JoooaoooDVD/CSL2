@@ -1,9 +1,13 @@
 package com.craftstudio.cslauncher.fragments;
 
 import android.graphics.drawable.AnimatedImageDrawable;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -38,6 +42,7 @@ import com.craftstudio.cslauncher.prefs.screens.LauncherPreferenceVideoFragment;
 import com.craftstudio.cslauncher.utils.CSAnimationEngine;
 import com.craftstudio.cslauncher.utils.LauncherBackground;
 import com.craftstudio.cslauncher.utils.motion.HomeMotion;
+import com.craftstudio.cslauncher.utils.motion.Motion;
 
 import java.io.File;
 import java.util.Locale;
@@ -66,6 +71,10 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
                     () -> onDownloadStateChanged(taskCount, aggregatePercent));
     private CenterCropVideoView mVideo;
     private mcVersionSpinner mVersionSpinner;
+    /** Selected profile card: mirrors the (hidden) spinner + the "version • loader" line */
+    private View mProfileTile;
+    private ImageView mProfileIcon;
+    private TextView mProfileName, mProfileDetail;
     /* Incremented to drop the result of a decode that is not needed anymore */
     private int mLoadId;
     /** Key of the artwork currently shown on the banner (path + mtime), null before the first load */
@@ -92,6 +101,7 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         view.findViewById(R.id.home_card_manager).setClipToOutline(true);
 
         mVersionSpinner = view.findViewById(R.id.mc_version_spinner);
+        bindProfileCard(view);
         // The Change button opens the editor of the currently selected profile
         view.findViewById(R.id.edit_profile_button).setOnClickListener(v -> {
             mVersionSpinner.openProfileEditor(requireActivity());
@@ -142,10 +152,68 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
                     new View[]{view.findViewById(R.id.home_card_browser), view.findViewById(R.id.home_card_manager)},
                     new View[]{view.findViewById(R.id.home_card_browser_tile), view.findViewById(R.id.home_card_manager_tile)},
                     new View[]{view.findViewById(R.id.home_card_browser_art), view.findViewById(R.id.home_card_manager_art)});
+            HomeMotion.profileDetails(mProfileTile, view.findViewById(R.id.home_profile_chevron),
+                    view.findViewById(R.id.home_profile_dot));
         } else {
             // Coming back (closing a screen of the pane): a quick settle instead of the full show
             HomeMotion.playReturn(view.findViewById(R.id.home_root), view.findViewById(R.id.home_play_glint));
         }
+    }
+
+    /**
+     * Selected profile card: the whole card opens the profile picker. The spinner keeps owning
+     * the profile list (selection, picker, editor); its icon + name are mirrored here.
+     */
+    private void bindProfileCard(@NonNull View view) {
+        View card = view.findViewById(R.id.home_profile_card);
+        View chevron = view.findViewById(R.id.home_profile_chevron);
+        mProfileTile = view.findViewById(R.id.home_profile_tile);
+        mProfileIcon = view.findViewById(R.id.home_profile_icon);
+        mProfileName = view.findViewById(R.id.home_profile_name);
+        mProfileDetail = view.findViewById(R.id.home_profile_detail);
+        card.setClipToOutline(true);
+        mProfileTile.setClipToOutline(true);
+        card.setOnClickListener(v -> HomeMotion.profileTapped(chevron, () -> {
+            if (mVersionSpinner != null && isAdded()) mVersionSpinner.showProfilePicker();
+        }));
+        CSAnimationEngine.attachPressFeedback(card);
+        if (mVersionSpinner == null) return;
+        // The spinner sets its icon first, then its text: one watcher catches every change
+        mVersionSpinner.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override public void afterTextChanged(Editable s) {
+                mirrorSpinner(true);
+            }
+        });
+        mirrorSpinner(false);
+    }
+
+    private void mirrorSpinner(boolean animate) {
+        if (mVersionSpinner == null || mProfileName == null || mProfileIcon == null) return;
+        CharSequence name = mVersionSpinner.getText();
+        boolean changed = !TextUtils.equals(mProfileName.getText(), name);
+        if (animate && changed && mProfileName.length() > 0) {
+            Motion.swapText(mProfileName, name);
+            HomeMotion.profileChanged(mProfileTile);
+        } else {
+            mProfileName.setText(name);
+        }
+        Drawable icon = mVersionSpinner.getCompoundDrawablesRelative()[0];
+        mProfileIcon.setImageDrawable(copyIcon(icon));
+    }
+
+    /** Own copy of the (cached, shared) profile icon; small pixel-art bitmaps stay crisp */
+    @Nullable
+    private Drawable copyIcon(@Nullable Drawable icon) {
+        if (icon == null) return null;
+        Drawable.ConstantState state = icon.getConstantState();
+        Drawable copy = state != null ? state.newDrawable(getResources()).mutate() : icon;
+        if (copy instanceof BitmapDrawable) {
+            BitmapDrawable bitmap = (BitmapDrawable) copy;
+            if (bitmap.getBitmap() != null && bitmap.getBitmap().getWidth() <= 64) bitmap.setFilterBitmap(false);
+        }
+        return copy;
     }
 
     /** Delegates to the parent menu so the picker opens in the panes on tablet-width screens */
@@ -287,6 +355,13 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
             mPlaySubtitle.setText(detail);
         } else {
             ((TextView) root.findViewById(R.id.home_play_subtitle)).setText(detail);
+        }
+
+        // Selected profile card: "26.3 • Fabric" under the profile name
+        if (mProfileDetail != null) {
+            CharSequence line = instance != null ? detail : "";
+            if (mProfileDetail.length() > 0) Motion.swapText(mProfileDetail, line);
+            else mProfileDetail.setText(line);
         }
 
         // The banner pill carries the same info so it is readable at a glance from the home screen

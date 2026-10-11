@@ -93,6 +93,33 @@ public final class HomeMotion {
         });
     }
 
+    /** Selected profile card details: icon tile, active dot and chevron pop in after the card */
+    public static void profileDetails(@Nullable View tile, @Nullable View chevron, @Nullable View dot) {
+        Motion.popIn(tile, 300, 0.6f);
+        Motion.popIn(dot, 460, 0.2f);
+        Motion.popIn(chevron, 380, 0.5f);
+    }
+
+    /** Profile card tapped: the chevron dips down and springs back, then {@code open} */
+    public static void profileTapped(@Nullable View chevron, @NonNull Runnable open) {
+        if (chevron == null || !Motion.buttons(chevron)) {
+            open.run();
+            return;
+        }
+        chevron.animate().cancel();
+        chevron.animate().translationY(Motion.dp(chevron, 4)).setStartDelay(0).setDuration(110)
+                .setInterpolator(Motion.STANDARD).setListener(null)
+                .withEndAction(() -> chevron.animate().translationY(0f).setDuration(260)
+                        .setInterpolator(Motion.SPRING).start())
+                .start();
+        chevron.postDelayed(open, 100);
+    }
+
+    /** Another profile got selected: the icon tile bounces */
+    public static void profileChanged(@Nullable View tile) {
+        Motion.bounce(tile);
+    }
+
     /** Chevron nudge, then {@code open} (immediately when animations are off) */
     public static void cardTapped(@NonNull View card, @Nullable View chevron, @NonNull Runnable open) {
         if (chevron == null || !Motion.buttons(card)) {

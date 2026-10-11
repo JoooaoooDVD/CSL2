@@ -32,9 +32,13 @@ import com.craftstudio.cslauncher.instances.Instance;
 import com.craftstudio.cslauncher.instances.InstanceInstaller;
 import com.craftstudio.cslauncher.instances.InstanceSetter;
 import com.craftstudio.cslauncher.instances.Instances;
+import com.craftstudio.cslauncher.modding.bta.BTADownloadTask;
+import com.craftstudio.cslauncher.modding.bta.BTAUtils;
 import com.craftstudio.cslauncher.modding.fabric.FabricVersion;
 import com.craftstudio.cslauncher.modding.fabric.FabriclikeUtils;
 import com.craftstudio.cslauncher.modding.forge.ForgelikeUtils;
+import com.craftstudio.cslauncher.modding.optifine.OptiFineDownloadTask;
+import com.craftstudio.cslauncher.modding.optifine.OptiFineUtils;
 import com.craftstudio.cslauncher.multirt.MultiRTUtils;
 import com.craftstudio.cslauncher.multirt.Runtime;
 import com.craftstudio.cslauncher.prefs.LauncherPreferences;
@@ -56,8 +60,8 @@ import java.util.Map;
 /**
  * "Normal" create instance popup: a two column landscape form.
  * <ul>
- *   <li>left: name, loader (Vanilla / Fabric / Forge / Quilt / NeoForge), Minecraft version,
- *       loader version ("Latest" by default);</li>
+ *   <li>left: name, loader (Vanilla / Fabric / Forge / NeoForge / Quilt / OptiFine /
+ *       Legacy Fabric / BTA), Minecraft version, loader version ("Latest" by default);</li>
  *   <li>right: RAM (own value or launcher default), Java runtime, renderer, shared folder.</li>
  * </ul>
  * Create runs the install in the background (busy overlay inside the card), selects the new
@@ -65,17 +69,22 @@ import java.util.Map;
  */
 public class CreateInstanceDialog extends CSPopupDialog {
 
-    private static final int L_VANILLA = 0, L_FABRIC = 1, L_FORGE = 2, L_QUILT = 3, L_NEOFORGE = 4;
-    private static final String[] LOADER_NAMES = {"Vanilla", "Fabric", "Forge", "Quilt", "NeoForge"};
+    private static final int L_VANILLA = 0, L_FABRIC = 1, L_FORGE = 2, L_QUILT = 3, L_NEOFORGE = 4,
+            L_OPTIFINE = 5, L_LEGACY_FABRIC = 6, L_BTA = 7;
+    private static final String[] LOADER_NAMES = {"Vanilla", "Fabric", "Forge", "Quilt", "NeoForge",
+            "OptiFine", "Legacy Fabric", "BTA"};
     private static final int[] LOADER_ICONS = {R.drawable.ic_pe_px_grass, R.drawable.ic_fabric,
-            R.drawable.ic_forge, R.drawable.ic_quilt, R.drawable.ic_neoforge};
+            R.drawable.ic_forge, R.drawable.ic_quilt, R.drawable.ic_neoforge,
+            R.drawable.ic_loader_optifine, R.drawable.ic_fabric, R.drawable.ic_pe_px_sword};
+    /** Better than Adventure! is always built on Beta 1.7.3 */
+    private static final String BTA_GAME_VERSION = "b1.7.3";
     private static final String DEFAULT_RUNTIME = "<Default>";
 
     @Nullable private final Runnable mOnBack;
 
     // Views
     private EditText mName;
-    private final View[] mChips = new View[5];
+    private final View[] mChips = new View[8];
     private View mMcField, mLoaderField, mLoaderBlock, mMcProgress, mLoaderProgress, mBusy, mCreate;
     private TextView mMcValue, mLoaderValue, mJavaValue, mRendererValue, mRamValue, mSummary, mSubtitle;
     private ImageView mHeaderIcon;
@@ -94,6 +103,12 @@ public class CreateInstanceDialog extends CSPopupDialog {
     private final List<String> mLoaderDisplay = new ArrayList<>();
     private int mLoaderIndex = 0;
     private Map<String, List<String>> mForgeVersions;
+    /** OptiFine: game version -> builds (newest first); builds of the selected game, aligned with mLoaderValues */
+    private Map<String, List<OptiFineUtils.OptiFineVersion>> mOptiFineVersions;
+    private final List<OptiFineUtils.OptiFineVersion> mOptiFineBuilds = new ArrayList<>();
+    /** BTA: every version (tested, untested, nightly), aligned with mLoaderValues */
+    private final List<BTAUtils.BTAVersion> mBtaBuilds = new ArrayList<>();
+    private final List<String> mBtaLabels = new ArrayList<>();
 
     // Run settings
     private int mRamMin, mRamMax, mRamStep, mRam;
@@ -151,6 +166,9 @@ public class CreateInstanceDialog extends CSPopupDialog {
         mChips[L_FORGE] = findViewById(R.id.ci_chip_forge);
         mChips[L_QUILT] = findViewById(R.id.ci_chip_quilt);
         mChips[L_NEOFORGE] = findViewById(R.id.ci_chip_neoforge);
+        mChips[L_OPTIFINE] = findViewById(R.id.ci_chip_optifine);
+        mChips[L_LEGACY_FABRIC] = findViewById(R.id.ci_chip_legacy_fabric);
+        mChips[L_BTA] = findViewById(R.id.ci_chip_bta);
         mMcField = findViewById(R.id.ci_mc_field);
         mMcValue = findViewById(R.id.ci_mc_value);
         mMcProgress = findViewById(R.id.ci_mc_progress);
@@ -353,8 +371,8 @@ public class CreateInstanceDialog extends CSPopupDialog {
         mHeaderIcon.setImageResource(LOADER_ICONS[loader]);
         mSubtitle.setText(getContext().getString(R.string.ci_subtitle) + " • " + LOADER_NAMES[loader]);
         if (!mSharedTouched) {
-            // Vanilla shares the common folder by default, modded profiles keep their own mods
-            mShared = loader == L_VANILLA;
+            // Vanilla / OptiFine share the common folder by default, modded profiles keep their own mods
+            mShared = loader == L_VANILLA || loader == L_OPTIFINE;
             mSharedSwitch.setChecked(mShared);
         }
         if (animate) CreatePopupMotion.loaderChanged(mChips[loader], findViewById(R.id.ci_header_tile));
@@ -362,7 +380,7 @@ public class CreateInstanceDialog extends CSPopupDialog {
     }
 
     private boolean isFabricLike() {
-        return mLoader == L_FABRIC || mLoader == L_QUILT;
+        return mLoader == L_FABRIC || mLoader == L_QUILT || mLoader == L_LEGACY_FABRIC;
     }
 
     private boolean isForgeLike() {
@@ -370,7 +388,9 @@ public class CreateInstanceDialog extends CSPopupDialog {
     }
 
     private FabriclikeUtils fabricUtils() {
-        return mLoader == L_QUILT ? FabriclikeUtils.QUILT_UTILS : FabriclikeUtils.FABRIC_UTILS;
+        if (mLoader == L_QUILT) return FabriclikeUtils.QUILT_UTILS;
+        if (mLoader == L_LEGACY_FABRIC) return FabriclikeUtils.LEGACY_FABRIC_UTILS;
+        return FabriclikeUtils.FABRIC_UTILS;
     }
 
     private ForgelikeUtils forgeUtils() {
@@ -402,14 +422,32 @@ public class CreateInstanceDialog extends CSPopupDialog {
 
         setLoaderBlockVisible(true);
         setLoaderLoading(true);
+        final int loader = mLoader;
         final boolean fabricLike = isFabricLike();
         final FabriclikeUtils fabric = fabricUtils();
         final ForgelikeUtils forge = forgeUtils();
         CSLauncherApplication.sExecutorService.execute(() -> {
             List<String> result = null;
             Map<String, List<String>> forgeMap = null;
+            Map<String, List<OptiFineUtils.OptiFineVersion>> optiFineMap = null;
+            List<BTAUtils.BTAVersion> btaBuilds = null;
+            List<String> btaLabels = null;
             try {
-                if (fabricLike) {
+                if (loader == L_OPTIFINE) {
+                    optiFineMap = groupOptiFineVersions(OptiFineUtils.downloadOptiFineVersions());
+                    if (optiFineMap != null) result = new ArrayList<>(optiFineMap.keySet());
+                } else if (loader == L_BTA) {
+                    BTAUtils.BTAVersionList list = BTAUtils.downloadVersionList();
+                    if (list != null) {
+                        btaBuilds = new ArrayList<>();
+                        btaLabels = new ArrayList<>();
+                        addBtaVersions(list.testedVersions, null, btaBuilds, btaLabels);
+                        addBtaVersions(list.untestedVersions, "untested", btaBuilds, btaLabels);
+                        addBtaVersions(list.nightlyVersions, "nightly", btaBuilds, btaLabels);
+                        result = new ArrayList<>();
+                        result.add(BTA_GAME_VERSION);
+                    }
+                } else if (fabricLike) {
                     FabricVersion[] versions = fabric.downloadGameVersions();
                     if (versions != null) {
                         result = new ArrayList<>();
@@ -429,9 +467,19 @@ public class CreateInstanceDialog extends CSPopupDialog {
             }
             final List<String> finalResult = result;
             final Map<String, List<String>> finalMap = forgeMap;
+            final Map<String, List<OptiFineUtils.OptiFineVersion>> finalOptiFine = optiFineMap;
+            final List<BTAUtils.BTAVersion> finalBta = btaBuilds;
+            final List<String> finalBtaLabels = btaLabels;
             Tools.runOnUiThread(() -> {
                 if (token != mGameToken) return;
                 mForgeVersions = finalMap;
+                mOptiFineVersions = finalOptiFine;
+                mBtaBuilds.clear();
+                mBtaLabels.clear();
+                if (finalBta != null && finalBtaLabels != null) {
+                    mBtaBuilds.addAll(finalBta);
+                    mBtaLabels.addAll(finalBtaLabels);
+                }
                 onGameVersions(token, finalResult);
             });
         });
@@ -467,6 +515,46 @@ public class CreateInstanceDialog extends CSPopupDialog {
             reversed.put(key, list);
         }
         return reversed;
+    }
+
+    /** OptiFine page order (newest first); "Minecraft 1.20.1" headers become "1.20.1" */
+    @Nullable
+    private static Map<String, List<OptiFineUtils.OptiFineVersion>> groupOptiFineVersions(@Nullable OptiFineUtils.OptiFineVersions versions) {
+        if (versions == null || versions.gameVersions == null || versions.optifineVersions == null) return null;
+        LinkedHashMap<String, List<OptiFineUtils.OptiFineVersion>> map = new LinkedHashMap<>();
+        int count = Math.min(versions.gameVersions.size(), versions.optifineVersions.size());
+        for (int i = 0; i < count; i++) {
+            String header = versions.gameVersions.get(i);
+            List<OptiFineUtils.OptiFineVersion> builds = versions.optifineVersions.get(i);
+            if (header == null || builds == null) continue;
+            String game = header.startsWith("Minecraft ") ? header.substring("Minecraft ".length()).trim() : header.trim();
+            List<OptiFineUtils.OptiFineVersion> valid = new ArrayList<>();
+            for (OptiFineUtils.OptiFineVersion build : builds) {
+                if (build != null && build.versionName != null && build.downloadUrl != null) valid.add(build);
+            }
+            if (valid.isEmpty()) continue;
+            List<OptiFineUtils.OptiFineVersion> existing = map.get(game);
+            if (existing == null) map.put(game, valid);
+            else existing.addAll(valid);
+        }
+        return map;
+    }
+
+    private static void addBtaVersions(@Nullable List<BTAUtils.BTAVersion> source, @Nullable String tag,
+                                       @NonNull List<BTAUtils.BTAVersion> builds, @NonNull List<String> labels) {
+        if (source == null) return;
+        for (BTAUtils.BTAVersion version : source) {
+            if (version == null || version.versionName == null) continue;
+            builds.add(version);
+            labels.add(tag == null ? version.versionName : version.versionName + " (" + tag + ")");
+        }
+    }
+
+    @NonNull
+    private static String optiFineLabel(@NonNull String versionName) {
+        // "OptiFine HD U I6" -> "HD U I6"
+        String label = versionName.trim();
+        return label.startsWith("OptiFine ") ? label.substring("OptiFine ".length()) : label;
     }
 
     private void onGameVersions(int token, @Nullable List<String> versions) {
@@ -513,9 +601,28 @@ public class CreateInstanceDialog extends CSPopupDialog {
         final String game = mGameVersions.get(mGameIndex);
         mLoaderValues.clear();
         mLoaderDisplay.clear();
+        mOptiFineBuilds.clear();
         mLoaderIndex = 0;
         mLoaderFailed = false;
         setLoaderLoading(true);
+
+        if (mLoader == L_OPTIFINE) {
+            List<OptiFineUtils.OptiFineVersion> builds = mOptiFineVersions != null ? mOptiFineVersions.get(game) : null;
+            List<String> labels = null;
+            if (builds != null) {
+                mOptiFineBuilds.addAll(builds);
+                labels = new ArrayList<>();
+                for (OptiFineUtils.OptiFineVersion build : builds) labels.add(optiFineLabel(build.versionName));
+            }
+            onLoaderVersions(token, labels, labels);
+            return;
+        }
+        if (mLoader == L_BTA) {
+            List<String> names = new ArrayList<>();
+            for (BTAUtils.BTAVersion build : mBtaBuilds) names.add(build.versionName);
+            onLoaderVersions(token, names, new ArrayList<>(mBtaLabels));
+            return;
+        }
 
         if (isForgeLike()) {
             List<String> builds = mForgeVersions != null ? mForgeVersions.get(game) : null;
@@ -744,6 +851,14 @@ public class CreateInstanceDialog extends CSPopupDialog {
         final boolean shared = mShared;
         final FabriclikeUtils fabric = fabricUtils();
         final ForgelikeUtils forge = forgeUtils();
+        final OptiFineUtils.OptiFineVersion optiFine = loader == L_OPTIFINE && mLoaderIndex < mOptiFineBuilds.size()
+                ? mOptiFineBuilds.get(mLoaderIndex) : null;
+        final BTAUtils.BTAVersion bta = loader == L_BTA && mLoaderIndex < mBtaBuilds.size()
+                ? mBtaBuilds.get(mLoaderIndex) : null;
+        if ((loader == L_OPTIFINE && optiFine == null) || (loader == L_BTA && bta == null)) {
+            Motion.shake(mCreate);
+            return;
+        }
         final Context context = getContext();
 
         mBusyRunning = true;
@@ -769,7 +884,7 @@ public class CreateInstanceDialog extends CSPopupDialog {
                         common.setInstanceProperties(instance);
                         instance.versionId = game;
                     }, game);
-                } else if (loader == L_FABRIC || loader == L_QUILT) {
+                } else if (loader == L_FABRIC || loader == L_QUILT || loader == L_LEGACY_FABRIC) {
                     final String versionId = fabric.install(game, loaderValue);
                     if (versionId == null) {
                         throw new java.io.IOException(context.getString(R.string.fabric_dl_cant_read_meta, fabric.getName()));
@@ -779,6 +894,29 @@ public class CreateInstanceDialog extends CSPopupDialog {
                         instance.icon = fabric.getIconName();
                         instance.versionId = versionId;
                     }, versionId);
+                } else if (loader == L_OPTIFINE) {
+                    // Same steps as the old OptiFine page: vanilla game first, then the OptiFine installer
+                    ProgressLayout.setProgress(ProgressLayout.INSTALL_MODPACK, 0);
+                    final InstanceInstaller installer;
+                    try {
+                        new OptiFineDownloadTask(optiFine).prepareForInstall();
+                        installer = OptiFineUtils.createInstaller(optiFine);
+                    } finally {
+                        ProgressLayout.clearProgress(ProgressLayout.INSTALL_MODPACK);
+                    }
+                    created = Instances.createInstance(instance -> {
+                        common.setInstanceProperties(instance);
+                        instance.installer = installer;
+                    }, "OptiFine-" + game);
+                    installer.start();
+                    installing = true;
+                } else if (loader == L_BTA) {
+                    ProgressKeeper.submitProgress(ProgressLayout.INSTALL_MODPACK, 0, R.string.fabric_dl_progress, "BTA");
+                    try {
+                        created = new BTADownloadTask(null, bta).install(common);
+                    } finally {
+                        ProgressLayout.clearProgress(ProgressLayout.INSTALL_MODPACK);
+                    }
                 } else {
                     ProgressLayout.setProgress(ProgressLayout.INSTALL_MODPACK, 0);
                     final InstanceInstaller installer;

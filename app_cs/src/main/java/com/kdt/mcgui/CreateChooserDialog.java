@@ -19,14 +19,13 @@ import com.craftstudio.cslauncher.utils.motion.CreatePopupMotion;
  *   <li>CS Client: not available yet (badge + shake + toast);</li>
  *   <li>Modpack: opens the modpack browser, where a modpack is installed as a profile.</li>
  * </ul>
- * The bottom link keeps access to every other loader (OptiFine, BTA, Legacy Fabric ...).
+ * Every loader (OptiFine, BTA, Legacy Fabric too) lives in the Normal form, there is no extra page.
  */
 public class CreateChooserDialog extends CSPopupDialog {
 
     public interface Callback {
         void onNormal();
         void onModpack();
-        void onAllLoaders();
     }
 
     private final Callback mCallback;
@@ -47,7 +46,6 @@ public class CreateChooserDialog extends CSPopupDialog {
         View normal = findViewById(R.id.cc_opt_normal);
         View cs = findViewById(R.id.cc_opt_cs);
         View modpack = findViewById(R.id.cc_opt_modpack);
-        View more = findViewById(R.id.cc_more);
         View close = findViewById(R.id.cc_close);
         for (View option : new View[]{normal, cs, modpack}) option.setClipToOutline(true);
         findViewById(R.id.cc_normal_tile).setClipToOutline(true);
@@ -67,12 +65,10 @@ public class CreateChooserDialog extends CSPopupDialog {
             CreatePopupMotion.comingSoon(cs, findViewById(R.id.cc_cs_badge));
             Toast.makeText(getContext(), R.string.cc_cs_toast, Toast.LENGTH_SHORT).show();
         });
-        more.setOnClickListener(v -> close(mCallback::onAllLoaders));
         CSAnimationEngine.attachPressFeedback(close);
-        CSAnimationEngine.attachPressFeedback(more);
 
         CreatePopupMotion.enter(mScrim, mCard);
-        CreatePopupMotion.chooserContent(findViewById(R.id.cc_header), new View[]{normal, cs, modpack}, more);
+        CreatePopupMotion.chooserContent(findViewById(R.id.cc_header), new View[]{normal, cs, modpack}, null);
         CreatePopupMotion.optionArts(new View[]{findViewById(R.id.cc_normal_art),
                 findViewById(R.id.cc_cs_art), findViewById(R.id.cc_modpack_art)});
     }
@@ -84,11 +80,11 @@ public class CreateChooserDialog extends CSPopupDialog {
         ViewGroup.LayoutParams params = card.getLayoutParams();
         params.width = Math.min((int) (640 * d), metrics.widthPixels - (int) (48 * d));
         card.setLayoutParams(params);
-        // header ~44 + margins 14/8 + link 36 + padding 36 + window margin 28
+        // header ~44 + margin 14 + padding 36 + window margin ~28; the art area takes what is left
         View options = findViewById(R.id.cc_options);
         ViewGroup.LayoutParams optionParams = options.getLayoutParams();
-        int available = metrics.heightPixels - (int) (170 * d);
-        optionParams.height = Math.max((int) (140 * d), Math.min((int) (196 * d), available));
+        int available = metrics.heightPixels - (int) (134 * d);
+        optionParams.height = Math.max((int) (150 * d), Math.min((int) (236 * d), available));
         options.setLayoutParams(optionParams);
     }
 }

@@ -14,7 +14,6 @@
     <string name="cc_modpack_title">Modpack</string>
     <string name="cc_modpack_desc">Browse modpacks and install one as a new profile</string>
     <string name="cc_modpack_badge">MODRINTH • CURSEFORGE</string>
-    <string name="cc_more">Need OptiFine, BTA or Legacy Fabric? Open all loaders</string>
 
     <!-- Create form -->
     <string name="ci_title">Create Instance</string>

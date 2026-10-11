@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- OptiFine chip icon: a lens (performance / visuals) on a red tile -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFD93A3A"
+        android:pathData="M6,2h12a4,4 0,0 1,4 4v12a4,4 0,0 1,-4 4H6a4,4 0,0 1,-4 -4V6a4,4 0,0 1,4 -4z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,5.5a6.5,6.5 0,1 1,0 13a6.5,6.5 0,1 1,0 -13zM12,8a4,4 0,1 0,0 8a4,4 0,1 0,0 -8z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,10.2a1.8,1.8 0,1 1,0 3.6a1.8,1.8 0,1 1,0 -3.6z" />
+</vector>

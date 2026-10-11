@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Banner fade: art visible at the top, solid card color behind the text at the bottom -->
+<!-- Short fade at the bottom of a chooser banner, melting the art into the card under the text -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <gradient android:angle="90" android:startColor="@color/hm_card_fade_start"
-        android:centerColor="@color/hm_card_fade_center" android:endColor="@color/hm_card_fade_end" />
+    <gradient android:angle="90" android:startColor="@color/hm_inner"
+        android:endColor="@color/hm_inner_clear" />
 </shape>

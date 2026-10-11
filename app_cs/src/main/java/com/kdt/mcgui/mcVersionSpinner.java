@@ -31,7 +31,6 @@ import com.craftstudio.cslauncher.extra.ExtraConstants;
 import com.craftstudio.cslauncher.extra.ExtraCore;
 import com.craftstudio.cslauncher.extra.ExtraListener;
 import com.craftstudio.cslauncher.fragments.InstanceEditorFragment;
-import com.craftstudio.cslauncher.fragments.ProfileTypeSelectFragment;
 import com.craftstudio.cslauncher.fragments.SearchModFragment;
 import com.craftstudio.cslauncher.instances.DisplayInstance;
 import com.craftstudio.cslauncher.instances.Instances;
@@ -191,12 +190,6 @@ public class mcVersionSpinner extends ExtendedTextView {
             public void onModpack() {
                 if (activity.isFinishing()) return;
                 Tools.swapFragment(activity, SearchModFragment.class, SearchModFragment.TAG, null);
-            }
-
-            @Override
-            public void onAllLoaders() {
-                if (activity.isFinishing()) return;
-                Tools.swapFragment(activity, ProfileTypeSelectFragment.class, ProfileTypeSelectFragment.TAG, null);
             }
         });
         mCreateDialog.show();

@@ -7,6 +7,7 @@
     <color name="hm_card_pressed">#F2172036</color>
     <color name="hm_card_stroke">#1F2B44</color>
     <color name="hm_inner">#0F1A2E</color>
+    <color name="hm_inner_clear">#000F1A2E</color>
     <color name="hm_inner_stroke">#2A3754</color>
     <color name="hm_text">#F2F5FA</color>
     <color name="hm_text_dim">#A3AEC2</color>
@@ -24,6 +25,9 @@
     <color name="hm_accent">#6FB1FF</color>
     <color name="hm_accent_fill">#264C8DFF</color>
     <color name="hm_accent_stroke">#996FB1FF</color>
+    <color name="hm_accent_clear">#004C8DFF</color>
+    <color name="hm_accent_soft">#144C8DFF</color>
+    <color name="hm_profile_active">#3DDC84</color>
     <color name="hm_green_fill">#1B3A2A</color>
     <color name="hm_green_text">#7CE3A2</color>
     <color name="hm_scrim">#B3030712</color>
