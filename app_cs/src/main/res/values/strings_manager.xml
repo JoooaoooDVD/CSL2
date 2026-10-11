@@ -16,6 +16,10 @@
     <string name="mm_search_sh">Search shader packs</string>
     <string name="mm_browse">Browse</string>
     <string name="mm_import">Import a file</string>
+    <string name="mm_import_short">Import</string>
+    <string name="mm_import_many">%1$d files imported</string>
+    <string name="mm_import_skipped">%1$d skipped: only %2$s files can be imported here</string>
+    <string name="mm_importing">Importing…</string>
     <string name="mm_refresh">Check for updates</string>
     <string name="mm_clear_search">Clear search</string>
     <string name="mm_subtitle">%1$s  ·  %2$s</string>

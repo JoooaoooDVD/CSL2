@@ -18,10 +18,13 @@ import androidx.recyclerview.widget.RecyclerView;
 public final class ManagerMotion {
     private ManagerMotion() {}
 
-    /** Page entrance: header slides from the left, toolbar rises, tabs pop */
+    /**
+     * Page entrance: back + tile pop, title slides from the left, toolbar rises, tabs pop.
+     * The back button only scales/fades (no translation), so it can never end up off screen.
+     */
     public static void playEntrance(@Nullable View back, @Nullable View tile, @Nullable View titleBlock,
                                     @Nullable View tabs, @Nullable ViewGroup toolbar) {
-        Motion.slideInX(back, 0, -24);
+        Motion.popIn(back, 30, 0.6f);
         Motion.popIn(tile, 60, 0.55f);
         Motion.slideInX(titleBlock, 110, -18);
         Motion.riseIn(tabs, 140, 10);
@@ -139,6 +142,26 @@ public final class ManagerMotion {
         for (int i = 1; i < group.getChildCount(); i++) {
             Motion.riseIn(group.getChildAt(i), 160 + i * 60L, 14);
         }
+    }
+
+    /**
+     * Puts a view back to its resting place if an entrance was interrupted (left translated,
+     * scaled or transparent). Animates softly when something is off, does nothing otherwise.
+     */
+    public static void ensureAtRest(@Nullable View view) {
+        if (view == null || view.getVisibility() != View.VISIBLE) return;
+        boolean off = view.getTranslationX() != 0f || view.getTranslationY() != 0f
+                || view.getAlpha() < 1f || view.getScaleX() != 1f || view.getScaleY() != 1f;
+        if (!off) return;
+        if (view.hasTransientState() || view.isPressed()) return; // animation still running / touched
+        view.animate().cancel();
+        if (!Motion.content(view)) {
+            Motion.settle(view);
+            return;
+        }
+        view.animate().alpha(1f).translationX(0f).translationY(0f).scaleX(1f).scaleY(1f)
+                .setStartDelay(0).setDuration(Motion.MEDIUM).setInterpolator(Motion.STANDARD)
+                .setListener(null).start();
     }
 
     /** Small rise for the "no results" block */

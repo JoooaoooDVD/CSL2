@@ -268,22 +268,45 @@
                     app:trackThickness="2.5dp" />
             </FrameLayout>
 
-            <ImageButton
+            <!-- Import: pick one or more .jar / .zip files from the phone, copied in automatically -->
+            <LinearLayout
                 android:id="@+id/manage_mods_import"
-                android:layout_width="42dp"
+                android:layout_width="wrap_content"
                 android:layout_height="42dp"
                 android:layout_marginStart="8dp"
                 android:background="@drawable/bg_mm_field_btn"
+                android:clickable="true"
                 android:contentDescription="@string/mm_import"
-                android:padding="11dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_folder"
-                app:tint="@color/hm_icon" />
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="12dp"
+                android:paddingEnd="14dp">
+
+                <ImageView
+                    android:id="@+id/manage_import_icon"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_folder"
+                    app:tint="@color/hm_accent" />
+
+                <TextView
+                    android:id="@+id/manage_import_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:singleLine="true"
+                    android:text="@string/mm_import_short"
+                    android:textColor="@color/hm_text"
+                    android:textSize="13.5sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
             <!-- Browse: same pixel texture as PLAY -->
             <FrameLayout
                 android:id="@+id/manage_mods_add"
-                android:layout_width="wrap_content"
+                android:layout_width="124dp"
                 android:layout_height="42dp"
                 android:layout_marginStart="8dp"
                 android:background="@drawable/bg_home_play_clip"
@@ -349,33 +372,41 @@
                 android:paddingBottom="16dp"
                 android:scrollbars="none" />
 
-            <!-- Empty folder -->
-            <LinearLayout
+            <!-- Empty folder (scrolls on short screens) -->
+            <ScrollView
                 android:id="@+id/manage_mods_empty"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:gravity="center_horizontal"
-                android:orientation="vertical"
-                android:paddingBottom="12dp"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fillViewport="true"
+                android:overScrollMode="never"
+                android:scrollbars="none"
                 android:visibility="gone"
                 tools:visibility="visible">
 
+            <LinearLayout
+                android:id="@+id/manage_empty_inner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:paddingTop="4dp"
+                android:paddingBottom="16dp">
+
                 <FrameLayout
-                    android:layout_width="120dp"
-                    android:layout_height="96dp">
+                    android:layout_width="112dp"
+                    android:layout_height="84dp">
 
                     <View
                         android:id="@+id/manage_empty_glow"
-                        android:layout_width="120dp"
-                        android:layout_height="96dp"
+                        android:layout_width="112dp"
+                        android:layout_height="84dp"
                         android:alpha="0.35"
                         android:background="@drawable/bg_mm_glow_mods" />
 
                     <FrameLayout
                         android:id="@+id/manage_empty_tile"
-                        android:layout_width="68dp"
-                        android:layout_height="68dp"
+                        android:layout_width="62dp"
+                        android:layout_height="62dp"
                         android:layout_gravity="center"
                         android:background="@drawable/bg_mm_type_mods">
 
@@ -452,6 +483,7 @@
                         android:textStyle="bold" />
                 </LinearLayout>
             </LinearLayout>
+            </ScrollView>
 
             <!-- Search / filter has no match -->
             <LinearLayout

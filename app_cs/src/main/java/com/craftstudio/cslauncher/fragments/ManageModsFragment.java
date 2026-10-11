@@ -38,7 +38,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.craftstudio.cslauncher.CSLauncherApplication;
 import com.craftstudio.cslauncher.R;
 import com.craftstudio.cslauncher.Tools;
-import com.craftstudio.cslauncher.contracts.OpenDocumentWithExtension;
+import com.craftstudio.cslauncher.contracts.OpenMultipleDocumentsWithExtension;
 import com.craftstudio.cslauncher.modding.optifine.InstalledModAdapter;
 import com.craftstudio.cslauncher.modding.modpacks.models.ContentType;
 import com.craftstudio.cslauncher.prefs.LauncherPreferences;
@@ -52,6 +52,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Manages installed content (mods, resource packs, or shader packs — see
@@ -118,9 +120,11 @@ public class ManageModsFragment extends Fragment {
     // fragment reaches STARTED) — mContentType isn't resolved from arguments yet
     // at construction time, so this accepts either supported extension and
     // onImportFilePicked() checks the picked file against mContentType itself.
+    // Several files can be picked at once; each one is checked against mContentType.
     private final ActivityResultLauncher<Object> mImportLauncher =
-            registerForActivityResult(new OpenDocumentWithExtension(new String[]{"jar", "zip"}),
-                    this::onImportFilePicked);
+            registerForActivityResult(new OpenMultipleDocumentsWithExtension(new String[]{"jar", "zip"}),
+                    this::onImportFilesPicked);
+    private boolean mImporting;
 
     public ManageModsFragment() {
         super(R.layout.fragment_manage_mods);
@@ -140,7 +144,7 @@ public class ManageModsFragment extends Fragment {
         mRefreshButton  = view.findViewById(R.id.manage_mods_refresh);
         mUpdateProgress = view.findViewById(R.id.manage_mods_update_progress);
         View addButton  = view.findViewById(R.id.manage_mods_add);
-        ImageButton importButton = view.findViewById(R.id.manage_mods_import);
+        View importButton = view.findViewById(R.id.manage_mods_import);
         mTitle       = view.findViewById(R.id.manage_mods_title);
         mRecycler    = view.findViewById(R.id.manage_mods_recycler);
         mContent     = view.findViewById(R.id.manage_content);
@@ -161,9 +165,9 @@ public class ManageModsFragment extends Fragment {
         mRefreshButton.setOnClickListener(v -> runUpdateCheck(false));
         addButton.setOnClickListener(v -> openModSearch());
         addButton.setClipToOutline(true);
-        importButton.setOnClickListener(v -> mImportLauncher.launch(null));
+        importButton.setOnClickListener(v -> launchImport());
         view.findViewById(R.id.manage_empty_browse).setOnClickListener(v -> openModSearch());
-        view.findViewById(R.id.manage_empty_import).setOnClickListener(v -> mImportLauncher.launch(null));
+        view.findViewById(R.id.manage_empty_import).setOnClickListener(v -> launchImport());
         view.findViewById(R.id.manage_show_all).setOnClickListener(v -> {
             mSearchInput.setText("");
             selectFilter(0, true);
@@ -236,10 +240,57 @@ public class ManageModsFragment extends Fragment {
 
         boolean animate = savedInstanceState == null;
         if (animate) {
-            ManagerMotion.playEntrance(backButton, mTypeTile, view.findViewById(R.id.manage_title_block),
-                    view.findViewById(R.id.manage_tabs), view.findViewById(R.id.manage_toolbar));
+            // Started once the page is attached and laid out: an entrance started before that
+            // could stay stuck at its first frame (the back button was left off screen)
+            view.post(() -> {
+                if (getView() == null) return;
+                ManagerMotion.playEntrance(backButton, mTypeTile, view.findViewById(R.id.manage_title_block),
+                        view.findViewById(R.id.manage_tabs), view.findViewById(R.id.manage_toolbar));
+            });
             ManagerMotion.rowsIn(mRecycler, mSpanCount, 220);
         }
+        // Safety net: whatever happens to the entrance, the back button ends up in place
+        backButton.postDelayed(this::settleHeader, 900);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        settleHeader();
+    }
+
+    /** Header views always end up in place, even if an entrance got interrupted */
+    private void settleHeader() {
+        View view = getView();
+        if (view == null) return;
+        ManagerMotion.ensureAtRest(view.findViewById(R.id.manage_mods_back));
+        ManagerMotion.ensureAtRest(view.findViewById(R.id.manage_title_block));
+        ManagerMotion.ensureAtRest(view.findViewById(R.id.manage_tabs));
+    }
+
+    private void launchImport() {
+        if (mImporting) {
+            View view = getView();
+            if (view != null) Motion.shake(view.findViewById(R.id.manage_mods_import));
+            return;
+        }
+        try {
+            mImportLauncher.launch(new Object());
+        } catch (android.content.ActivityNotFoundException e) {
+            Toast.makeText(requireContext(), R.string.content_import_failed, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    /** Import button state: label swaps to "Importing…" and the icon pulses while copying */
+    private void setImporting(boolean importing) {
+        mImporting = importing;
+        View view = getView();
+        if (view == null) return;
+        TextView label = view.findViewById(R.id.manage_import_label);
+        Motion.swapText(label, getString(importing ? R.string.mm_importing : R.string.mm_import_short));
+        View icon = view.findViewById(R.id.manage_import_icon);
+        if (importing) Motion.pulse(icon);
+        else Motion.bounce(icon);
     }
 
     @Override
@@ -428,7 +479,7 @@ public class ManageModsFragment extends Fragment {
                 mEmptyState.setVisibility(View.VISIBLE);
                 View root = getView();
                 ManagerMotion.emptyIn(root.findViewById(R.id.manage_empty_glow),
-                        root.findViewById(R.id.manage_empty_tile), (ViewGroup) mEmptyState);
+                        root.findViewById(R.id.manage_empty_tile), root.findViewById(R.id.manage_empty_inner));
             }
         } else if (listEmpty) {
             mRecycler.setVisibility(View.GONE);
@@ -514,42 +565,94 @@ public class ManageModsFragment extends Fragment {
     }
 
     /**
-     * Handles a file picked via {@link #mImportLauncher} (e.g. from Downloads):
-     * validates its extension against the content type this screen manages,
-     * copies it into that content type's folder for the current instance, and
-     * inserts it into the list. Runs the copy off the main thread since the
-     * source may be a slow content provider (cloud storage, etc.).
+     * Handles the files picked via {@link #mImportLauncher} (e.g. from Downloads): each one
+     * is checked against the content type of this screen (.jar for mods, .zip for packs),
+     * copied into that type's folder of the current instance and inserted into the list.
+     * Copies run off the main thread (the source may be a slow cloud provider).
      */
-    private void onImportFilePicked(Uri uri) {
-        if (uri == null || mAdapter == null) return;
+    private void onImportFilesPicked(@Nullable List<Uri> uris) {
+        if (uris == null || uris.isEmpty() || mAdapter == null || getContext() == null) return;
 
-        String requiredExtension = mContentType.fileExtension;
-        String pickedName = queryDisplayName(uri);
-        if (pickedName == null || !pickedName.toLowerCase().endsWith(requiredExtension)) {
-            Toast.makeText(requireContext(),
-                    getString(R.string.content_import_wrong_type, requiredExtension),
-                    Toast.LENGTH_LONG).show();
-            return;
+        final String requiredExtension = mContentType.fileExtension;
+        final File contentDir = getContentDir();
+        final InstalledModAdapter targetAdapter = mAdapter;
+        final ArrayList<Uri> accepted = new ArrayList<>();
+        final ArrayList<String> names = new ArrayList<>();
+        int skipped = 0;
+        for (Uri uri : uris) {
+            String pickedName = queryDisplayName(uri);
+            if (pickedName == null || !pickedName.toLowerCase(java.util.Locale.ROOT).endsWith(requiredExtension)) {
+                skipped++;
+                continue;
+            }
+            accepted.add(uri);
+            names.add(pickedName);
         }
+        if (skipped > 0) {
+            Toast.makeText(requireContext(), accepted.isEmpty()
+                    ? getString(R.string.content_import_wrong_type, requiredExtension)
+                    : getString(R.string.mm_import_skipped, skipped, requiredExtension),
+                    Toast.LENGTH_LONG).show();
+        }
+        if (accepted.isEmpty()) return;
 
-        File contentDir = getContentDir();
-        File destination = uniqueDestination(contentDir, pickedName);
-
+        setImporting(true);
         CSLauncherApplication.sExecutorService.execute(() -> {
-            boolean success = copyToFile(uri, contentDir, destination);
+            final ArrayList<File> imported = new ArrayList<>();
+            int failed = 0;
+            for (int i = 0; i < accepted.size(); i++) {
+                File destination = uniqueDestination(contentDir, names.get(i));
+                if (copyToFile(accepted.get(i), contentDir, destination)) imported.add(destination);
+                else failed++;
+            }
+            final int failedCount = failed;
             if (getActivity() == null) return;
             requireActivity().runOnUiThread(() -> {
-                if (success) {
-                    mAdapter.addContentFile(destination);
+                if (getView() == null) return;
+                setImporting(false);
+                // The type may have been switched meanwhile: only that adapter gets the rows
+                if (mAdapter == targetAdapter) {
+                    for (File file : imported) mAdapter.addContentFile(file);
+                    if (!imported.isEmpty()) {
+                        mSearchInput.setText("");
+                        if (mStateFilter != InstalledModAdapter.FILTER_ALL) selectFilter(0, true);
+                        mRecycler.smoothScrollToPosition(0);
+                    }
+                }
+                if (imported.size() == 1) {
                     Toast.makeText(requireContext(),
-                            getString(R.string.content_import_success, destination.getName()),
+                            getString(R.string.content_import_success, imported.get(0).getName()),
                             Toast.LENGTH_SHORT).show();
-                } else {
+                } else if (imported.size() > 1) {
                     Toast.makeText(requireContext(),
-                            R.string.content_import_failed, Toast.LENGTH_LONG).show();
+                            getString(R.string.mm_import_many, imported.size()), Toast.LENGTH_SHORT).show();
+                }
+                if (failedCount > 0) {
+                    Toast.makeText(requireContext(), R.string.content_import_failed, Toast.LENGTH_LONG).show();
                 }
             });
         });
+    }
+
+    /** Runs on a background thread: uses getContext(), requireContext() may throw once detached */
+    private boolean copyToFile(Uri source, File contentDir, File destination) {
+        android.content.Context context = getContext();
+        if (context == null) return false;
+        if (!contentDir.isDirectory() && !contentDir.mkdirs()) return false;
+        try (InputStream input = context.getContentResolver().openInputStream(source);
+             FileOutputStream output = new FileOutputStream(destination)) {
+            if (input == null) return false;
+            byte[] buffer = new byte[262144];
+            int read;
+            while ((read = input.read(buffer)) != -1) {
+                output.write(buffer, 0, read);
+            }
+            output.flush();
+            return true;
+        } catch (IOException e) {
+            destination.delete();
+            return false;
+        }
     }
 
     @Nullable
@@ -582,24 +685,6 @@ public class ManageModsFragment extends Fragment {
             count++;
         } while (candidate.exists());
         return candidate;
-    }
-
-    private boolean copyToFile(Uri source, File contentDir, File destination) {
-        if (!contentDir.isDirectory() && !contentDir.mkdirs()) return false;
-        try (InputStream input = requireContext().getContentResolver().openInputStream(source);
-             FileOutputStream output = new FileOutputStream(destination)) {
-            if (input == null) return false;
-            byte[] buffer = new byte[262144];
-            int read;
-            while ((read = input.read(buffer)) != -1) {
-                output.write(buffer, 0, read);
-            }
-            output.flush();
-            return true;
-        } catch (IOException e) {
-            destination.delete();
-            return false;
-        }
     }
 
     /**
