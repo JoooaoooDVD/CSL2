@@ -4,7 +4,7 @@
     android:exitFadeDuration="140">
     <item android:state_pressed="true">
         <shape android:shape="rectangle">
-            <solid android:color="@color/hm_accent_fill" />
+            <solid android:color="@color/ce_row_pressed" />
             <corners android:radius="100dp" />
         </shape>
     </item>

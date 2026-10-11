@@ -1,10 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Soft radial glow behind the Shader packs tile -->
+<!-- Former coloured glow: kept as an empty shape (single colour design, no halos) -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
-    <gradient
-        android:centerColor="#00000000"
-        android:endColor="#00000000"
-        android:gradientRadius="50%p"
-        android:startColor="@color/mm_sh_stroke"
-        android:type="radial" />
+    <solid android:color="@android:color/transparent" />
 </shape>

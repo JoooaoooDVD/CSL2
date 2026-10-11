@@ -55,7 +55,7 @@ public class CustomControlsActivity extends BaseActivity implements EditorExitab
 		mDrawerLayout = findViewById(R.id.customctrl_drawerlayout);
 		mDrawerNavigationView = findViewById(R.id.customctrl_navigation_view);
 		mHint = findViewById(R.id.ce_hint);
-		mHintText = findViewById(R.id.ce_hint_text);
+		mHintText = (TextView) mHint;
 		mLayoutName = findViewById(R.id.ce_layout_name);
 		View handle = findViewById(R.id.drawer_button);
 		CSAnimationEngine.attachPressFeedback(handle);
@@ -90,19 +90,14 @@ public class CustomControlsActivity extends BaseActivity implements EditorExitab
 		bindAction(R.id.ce_default, () -> mControlLayout.openSetDefaultDialog());
 		bindAction(R.id.ce_export, this::exportLayout);
 		bindAction(R.id.ce_exit, () -> mControlLayout.askToExit(this));
-		View close = findViewById(R.id.ce_panel_close);
-		close.setOnClickListener(v -> mDrawerLayout.closeDrawers());
-		CSAnimationEngine.attachPressFeedback(close);
-
-		// Hint chip: shown on start, goes away by itself
-		View hintClose = findViewById(R.id.ce_hint_close);
-		hintClose.setOnClickListener(v -> {
+		// Hint: shown on start, goes away by itself (or when tapped)
+		mHint.setOnClickListener(v -> {
 			mHandler.removeCallbacks(mHideHint);
 			Motion.hide(mHint, true);
 		});
-		Motion.riseIn(handle, 120, -12);
-		Motion.riseIn(mHint, 420, 18);
-		mHandler.postDelayed(mHideHint, 7000);
+		Motion.riseIn(handle, 120, -10);
+		Motion.fadeIn(mHint, 400, Motion.MEDIUM);
+		mHandler.postDelayed(mHideHint, 6000);
 
 		mControlLayout.setModifiable(true);
 	}
@@ -132,15 +127,14 @@ public class CustomControlsActivity extends BaseActivity implements EditorExitab
 		Motion.hide(findViewById(R.id.drawer_button), false);
 		mDrawerLayout.openDrawer(mDrawerNavigationView);
 		ViewGroup content = findViewById(R.id.ce_panel_content);
-		Motion.cascadeChildren(content, 90, 40, 16);
-		Motion.popChildren(findViewById(R.id.ce_add_row), 200, 60, 0.75f);
+		Motion.cascadeChildren(content, 80, 28, 10);
 	}
 
 	private void showHint(int textRes, long durationMs) {
 		mHandler.removeCallbacks(mHideHint);
 		mHintText.setText(textRes);
 		mHint.setVisibility(View.VISIBLE);
-		Motion.riseIn(mHint, 250, 16);
+		Motion.fadeIn(mHint, 250, Motion.MEDIUM);
 		mHandler.postDelayed(mHideHint, durationMs);
 	}
 

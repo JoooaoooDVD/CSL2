@@ -65,7 +65,7 @@ public class ActionRow extends LinearLayout {
         setBackgroundResource(R.drawable.bg_ce_action_row);
         int pad = Math.round(4 * getResources().getDisplayMetrics().density);
         setPadding(pad, pad, pad, pad);
-        styleAction((android.widget.Button) actionButtons[0], R.drawable.ic_cc_delete, R.color.mm_danger);
+        styleAction((android.widget.Button) actionButtons[0], R.drawable.ic_cc_delete, R.color.hm_text);
         styleAction((android.widget.Button) actionButtons[1], R.drawable.ic_cc_copy, R.color.hm_text);
         styleAction((android.widget.Button) actionButtons[2], R.drawable.ic_cc_sub, R.color.hm_text);
 

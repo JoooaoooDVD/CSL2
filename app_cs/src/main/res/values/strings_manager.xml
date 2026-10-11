@@ -61,7 +61,7 @@
     <string name="ce_export_desc">Share the layout as a .json file</string>
     <string name="ce_exit">Exit editor</string>
     <string name="ce_layout_name">Layout: %1$s</string>
-    <string name="ce_hint">Tap Edit to add buttons, drawers and joysticks. Tap any control to change, resize or remap it.</string>
+    <string name="ce_hint">Tap the ⚙ tab at the top to add buttons. Tap any control to edit, resize or remap it.</string>
     <string name="ce_added">Added. Drag it where you want.</string>
     <string name="ce_edit_controls">Edit control</string>
 </resources>

@@ -33,7 +33,7 @@
                 android:layout_gravity="center"
                 android:contentDescription="@null"
                 android:src="@drawable/ic_cc_sliders"
-                app:tint="@color/hm_accent" />
+                app:tint="@color/hm_icon" />
         </FrameLayout>
 
         <LinearLayout
@@ -105,10 +105,10 @@
             android:layout_height="40dp"
             android:layout_marginStart="4dp"
             android:layout_weight="1"
-            android:background="@drawable/bg_mm_tab_indicator"
+            android:background="@drawable/bg_ce_btn_light"
             android:stateListAnimator="?attr/csPressAnimator"
             android:textAllCaps="false"
-            android:textColor="@color/hm_text"
+            android:textColor="@color/ce_btn_dark_text"
             android:textSize="13.5sp"
             android:textStyle="bold"
             android:visibility="gone"
