@@ -4,13 +4,18 @@ import android.graphics.Bitmap;
 import android.os.Build;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import com.craftstudio.cslauncher.Tools;
 import com.craftstudio.cslauncher.prefs.LauncherPreferences;
 import com.craftstudio.cslauncher.utils.JSONUtils;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class Instance extends DisplayInstance {
     public static final int ARGS_MODE_REPLACE = 0;
@@ -120,6 +125,24 @@ public class Instance extends DisplayInstance {
                     85,
                     fileOutputStream
             );
+        }
+    }
+
+    /**
+     * Store an already-encoded background file (e.g. an animated GIF) as this profile's
+     * custom home-banner artwork, byte for byte, so animation survives. The global
+     * launcher banner (LauncherBackground) is untouched.
+     * @param source the picked file to copy in
+     * @throws IOException in case of read/write errors
+     */
+    public void storeRawBackground(@NonNull File source) throws IOException {
+        File target = getBackgroundFile();
+        try (InputStream in = new FileInputStream(source);
+             OutputStream out = new FileOutputStream(target)) {
+            byte[] buffer = new byte[64 * 1024];
+            int read;
+            while ((read = in.read(buffer)) != -1) out.write(buffer, 0, read);
+            out.flush();
         }
     }
 

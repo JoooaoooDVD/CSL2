@@ -2,8 +2,11 @@ package com.craftstudio.cslauncher.fragments;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.drawable.AnimatedImageDrawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.Gravity;
@@ -17,6 +20,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -42,6 +46,9 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.materialswitch.MaterialSwitch;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -85,6 +92,7 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
     private Bitmap mPendingIcon;           // custom icon cropped from storage
     private String mPendingStaticIcon;     // built-in icon picked from the strip
     private Bitmap mPendingBackground;     // banner artwork cropped from storage
+    private File mPendingRawBackground;    // picked GIF kept byte-for-byte so it stays animated
     private boolean mClearBackground;      // reset banner artwork to the global default
     private int mBackgroundLoadId;         // cancels stale preview decodes
     private int mRecommendedIconSize;
@@ -99,31 +107,35 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
 
     private final ActivityResultLauncher<?> mCropperLauncher = CropperUtils.registerCropper(this, this);
 
-    /** Second picker for the profile banner: wide crop box, larger output */
-    private final ActivityResultLauncher<?> mBackgroundCropperLauncher = CropperUtils.registerCropper(this,
-            new CropperUtils.CropperReceiver() {
-                @Override
-                public float getAspectRatio() {
-                    return 16f / 6f;
-                }
+    /** Shared crop handling for the profile banner: a crop freezes animation. */
+    private final CropperUtils.CropperReceiver mBackgroundCropReceiver = new CropperUtils.CropperReceiver() {
+        @Override
+        public float getAspectRatio() {
+            return 16f / 6f;
+        }
 
-                @Override
-                public int getTargetMaxSide() {
-                    return BACKGROUND_MAX_SIDE;
-                }
+        @Override
+        public int getTargetMaxSide() {
+            return BACKGROUND_MAX_SIDE;
+        }
 
-                @Override
-                public void onCropped(Bitmap contentBitmap) {
-                    mPendingBackground = contentBitmap;
-                    mClearBackground = false;
-                    showBackgroundPreview(contentBitmap);
-                }
+        @Override
+        public void onCropped(Bitmap contentBitmap) {
+            discardPendingRawBackground();
+            mPendingBackground = contentBitmap;
+            mClearBackground = false;
+            showBackgroundPreview(contentBitmap);
+        }
 
-                @Override
-                public void onFailed(Exception exception) {
-                    Tools.showErrorRemote(exception);
-                }
-            });
+        @Override
+        public void onFailed(Exception exception) {
+            Tools.showErrorRemote(exception);
+        }
+    };
+
+    /** Banner entry point: GIFs bypass the cropper so the animation survives. */
+    private final ActivityResultLauncher<String[]> mBackgroundPickLauncher =
+            registerForActivityResult(new ActivityResultContracts.OpenDocument(), this::onBackgroundPicked);
 
     public InstanceEditorFragment() {
         super(R.layout.fragment_instance_editor);
@@ -230,6 +242,7 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
     @Override
     public void onDestroyView() {
         if (mName != null) mEditName = mName.getText().toString();
+        stopPreviewAnimation();
         super.onDestroyView();
         mName = null;
         mNameField = null;
@@ -247,6 +260,7 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
         mPendingIcon = null;
         mPendingStaticIcon = null;
         mPendingBackground = null;
+        discardPendingRawBackground();
         mClearBackground = false;
 
         mEditName = nullToEmpty(instance.name);
@@ -353,8 +367,8 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
         iconAdd.setOnClickListener(pickIcon);
         iconBadge.setOnClickListener(pickIcon);
 
-        // Banner artwork: pick from storage or restore the default
-        View.OnClickListener pickBanner = v -> CropperUtils.startCropper(mBackgroundCropperLauncher);
+        // Banner artwork: pick from storage (GIFs stay animated) or restore the default
+        View.OnClickListener pickBanner = v -> mBackgroundPickLauncher.launch(new String[]{"image/*"});
         bannerChoose.setOnClickListener(pickBanner);
         bannerBadge.setOnClickListener(pickBanner);
         mBackgroundPreview.setOnClickListener(pickBanner);
@@ -594,6 +608,7 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
                     return;
                 }
                 mBackgroundPreview.setImageDrawable(drawable);
+                playPreviewAnimation();
                 ProfileEditorMotion.bannerChanged(mBackgroundPreview);
             });
         });
@@ -602,15 +617,92 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
     private void showBackgroundPreview(@Nullable Bitmap bitmap) {
         if (mBackgroundPreview == null || bitmap == null) return;
         mBackgroundLoadId++;
+        stopPreviewAnimation();
         mBackgroundPreview.setImageBitmap(bitmap);
         ProfileEditorMotion.bannerChanged(mBackgroundPreview);
+    }
+
+    /** A picked GIF is staged byte-for-byte; anything else goes through the cropper. */
+    private void onBackgroundPicked(@Nullable Uri uri) {
+        if (uri == null || getContext() == null) return;
+        String mime = getContext().getContentResolver().getType(uri);
+        if (!"image/gif".equalsIgnoreCase(mime)) {
+            CropperUtils.openCropper(requireContext(), uri, mBackgroundCropReceiver);
+            return;
+        }
+        final android.content.ContentResolver resolver = getContext().getContentResolver();
+        CSLauncherApplication.sExecutorService.execute(() -> {
+            File staged = new File(Tools.DIR_CACHE, "pending_profile_bg");
+            try (InputStream in = resolver.openInputStream(uri);
+                 OutputStream out = new FileOutputStream(staged)) {
+                if (in == null) throw new java.io.IOException("Can't open " + uri);
+                byte[] buffer = new byte[64 * 1024];
+                int read;
+                while ((read = in.read(buffer)) != -1) out.write(buffer, 0, read);
+                out.flush();
+            } catch (Exception e) {
+                //noinspection ResultOfMethodCallIgnored
+                staged.delete();
+                Tools.showErrorRemote(e);
+                return;
+            }
+            Drawable drawable = LauncherBackground.decodeImage(staged);
+            if (getActivity() == null) {
+                //noinspection ResultOfMethodCallIgnored
+                staged.delete();
+                return;
+            }
+            requireActivity().runOnUiThread(() -> {
+                if (mBackgroundPreview == null) return;
+                if (drawable == null) {
+                    staged.delete();
+                    Tools.showErrorRemote(new java.io.IOException("Unusable background"));
+                    return;
+                }
+                discardPendingRawBackground();
+                mPendingRawBackground = staged;
+                mPendingBackground = null;
+                mClearBackground = false;
+                stopPreviewAnimation();
+                mBackgroundPreview.setImageDrawable(drawable);
+                playPreviewAnimation();
+                ProfileEditorMotion.bannerChanged(mBackgroundPreview);
+            });
+        });
+    }
+
+    /** Drops a staged GIF without touching the saved profile. */
+    private void discardPendingRawBackground() {
+        if (mPendingRawBackground != null) {
+            //noinspection ResultOfMethodCallIgnored
+            mPendingRawBackground.delete();
+            mPendingRawBackground = null;
+        }
+    }
+
+    /** Plays the preview when it is an animated image (GIF, animated WebP). */
+    private void playPreviewAnimation() {
+        if (mBackgroundPreview == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.P) return;
+        Drawable drawable = mBackgroundPreview.getDrawable();
+        if (!(drawable instanceof AnimatedImageDrawable)) return;
+        AnimatedImageDrawable animated = (AnimatedImageDrawable) drawable;
+        animated.setRepeatCount(AnimatedImageDrawable.REPEAT_INFINITE);
+        animated.start();
+    }
+
+    private void stopPreviewAnimation() {
+        if (mBackgroundPreview == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.P) return;
+        Drawable drawable = mBackgroundPreview.getDrawable();
+        if (drawable instanceof AnimatedImageDrawable) ((AnimatedImageDrawable) drawable).stop();
     }
 
     private void resetBackground() {
         mClearBackground = true;
         mPendingBackground = null;
+        discardPendingRawBackground();
         mBackgroundLoadId++;
         if (mBackgroundPreview != null) {
+            stopPreviewAnimation();
             mBackgroundPreview.setImageResource(R.drawable.banner_home);
             ProfileEditorMotion.bannerChanged(mBackgroundPreview);
         }
@@ -658,7 +750,10 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
                 iconChanged = true;
             }
 
-            if (mPendingBackground != null) {
+            if (mPendingRawBackground != null) {
+                mInstance.storeRawBackground(mPendingRawBackground);
+                discardPendingRawBackground();
+            } else if (mPendingBackground != null) {
                 mInstance.encodeNewBackground(mPendingBackground);
             } else if (mClearBackground) {
                 mInstance.clearCustomBackground();

@@ -17,6 +17,7 @@ import android.widget.ToggleButton;
 import androidx.activity.result.ActivityResultCaller;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
@@ -161,6 +162,15 @@ public class CropperUtils {
         ActivityResultLauncher<String[]> realResultLauncher =
                 (ActivityResultLauncher<String[]>) resultLauncher;
         realResultLauncher.launch(new String[]{"image/*"});
+    }
+
+    /**
+     * Opens the crop dialog for an already-picked document (e.g. after checking its
+     * type first). Behaves exactly like the cropper launched via {@link #startCropper}.
+     */
+    public static void openCropper(@NonNull Context context, @NonNull Uri selectedUri,
+                                   @NonNull CropperReceiver cropperReceiver) {
+        openCropperDialog(context, selectedUri, cropperReceiver);
     }
 
     public interface CropperReceiver {
