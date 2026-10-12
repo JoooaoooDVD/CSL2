@@ -713,6 +713,7 @@
     <string name="switch_mod_version_title">Switch version</string>
     <string name="switch_mod_version_hide_incompatible">Hide incompatible</string>
     <string name="mcl_content_shaderpacks">Shader Packs</string>
+    <string name="mcl_content_worlds">Worlds</string>
     <string name="mcl_content_mods">Mods</string>
     <string name="global_back">Back</string>
     <string name="manage_mods_filter_active">Filter active: %s / %s</string>

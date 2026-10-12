@@ -24,14 +24,16 @@ import com.craftstudio.cslauncher.utils.motion.Motion;
 import java.io.File;
 
 /**
- * "Manage content" popup (Manager button): pick Mods, Resource packs or Shader packs, then the
- * full screen manager opens on that type. Each option shows how many files are installed in
- * the selected profile (counted off the main thread). No banners, only gradient icon tiles.
+ * "Manage content" popup (Manager button): pick Mods, Resource packs, Shader packs or
+ * Worlds, then the matching manager opens. Each option shows how many items are installed
+ * in the selected profile (counted off the main thread). The card art is the manager
+ * banner on top, gradient icon tiles below.
  */
 public class ManageChooserDialog extends CSPopupDialog {
 
     public interface Callback {
         void onTypeChosen(@NonNull ContentType type);
+        void onWorldsChosen();
         void onFilterRequested();
     }
 
@@ -71,6 +73,18 @@ public class ManageChooserDialog extends CSPopupDialog {
             });
         }
 
+        View worldOption = findViewById(R.id.mc_opt_world);
+        View worldTile = findViewById(R.id.mc_world_tile);
+        View worldGlow = findViewById(R.id.mc_world_glow);
+        View worldBar = findViewById(R.id.mc_world_bar);
+        TextView worldCount = findViewById(R.id.mc_world_count);
+        worldOption.setClipToOutline(true);
+        worldOption.setOnClickListener(v -> {
+            if (isClosing()) return;
+            Motion.bounce(worldTile);
+            CreatePopupMotion.optionChosen(worldOption, () -> close(mCallback::onWorldsChosen));
+        });
+
         View close = findViewById(R.id.mc_close);
         View filter = findViewById(R.id.mc_filter);
         close.setOnClickListener(v -> close(null));
@@ -92,7 +106,11 @@ public class ManageChooserDialog extends CSPopupDialog {
             breathe(glows[i], delay + 60);
             growBar(bars[i], delay + 160);
         }
-        loadCounts(counts);
+        Motion.popIn(worldTile, 200 + tiles.length * 70L, 0.4f);
+        Motion.fadeIn(worldCount, 200 + tiles.length * 70L + 120, Motion.MEDIUM);
+        breathe(worldGlow, 200 + tiles.length * 70L + 60);
+        growBar(worldBar, 200 + tiles.length * 70L + 160);
+        loadCounts(counts, worldCount);
     }
 
     /** The glow behind a tile fades to its resting alpha, then slowly breathes */
@@ -124,11 +142,12 @@ public class ManageChooserDialog extends CSPopupDialog {
     }
 
     /** Counts the files of each content folder in the background */
-    private void loadCounts(@NonNull TextView[] counts) {
+    private void loadCounts(@NonNull TextView[] counts, @NonNull TextView worldCount) {
         final File gameDir = gameDirectory();
         CSLauncherApplication.sExecutorService.execute(() -> {
             final int[] values = new int[TYPES.length];
             for (int i = 0; i < TYPES.length; i++) values[i] = countFiles(new File(gameDir, TYPES[i].folderName), TYPES[i].fileExtension);
+            final int worlds = countWorlds(gameDir);
             mHandler.post(() -> {
                 if (!isShowing()) return;
                 for (int i = 0; i < counts.length; i++) {
@@ -136,8 +155,23 @@ public class ManageChooserDialog extends CSPopupDialog {
                     counts[i].setTextColor(ContextCompat.getColor(getContext(),
                             values[i] > 0 ? R.color.hm_text : R.color.hm_text_dim));
                 }
+                Motion.swapText(worldCount, getContext().getString(R.string.mc_count, worlds));
+                worldCount.setTextColor(ContextCompat.getColor(getContext(),
+                        worlds > 0 ? R.color.hm_text : R.color.hm_text_dim));
             });
         });
+    }
+
+    /** Worlds are the save folders of the profile (a real world always has level.dat) */
+    private static int countWorlds(@NonNull File gameDir) {
+        File saves = new File(gameDir, "saves");
+        File[] dirs = saves.listFiles(File::isDirectory);
+        if (dirs == null) return 0;
+        int withLevel = 0;
+        for (File dir : dirs) {
+            if (new File(dir, "level.dat").isFile() || new File(dir, "level.dat_old").isFile()) withLevel++;
+        }
+        return withLevel > 0 ? withLevel : dirs.length;
     }
 
     private static int countFiles(@NonNull File dir, @NonNull String extension) {

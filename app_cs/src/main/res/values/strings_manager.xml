@@ -39,9 +39,29 @@
     <string name="mc_desc_mods">Gameplay, items, mobs and performance</string>
     <string name="mc_desc_rp">Textures, models, sounds and menus</string>
     <string name="mc_desc_sh">Lighting, shadows, water and sky</string>
+    <string name="mc_desc_world">Saves, backups and datapacks</string>
     <string name="mc_count">%1$d installed</string>
     <string name="mc_count_loading">Counting…</string>
     <string name="mc_filters">Filters</string>
+
+    <!-- World manager -->
+    <string name="mcl_worlds_title">Worlds</string>
+    <string name="mcl_worlds_subtitle">%1$d worlds in %2$s</string>
+    <string name="mcl_worlds_empty_title">No worlds yet</string>
+    <string name="mcl_worlds_empty_desc">Play the game once and your saves will show up here. Worlds live in the saves folder of this profile.</string>
+    <string name="mcl_world_detail">%1$s • played %2$s</string>
+    <string name="mcl_world_actions">%1$s</string>
+    <string name="mcl_world_rename">Rename</string>
+    <string name="mcl_world_rename_title">Rename world</string>
+    <string name="mcl_world_view_files">View files</string>
+    <string name="mcl_world_install_datapack">Install datapack (.zip)</string>
+    <string name="mcl_world_delete">Delete</string>
+    <string name="mcl_world_delete_title">Delete world?</string>
+    <string name="mcl_world_delete_message">Delete %1$s and everything inside it? This cannot be undone.</string>
+    <string name="mcl_world_renamed">World renamed</string>
+    <string name="mcl_world_deleted">World deleted</string>
+    <string name="mcl_world_datapack_installed">Datapack installed: %1$s</string>
+    <string name="mcl_world_datapack_invalid">Not a datapack (pack.mcmeta is missing)</string>
 
     <!-- Control editor -->
     <string name="ce_title">Controls editor</string>

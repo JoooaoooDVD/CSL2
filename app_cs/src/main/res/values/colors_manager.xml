@@ -13,6 +13,10 @@
     <color name="mm_sh_end">#121215</color>
     <color name="mm_sh_stroke">#34343A</color>
     <color name="mm_sh_glyph">#E8EDF6</color>
+    <color name="mm_world_start">#232329</color>
+    <color name="mm_world_end">#121215</color>
+    <color name="mm_world_stroke">#3E3E46</color>
+    <color name="mm_world_glyph">#E8EDF6</color>
     <color name="mm_danger">#FF8A8A</color>
     <color name="mm_danger_fill">#2EFF5A5A</color>
     <color name="mm_danger_stroke">#80FF7A7A</color>

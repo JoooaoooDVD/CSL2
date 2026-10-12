@@ -152,6 +152,11 @@ public class MainMenuFragment extends Fragment {
             }
 
             @Override
+            public void onWorldsChosen() {
+                if (getView() != null) openPane(ManageWorldsFragment.class, ManageWorldsFragment.TAG, null);
+            }
+
+            @Override
             public void onFilterRequested() {
                 if (getContext() == null) return;
                 ContentFilterDialog.show(requireContext(), Instances.getSelectedInstanceKey(),
