@@ -19,6 +19,11 @@ import com.craftstudio.cslauncher.input.buttons.ControlInterface;
 public class ControlHandleView extends View {
     /** Smallest size the resize handle can produce, so controls never become stray lines. */
     private static final float MIN_RESIZE_DP = 24;
+
+    /** Smallest size a control may have before it stops being rendered as a stray line. */
+    public static boolean isUnusableSize(float px) {
+        return Float.isNaN(px) || px < Tools.dpToPx(24);
+    }
     public ControlHandleView(Context context) {
         super(context);
         init();

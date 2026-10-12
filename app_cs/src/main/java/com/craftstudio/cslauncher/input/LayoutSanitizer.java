@@ -8,7 +8,7 @@ import java.util.List;
 public class LayoutSanitizer {
 
     /** Controls smaller than this are unusable touch targets and render as stray lines. */
-    private static final float MIN_SANE_SIZE_DP = 8;
+    private static final float MIN_SANE_SIZE_DP = 24;
 
     // Maybe add more conditions here later?
     private static boolean isValidFormula(String formula) {

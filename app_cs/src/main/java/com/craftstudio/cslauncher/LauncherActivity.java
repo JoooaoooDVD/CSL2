@@ -234,7 +234,7 @@ public class LauncherActivity extends BaseActivity {
         ProgressKeeper.addTaskCountListener((mProgressServiceKeeper = new ProgressServiceKeeper(this)));
 
         mSettingsButton.setOnClickListener(mSettingButtonListener);
-        mOverflowButton.setOnClickListener(this::showOverflowMenu);
+        if (mOverflowButton != null) mOverflowButton.setOnClickListener(this::showOverflowMenu);
         ProgressKeeper.addTaskCountListener(mProgressLayout);
         ExtraCore.addExtraListener(ExtraConstants.BACK_PREFERENCE, mBackPreferenceListener);
         ExtraCore.addExtraListener(ExtraConstants.SELECT_AUTH_METHOD, mSelectAuthMethod);
@@ -399,7 +399,11 @@ public class LauncherActivity extends BaseActivity {
         TopNavDock.bind(this, this::onDockItemClicked);
     }
 
-    /** The three-dots menu of the header: shortcuts to the flows that lost their dedicated buttons */
+    /**
+     * The three-dots menu of the header: shortcuts to the flows that lost their dedicated buttons.
+     * The header button itself has been removed, but other surfaces (and future docks) may still
+     * route here, so the entry point stays available.
+     */
     private void showOverflowMenu(View anchor) {
         PopupMenu menu = new PopupMenu(this, anchor);
         menu.inflate(R.menu.home_overflow);

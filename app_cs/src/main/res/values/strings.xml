@@ -339,6 +339,14 @@
     <string name="use_global_default">(Use global default)</string>
     <string name="default_control">Default controlmap</string>
     <string name="progresslayout_tasks_in_progress">%d tasks in progress</string>
+    <string name="progress_console_title">Launcher activity</string>
+    <string name="progress_console_subtitle">%1$d active • %2$d%%</string>
+    <string name="progress_console_subtitle_unknown">%d active</string>
+    <string name="progress_task_unknown">Working…</string>
+    <string name="progress_task_indeterminate">Preparing…</string>
+    <string name="notification_progress_title">CS Launcher Plus</string>
+    <string name="notification_progress_text">Working…</string>
+    <string name="notification_progress_sub">%1$d%% • %2$d task(s)</string>
     <string name="notification_terminate">Terminate</string>
     <string name="notification_game_runs">The game is running!</string>
     <string name="folder_dialog_create">Create</string>

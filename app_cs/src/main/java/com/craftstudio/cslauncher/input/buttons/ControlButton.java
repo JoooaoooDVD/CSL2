@@ -108,6 +108,8 @@ public class ControlButton extends TextView implements ControlInterface {
         super.onDraw(canvas);
         // Bitmap uses a tint list, so don't do any custom rendering
         if(mHasBitmap || !isActivated()) return;
+        // A control that collapsed to a sliver (old resize bug) would render as a stray line
+        if(getWidth() < Tools.dpToPx(24) || getHeight() < Tools.dpToPx(24)) return;
         canvas.drawRoundRect(0, 0, getWidth(), getHeight(), mComputedRadius, mComputedRadius, mRectPaint);
     }
 

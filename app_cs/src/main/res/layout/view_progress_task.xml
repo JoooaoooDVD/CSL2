@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Download console: one task notification card -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_progress_task"
+    android:gravity="center_vertical"
+    android:minHeight="62dp"
+    android:orientation="horizontal"
+    android:paddingStart="10dp"
+    android:paddingTop="8dp"
+    android:paddingEnd="12dp"
+    android:paddingBottom="8dp">
+
+    <com.kdt.mcgui.TaskProgressRing
+        android:id="@+id/task_ring"
+        android:layout_width="36dp"
+        android:layout_height="36dp" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/task_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="#FFF2F5FA"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            tools:text="Downloading game files" />
+
+        <TextView
+            android:id="@+id/task_detail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="1dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="#FF9C9CA4"
+            android:textSize="11sp"
+            tools:text="24.3 MB / 48.1 MB - 1.8 MB/s" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/task_percent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:textColor="#FFF2F5FA"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        tools:text="51%" />
+</LinearLayout>

@@ -20,24 +20,29 @@ import androidx.core.content.ContextCompat;
 import com.craftstudio.cslauncher.R;
 import com.craftstudio.cslauncher.Tools;
 import com.craftstudio.cslauncher.progresskeeper.ProgressKeeper;
+import com.craftstudio.cslauncher.progresskeeper.ProgressState;
 import com.craftstudio.cslauncher.progresskeeper.TaskCountListener;
 import com.craftstudio.cslauncher.utils.NotificationUtils;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 /**
- * Lazy service which allows the process not to get killed.
- * Can be created from context, can be killed statically
+ * Foreground service that keeps the process alive while launcher tasks run and
+ * posts the download notification: a determinate bar for the overall progress,
+ * the active task count as subtext and one line per running task.
  */
 public class ProgressService extends Service implements TaskCountListener {
 
     private NotificationManagerCompat notificationManagerCompat;
+    private NotificationCompat.Builder mNotificationBuilder;
 
     /** Simple wrapper to start the service */
     public static void startService(Context context){
         Intent intent = new Intent(context, ProgressService.class);
         ContextCompat.startForegroundService(context, intent);
     }
-
-    private NotificationCompat.Builder mNotificationBuilder;
 
     @Override
     public void onCreate() {
@@ -48,10 +53,12 @@ public class ProgressService extends Service implements TaskCountListener {
         PendingIntent pendingKillIntent = PendingIntent.getService(this, NotificationUtils.PENDINGINTENT_CODE_KILL_PROGRESS_SERVICE
                 , killIntent, Build.VERSION.SDK_INT >=23 ? PendingIntent.FLAG_IMMUTABLE : 0);
         mNotificationBuilder = new NotificationCompat.Builder(this, "channel_id")
-                .setContentTitle(getString(R.string.lazy_service_default_title))
+                .setContentTitle(getString(R.string.notification_progress_title))
                 .addAction(android.R.drawable.ic_menu_close_clear_cancel,  getString(R.string.notification_terminate), pendingKillIntent)
                 .setSmallIcon(R.drawable.notif_icon)
+                .setOnlyAlertOnce(true)
                 .setNotificationSilent();
+        ProgressKeeper.addGlobalListener((taskCount, percent) -> Tools.MAIN_HANDLER.post(this::refreshNotification));
     }
 
     @SuppressLint("StringFormatInvalid")
@@ -65,8 +72,7 @@ public class ProgressService extends Service implements TaskCountListener {
             }
         }
         Log.d("ProgressService", "Started!");
-        mNotificationBuilder.setContentText(getString(R.string.progresslayout_tasks_in_progress, ProgressKeeper.getTaskCount()));
-        Notification notification = mNotificationBuilder.build();
+        Notification notification = buildNotification();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(NotificationUtils.NOTIFICATION_ID_PROGRESS_SERVICE, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MANIFEST);
         } else {
@@ -89,15 +95,62 @@ public class ProgressService extends Service implements TaskCountListener {
         ProgressKeeper.removeTaskCountListener(this);
     }
 
+    /** Rebuilds the notification from the current task snapshot. */
+    private void refreshNotification() {
+        if (!ProgressKeeper.hasOngoingTasks()) {
+            stopSelf();
+            return;
+        }
+        notificationManagerCompat.notify(NotificationUtils.NOTIFICATION_ID_PROGRESS_SERVICE, buildNotification());
+    }
+
+    private Notification buildNotification() {
+        int taskCount = ProgressKeeper.getTaskCount();
+        int percent = ProgressKeeper.getAggregateProgress();
+        List<String> lines = new ArrayList<>();
+        for (Map.Entry<String, ProgressState> entry : ProgressKeeper.snapshotStates().entrySet()) {
+            ProgressState state = entry.getValue();
+            String detail;
+            if (state.getResid() != -1) {
+                detail = getString(state.getResid(), state.getVarArg());
+            } else if (state.getVarArg().length > 0 && state.getVarArg()[0] != null) {
+                detail = state.getVarArg()[0].toString();
+            } else {
+                detail = getString(R.string.progress_task_unknown);
+            }
+            lines.add(detail);
+        }
+
+        mNotificationBuilder
+                .setContentText(taskCount == 1
+                        ? lines.isEmpty() ? getString(R.string.progress_task_unknown) : lines.get(0)
+                        : getString(R.string.progresslayout_tasks_in_progress, taskCount))
+                .setProgress(100, percent >= 0 ? percent : 0, percent < 0)
+                .setSubText(percent >= 0
+                        ? getString(R.string.notification_progress_sub, percent, taskCount)
+                        : getString(R.string.progress_console_subtitle_unknown, taskCount));
+
+        if (!lines.isEmpty()) {
+            NotificationCompat.InboxStyle style = new NotificationCompat.InboxStyle();
+            int shown = 0;
+            for (String line : lines) {
+                if (shown >= 5) break;
+                style.addLine(line);
+                shown++;
+            }
+            if (lines.size() > shown) style.setSummaryText("+" + (lines.size() - shown));
+            mNotificationBuilder.setStyle(style);
+        } else {
+            mNotificationBuilder.setStyle(null);
+        }
+        return mNotificationBuilder.build();
+    }
+
     @Override
     public boolean onUpdateTaskCount(int taskCount) {
         Tools.MAIN_HANDLER.post(()->{
-            if(taskCount > 0) {
-                mNotificationBuilder.setContentText(getString(R.string.progresslayout_tasks_in_progress, taskCount));
-                notificationManagerCompat.notify(1, mNotificationBuilder.build());
-            }else{
-                stopSelf();
-            }
+            if(taskCount > 0) refreshNotification();
+            else stopSelf();
         });
         return false;
     }

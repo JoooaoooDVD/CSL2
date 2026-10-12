@@ -161,6 +161,23 @@ public class ProgressKeeper {
         return sProgressStates.size();
     }
 
+    /**
+     * A detached snapshot of every running task, safe to read from any thread.
+     * Used by the foreground service to build its notification lines.
+     */
+    public static synchronized java.util.Map<String, ProgressState> snapshotStates() {
+        java.util.HashMap<String, ProgressState> copy = new java.util.HashMap<>();
+        for (java.util.Map.Entry<String, ProgressState> entry : sProgressStates.entrySet()) {
+            ProgressState source = entry.getValue();
+            ProgressState clone = new ProgressState();
+            clone.progress = source.progress;
+            clone.resid = source.resid;
+            clone.varArg = source.varArg;
+            copy.put(entry.getKey(), clone);
+        }
+        return copy;
+    }
+
     public static boolean hasOngoingTasks() {
         return getTaskCount() > 0;
     }

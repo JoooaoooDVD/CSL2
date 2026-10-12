@@ -93,6 +93,8 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
         mDot = findViewById(R.id.progress_dot);
         setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.bg_dl_dock, getContext().getTheme()));
         setOnClickListener(this);
+        // Keep the console summary fresh even while it is collapsed
+        ProgressKeeper.addGlobalListener(mGlobalListener);
     }
 
     private void startPulse() {
@@ -115,6 +117,7 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
     @Override
     protected void onDetachedFromWindow() {
         stopPulse();
+        ProgressKeeper.removeGlobalListener(mGlobalListener);
         super.onDetachedFromWindow();
     }
 
@@ -144,6 +147,14 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
         mLinearLayout.setVisibility(mLinearLayout.getVisibility() == GONE ? VISIBLE : GONE);
         mFlipArrow.setRotation(mLinearLayout.getVisibility() == GONE? 0 : 180);
     }
+
+    /** Keeps the header summary ("3 active - 62%") in sync. */
+    private final ProgressKeeper.GlobalProgressListener mGlobalListener = (taskCount, percent) -> post(() -> {
+        if (taskCount == 0) return;
+        mTaskNumberDisplayer.setText(percent >= 0
+                ? getContext().getString(R.string.progress_console_subtitle, taskCount, percent)
+                : getContext().getString(R.string.progress_console_subtitle_unknown, taskCount));
+    });
 
     /** When true (set by the home screen, which shows progress on the PLAY button instead),
      *  the floating panel stays hidden while still keeping its task-count registration. */
@@ -192,46 +203,71 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
 
     class LayoutProgressListener implements ProgressListener {
         final String progressKey;
-        final TextProgressBar textView;
+        final TaskProgressCard card;
         final LinearLayout.LayoutParams params;
         boolean isAttached = false;
         public LayoutProgressListener(String progressKey) {
             this.progressKey = progressKey;
-            textView = new TextProgressBar(getContext());
-            textView.setTextPadding(getContext().getResources().getDimensionPixelOffset(R.dimen._6sdp));
-            params = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, getResources().getDimensionPixelOffset(R.dimen._20sdp));
-            params.bottomMargin = getResources().getDimensionPixelOffset(R.dimen._6sdp);
+            card = new TaskProgressCard(getContext());
+            card.setTitle(describeTask(getContext(), progressKey));
+            int margin = getResources().getDimensionPixelOffset(R.dimen._6sdp);
+            params = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+            params.bottomMargin = margin;
             ProgressKeeper.addListener(progressKey, this);
         }
         @Override
         public void onProgressStarted() {
             post(()-> {
                 Log.i("ProgressLayout", "onProgressStarted");
-                if(!isAttached) mLinearLayout.addView(textView, params);
+                if(!isAttached) mLinearLayout.addView(card, params);
                 isAttached = true;
+                update(-1, -1, new Object[0]);
             });
         }
 
         @Override
         public void onProgressUpdated(int progress, int resid, Object... va) {
-            post(()-> {
+            post(()-> update(progress, resid, va));
+        }
+
+        private void update(int progress, int resid, Object... va) {
+            if (progress >= 0) {
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                    textView.setProgress(progress, true);
+                    card.setProgress(progress, false);
                 } else {
-                    textView.setProgress(progress);
+                    card.setProgress(progress, true);
                 }
-                if(resid != -1) textView.setText(getContext().getString(resid, va));
-                else if(va.length > 0 && va[0] != null)textView.setText((String)va[0]);
-                else textView.setText("");
-            });
+            } else {
+                card.setProgress(-1, true);
+            }
+            String detail = null;
+            if(resid != -1) detail = getContext().getString(resid, va);
+            else if(va.length > 0 && va[0] != null) detail = va[0].toString();
+            card.setDetail(detail == null ? getContext().getString(R.string.progress_task_unknown) : detail);
         }
 
         @Override
         public void onProgressEnded() {
             post(()-> {
-                mLinearLayout.removeView(textView);
+                mLinearLayout.removeView(card);
                 isAttached = false;
             });
+        }
+    }
+
+    /** Human label for a progress key, used as the card title. */
+    private static String describeTask(Context context, @NonNull String key) {
+        switch (key) {
+            case DOWNLOAD_GAME: return "Game files";
+            case DOWNLOAD_VERSION_LIST: return "Version list";
+            case UNPACK_RUNTIME: return "Java runtime";
+            case AUTHENTICATE: return "Signing in";
+            case INSTALL_MODPACK: return "Modpack";
+            case EXTRACT_COMPONENTS: return "Components";
+            case EXTRACT_SINGLE_FILES: return "Assets";
+            case INSTANCE_INSTALL: return "Instance";
+            case DATA_MIGRATION: return "Data migration";
+            default: return key;
         }
     }
 }

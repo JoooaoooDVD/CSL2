@@ -50,13 +50,17 @@
 				android:inputType="textFilter|textImeMultiLine|textAutoComplete|textAutoCorrect"
 				tools:ignore="TouchTargetSizeCheck" />
 
-			<com.craftstudio.cslauncher.input.handleview.DrawerPullButton
+			<ImageView
 				android:id="@+id/drawer_button"
-				android:layout_width="40dp"
-				android:layout_height="20dp"
-				android:padding="8dp"
+				android:layout_width="64dp"
+				android:layout_height="48dp"
+				android:layout_gravity="center_horizontal"
+				android:contentDescription="@string/ce_title"
 				android:elevation="10dp"
-				android:layout_gravity="center_horizontal"/>
+				android:padding="11dp"
+				android:scaleType="fitCenter"
+				android:src="@drawable/ic_sharp_settings_24"
+				android:tint="#FFFFFFFF" />
 			<com.craftstudio.cslauncher.input.mouse.HotbarView
 				android:id="@+id/hotbar_view"
 				android:layout_width="0px"
