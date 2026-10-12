@@ -87,7 +87,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@drawable/bg_dl_fill"
-            android:pivotX="0dp"
+            android:pivotX="0"
             android:scaleX="0" />
     </FrameLayout>
 

@@ -93,6 +93,7 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
         mTaskNumberDisplayer = findViewById(R.id.progress_textview);
         mPercentDisplayer = findViewById(R.id.progress_percent);
         mStrip = findViewById(R.id.progress_strip);
+        mStrip.setPivotX(0f);
         mFlipArrow = findViewById(R.id.progress_flip_arrow);
         mDot = findViewById(R.id.progress_dot);
         setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.bg_dl_dock, getContext().getTheme()));
