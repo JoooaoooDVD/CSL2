@@ -8,7 +8,7 @@
     android:clickable="true"
     android:focusable="true"
     android:gravity="center_vertical"
-    android:minHeight="58dp"
+    android:minHeight="64dp"
     android:orientation="horizontal"
     android:paddingStart="14dp"
     android:paddingTop="8dp"
@@ -28,7 +28,7 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:textColor="?attr/colorOnSurface"
-            android:textSize="14.5sp"
+            android:textSize="15sp"
             android:textStyle="bold" />
 
         <TextView
