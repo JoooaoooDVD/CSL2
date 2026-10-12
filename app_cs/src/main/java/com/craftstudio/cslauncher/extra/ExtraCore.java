@@ -20,6 +20,9 @@ public final class ExtraCore {
     // Singleton instance
     private static volatile ExtraCore sExtraCoreSingleton = null;
 
+    /** Placeholder stored for keys that were set with a null value */
+    private static final Object NO_VALUE = new Object();
+
     // Store the key-value pair
     private final Map<String, Object> mValueMap = new ConcurrentHashMap<>();
 
@@ -44,9 +47,9 @@ public final class ExtraCore {
      * @param value The value
      */
     public static void setValue(String key, Object value){
-        if(value == null || key == null) return; // null values create an NPE on insertion
-
-        getInstance().mValueMap.put(key, value);
+        if(key == null) return;
+        // Signals without a payload (ExtraListener<Void>) are stored as a marker: the map rejects nulls
+        getInstance().mValueMap.put(key, value == null ? NO_VALUE : value);
         ConcurrentLinkedQueue<WeakReference<ExtraListener>> extraListenerList = getInstance().mListenerMap.get(key);
         if(extraListenerList == null) return; //No listeners
         for(WeakReference<ExtraListener> listener : extraListenerList){
@@ -64,12 +67,16 @@ public final class ExtraCore {
 
     /** @return The value behind the key */
     public static Object getValue(String key){
-        return getInstance().mValueMap.get(key);
+        return unwrap(getInstance().mValueMap.get(key));
+    }
+
+    private static Object unwrap(Object value) {
+        return value == NO_VALUE ? null : value;
     }
 
     /** @return The value behind the key, or the default value */
     public static Object getValue(String key, Object defaultValue){
-        Object value = getInstance().mValueMap.get(key);
+        Object value = unwrap(getInstance().mValueMap.get(key));
         return value != null ? value : defaultValue;
     }
 
@@ -79,7 +86,7 @@ public final class ExtraCore {
     }
 
     public static Object consumeValue(String key){
-        Object value = getInstance().mValueMap.get(key);
+        Object value = unwrap(getInstance().mValueMap.get(key));
         getInstance().mValueMap.remove(key);
         return value;
     }

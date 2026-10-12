@@ -82,6 +82,20 @@ public final class LibraryCatalog {
             new Category("low", "Low-end", TINT_GREEN),
     };
 
+    private static final Category[] MODPACK_CATEGORIES = {
+            new Category("", "All", TINT_NEUTRAL),
+            new Category("adventure", "Adventure", TINT_AMBER),
+            new Category("kitchen-sink", "Kitchen sink", TINT_SLATE),
+            new Category("technology", "Technology", TINT_BLUE),
+            new Category("magic", "Magic", TINT_PURPLE),
+            new Category("quests", "Quests", TINT_AMBER),
+            new Category("lightweight", "Lightweight", TINT_GREEN),
+            new Category("optimization", "Performance", TINT_GREEN),
+            new Category("multiplayer", "Multiplayer", TINT_BLUE),
+            new Category("challenging", "Challenging", TINT_PURPLE),
+            new Category("combat", "Combat", TINT_AMBER),
+    };
+
     /** Extra labels for categories that are not offered as chips but may show on a card */
     private static final String[][] EXTRA_LABELS = {
             {"food", "Food"}, {"economy", "Economy"}, {"social", "Social"},
@@ -104,6 +118,7 @@ public final class LibraryCatalog {
         switch (type) {
             case RESOURCE_PACK: return RESOURCE_PACK_CATEGORIES;
             case SHADER_PACK: return SHADER_CATEGORIES;
+            case MODPACK: return MODPACK_CATEGORIES;
             default: return MOD_CATEGORIES;
         }
     }

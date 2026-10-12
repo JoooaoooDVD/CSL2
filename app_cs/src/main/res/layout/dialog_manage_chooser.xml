@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    "Manage content" popup: Mods | Resource packs | Shader packs | Worlds (installed counts
-    load in the background). Card art: the manager banner on top, gradient icon tiles below.
-    Card width is set in code.
+    "Manage content" popup: Mods | Resource packs | Shader packs | Worlds in one row.
+    Same card language as the Create chooser: artwork on top, name and installed count below.
+    Card width and option height are adjusted in code to the screen.
 -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -20,28 +20,15 @@
 
     <LinearLayout
         android:id="@+id/mc_card"
-        android:layout_width="620dp"
+        android:layout_width="720dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:background="@drawable/bg_pp_card"
         android:clickable="true"
-        android:clipToOutline="true"
         android:elevation="16dp"
         android:focusable="false"
-        android:orientation="vertical">
-
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="100dp"
-            android:contentDescription="@null"
-            android:scaleType="centerCrop"
-            android:src="@drawable/banner_home_manager" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="18dp">
+        android:orientation="vertical"
+        android:padding="18dp">
 
         <LinearLayout
             android:id="@+id/mc_header"
@@ -119,448 +106,469 @@
         <LinearLayout
             android:id="@+id/mc_options"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_height="200dp"
+            android:layout_marginTop="14dp"
             android:orientation="horizontal">
 
         <!-- ═════ mods ═════ -->
-        <LinearLayout
+        <FrameLayout
             android:id="@+id/mc_opt_mods"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="1"
-            android:layout_marginEnd="8dp"
-            android:background="@drawable/bg_mm_option"
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/bg_cc_option"
             android:clickable="true"
-            android:focusable="true"
-            android:orientation="vertical"
-            android:padding="10dp">
-
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="64dp">
-
-                <View
-                    android:id="@+id/mc_mods_glow"
-                    android:layout_width="96dp"
-                    android:layout_height="64dp"
-                    android:layout_gravity="start|center_vertical"
-                    android:layout_marginStart="-22dp"
-                    android:alpha="0.3"
-                    android:background="@drawable/bg_mm_glow_mods" />
-
-                <FrameLayout
-                    android:id="@+id/mc_mods_tile"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:layout_gravity="start|center_vertical"
-                    android:background="@drawable/bg_mm_type_mods">
-
-                    <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:layout_gravity="center"
-                        android:contentDescription="@null"
-                        android:src="@drawable/ic_lib_cube"
-                        app:tint="@color/mm_mods_glyph" />
-                </FrameLayout>
-
-                <TextView
-                    android:id="@+id/mc_mods_count"
-                    android:layout_width="wrap_content"
-                    android:layout_height="24dp"
-                    android:layout_gravity="top|end"
-                    android:background="@drawable/bg_mm_count_pill"
-                    android:gravity="center"
-                    android:includeFontPadding="false"
-                    android:paddingStart="10dp"
-                    android:paddingEnd="10dp"
-                    android:singleLine="true"
-                    android:text="@string/mc_count_loading"
-                    android:textColor="@color/hm_text_dim"
-                    android:textSize="11sp"
-                    android:textStyle="bold" />
-            </FrameLayout>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:ellipsize="end"
-                android:singleLine="true"
-                android:text="@string/mcl_content_mods"
-                android:textColor="@color/hm_text"
-                android:textSize="13.5sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:ellipsize="end"
-                android:lines="2"
-                android:maxLines="2"
-                android:text="@string/mc_desc_mods"
-                android:textColor="@color/hm_text_dim"
-                android:textSize="12sp" />
+            android:focusable="true">
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:layout_height="match_parent"
+                android:orientation="vertical">
 
-                <View
-                    android:id="@+id/mc_mods_bar"
-                    android:layout_width="0dp"
-                    android:layout_height="3dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/bg_mm_type_mods"
-                    android:alpha="0.85" />
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1">
 
-                <ImageView
-                    android:id="@+id/mc_mods_chevron"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_marginStart="10dp"
-                    android:background="@drawable/bg_mm_btn"
-                    android:contentDescription="@null"
-                    android:padding="6dp"
-                    android:rotation="180"
-                    android:src="@drawable/ic_ci_back"
-                    app:tint="@color/hm_icon" />
+                    <ImageView
+                        android:id="@+id/mc_mods_art"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:contentDescription="@null"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/banner_manage_mods" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="34dp"
+                        android:layout_gravity="bottom"
+                        android:background="@drawable/bg_cc_art_fade" />
+
+                    <TextView
+                        android:id="@+id/mc_mods_count"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="top|end"
+                        android:layout_margin="8dp"
+                        android:background="@drawable/bg_cc_badge_dark"
+                        android:includeFontPadding="false"
+                        android:letterSpacing="0.06"
+                        android:paddingStart="9dp"
+                        android:paddingTop="4dp"
+                        android:paddingEnd="9dp"
+                        android:paddingBottom="4dp"
+                        android:singleLine="true"
+                        android:text="@string/mc_count_loading"
+                        android:textColor="@color/hm_text"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold" />
+
+                    <FrameLayout
+                        android:id="@+id/mc_mods_tile"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_gravity="bottom|start"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginBottom="-8dp"
+                        android:background="@drawable/bg_mm_type_mods"
+                        android:elevation="2dp">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_lib_cube"
+                            app:tint="@color/mm_mods_glyph" />
+                    </FrameLayout>
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingStart="10dp"
+                    android:paddingTop="12dp"
+                    android:paddingEnd="10dp"
+                    android:paddingBottom="10dp">
+
+                    <TextView
+                        android:id="@+id/mc_mods_name"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:includeFontPadding="false"
+                        android:singleLine="true"
+                        android:text="@string/mcl_content_mods"
+                        android:textColor="@color/hm_text"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/mc_mods_desc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="@string/mc_desc_mods"
+                        android:textColor="@color/hm_text_dim"
+                        android:textSize="11sp" />
+                </LinearLayout>
             </LinearLayout>
-        </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_cc_option_overlay"
+                android:duplicateParentState="true" />
+        </FrameLayout>
 
         <!-- ═════ rp ═════ -->
-        <LinearLayout
+        <FrameLayout
             android:id="@+id/mc_opt_rp"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="1"
-            android:layout_marginEnd="8dp"
-            android:background="@drawable/bg_mm_option"
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/bg_cc_option"
             android:clickable="true"
-            android:focusable="true"
-            android:orientation="vertical"
-            android:padding="10dp">
-
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="64dp">
-
-                <View
-                    android:id="@+id/mc_rp_glow"
-                    android:layout_width="96dp"
-                    android:layout_height="64dp"
-                    android:layout_gravity="start|center_vertical"
-                    android:layout_marginStart="-22dp"
-                    android:alpha="0.3"
-                    android:background="@drawable/bg_mm_glow_rp" />
-
-                <FrameLayout
-                    android:id="@+id/mc_rp_tile"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:layout_gravity="start|center_vertical"
-                    android:background="@drawable/bg_mm_type_rp">
-
-                    <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:layout_gravity="center"
-                        android:contentDescription="@null"
-                        android:src="@drawable/ic_lib_image"
-                        app:tint="@color/mm_rp_glyph" />
-                </FrameLayout>
-
-                <TextView
-                    android:id="@+id/mc_rp_count"
-                    android:layout_width="wrap_content"
-                    android:layout_height="24dp"
-                    android:layout_gravity="top|end"
-                    android:background="@drawable/bg_mm_count_pill"
-                    android:gravity="center"
-                    android:includeFontPadding="false"
-                    android:paddingStart="10dp"
-                    android:paddingEnd="10dp"
-                    android:singleLine="true"
-                    android:text="@string/mc_count_loading"
-                    android:textColor="@color/hm_text_dim"
-                    android:textSize="11sp"
-                    android:textStyle="bold" />
-            </FrameLayout>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:ellipsize="end"
-                android:singleLine="true"
-                android:text="@string/mcl_content_resourcepacks"
-                android:textColor="@color/hm_text"
-                android:textSize="13.5sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:ellipsize="end"
-                android:lines="2"
-                android:maxLines="2"
-                android:text="@string/mc_desc_rp"
-                android:textColor="@color/hm_text_dim"
-                android:textSize="12sp" />
+            android:focusable="true">
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:layout_height="match_parent"
+                android:orientation="vertical">
 
-                <View
-                    android:id="@+id/mc_rp_bar"
-                    android:layout_width="0dp"
-                    android:layout_height="3dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/bg_mm_type_rp"
-                    android:alpha="0.85" />
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1">
 
-                <ImageView
-                    android:id="@+id/mc_rp_chevron"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_marginStart="10dp"
-                    android:background="@drawable/bg_mm_btn"
-                    android:contentDescription="@null"
-                    android:padding="6dp"
-                    android:rotation="180"
-                    android:src="@drawable/ic_ci_back"
-                    app:tint="@color/hm_icon" />
+                    <ImageView
+                        android:id="@+id/mc_rp_art"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:contentDescription="@null"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/banner_manage_rp" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="34dp"
+                        android:layout_gravity="bottom"
+                        android:background="@drawable/bg_cc_art_fade" />
+
+                    <TextView
+                        android:id="@+id/mc_rp_count"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="top|end"
+                        android:layout_margin="8dp"
+                        android:background="@drawable/bg_cc_badge_dark"
+                        android:includeFontPadding="false"
+                        android:letterSpacing="0.06"
+                        android:paddingStart="9dp"
+                        android:paddingTop="4dp"
+                        android:paddingEnd="9dp"
+                        android:paddingBottom="4dp"
+                        android:singleLine="true"
+                        android:text="@string/mc_count_loading"
+                        android:textColor="@color/hm_text"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold" />
+
+                    <FrameLayout
+                        android:id="@+id/mc_rp_tile"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_gravity="bottom|start"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginBottom="-8dp"
+                        android:background="@drawable/bg_mm_type_rp"
+                        android:elevation="2dp">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_lib_image"
+                            app:tint="@color/mm_rp_glyph" />
+                    </FrameLayout>
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingStart="10dp"
+                    android:paddingTop="12dp"
+                    android:paddingEnd="10dp"
+                    android:paddingBottom="10dp">
+
+                    <TextView
+                        android:id="@+id/mc_rp_name"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:includeFontPadding="false"
+                        android:singleLine="true"
+                        android:text="@string/mcl_content_resourcepacks"
+                        android:textColor="@color/hm_text"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/mc_rp_desc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="@string/mc_desc_rp"
+                        android:textColor="@color/hm_text_dim"
+                        android:textSize="11sp" />
+                </LinearLayout>
             </LinearLayout>
-        </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_cc_option_overlay"
+                android:duplicateParentState="true" />
+        </FrameLayout>
+
         <!-- ═════ sh ═════ -->
-        <LinearLayout
+        <FrameLayout
             android:id="@+id/mc_opt_sh"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="1"
-            android:layout_marginEnd="8dp"
-            android:background="@drawable/bg_mm_option"
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/bg_cc_option"
             android:clickable="true"
-            android:focusable="true"
-            android:orientation="vertical"
-            android:padding="10dp">
-
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="64dp">
-
-                <View
-                    android:id="@+id/mc_sh_glow"
-                    android:layout_width="96dp"
-                    android:layout_height="64dp"
-                    android:layout_gravity="start|center_vertical"
-                    android:layout_marginStart="-22dp"
-                    android:alpha="0.3"
-                    android:background="@drawable/bg_mm_glow_sh" />
-
-                <FrameLayout
-                    android:id="@+id/mc_sh_tile"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:layout_gravity="start|center_vertical"
-                    android:background="@drawable/bg_mm_type_sh">
-
-                    <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:layout_gravity="center"
-                        android:contentDescription="@null"
-                        android:src="@drawable/ic_lib_sun"
-                        app:tint="@color/mm_sh_glyph" />
-                </FrameLayout>
-
-                <TextView
-                    android:id="@+id/mc_sh_count"
-                    android:layout_width="wrap_content"
-                    android:layout_height="24dp"
-                    android:layout_gravity="top|end"
-                    android:background="@drawable/bg_mm_count_pill"
-                    android:gravity="center"
-                    android:includeFontPadding="false"
-                    android:paddingStart="10dp"
-                    android:paddingEnd="10dp"
-                    android:singleLine="true"
-                    android:text="@string/mc_count_loading"
-                    android:textColor="@color/hm_text_dim"
-                    android:textSize="11sp"
-                    android:textStyle="bold" />
-            </FrameLayout>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:ellipsize="end"
-                android:singleLine="true"
-                android:text="@string/mcl_content_shaderpacks"
-                android:textColor="@color/hm_text"
-                android:textSize="13.5sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:ellipsize="end"
-                android:lines="2"
-                android:maxLines="2"
-                android:text="@string/mc_desc_sh"
-                android:textColor="@color/hm_text_dim"
-                android:textSize="12sp" />
+            android:focusable="true">
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:layout_height="match_parent"
+                android:orientation="vertical">
 
-                <View
-                    android:id="@+id/mc_sh_bar"
-                    android:layout_width="0dp"
-                    android:layout_height="3dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/bg_mm_type_sh"
-                    android:alpha="0.85" />
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1">
 
-                <ImageView
-                    android:id="@+id/mc_sh_chevron"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_marginStart="10dp"
-                    android:background="@drawable/bg_mm_btn"
-                    android:contentDescription="@null"
-                    android:padding="6dp"
-                    android:rotation="180"
-                    android:src="@drawable/ic_ci_back"
-                    app:tint="@color/hm_icon" />
+                    <ImageView
+                        android:id="@+id/mc_sh_art"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:contentDescription="@null"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/banner_manage_shaders" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="34dp"
+                        android:layout_gravity="bottom"
+                        android:background="@drawable/bg_cc_art_fade" />
+
+                    <TextView
+                        android:id="@+id/mc_sh_count"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="top|end"
+                        android:layout_margin="8dp"
+                        android:background="@drawable/bg_cc_badge_dark"
+                        android:includeFontPadding="false"
+                        android:letterSpacing="0.06"
+                        android:paddingStart="9dp"
+                        android:paddingTop="4dp"
+                        android:paddingEnd="9dp"
+                        android:paddingBottom="4dp"
+                        android:singleLine="true"
+                        android:text="@string/mc_count_loading"
+                        android:textColor="@color/hm_text"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold" />
+
+                    <FrameLayout
+                        android:id="@+id/mc_sh_tile"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_gravity="bottom|start"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginBottom="-8dp"
+                        android:background="@drawable/bg_mm_type_sh"
+                        android:elevation="2dp">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_lib_sun"
+                            app:tint="@color/mm_sh_glyph" />
+                    </FrameLayout>
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingStart="10dp"
+                    android:paddingTop="12dp"
+                    android:paddingEnd="10dp"
+                    android:paddingBottom="10dp">
+
+                    <TextView
+                        android:id="@+id/mc_sh_name"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:includeFontPadding="false"
+                        android:singleLine="true"
+                        android:text="@string/mcl_content_shaderpacks"
+                        android:textColor="@color/hm_text"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/mc_sh_desc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="@string/mc_desc_sh"
+                        android:textColor="@color/hm_text_dim"
+                        android:textSize="11sp" />
+                </LinearLayout>
             </LinearLayout>
-        </LinearLayout>
 
-        <!-- ═════ worlds ═════ -->
-        <LinearLayout
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_cc_option_overlay"
+                android:duplicateParentState="true" />
+        </FrameLayout>
+
+        <!-- ═════ world ═════ -->
+        <FrameLayout
             android:id="@+id/mc_opt_world"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="1"
-            android:background="@drawable/bg_mm_option"
+            android:background="@drawable/bg_cc_option"
             android:clickable="true"
-            android:focusable="true"
-            android:orientation="vertical"
-            android:padding="10dp">
-
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="64dp">
-
-                <View
-                    android:id="@+id/mc_world_glow"
-                    android:layout_width="96dp"
-                    android:layout_height="64dp"
-                    android:layout_gravity="start|center_vertical"
-                    android:layout_marginStart="-22dp"
-                    android:alpha="0.3"
-                    android:background="@drawable/bg_mm_glow_world" />
-
-                <FrameLayout
-                    android:id="@+id/mc_world_tile"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:layout_gravity="start|center_vertical"
-                    android:background="@drawable/bg_mm_type_world">
-
-                    <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:layout_gravity="center"
-                        android:contentDescription="@null"
-                        android:src="@drawable/ic_lib_world"
-                        app:tint="@color/mm_world_glyph" />
-                </FrameLayout>
-
-                <TextView
-                    android:id="@+id/mc_world_count"
-                    android:layout_width="wrap_content"
-                    android:layout_height="24dp"
-                    android:layout_gravity="top|end"
-                    android:background="@drawable/bg_mm_count_pill"
-                    android:gravity="center"
-                    android:includeFontPadding="false"
-                    android:paddingStart="10dp"
-                    android:paddingEnd="10dp"
-                    android:singleLine="true"
-                    android:text="@string/mc_count_loading"
-                    android:textColor="@color/hm_text_dim"
-                    android:textSize="11sp"
-                    android:textStyle="bold" />
-            </FrameLayout>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:ellipsize="end"
-                android:singleLine="true"
-                android:text="@string/mcl_content_worlds"
-                android:textColor="@color/hm_text"
-                android:textSize="13.5sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:ellipsize="end"
-                android:lines="2"
-                android:maxLines="2"
-                android:text="@string/mc_desc_world"
-                android:textColor="@color/hm_text_dim"
-                android:textSize="12sp" />
+            android:focusable="true">
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:layout_height="match_parent"
+                android:orientation="vertical">
 
-                <View
-                    android:id="@+id/mc_world_bar"
-                    android:layout_width="0dp"
-                    android:layout_height="3dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/bg_mm_type_world"
-                    android:alpha="0.85" />
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1">
 
-                <ImageView
-                    android:id="@+id/mc_world_chevron"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_marginStart="10dp"
-                    android:background="@drawable/bg_mm_btn"
-                    android:contentDescription="@null"
-                    android:padding="6dp"
-                    android:rotation="180"
-                    android:src="@drawable/ic_ci_back"
-                    app:tint="@color/hm_icon" />
+                    <ImageView
+                        android:id="@+id/mc_world_art"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:contentDescription="@null"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/banner_manage_worlds" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="34dp"
+                        android:layout_gravity="bottom"
+                        android:background="@drawable/bg_cc_art_fade" />
+
+                    <TextView
+                        android:id="@+id/mc_world_count"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="top|end"
+                        android:layout_margin="8dp"
+                        android:background="@drawable/bg_cc_badge_dark"
+                        android:includeFontPadding="false"
+                        android:letterSpacing="0.06"
+                        android:paddingStart="9dp"
+                        android:paddingTop="4dp"
+                        android:paddingEnd="9dp"
+                        android:paddingBottom="4dp"
+                        android:singleLine="true"
+                        android:text="@string/mc_count_loading"
+                        android:textColor="@color/hm_text"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold" />
+
+                    <FrameLayout
+                        android:id="@+id/mc_world_tile"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_gravity="bottom|start"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginBottom="-8dp"
+                        android:background="@drawable/bg_mm_type_world"
+                        android:elevation="2dp">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_lib_world"
+                            app:tint="@color/mm_world_glyph" />
+                    </FrameLayout>
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingStart="10dp"
+                    android:paddingTop="12dp"
+                    android:paddingEnd="10dp"
+                    android:paddingBottom="10dp">
+
+                    <TextView
+                        android:id="@+id/mc_world_name"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:includeFontPadding="false"
+                        android:singleLine="true"
+                        android:text="@string/mcl_content_worlds"
+                        android:textColor="@color/hm_text"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/mc_world_desc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="@string/mc_desc_world"
+                        android:textColor="@color/hm_text_dim"
+                        android:textSize="11sp" />
+                </LinearLayout>
             </LinearLayout>
-        </LinearLayout>
-        </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_cc_option_overlay"
+                android:duplicateParentState="true" />
+        </FrameLayout>
+
         </LinearLayout>
     </LinearLayout>
 </FrameLayout>

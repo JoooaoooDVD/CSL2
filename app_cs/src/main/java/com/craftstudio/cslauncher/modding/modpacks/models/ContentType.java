@@ -1,7 +1,7 @@
 package com.craftstudio.cslauncher.modding.modpacks.models;
 
 /**
- * The three kinds of installable content that "Browse Content" / "Manage Content"
+ * The kinds of installable content that "Browse Content" / "Manage Content"
  * support. Mods, resource packs, and shader packs all go through the same
  * search/install/update-check pipeline (ModsSearchFragment, ManageModsFragment,
  * InstalledModAdapter) — this enum centralizes the handful of things that
@@ -16,7 +16,12 @@ public enum ContentType {
     MOD("mods", ".jar", "mod", 6),
     RESOURCE_PACK("resourcepacks", ".zip", "resourcepack", 12),
     // https://api.curseforge.com/v1/categories?gameId=432 — "Shaders" category id.
-    SHADER_PACK("shaderpacks", ".zip", "shader", 6552);
+    SHADER_PACK("shaderpacks", ".zip", "shader", 6552),
+    /**
+     * Modpacks are browsed with the same library screens, but installing one creates a new
+     * profile instead of dropping a file into a folder. CurseForge classId 4471 = "Modpacks".
+     */
+    MODPACK("modpacks", ".mrpack", "modpack", 4471);
 
     /** Folder name under the instance's game directory (e.g. ".minecraft/mods"). */
     public final String folderName;
@@ -40,6 +45,7 @@ public enum ContentType {
         switch (type) {
             case "resourcepack": return RESOURCE_PACK;
             case "shader":       return SHADER_PACK;
+            case "modpack":      return MODPACK;
             default:             return MOD;
         }
     }

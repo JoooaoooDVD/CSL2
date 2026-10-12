@@ -2,6 +2,7 @@ package com.craftstudio.cslauncher.fragments;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -21,6 +22,8 @@ import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -37,6 +40,7 @@ import com.craftstudio.cslauncher.modding.modpacks.InstalledContentIndex;
 import com.craftstudio.cslauncher.modding.modpacks.LibraryCardAdapter;
 import com.craftstudio.cslauncher.modding.modpacks.LibraryCatalog;
 import com.craftstudio.cslauncher.modding.modpacks.api.CommonApi;
+import com.craftstudio.cslauncher.modding.modpacks.api.LocalModpackImporter;
 import com.craftstudio.cslauncher.modding.modpacks.imagecache.ModIconCache;
 import com.craftstudio.cslauncher.modding.modpacks.models.Constants;
 import com.craftstudio.cslauncher.modding.modpacks.models.ContentType;
@@ -69,6 +73,10 @@ import java.util.concurrent.Future;
  * next to the search box. Results show up as cards in a grid; tapping a card (or its Install /
  * Update button) opens {@link ModInstallFragment}, while installed projects get a red
  * Uninstall button right on the card.
+ * <p>
+ * Opened with {@link #ARG_CONTENT_TYPE} = MODPACK the same screen becomes the modpack browser:
+ * the type tabs make way for an Import button, nothing is tied to the selected profile and the
+ * install page creates a new profile from the chosen pack.
  */
 public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.Listener {
 
@@ -123,7 +131,10 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
     private View mStateContainer, mStateLoading, mStateRetry;
     private ImageView mStateIcon;
     private TextView mStateText;
-    private View mTabIndicator, mTypeTabsFrame, mToolbar, mSearchBox, mSortChevron;
+    private View mTabIndicator, mTypeTabsFrame, mToolbar, mSearchBox, mSortChevron, mImportButton;
+
+    private final ActivityResultLauncher<String> mImportLauncher = registerForActivityResult(
+            new ActivityResultContracts.GetContent(), this::importLocalModpack);
 
     private final TaskCountListener mTaskCountListener = taskCount -> {
         Tools.runOnUiThread(() -> {
@@ -172,6 +183,15 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         mToolbar = view.findViewById(R.id.library_toolbar);
         mSearchBox = view.findViewById(R.id.library_search_box);
         mSortChevron = view.findViewById(R.id.library_sort_chevron);
+        mImportButton = view.findViewById(R.id.library_import_button);
+        mImportButton.setOnClickListener(v -> {
+            if (ProgressKeeper.getTaskCount() > 0) {
+                Toast.makeText(requireContext(), R.string.lib_tasks_running, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            mImportLauncher.launch("*/*");
+        });
+        CSAnimationEngine.attachPressFeedback(mImportButton);
 
         if (!mInitialized) resolveProfile();
 
@@ -213,7 +233,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         mLastTaskCount = ProgressKeeper.getTaskCount();
         ProgressKeeper.addTaskCountListener(mTaskCountListener, false);
 
-        LibraryMotion.playEntrance(mTitle, mSubtitle, mTypeTabsFrame, mToolbar, mChips);
+        LibraryMotion.playEntrance(mTitle, mSubtitle, isModpackMode() ? mImportButton : mTypeTabsFrame, mToolbar, mChips);
     }
 
     @Override
@@ -229,7 +249,18 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         mAdapter = null;
         mStateContainer = mStateLoading = mStateRetry = null;
         mStateIcon = null;
-        mTabIndicator = mTypeTabsFrame = mToolbar = mSearchBox = mSortChevron = null;
+        mTabIndicator = mTypeTabsFrame = mToolbar = mSearchBox = mSortChevron = mImportButton = null;
+    }
+
+    /** Modpack browser: no profile context, installs create a profile */
+    private boolean isModpackMode() {
+        return mFilters.contentType == ContentType.MODPACK;
+    }
+
+    /** A .mrpack / CurseForge .zip picked from the device becomes a profile */
+    private void importLocalModpack(@Nullable Uri uri) {
+        if (uri == null || getContext() == null) return;
+        LocalModpackImporter.importAsync(requireContext(), uri, mApi);
     }
 
     // ─── Setup ───────────────────────────────────────────────────────────────
@@ -258,6 +289,14 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
             if (presetVersion != null && !presetVersion.isEmpty()) version = presetVersion;
             if (presetLoader != null && !presetLoader.isEmpty()) loader = presetLoader;
         }
+        if (isModpackMode()) {
+            // A modpack brings its own version and loader, so nothing is pre-filtered unless asked
+            boolean presetVersion = args != null && !isEmpty(args.getString(ARG_PRESET_MC_VERSION, null));
+            boolean presetLoader = args != null && !isEmpty(args.getString(ARG_PRESET_LOADER, null));
+            mFilters.mcVersion = presetVersion ? version : "";
+            mPreferredLoader = presetLoader ? loader : "";
+            return;
+        }
         mFilters.mcVersion = version == null ? "" : version;
         mPreferredLoader = loader == null ? "" : loader;
     }
@@ -266,7 +305,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         View.OnClickListener listener = v -> {
             ContentType type = v == mTabResourcePacks ? ContentType.RESOURCE_PACK
                     : v == mTabShaders ? ContentType.SHADER_PACK : ContentType.MOD;
-            if (type == mFilters.contentType) return;
+            if (type == mFilters.contentType || isModpackMode()) return;
             mItems.clear();
             applyContentType(type, true);
             startSearch();
@@ -414,8 +453,24 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
 
     private void applyContentType(ContentType type, boolean userAction) {
         mFilters.contentType = type;
-        mFilters.modLoader = type == ContentType.MOD ? mPreferredLoader : "";
+        mFilters.modLoader = usesLoader(type) ? mPreferredLoader : "";
         if (userAction) mFilters.category = "";
+
+        if (type == ContentType.MODPACK) {
+            // Modpack browser: no type tabs, an Import button instead
+            mTypeTabsFrame.setVisibility(View.GONE);
+            if (mImportButton != null) mImportButton.setVisibility(View.VISIBLE);
+            mTitle.setText(R.string.lib_title_modpacks);
+            mSubtitle.setText(R.string.lib_subtitle_modpacks);
+            mSearchInput.setHint(R.string.lib_search_modpacks);
+            buildChips();
+            updateContextPill();
+            updateAdapterContext();
+            mAdapter.setInstalledIndex(InstalledContentIndex.empty(type));
+            return;
+        }
+        mTypeTabsFrame.setVisibility(View.VISIBLE);
+        if (mImportButton != null) mImportButton.setVisibility(View.GONE);
 
         mTabMods.setSelected(type == ContentType.MOD);
         mTabResourcePacks.setSelected(type == ContentType.RESOURCE_PACK);
@@ -455,6 +510,11 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         InstalledContentIndex cached = mIndexCache.get(type);
         mAdapter.setInstalledIndex(cached != null ? cached : InstalledContentIndex.empty(type));
         if (userAction && mGrid != null) mGrid.scrollToPosition(0);
+    }
+
+    /** Mods and modpacks are picked per loader; packs and shaders are not */
+    private static boolean usesLoader(ContentType type) {
+        return type == ContentType.MOD || type == ContentType.MODPACK;
     }
 
     private void tintTab(TextView tab, boolean animate) {
@@ -513,8 +573,9 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         String version = mFilters.mcVersion;
         String text;
         if (isEmpty(version)) {
-            text = getString(R.string.lib_all_versions);
-        } else if (mFilters.contentType == ContentType.MOD && !isEmpty(mFilters.modLoader)) {
+            text = isEmpty(mFilters.modLoader) || !isModpackMode()
+                    ? getString(R.string.lib_all_versions) : LibraryCatalog.loaderLabel(mFilters.modLoader);
+        } else if (usesLoader(mFilters.contentType) && !isEmpty(mFilters.modLoader)) {
             text = LibraryCatalog.loaderLabel(mFilters.modLoader) + " " + version;
         } else {
             text = version;
@@ -525,6 +586,11 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
 
     private void updateAdapterContext() {
         if (mAdapter == null) return;
+        if (isModpackMode()) {
+            // Compatibility badges make no sense for a pack that creates its own profile
+            mAdapter.setContext(mFilters.contentType, null, "", mFilters.category);
+            return;
+        }
         mAdapter.setContext(mFilters.contentType, mProfileVersion,
                 mFilters.contentType == ContentType.MOD ? mProfileLoader : "", mFilters.category);
     }
@@ -533,7 +599,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
 
     private static SearchFilters copyOf(SearchFilters source) {
         SearchFilters copy = new SearchFilters();
-        copy.isModpack = false;
+        copy.isModpack = source.contentType == ContentType.MODPACK;
         copy.name = source.name == null ? "" : source.name;
         copy.mcVersion = source.mcVersion;
         copy.modLoader = source.modLoader;
@@ -651,6 +717,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
 
     private void refreshInstalled() {
         final ContentType type = mFilters.contentType;
+        if (type == ContentType.MODPACK) return;
         final int generation = ++mIndexGeneration;
         final String version = mProfileVersion;
         final String loader = mProfileLoader;
@@ -691,6 +758,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         switch (mFilters.contentType) {
             case RESOURCE_PACK: return R.string.lib_tab_resourcepacks;
             case SHADER_PACK: return R.string.lib_tab_shaders;
+            case MODPACK: return R.string.lib_tab_modpacks;
             default: return R.string.lib_tab_mods;
         }
     }
@@ -761,7 +829,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
             }
 
             final String[] loaderValues = {"", "fabric", "forge", "quilt", "neoforge"};
-            boolean showLoader = mFilters.contentType == ContentType.MOD;
+            boolean showLoader = usesLoader(mFilters.contentType);
             if (loaderLabel != null) loaderLabel.setVisibility(showLoader ? View.VISIBLE : View.GONE);
             if (loaderSpinner != null) {
                 loaderSpinner.setVisibility(showLoader ? View.VISIBLE : View.GONE);
@@ -788,7 +856,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
                     int position = loaderSpinner.getSelectedItemPosition();
                     if (position >= 0 && position < loaderValues.length) mPreferredLoader = loaderValues[position];
                 }
-                mFilters.modLoader = mFilters.contentType == ContentType.MOD ? mPreferredLoader : "";
+                mFilters.modLoader = usesLoader(mFilters.contentType) ? mPreferredLoader : "";
                 mFilters.mcVersion = selectedVersion.getText().toString();
                 updateContextPill();
                 startSearch();

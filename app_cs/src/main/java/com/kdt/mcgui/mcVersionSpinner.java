@@ -7,6 +7,7 @@ import com.craftstudio.cslauncher.utils.CSAnimationEngine;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.os.Bundle;
 import android.os.Build;
 import android.transition.Transition;
 import android.util.AttributeSet;
@@ -31,7 +32,8 @@ import com.craftstudio.cslauncher.extra.ExtraConstants;
 import com.craftstudio.cslauncher.extra.ExtraCore;
 import com.craftstudio.cslauncher.extra.ExtraListener;
 import com.craftstudio.cslauncher.fragments.InstanceEditorFragment;
-import com.craftstudio.cslauncher.fragments.SearchModFragment;
+import com.craftstudio.cslauncher.fragments.ModsSearchFragment;
+import com.craftstudio.cslauncher.modding.modpacks.models.ContentType;
 import com.craftstudio.cslauncher.instances.DisplayInstance;
 import com.craftstudio.cslauncher.instances.Instances;
 import com.craftstudio.cslauncher.instances.InstanceAdapter;
@@ -210,7 +212,10 @@ public class mcVersionSpinner extends ExtendedTextView {
             @Override
             public void onModpack() {
                 if (activity.isFinishing()) return;
-                Tools.swapFragment(activity, SearchModFragment.class, SearchModFragment.TAG, null);
+                // Modpack library: same two pages as mods (grid, then the install page)
+                Bundle args = new Bundle();
+                args.putString(ModsSearchFragment.ARG_CONTENT_TYPE, ContentType.MODPACK.name());
+                Tools.swapFragment(activity, ModsSearchFragment.class, ModsSearchFragment.TAG, args);
             }
         });
         mCreateDialog.show();

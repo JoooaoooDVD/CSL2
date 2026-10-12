@@ -277,12 +277,18 @@ public class ModInstallFragment extends Fragment {
 
         mInstance = Instances.loadSelectedInstance();
         String key = Instances.getSelectedInstanceKey();
-        if (mInstance != null && key != null && !key.isEmpty()) {
+        // A modpack creates its own profile, so the selected one plays no part in compatibility
+        if (!isModpack() && mInstance != null && key != null && !key.isEmpty()) {
             InstanceVersionResolver.Info info = InstanceVersionResolver.resolve(key);
             mProfileVersion = info.mcVersion;
             mProfileLoader = info.loader == null ? "" : info.loader;
         }
         return true;
+    }
+
+    /** Modpack browser: install creates a new profile instead of touching the selected one */
+    private boolean isModpack() {
+        return mType == ContentType.MODPACK;
     }
 
     /** Loader used for matching versions: only mods depend on the profile loader */
@@ -353,6 +359,7 @@ public class ModInstallFragment extends Fragment {
         switch (mType) {
             case RESOURCE_PACK: return R.drawable.ic_lib_image;
             case SHADER_PACK: return R.drawable.ic_lib_sun;
+            case MODPACK: return R.drawable.ic_lib_world;
             default: return R.drawable.ic_lib_cube;
         }
     }
@@ -393,6 +400,13 @@ public class ModInstallFragment extends Fragment {
         TextView name = view.findViewById(R.id.install_profile_name);
         TextView version = view.findViewById(R.id.install_profile_version);
         View autoBadge = view.findViewById(R.id.install_auto_badge);
+        if (isModpack()) {
+            name.setText(R.string.lib_modpack_new_profile);
+            version.setText(R.string.lib_modpack_profile_hint);
+            autoBadge.setVisibility(View.GONE);
+            icon.setImageResource(R.drawable.ic_pe_plus);
+            return;
+        }
         if (mInstance == null) {
             name.setText(R.string.lib_no_profile);
             version.setText(R.string.lib_profile_any_version);
@@ -413,6 +427,7 @@ public class ModInstallFragment extends Fragment {
 
     /** "Fabric 1.21.1", "1.20.4" or "Version not detected" */
     private String profileLabel() {
+        if (isModpack()) return getString(R.string.lib_modpack_any_version);
         if (mProfileVersion == null) return getString(R.string.lib_profile_any_version);
         String loader = mType == ContentType.MOD ? LibraryCatalog.loaderLabel(mProfileLoader) : "";
         return loader.isEmpty() ? mProfileVersion : loader + " " + mProfileVersion;
@@ -621,7 +636,7 @@ public class ModInstallFragment extends Fragment {
         final String version = mProfileVersion;
         final String loader = mProfileLoader;
         final String key = mCurseforgeKey;
-        final boolean hasProfile = mInstance != null;
+        final boolean hasProfile = mInstance != null && !isModpack();
         sExecutor.execute(() -> {
             ModDetail detail = null;
             InstalledContentIndex index = null;
@@ -964,7 +979,7 @@ public class ModInstallFragment extends Fragment {
             mUninstall.setVisibility(View.GONE);
             return;
         }
-        boolean hasProfile = mInstance != null;
+        boolean hasProfile = mInstance != null || isModpack();
         if (isRestrictedProject() || (mSelectedIndex >= 0 && !isDownloadable(mSelectedIndex))) {
             styleInstallButton(R.string.lib_open_curseforge, R.drawable.ic_lib_open);
             mPrimary.setEnabled(true);
@@ -1186,7 +1201,7 @@ public class ModInstallFragment extends Fragment {
             openCurseforgePage();
             return;
         }
-        if (mInstance == null) {
+        if (mInstance == null && !isModpack()) {
             Toast.makeText(requireContext(), R.string.lib_no_profile, Toast.LENGTH_SHORT).show();
             return;
         }
@@ -1195,7 +1210,22 @@ public class ModInstallFragment extends Fragment {
             return;
         }
         if (mSelectedIndex < 0) return;
-        startInstall();
+        if (isModpack()) startModpackInstall();
+        else startInstall();
+    }
+
+    /**
+     * Modpacks go through the profile installer: the pack is downloaded, a new profile is
+     * created from it and the home screen follows the progress. This page steps aside.
+     */
+    private void startModpackInstall() {
+        final ModDetail detail = mDetail;
+        if (detail == null) return;
+        Context appContext = requireContext().getApplicationContext();
+        mApi.handleInstallation(appContext, detail, mSelectedIndex);
+        Toast.makeText(appContext, appContext.getString(R.string.lib_modpack_install_started, mItem.title),
+                Toast.LENGTH_SHORT).show();
+        Tools.backToMainMenu(requireActivity());
     }
 
     private void openCurseforgePage() {
@@ -1205,6 +1235,7 @@ public class ModInstallFragment extends Fragment {
             switch (mType) {
                 case RESOURCE_PACK: section = "texture-packs"; break;
                 case SHADER_PACK: section = "shaders"; break;
+                case MODPACK: section = "modpacks"; break;
                 default: section = "mc-mods"; break;
             }
             url = "https://www.curseforge.com/minecraft/" + section + "/"

@@ -181,7 +181,11 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         CSAnimationEngine.attachPressFeedback(card);
         if (mVersionSpinner == null) return;
         // Every selection change (also a reload after the app comes back) re-mirrors the card
-        mVersionSpinner.setSelectionListener(() -> mirrorSpinner(true));
+        mVersionSpinner.setSelectionListener(() -> {
+            mirrorSpinner(true);
+            // The banner artwork belongs to the selected profile: swap it right away
+            loadBackground();
+        });
         mirrorSpinner(false);
     }
 

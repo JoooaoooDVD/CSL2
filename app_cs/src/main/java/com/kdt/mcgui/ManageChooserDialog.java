@@ -9,7 +9,6 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
 
 import com.craftstudio.cslauncher.CSLauncherApplication;
 import com.craftstudio.cslauncher.R;
@@ -26,8 +25,8 @@ import java.io.File;
 /**
  * "Manage content" popup (Manager button): pick Mods, Resource packs, Shader packs or
  * Worlds, then the matching manager opens. Each option shows how many items are installed
- * in the selected profile (counted off the main thread). The card art is the manager
- * banner on top, gradient icon tiles below.
+ * in the selected profile (counted off the main thread). Each option is a card with its
+ * own artwork, the same look as the Create chooser.
  */
 public class ManageChooserDialog extends CSPopupDialog {
 
@@ -57,8 +56,8 @@ public class ManageChooserDialog extends CSPopupDialog {
 
         View[] options = {findViewById(R.id.mc_opt_mods), findViewById(R.id.mc_opt_rp), findViewById(R.id.mc_opt_sh)};
         View[] tiles = {findViewById(R.id.mc_mods_tile), findViewById(R.id.mc_rp_tile), findViewById(R.id.mc_sh_tile)};
-        View[] glows = {findViewById(R.id.mc_mods_glow), findViewById(R.id.mc_rp_glow), findViewById(R.id.mc_sh_glow)};
-        View[] bars = {findViewById(R.id.mc_mods_bar), findViewById(R.id.mc_rp_bar), findViewById(R.id.mc_sh_bar)};
+        View[] arts = {findViewById(R.id.mc_mods_art), findViewById(R.id.mc_rp_art), findViewById(R.id.mc_sh_art),
+                findViewById(R.id.mc_world_art)};
         TextView[] counts = {findViewById(R.id.mc_mods_count), findViewById(R.id.mc_rp_count), findViewById(R.id.mc_sh_count)};
 
         for (int i = 0; i < options.length; i++) {
@@ -66,6 +65,7 @@ public class ManageChooserDialog extends CSPopupDialog {
             final View option = options[i];
             final View tile = tiles[i];
             option.setClipToOutline(true);
+            tile.setClipToOutline(true);
             option.setOnClickListener(v -> {
                 if (isClosing()) return;
                 Motion.bounce(tile);
@@ -75,10 +75,9 @@ public class ManageChooserDialog extends CSPopupDialog {
 
         View worldOption = findViewById(R.id.mc_opt_world);
         View worldTile = findViewById(R.id.mc_world_tile);
-        View worldGlow = findViewById(R.id.mc_world_glow);
-        View worldBar = findViewById(R.id.mc_world_bar);
         TextView worldCount = findViewById(R.id.mc_world_count);
         worldOption.setClipToOutline(true);
+        worldTile.setClipToOutline(true);
         worldOption.setOnClickListener(v -> {
             if (isClosing()) return;
             Motion.bounce(worldTile);
@@ -98,47 +97,17 @@ public class ManageChooserDialog extends CSPopupDialog {
         else subtitle.setText(getContext().getString(R.string.mc_subtitle, profileName));
 
         CreatePopupMotion.enter(mScrim, mCard);
-        CreatePopupMotion.chooserContent(findViewById(R.id.mc_header), options, null);
+        CreatePopupMotion.chooserContent(findViewById(R.id.mc_header),
+                new View[]{options[0], options[1], options[2], worldOption}, null);
+        CreatePopupMotion.optionArts(arts);
         for (int i = 0; i < tiles.length; i++) {
-            long delay = 200 + i * 70L;
+            long delay = 220 + i * 70L;
             Motion.popIn(tiles[i], delay, 0.4f);
             Motion.fadeIn(counts[i], delay + 120, Motion.MEDIUM);
-            breathe(glows[i], delay + 60);
-            growBar(bars[i], delay + 160);
         }
-        Motion.popIn(worldTile, 200 + tiles.length * 70L, 0.4f);
-        Motion.fadeIn(worldCount, 200 + tiles.length * 70L + 120, Motion.MEDIUM);
-        breathe(worldGlow, 200 + tiles.length * 70L + 60);
-        growBar(worldBar, 200 + tiles.length * 70L + 160);
+        Motion.popIn(worldTile, 220 + tiles.length * 70L, 0.4f);
+        Motion.fadeIn(worldCount, 220 + tiles.length * 70L + 120, Motion.MEDIUM);
         loadCounts(counts, worldCount);
-    }
-
-    /** The glow behind a tile fades to its resting alpha, then slowly breathes */
-    private void breathe(@NonNull View glow, long delay) {
-        final float rest = 0.3f;
-        glow.animate().cancel();
-        if (!Motion.content(glow)) {
-            glow.setAlpha(rest);
-            return;
-        }
-        glow.setAlpha(0f);
-        glow.setScaleX(0.5f);
-        glow.setScaleY(0.5f);
-        glow.animate().alpha(rest).scaleX(1f).scaleY(1f).setStartDelay(delay)
-                .setDuration(Motion.LONG + 180).setInterpolator(Motion.ENTER).start();
-    }
-
-    /** The colour bar at the bottom of an option grows from the left */
-    private void growBar(@NonNull View bar, long delay) {
-        bar.animate().cancel();
-        if (!Motion.content(bar)) {
-            bar.setScaleX(1f);
-            return;
-        }
-        bar.setPivotX(0f);
-        bar.setScaleX(0f);
-        bar.animate().scaleX(1f).setStartDelay(delay).setDuration(Motion.LONG + 120)
-                .setInterpolator(Motion.STANDARD).start();
     }
 
     /** Counts the files of each content folder in the background */
@@ -152,12 +121,8 @@ public class ManageChooserDialog extends CSPopupDialog {
                 if (!isShowing()) return;
                 for (int i = 0; i < counts.length; i++) {
                     Motion.swapText(counts[i], getContext().getString(R.string.mc_count, values[i]));
-                    counts[i].setTextColor(ContextCompat.getColor(getContext(),
-                            values[i] > 0 ? R.color.hm_text : R.color.hm_text_dim));
                 }
                 Motion.swapText(worldCount, getContext().getString(R.string.mc_count, worlds));
-                worldCount.setTextColor(ContextCompat.getColor(getContext(),
-                        worlds > 0 ? R.color.hm_text : R.color.hm_text_dim));
             });
         });
     }
@@ -201,20 +166,25 @@ public class ManageChooserDialog extends CSPopupDialog {
         }
     }
 
-    /** Wide on tablets, never touching the edges; capped in height so the option rows scroll */
+    /** Wide on tablets, never touching the edges; option cards shrink on short screens */
     private void sizeCard(@NonNull View card) {
         DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
         float d = metrics.density;
         ViewGroup.LayoutParams params = card.getLayoutParams();
-        params.width = Math.min((int) (660 * d), metrics.widthPixels - (int) (48 * d));
+        params.width = Math.min((int) (720 * d), metrics.widthPixels - (int) (40 * d));
         card.setLayoutParams(params);
-        final int maxHeight = (int) (metrics.heightPixels * 0.86);
-        card.post(() -> {
-            if (card.getHeight() > maxHeight) {
-                ViewGroup.LayoutParams capped = card.getLayoutParams();
-                capped.height = maxHeight;
-                card.setLayoutParams(capped);
+        // header ~58 + margin 14 + padding 36 + window margin ~28; the art area takes what is left
+        View options = findViewById(R.id.mc_options);
+        ViewGroup.LayoutParams optionParams = options.getLayoutParams();
+        int available = metrics.heightPixels - (int) (150 * d);
+        optionParams.height = Math.max((int) (140 * d), Math.min((int) (220 * d), available));
+        options.setLayoutParams(optionParams);
+        // Keep the description line only when the cards are tall enough for it
+        if (optionParams.height < (int) (170 * d)) {
+            for (int id : new int[]{R.id.mc_mods_desc, R.id.mc_rp_desc, R.id.mc_sh_desc, R.id.mc_world_desc}) {
+                View desc = findViewById(id);
+                if (desc != null) desc.setVisibility(View.GONE);
             }
-        });
+        }
     }
 }
