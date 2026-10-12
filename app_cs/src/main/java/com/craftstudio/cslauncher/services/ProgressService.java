@@ -37,6 +37,7 @@ public class ProgressService extends Service implements TaskCountListener {
 
     private NotificationManagerCompat notificationManagerCompat;
     private NotificationCompat.Builder mNotificationBuilder;
+    private final ProgressKeeper.GlobalProgressListener mGlobalListener = (taskCount, percent) -> Tools.MAIN_HANDLER.post(this::refreshNotification);
 
     /** Simple wrapper to start the service */
     public static void startService(Context context){
@@ -58,7 +59,7 @@ public class ProgressService extends Service implements TaskCountListener {
                 .setSmallIcon(R.drawable.notif_icon)
                 .setOnlyAlertOnce(true)
                 .setNotificationSilent();
-        ProgressKeeper.addGlobalListener((taskCount, percent) -> Tools.MAIN_HANDLER.post(this::refreshNotification));
+        ProgressKeeper.addGlobalListener(mGlobalListener);
     }
 
     @SuppressLint("StringFormatInvalid")
@@ -93,6 +94,7 @@ public class ProgressService extends Service implements TaskCountListener {
     @Override
     public void onDestroy() {
         ProgressKeeper.removeTaskCountListener(this);
+        ProgressKeeper.removeGlobalListener(mGlobalListener);
     }
 
     /** Rebuilds the notification from the current task snapshot. */
