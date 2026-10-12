@@ -25,6 +25,18 @@
 
         tools:ignore="RtlSymmetry" />
 
+    <!-- Discord link badge, shown when a Discord session is connected on this device -->
+    <ImageView
+        android:id="@+id/discord_badge"
+        android:layout_width="@dimen/_24sdp"
+        android:layout_height="@dimen/_24sdp"
+        android:layout_gravity="center_vertical"
+        android:layout_marginEnd="@dimen/_4sdp"
+        android:contentDescription="@null"
+        android:padding="@dimen/padding_small"
+        android:src="@drawable/ic_discord_mark"
+        android:visibility="gone" />
+
     <!-- Skin/cape editor, shown for Microsoft accounts only (right next to their logo) -->
     <ImageView
         android:id="@+id/edit_account_button"

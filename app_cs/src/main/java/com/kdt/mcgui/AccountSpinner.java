@@ -40,6 +40,7 @@ import com.craftstudio.cslauncher.authenticator.BackgroundLogin;
 import com.craftstudio.cslauncher.authenticator.accounts.Accounts;
 import com.craftstudio.cslauncher.authenticator.accounts.Account;
 import com.craftstudio.cslauncher.authenticator.listener.LoginListener;
+import com.craftstudio.cslauncher.discord.DiscordAccount;
 import com.craftstudio.cslauncher.extra.ExtraConstants;
 import com.craftstudio.cslauncher.extra.ExtraCore;
 import com.craftstudio.cslauncher.extra.ExtraListener;
@@ -336,6 +337,7 @@ public class AccountSpinner extends AppCompatSpinner implements LoginListener, A
             ExtendedTextView textview = view.findViewById(R.id.account_item);
             ImageView deleteButton = view.findViewById(R.id.delete_account_button);
             ImageView editButton = view.findViewById(R.id.edit_account_button);
+            ImageView discordBadge = view.findViewById(R.id.discord_badge);
 
             if(position == 0) {
                 // "Add account" button
@@ -344,6 +346,7 @@ public class AccountSpinner extends AppCompatSpinner implements LoginListener, A
                 textview.setText(R.string.main_add_account);
                 deleteButton.setVisibility(View.GONE);
                 editButton.setVisibility(View.GONE);
+                if (discordBadge != null) discordBadge.setVisibility(View.GONE);
                 // Only activate the listener behaviour when in drop-down mode
                 // or when there's no accounts
                 if(isDropDown || getCount() == 1) view.setOnClickListener(v-> createAccount());
@@ -391,6 +394,12 @@ public class AccountSpinner extends AppCompatSpinner implements LoginListener, A
             }
 
             textview.setText(account.username);
+            // Discord link badge: a connected Discord session on this device shows
+            // right after the name, with a small gap, in the pill and in the list
+            if (discordBadge != null) {
+                discordBadge.setVisibility(DiscordAccount.isLoggedIn(getContext())
+                        ? View.VISIBLE : View.GONE);
+            }
             if (!isDropDown && view.getId() == R.id.account_compact_root) {
                 editButton.setVisibility(View.GONE);
                 Drawable chevron = ResourcesCompat.getDrawable(resources, R.drawable.ic_home_chevron_down, theme);

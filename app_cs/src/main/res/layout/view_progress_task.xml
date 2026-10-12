@@ -6,17 +6,26 @@
     android:layout_height="wrap_content"
     android:background="@drawable/bg_progress_task"
     android:gravity="center_vertical"
-    android:minHeight="62dp"
+    android:minHeight="58dp"
     android:orientation="horizontal"
     android:paddingStart="10dp"
     android:paddingTop="8dp"
     android:paddingEnd="12dp"
     android:paddingBottom="8dp">
 
-    <com.kdt.mcgui.TaskProgressRing
-        android:id="@+id/task_ring"
-        android:layout_width="36dp"
-        android:layout_height="36dp" />
+    <FrameLayout
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:background="@drawable/bg_gm_dialog_tile">
+
+        <ImageView
+            android:id="@+id/task_icon"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:layout_gravity="center"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_px_file_dl" />
+    </FrameLayout>
 
     <LinearLayout
         android:layout_width="0dp"

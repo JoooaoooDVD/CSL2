@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Download console: aggregate fill strip -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient
+        android:angle="0"
+        android:startColor="#FF8E8E96"
+        android:centerColor="#FFF2F5FA"
+        android:endColor="#FF8E8E96" />
+    <corners android:radius="2dp" />
+</shape>

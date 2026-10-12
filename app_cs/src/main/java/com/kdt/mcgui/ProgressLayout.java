@@ -64,6 +64,8 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
     private final ArrayList<LayoutProgressListener> mMap = new ArrayList<>();
     private LinearLayout mLinearLayout;
     private TextView mTaskNumberDisplayer;
+    private TextView mPercentDisplayer;
+    private View mStrip;
     private ImageView mFlipArrow;
     private View mDot;
     private ObjectAnimator mPulse;
@@ -89,6 +91,8 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
         inflate(getContext(), R.layout.view_progress, this);
         mLinearLayout = findViewById(R.id.progress_linear_layout);
         mTaskNumberDisplayer = findViewById(R.id.progress_textview);
+        mPercentDisplayer = findViewById(R.id.progress_percent);
+        mStrip = findViewById(R.id.progress_strip);
         mFlipArrow = findViewById(R.id.progress_flip_arrow);
         mDot = findViewById(R.id.progress_dot);
         setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.bg_dl_dock, getContext().getTheme()));
@@ -148,12 +152,18 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
         mFlipArrow.setRotation(mLinearLayout.getVisibility() == GONE? 0 : 180);
     }
 
-    /** Keeps the header summary ("3 active - 62%") in sync. */
+    /** Keeps the header summary ("3 active") and the big percent + strip in sync. */
     private final ProgressKeeper.GlobalProgressListener mGlobalListener = (taskCount, percent) -> post(() -> {
         if (taskCount == 0) return;
-        mTaskNumberDisplayer.setText(percent >= 0
-                ? getContext().getString(R.string.progress_console_subtitle, taskCount, percent)
-                : getContext().getString(R.string.progress_console_subtitle_unknown, taskCount));
+        mTaskNumberDisplayer.setText(
+                getContext().getString(R.string.progress_console_subtitle_unknown, taskCount));
+        if (percent >= 0) {
+            mPercentDisplayer.setText(percent + "%");
+            mStrip.setScaleX(Math.max(0f, Math.min(1f, percent / 100f)));
+        } else {
+            mPercentDisplayer.setText("–");
+            mStrip.setScaleX(0f);
+        }
     });
 
     /** When true (set by the home screen, which shows progress on the PLAY button instead),
@@ -183,7 +193,8 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
             }).start();
             return;
         }
-        mTaskNumberDisplayer.setText(getContext().getString(R.string.progresslayout_tasks_in_progress, tc));
+        mTaskNumberDisplayer.setText(
+                getContext().getString(R.string.progress_console_subtitle_unknown, tc));
         if (getVisibility() != VISIBLE) {
             setVisibility(VISIBLE);
             if (motion && isAttachedToWindow()) {
@@ -210,6 +221,7 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
             this.progressKey = progressKey;
             card = new TaskProgressCard(getContext());
             card.setTitle(describeTask(getContext(), progressKey));
+            card.setIcon(iconForTask(progressKey));
             int margin = getResources().getDimensionPixelOffset(R.dimen._6sdp);
             params = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
             params.bottomMargin = margin;
@@ -255,9 +267,24 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
         }
     }
 
-    /** Human label for a progress key, used as the card title. */
-    private static String describeTask(Context context, @NonNull String key) {
+    /** Glyph for a progress key, shown on the card tile. */
+    private static int iconForTask(@NonNull String key) {
         switch (key) {
+            case DOWNLOAD_GAME: return R.drawable.ic_px_file_dl;
+            case DOWNLOAD_VERSION_LIST: return R.drawable.ic_px_hash;
+            case UNPACK_RUNTIME: return R.drawable.ic_px_runtime_mgr;
+            case AUTHENTICATE: return R.drawable.ic_px_account_edit;
+            case INSTALL_MODPACK: return R.drawable.ic_px_data_import;
+            case EXTRACT_COMPONENTS: return R.drawable.ic_px_sliders;
+            case EXTRACT_SINGLE_FILES: return R.drawable.ic_px_file;
+            case INSTANCE_INSTALL: return R.drawable.ic_px_folder;
+            case DATA_MIGRATION: return R.drawable.ic_px_migrate;
+            default: return R.drawable.ic_px_file_dl;
+        }
+    }
+
+    /** Human label for a progress key, used as the card title. */
+    private static String describeTask(Context context, @NonNull String key) {        switch (key) {
             case DOWNLOAD_GAME: return "Game files";
             case DOWNLOAD_VERSION_LIST: return "Version list";
             case UNPACK_RUNTIME: return "Java runtime";

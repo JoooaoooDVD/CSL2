@@ -15,6 +15,8 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.craftstudio.cslauncher.utils.AnimationManager;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -50,6 +52,8 @@ public class PlayerPreviewView extends View {
         boolean hasOverlay;
         float centerX, centerY, centerZ;
         float depth;
+        // Per-frame idle-pose rotation (radians) around the pivot, set before every draw
+        float animRotX, animRotY, animPivX, animPivY, animPivZ;
         Part(boolean cape) { this.cape = cape; }
     }
 
@@ -66,6 +70,9 @@ public class PlayerPreviewView extends View {
     private float mLastTouchX, mLastTouchY;
     private boolean mDragging;
     private long mLastFrameTime;
+    /** Idle-life clock (seconds); frozen when content animation is disabled */
+    private float mAnimT;
+    private boolean mMotionAllowed = true;
 
     private final Paint mPaint = new Paint();
     private final Matrix mMatrix = new Matrix();
@@ -233,11 +240,16 @@ public class PlayerPreviewView extends View {
         if (mSkin == null || mParts.isEmpty()) return;
 
         long now = SystemClock.uptimeMillis();
+        float dt = 0f;
         if (mLastFrameTime != 0 && !mDragging) {
-            float dt = Math.min(now - mLastFrameTime, 100) / 1000f;
+            dt = Math.min(now - mLastFrameTime, 100) / 1000f;
             mYaw = (mYaw + AUTO_ROTATE_DEGREES_PER_SECOND * dt) % 360f;
         }
         mLastFrameTime = now;
+
+        mMotionAllowed = AnimationManager.isEnabled(getContext(), AnimationManager.TYPE_CONTENT);
+        if (mMotionAllowed && dt > 0f) mAnimT += dt;
+        poseIdle(dt > 0f && mMotionAllowed);
 
         float yawRad = (float) Math.toRadians(mYaw);
         float pitchRad = (float) Math.toRadians(mPitch);
@@ -246,7 +258,7 @@ public class PlayerPreviewView extends View {
 
         float scale = Math.min(getWidth() / MODEL_FIT_WIDTH, getHeight() / MODEL_FIT_HEIGHT);
         float originX = getWidth() / 2f;
-        float originY = getHeight() / 2f;
+        float originY = getHeight() / 2f + (float) (Math.sin(mAnimT * 1.6) * scale * 0.12);
 
         // Far parts first
         for (Part part : mParts) {
@@ -256,14 +268,63 @@ public class PlayerPreviewView extends View {
 
         for (Part part : mParts) {
             Bitmap texture = part.cape ? mCape : mSkin;
-            drawFaces(canvas, texture, part.baseFaces, part.baseRects, cy, sy, cp, sp, scale, originX, originY);
+            drawFaces(canvas, texture, part, part.baseFaces, part.baseRects, cy, sy, cp, sp, scale, originX, originY);
             if (part.hasOverlay) {
-                drawFaces(canvas, texture, part.overlayFaces, part.overlayRects, cy, sy, cp, sp, scale, originX, originY);
+                drawFaces(canvas, texture, part, part.overlayFaces, part.overlayRects, cy, sy, cp, sp, scale, originX, originY);
             }
         }
         postInvalidateOnAnimation();
     }
 
+    /** Idle life: arms sway opposite each other, the head looks around, the cape follows. */
+    private void poseIdle(boolean alive) {
+        float arm = 0f, head = 0f, cape = 0f;
+        if (alive) {
+            arm = (float) Math.sin(mAnimT * 2.2) * 4f;
+            head = (float) Math.sin(mAnimT * 0.7) * 6f;
+            cape = (float) Math.sin(mAnimT * 2.2 + 0.6) * 1.5f;
+        }
+        for (int i = 0; i < mParts.size(); i++) {
+            Part part = mParts.get(i);
+            part.animRotX = 0f;
+            part.animRotY = 0f;
+            part.animPivX = 0f;
+            part.animPivY = 24f;
+            part.animPivZ = 0f;
+            if (i == 2) {          // right arm swings from the shoulder
+                part.animRotX = arm;
+                part.animPivX = -4f;
+            } else if (i == 3) {   // left arm swings the opposite way
+                part.animRotX = -arm;
+                part.animPivX = 4f;
+            } else if (i == 0) {   // head looks around the neck
+                part.animRotY = head;
+            } else if (part.cape) {
+                part.animRotX = cape;
+                part.animPivZ = -2f;
+            }
+        }
+    }
+
+    private final float[] mPt = new float[3];
+
+    private static void rotatePoint(float[] p, float rotXDeg, float rotYDeg,
+                                    float px, float py, float pz) {
+        if (rotXDeg != 0f) {
+            double a = Math.toRadians(rotXDeg);
+            float dy = p[1] - py, dz = p[2] - pz;
+            float cos = (float) Math.cos(a), sin = (float) Math.sin(a);
+            p[1] = py + dy * cos - dz * sin;
+            p[2] = pz + dy * sin + dz * cos;
+        }
+        if (rotYDeg != 0f) {
+            double a = Math.toRadians(rotYDeg);
+            float dx = p[0] - px, dz = p[2] - pz;
+            float cos = (float) Math.cos(a), sin = (float) Math.sin(a);
+            p[0] = px + dx * cos + dz * sin;
+            p[2] = pz - dx * sin + dz * cos;
+        }
+    }
     private static float transformZ(float x, float y, float z, float cy, float sy, float cp, float sp) {
         float z1 = -x * sy + z * cy;
         return (y - MODEL_CENTER_Y) * sp + z1 * cp;
@@ -282,13 +343,18 @@ public class PlayerPreviewView extends View {
         out[offset + 2] = z2;
     }
 
-    private void drawFaces(Canvas canvas, Bitmap texture, float[][] faces, Rect[] rects,
+    private void drawFaces(Canvas canvas, Bitmap texture, Part part, float[][] faces, Rect[] rects,
                            float cy, float sy, float cp, float sp,
                            float scale, float originX, float originY) {
         for (int f = 0; f < 6; f++) {
             float[] c = faces[f];
             for (int i = 0; i < 4; i++) {
-                project(c[i * 3], c[i * 3 + 1], c[i * 3 + 2], cy, sy, cp, sp,
+                mPt[0] = c[i * 3];
+                mPt[1] = c[i * 3 + 1];
+                mPt[2] = c[i * 3 + 2];
+                rotatePoint(mPt, part.animRotX, part.animRotY,
+                        part.animPivX, part.animPivY, part.animPivZ);
+                project(mPt[0], mPt[1], mPt[2], cy, sy, cp, sp,
                         scale, originX, originY, mView, i * 3);
             }
             // Back-face culling: normal = down x right, visible when it points to the camera (+z)

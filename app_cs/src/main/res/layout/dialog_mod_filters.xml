@@ -11,7 +11,7 @@
     <FrameLayout
         android:id="@+id/dialog_mod_filters_banner"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="64dp"
         android:layout_marginHorizontal="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="6dp"
@@ -60,7 +60,7 @@
                     android:singleLine="true"
                     android:text="@string/content_picker_filter"
                     android:textColor="#FFFFFFFF"
-                    android:textSize="14sp"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -99,7 +99,7 @@
         <Spinner
             android:id="@+id/search_mod_engine_spinner"
             android:layout_width="match_parent"
-            android:layout_height="42dp"
+            android:layout_height="48dp"
             android:layout_marginTop="4dp"
             android:background="@drawable/bg_icon_button_home"
             android:popupBackground="@drawable/bg_popup_rounded" />
@@ -125,7 +125,7 @@
             <TextView
                 android:id="@+id/search_mod_selected_mc_version_textview"
                 android:layout_width="0dp"
-                android:layout_height="42dp"
+                android:layout_height="48dp"
                 android:layout_marginEnd="6dp"
                 android:layout_weight="1"
                 android:background="@drawable/bg_input_field"
@@ -138,7 +138,7 @@
             <Button
                 android:id="@+id/search_mod_mc_version_button"
                 android:layout_width="wrap_content"
-                android:layout_height="42dp"
+                android:layout_height="48dp"
                 android:stateListAnimator="?attr/csPressAnimator"
                 android:text="@string/global_select" />
         </LinearLayout>
@@ -157,7 +157,7 @@
         <Spinner
             android:id="@+id/search_mod_loader_spinner"
             android:layout_width="match_parent"
-            android:layout_height="42dp"
+            android:layout_height="48dp"
             android:layout_marginTop="4dp"
             android:background="@drawable/bg_icon_button_home"
             android:popupBackground="@drawable/bg_popup_rounded" />
