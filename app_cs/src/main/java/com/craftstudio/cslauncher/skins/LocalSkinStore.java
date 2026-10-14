@@ -45,7 +45,13 @@ public final class LocalSkinStore {
     /** Selection key of a local account (local accounts share the nil UUID, so the name is used) */
     @NonNull
     public static String keyOf(@NonNull Account account) {
-        String name = account.username == null ? "player" : account.username;
+        return keyOfName(account.username);
+    }
+
+    /** Same key built from just the player name (used before the account exists) */
+    @NonNull
+    public static String keyOfName(@Nullable String username) {
+        String name = username == null ? "player" : username;
         return "local:" + name.toLowerCase(Locale.ROOT);
     }
 
@@ -159,9 +165,13 @@ public final class LocalSkinStore {
     }
 
     public static synchronized void setSelectedCape(@NonNull Account account, @Nullable String id) throws IOException {
+        setSelectedCapeByKey(keyOf(account), id);
+    }
+
+    public static synchronized void setSelectedCapeByKey(@NonNull String key, @Nullable String id) throws IOException {
         CapeIndex index = readCapeIndex();
-        if (id == null) index.selected.remove(keyOf(account));
-        else index.selected.put(keyOf(account), id);
+        if (id == null) index.selected.remove(key);
+        else index.selected.put(key, id);
         writeCapeIndex(index);
     }
 
@@ -187,7 +197,12 @@ public final class LocalSkinStore {
 
     @NonNull
     public static File faceFile(@NonNull Account account) {
-        String safe = keyOf(account).replaceAll("[^a-z0-9_.-]", "_");
+        return faceFileForKey(keyOf(account));
+    }
+
+    @NonNull
+    public static File faceFileForKey(@NonNull String key) {
+        String safe = key.replaceAll("[^a-z0-9_.-]", "_");
         return new File(Tools.DIR_CACHE, "skin-face-" + safe + ".webp");
     }
 
@@ -197,8 +212,12 @@ public final class LocalSkinStore {
      * Performs I/O: call it off the UI thread.
      */
     public static void updateFace(@NonNull Account account) {
-        File face = faceFile(account);
-        SkinLibrary.Entry entry = selectedSkin(account);
+        updateFaceForKey(keyOf(account));
+    }
+
+    public static void updateFaceForKey(@NonNull String key) {
+        File face = faceFileForKey(key);
+        SkinLibrary.Entry entry = SkinLibrary.find(SkinLibrary.getSelected(key));
         if (entry == null) {
             //noinspection ResultOfMethodCallIgnored
             face.delete();

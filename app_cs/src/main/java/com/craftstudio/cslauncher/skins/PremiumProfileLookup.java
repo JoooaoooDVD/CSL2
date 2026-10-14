@@ -8,7 +8,6 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.craftstudio.cslauncher.authenticator.accounts.Account;
 import com.craftstudio.cslauncher.authenticator.accounts.SkinHeadRenderer;
 
 import org.json.JSONObject;
@@ -99,9 +98,7 @@ public final class PremiumProfileLookup {
      * with that name. Blocking (file I/O).
      */
     public static void applyToLocalAccount(@NonNull Result result, @NonNull String username) throws IOException {
-        Account probe = new Account();
-        probe.username = username;
-        String key = LocalSkinStore.keyOf(probe);
+        String key = LocalSkinStore.keyOfName(username);
         if (result.skinPng != null) {
             SkinLibrary.Entry entry = SkinLibrary.add(result.skinPng, result.name + "'s skin", result.slim);
             SkinLibrary.setSelected(key, entry.id);
@@ -110,18 +107,18 @@ public final class PremiumProfileLookup {
             Bitmap cape = BitmapFactory.decodeByteArray(result.capePng, 0, result.capePng.length);
             if (cape != null && LocalSkinStore.isValidCapeSize(cape.getWidth(), cape.getHeight())) {
                 LocalSkinStore.Cape stored = LocalSkinStore.addCape(result.capePng, result.name + "'s cape");
-                LocalSkinStore.setSelectedCape(probe, stored.id);
+                LocalSkinStore.setSelectedCapeByKey(key, stored.id);
             } else if (cape != null) {
                 // Mojang capes are 64x32 but some are 22x17 or padded: normalize to a standard sheet
                 Bitmap normalized = SkinTextures.normalizeCape(cape);
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 normalized.compress(Bitmap.CompressFormat.PNG, 100, out);
                 LocalSkinStore.Cape stored = LocalSkinStore.addCape(out.toByteArray(), result.name + "'s cape");
-                LocalSkinStore.setSelectedCape(probe, stored.id);
+                LocalSkinStore.setSelectedCapeByKey(key, stored.id);
             }
             if (cape != null) cape.recycle();
         }
-        LocalSkinStore.updateFace(probe);
+        LocalSkinStore.updateFaceForKey(key);
     }
 
     private static String dashed(String id) {
