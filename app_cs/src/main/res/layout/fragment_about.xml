@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- About CS Launcher Plus: hero, community links, the launchers it is built on, open source credits, legal -->
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/about_scroll"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipToPadding="false"
+    android:overScrollMode="ifContentScrolls"
+    android:scrollbars="none">
+
+    <LinearLayout
+        android:id="@+id/about_root"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="16dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="24dp">
+
+        <!-- Top row: back + title -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/about_back"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_pp_round_btn"
+                android:contentDescription="@string/about_back"
+                android:padding="10dp"
+                android:src="@drawable/ic_pe_back" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:layout_weight="1"
+                android:fontFamily="@font/minecraft_ten"
+                android:text="@string/about_title"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="22sp" />
+        </LinearLayout>
+
+        <!-- Hero -->
+        <LinearLayout
+            android:id="@+id/about_hero"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_about_hero"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="22dp">
+
+            <ImageView
+                android:id="@+id/about_logo"
+                android:layout_width="92dp"
+                android:layout_height="92dp"
+                android:importantForAccessibility="no"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_cs_full" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/about_app_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/minecraft_ten"
+                    android:includeFontPadding="false"
+                    android:text="@string/brand_short_name"
+                    android:textColor="#FFFFFF"
+                    android:textSize="24sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:letterSpacing="0.3"
+                    android:text="@string/brand_tagline_home"
+                    android:textColor="#9AA3B2"
+                    android:textSize="10.5sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/about_version"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_lib_badge_neutral"
+                        android:paddingStart="10dp"
+                        android:paddingTop="4dp"
+                        android:paddingEnd="10dp"
+                        android:paddingBottom="4dp"
+                        android:textColor="#E6EAF0"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/about_team"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:text="@string/brand_team_tag"
+                        android:textColor="#9AA3B2"
+                        android:textSize="12.5sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:lineSpacingExtra="2dp"
+                    android:text="@string/about_blurb"
+                    android:textColor="#C3CAD6"
+                    android:textSize="13.5sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Community -->
+        <LinearLayout
+            android:id="@+id/about_links"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:baselineAligned="false"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:id="@+id/about_discord"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_about_pill_discord"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_discord_mark"
+                    android:tint="#FFFFFF" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:includeFontPadding="false"
+                        android:text="@string/about_discord"
+                        android:textColor="#FFFFFF"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:includeFontPadding="false"
+                        android:text="@string/about_discord_desc"
+                        android:textColor="#D9DCFF"
+                        android:textSize="11.5sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/about_github"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_marginStart="10dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_about_pill_github"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_about_github"
+                    android:tint="#FFFFFF" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:includeFontPadding="false"
+                        android:text="@string/about_github"
+                        android:textColor="#FFFFFF"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:includeFontPadding="false"
+                        android:text="@string/about_github_desc"
+                        android:textColor="#AEB6C4"
+                        android:textSize="11.5sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Built on -->
+        <TextView
+            android:id="@+id/about_section_built"
+            style="@style/About.Section"
+            android:text="@string/about_section_built" />
+
+        <TextView
+            style="@style/About.SectionSub"
+            android:text="@string/about_section_built_sub" />
+
+        <LinearLayout
+            android:id="@+id/about_projects"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="vertical" />
+
+        <!-- Open source components -->
+        <TextView
+            style="@style/About.Section"
+            android:text="@string/about_section_oss" />
+
+        <TextView
+            style="@style/About.SectionSub"
+            android:text="@string/about_section_oss_sub" />
+
+        <LinearLayout
+            android:id="@+id/about_libraries"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_st_card"
+            android:orientation="vertical"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp" />
+
+        <!-- Services -->
+        <TextView
+            style="@style/About.Section"
+            android:text="@string/about_section_services" />
+
+        <LinearLayout
+            android:id="@+id/about_services"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_st_card"
+            android:orientation="vertical"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp" />
+
+        <!-- Legal -->
+        <TextView
+            style="@style/About.Section"
+            android:text="@string/about_section_legal" />
+
+        <LinearLayout
+            android:id="@+id/about_legal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_st_card"
+            android:orientation="vertical"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp" />
+
+        <TextView
+            android:id="@+id/about_footer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            android:gravity="center"
+            android:lineSpacingExtra="2dp"
+            android:text="@string/about_footer"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="12sp" />
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

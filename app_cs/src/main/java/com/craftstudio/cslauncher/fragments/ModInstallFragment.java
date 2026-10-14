@@ -47,6 +47,7 @@ import com.craftstudio.cslauncher.prefs.LauncherPreferences;
 import com.craftstudio.cslauncher.progresskeeper.ProgressKeeper;
 import com.craftstudio.cslauncher.utils.ThemeColors;
 import com.craftstudio.cslauncher.utils.motion.InstallMotion;
+import com.craftstudio.cslauncher.utils.motion.LibraryMotion;
 import com.craftstudio.cslauncher.utils.motion.MainMenuMotion;
 import com.craftstudio.cslauncher.utils.motion.Motion;
 import com.craftstudio.cslauncher.modding.modpacks.imagecache.GalleryImageLoader;
@@ -380,6 +381,7 @@ public class ModInstallFragment extends Fragment {
             case RESOURCE_PACK: return R.drawable.ic_lib_image;
             case SHADER_PACK: return R.drawable.ic_lib_sun;
             case DATAPACK: return R.drawable.ic_lib_world;
+            case WORLD: return R.drawable.ic_lib_world;
             case MODPACK: return R.drawable.ic_lib_world;
             default: return R.drawable.ic_lib_cube;
         }
@@ -771,7 +773,7 @@ public class ModInstallFragment extends Fragment {
 
     /** Whether a version runs on the selected profile */
     private boolean isCompatible(int index) {
-        if (mProfileVersion == null) return true;
+        if (mProfileVersion == null || mType == ContentType.WORLD) return true;
         if (!LibraryCatalog.containsVersion(gameVersionsOf(index), mProfileVersion)) return false;
         return mType != ContentType.MOD || LibraryCatalog.loaderMatches(loadersOf(index), mProfileLoader);
     }
@@ -830,7 +832,7 @@ public class ModInstallFragment extends Fragment {
     private String versionMeta(int index) {
         List<String> parts = new ArrayList<>();
         String[] loaders = loadersOf(index);
-        if (loaders != null && mType != ContentType.RESOURCE_PACK && mType != ContentType.DATAPACK) {
+        if (loaders != null && mType != ContentType.RESOURCE_PACK && mType != ContentType.DATAPACK && mType != ContentType.WORLD) {
             List<String> labels = new ArrayList<>();
             for (String loader : loaders) {
                 if (loader == null || "minecraft".equalsIgnoreCase(loader)) continue;
@@ -1258,6 +1260,7 @@ public class ModInstallFragment extends Fragment {
                 case SHADER_PACK: section = "shaders"; break;
                 case MODPACK: section = "modpacks"; break;
                 case DATAPACK: section = "data-packs"; break;
+                case WORLD: section = "worlds"; break;
                 default: section = "mc-mods"; break;
             }
             url = "https://www.curseforge.com/minecraft/" + section + "/"
@@ -1291,8 +1294,9 @@ public class ModInstallFragment extends Fragment {
                                 detail.versionIds != null && index < detail.versionIds.length ? detail.versionIds[index] : null);
                         mInstalledIndex = index;
                         mUserPicked = false;
-                        Toast.makeText(appContext, appContext.getString(
-                                wasInstalled ? R.string.lib_update_done : R.string.lib_install_done, title),
+                        Toast.makeText(appContext, mType == ContentType.WORLD
+                                ? appContext.getString(R.string.lib_world_installed, file.getName())
+                                : appContext.getString(wasInstalled ? R.string.lib_update_done : R.string.lib_install_done, title),
                                 Toast.LENGTH_SHORT).show();
                     } else {
                         String message = error == null ? "" : String.valueOf(error.getMessage());
@@ -1411,17 +1415,74 @@ public class ModInstallFragment extends Fragment {
         list.setLayoutManager(new LinearLayoutManager(requireContext()));
         list.setAdapter(adapter);
 
+        final android.widget.EditText search = content.findViewById(R.id.picker_search);
+        final LinearLayout chips = content.findViewById(R.id.picker_chips);
+        final String[] chipFilter = {""};
+
+        // Minecraft version chips, newest first, built from what this project actually offers
+        List<String> gameVersions = new ArrayList<>();
+        for (int index : orderedIndices()) {
+            String[] versions = gameVersionsOf(index);
+            if (versions == null) continue;
+            for (String version : versions) {
+                if (version != null && !gameVersions.contains(version)) gameVersions.add(version);
+            }
+        }
+        gameVersions.sort((a, b) -> LibraryCatalog.compareVersions(b, a));
+        if (gameVersions.size() > 1) {
+            content.findViewById(R.id.picker_chips_scroll).setVisibility(View.VISIBLE);
+        } else {
+            content.findViewById(R.id.picker_chips_scroll).setVisibility(View.GONE);
+        }
+
         Runnable refresh = () -> {
+            String query = search.getText() == null ? "" : search.getText().toString().trim().toLowerCase(java.util.Locale.ROOT);
             List<Integer> indices = new ArrayList<>();
             for (int index : orderedIndices()) {
-                if (showAll.isChecked() || isCompatible(index)) indices.add(index);
+                if (!showAll.isChecked() && !isCompatible(index)) continue;
+                if (!chipFilter[0].isEmpty() && !LibraryCatalog.containsVersion(gameVersionsOf(index), chipFilter[0])) continue;
+                if (!query.isEmpty()) {
+                    String hay = (versionTitle(index) + " " + versionMeta(index)).toLowerCase(java.util.Locale.ROOT);
+                    if (!hay.contains(query)) continue;
+                }
+                indices.add(index);
             }
             adapter.setIndices(indices);
             empty.setVisibility(indices.isEmpty() ? View.VISIBLE : View.GONE);
             list.setVisibility(indices.isEmpty() ? View.GONE : View.VISIBLE);
+            subtitle.setText(getString(R.string.lib_versions_for, profileLabel()) + "  \u00b7  " + getString(R.string.lib_picker_count, indices.size()));
             int position = indices.indexOf(mSelectedIndex);
             if (position > 0) list.scrollToPosition(position);
         };
+
+        // Chips: "All" + each game version; tapping toggles the filter
+        if (gameVersions.size() > 1) {
+            List<String> labels = new ArrayList<>();
+            labels.add("");
+            labels.addAll(gameVersions.subList(0, Math.min(gameVersions.size(), 30)));
+            for (String label : labels) {
+                TextView chip = (TextView) LayoutInflater.from(requireContext()).inflate(R.layout.item_library_chip, chips, false);
+                chip.setText(label.isEmpty() ? getString(R.string.lib_picker_all) : label);
+                chip.setTag(label);
+                chip.setSelected(label.isEmpty());
+                chip.setOnClickListener(v -> {
+                    chipFilter[0] = label;
+                    for (int i = 0; i < chips.getChildCount(); i++) {
+                        View child = chips.getChildAt(i);
+                        child.setSelected(label.equals(child.getTag()));
+                    }
+                    LibraryMotion.selectChip(v);
+                    refresh.run();
+                });
+                chips.addView(chip);
+            }
+        }
+
+        search.addTextChangedListener(new android.text.TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int st, int c, int a) {}
+            @Override public void onTextChanged(CharSequence s, int st, int b, int c) {}
+            @Override public void afterTextChanged(android.text.Editable s) { refresh.run(); }
+        });
         showAll.setOnCheckedChangeListener((button, checked) -> refresh.run());
         refresh.run();
         dialog.show();

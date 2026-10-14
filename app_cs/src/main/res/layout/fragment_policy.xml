@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Privacy policy & terms. Used as the first-launch welcome overlay and from the About page -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/policy_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F20C0F14"
+    android:clickable="true"
+    android:focusable="true">
+
+    <LinearLayout
+        android:id="@+id/policy_card"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:orientation="vertical">
+
+        <!-- Header -->
+        <LinearLayout
+            android:id="@+id/policy_header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="22dp"
+            android:paddingTop="16dp"
+            android:paddingEnd="18dp"
+            android:paddingBottom="10dp">
+
+            <ImageView
+                android:id="@+id/policy_logo"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_cs_full" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/policy_eyebrow"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:letterSpacing="0.3"
+                    android:text="@string/policy_eyebrow"
+                    android:textColor="#8F99A8"
+                    android:textSize="10.5sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/policy_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:fontFamily="@font/minecraft_ten"
+                    android:includeFontPadding="false"
+                    android:text="@string/policy_title_welcome"
+                    android:textColor="#FFFFFF"
+                    android:textSize="22sp" />
+
+                <TextView
+                    android:id="@+id/policy_subtitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/policy_subtitle"
+                    android:textColor="#B5BDCA"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <ImageButton
+                android:id="@+id/policy_close"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_pp_round_btn"
+                android:contentDescription="@android:string/cancel"
+                android:padding="11dp"
+                android:src="@drawable/ic_pp_close"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <!-- Sections -->
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/policy_scroll"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:fadingEdgeLength="28dp"
+            android:paddingStart="18dp"
+            android:paddingTop="6dp"
+            android:paddingEnd="18dp"
+            android:paddingBottom="12dp"
+            android:requiresFadingEdge="vertical"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/policy_sections"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </androidx.core.widget.NestedScrollView>
+
+        <!-- Footer -->
+        <LinearLayout
+            android:id="@+id/policy_footer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="18dp"
+            android:paddingTop="8dp"
+            android:paddingEnd="18dp"
+            android:paddingBottom="16dp">
+
+            <TextView
+                android:id="@+id/policy_footnote"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/policy_footnote"
+                android:textColor="#8F99A8"
+                android:textSize="11.5sp" />
+
+            <LinearLayout
+                android:id="@+id/policy_accept"
+                android:layout_width="wrap_content"
+                android:layout_height="52dp"
+                android:layout_marginStart="14dp"
+                android:background="@drawable/bg_policy_accept"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:paddingStart="20dp"
+                android:paddingEnd="22dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_pe_check"
+                    android:tint="#15181D" />
+
+                <TextView
+                    android:id="@+id/policy_accept_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:fontFamily="@font/noto_sans_bold"
+                    android:includeFontPadding="false"
+                    android:text="@string/policy_accept"
+                    android:textColor="#15181D"
+                    android:textSize="15sp" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

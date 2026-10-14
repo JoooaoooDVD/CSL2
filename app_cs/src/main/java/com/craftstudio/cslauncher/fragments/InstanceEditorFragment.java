@@ -469,19 +469,10 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
     // ─── Dialogs ─────────────────────────────────────────────────────────────
 
     private void showRuntimeDialog() {
-        String[] items = new String[mRuntimes.size()];
-        for (int i = 0; i < mRuntimes.size(); i++) {
-            items[i] = i == mRuntimes.size() - 1 ? getString(R.string.pe_default_runtime) : runtimeDisplay(mRuntimes.get(i));
-        }
-        new MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.pedit_java_runtime)
-                .setSingleChoiceItems(items, mRuntimeIndex, (dialog, which) -> {
-                    mRuntimeIndex = which;
-                    if (mRuntimeValue != null) ProfileEditorMotion.valueChanged(mRuntimeValue, runtimeLabel());
-                    dialog.dismiss();
-                })
-                .setNegativeButton(android.R.string.cancel, null)
-                .show();
+        new com.kdt.mcgui.RuntimePickerDialog(requireContext(), mRuntimes, mRuntimeIndex, which -> {
+            mRuntimeIndex = which;
+            if (mRuntimeValue != null) ProfileEditorMotion.valueChanged(mRuntimeValue, runtimeLabel());
+        }).show();
     }
 
     private void showRendererDialog() {

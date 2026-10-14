@@ -53,7 +53,7 @@ public class PlayerPreviewView extends View {
         float centerX, centerY, centerZ;
         float depth;
         // Per-frame idle-pose rotation (radians) around the pivot, set before every draw
-        float animRotX, animRotY, animPivX, animPivY, animPivZ;
+        float animRotX, animRotY, animRotZ, animPivX, animPivY, animPivZ;
         Part(boolean cape) { this.cape = cape; }
     }
 
@@ -73,6 +73,18 @@ public class PlayerPreviewView extends View {
     /** Idle-life clock (seconds); frozen when content animation is disabled */
     private float mAnimT;
     private boolean mMotionAllowed = true;
+
+    // ─── Wave ("hello") gesture ───────────────────────────────────────────
+    /** Seconds the whole wave takes: raise, a few shakes, lower */
+    private static final float WAVE_DURATION = 2.6f;
+    private static final float WAVE_RAISE = 0.4f;
+    /** Idle seconds between spontaneous waves */
+    private static final float WAVE_EVERY = 11f;
+    /** Animation clock value when the current wave started, or -1 when not waving */
+    private float mWaveStart = -1f;
+    private float mNextAutoWave = 1.0f;
+    private float mTouchDownX, mTouchDownY;
+    private boolean mTouchMoved;
 
     private final Paint mPaint = new Paint();
     private final Matrix mMatrix = new Matrix();
@@ -107,6 +119,8 @@ public class PlayerPreviewView extends View {
         mSkin = skin == null ? null : SkinTextures.normalizeSkin(skin);
         mSlim = slim;
         mModelDirty = true;
+        // Say hello shortly after a new skin shows up
+        if (mSkin != null) mNextAutoWave = Math.min(mNextAutoWave, mAnimT + 0.7f);
         invalidate();
     }
 
@@ -249,6 +263,7 @@ public class PlayerPreviewView extends View {
 
         mMotionAllowed = AnimationManager.isEnabled(getContext(), AnimationManager.TYPE_CONTENT);
         if (mMotionAllowed && dt > 0f) mAnimT += dt;
+        if (mMotionAllowed && mWaveStart < 0f && mAnimT >= mNextAutoWave && !mDragging) startWave();
         poseIdle(dt > 0f && mMotionAllowed);
 
         float yawRad = (float) Math.toRadians(mYaw);
@@ -284,21 +299,46 @@ public class PlayerPreviewView extends View {
             head = (float) Math.sin(mAnimT * 0.7) * 6f;
             cape = (float) Math.sin(mAnimT * 2.2 + 0.6) * 1.5f;
         }
+        // Wave: 0..1 envelope for how far the right arm is raised, plus the hand shake
+        float waveLift = 0f, waveShake = 0f, waveHeadTilt = 0f;
+        if (mWaveStart >= 0f) {
+            float t = mAnimT - mWaveStart;
+            if (t >= WAVE_DURATION) {
+                mWaveStart = -1f;
+                mNextAutoWave = mAnimT + WAVE_EVERY;
+            } else {
+                float lower = WAVE_DURATION - WAVE_RAISE;
+                if (t < WAVE_RAISE) waveLift = easeOutBack(t / WAVE_RAISE);
+                else if (t > lower) waveLift = 1f - easeInOut((t - lower) / WAVE_RAISE);
+                else waveLift = 1f;
+                float shakeT = Math.max(0f, t - WAVE_RAISE * 0.6f);
+                waveShake = (float) Math.sin(shakeT * 11.0) * 22f * waveLift;
+                waveHeadTilt = (float) Math.sin(Math.min(1f, t / 0.6f) * Math.PI) * 6f;
+            }
+        }
         for (int i = 0; i < mParts.size(); i++) {
             Part part = mParts.get(i);
             part.animRotX = 0f;
             part.animRotY = 0f;
+            part.animRotZ = 0f;
             part.animPivX = 0f;
             part.animPivY = 24f;
             part.animPivZ = 0f;
-            if (i == 2) {          // right arm swings from the shoulder
-                part.animRotX = arm;
+            if (i == 2) {          // right arm swings from the shoulder, or waves hello
                 part.animPivX = -4f;
+                if (waveLift > 0f) {
+                    // Raise the arm sideways-up (Z), then shake the forearm around the raised pose
+                    part.animRotZ = -150f * waveLift + waveShake;
+                    part.animRotX = arm * (1f - waveLift) - 10f * waveLift;
+                } else {
+                    part.animRotX = arm;
+                }
             } else if (i == 3) {   // left arm swings the opposite way
                 part.animRotX = -arm;
                 part.animPivX = 4f;
-            } else if (i == 0) {   // head looks around the neck
+            } else if (i == 0) {   // head looks around the neck, tilts a little while waving
                 part.animRotY = head;
+                part.animRotZ = waveHeadTilt;
             } else if (part.cape) {
                 part.animRotX = cape;
                 part.animPivZ = -2f;
@@ -308,8 +348,32 @@ public class PlayerPreviewView extends View {
 
     private final float[] mPt = new float[3];
 
-    private static void rotatePoint(float[] p, float rotXDeg, float rotYDeg,
+    private static float easeOutBack(float x) {
+        float c1 = 1.70158f, c3 = c1 + 1f;
+        return 1f + c3 * (float) Math.pow(x - 1, 3) + c1 * (float) Math.pow(x - 1, 2);
+    }
+
+    private static float easeInOut(float x) {
+        return x < 0.5f ? 2f * x * x : 1f - (float) Math.pow(-2f * x + 2f, 2) / 2f;
+    }
+
+    /** Starts the hello wave if the model is alive and not already waving */
+    public void startWave() {
+        if (mParts.isEmpty() || mSkin == null) return;
+        if (mWaveStart >= 0f) return;
+        mWaveStart = mAnimT;
+        postInvalidateOnAnimation();
+    }
+
+    private static void rotatePoint(float[] p, float rotXDeg, float rotYDeg, float rotZDeg,
                                     float px, float py, float pz) {
+        if (rotZDeg != 0f) {
+            double a = Math.toRadians(rotZDeg);
+            float dx = p[0] - px, dy = p[1] - py;
+            float cos = (float) Math.cos(a), sin = (float) Math.sin(a);
+            p[0] = px + dx * cos - dy * sin;
+            p[1] = py + dx * sin + dy * cos;
+        }
         if (rotXDeg != 0f) {
             double a = Math.toRadians(rotXDeg);
             float dy = p[1] - py, dz = p[2] - pz;
@@ -352,7 +416,7 @@ public class PlayerPreviewView extends View {
                 mPt[0] = c[i * 3];
                 mPt[1] = c[i * 3 + 1];
                 mPt[2] = c[i * 3 + 2];
-                rotatePoint(mPt, part.animRotX, part.animRotY,
+                rotatePoint(mPt, part.animRotX, part.animRotY, part.animRotZ,
                         part.animPivX, part.animPivY, part.animPivZ);
                 project(mPt[0], mPt[1], mPt[2], cy, sy, cp, sp,
                         scale, originX, originY, mView, i * 3);
@@ -382,6 +446,11 @@ public class PlayerPreviewView extends View {
         }
     }
 
+    @Override
+    public boolean performClick() {
+        return super.performClick();
+    }
+
     // ------------------------------------------------------------------ touch
 
     @Override
@@ -390,10 +459,12 @@ public class PlayerPreviewView extends View {
             case MotionEvent.ACTION_DOWN:
                 getParent().requestDisallowInterceptTouchEvent(true);
                 mDragging = true;
-                mLastTouchX = event.getX();
-                mLastTouchY = event.getY();
+                mTouchMoved = false;
+                mTouchDownX = mLastTouchX = event.getX();
+                mTouchDownY = mLastTouchY = event.getY();
                 return true;
             case MotionEvent.ACTION_MOVE:
+                if (Math.abs(event.getX() - mTouchDownX) > 8f || Math.abs(event.getY() - mTouchDownY) > 8f) mTouchMoved = true;
                 mYaw += (event.getX() - mLastTouchX) * 0.6f;
                 mPitch = Math.max(-30f, Math.min(45f, mPitch + (event.getY() - mLastTouchY) * 0.3f));
                 mLastTouchX = event.getX();
@@ -401,6 +472,11 @@ public class PlayerPreviewView extends View {
                 invalidate();
                 return true;
             case MotionEvent.ACTION_UP:
+                if (!mTouchMoved) {
+                    performClick();
+                    startWave();
+                }
+                // fall through
             case MotionEvent.ACTION_CANCEL:
                 mDragging = false;
                 mLastFrameTime = SystemClock.uptimeMillis();

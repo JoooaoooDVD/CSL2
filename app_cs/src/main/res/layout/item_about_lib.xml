@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One open source component row -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?android:attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:minHeight="54dp"
+    android:orientation="horizontal"
+    android:paddingStart="14dp"
+    android:paddingTop="8dp"
+    android:paddingEnd="14dp"
+    android:paddingBottom="8dp">
+
+    <ImageView
+        android:id="@+id/al_icon"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:background="@drawable/bg_st_icon_box"
+        android:importantForAccessibility="no"
+        android:padding="8dp"
+        android:src="@drawable/ic_about_code"
+        android:tint="@color/pe_icon" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/al_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/noto_sans_bold"
+            android:includeFontPadding="false"
+            android:textColor="@color/pe_text_primary"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/al_desc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textColor="@color/pe_text_secondary"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/al_license"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:background="@drawable/bg_about_license_chip"
+        android:paddingStart="7dp"
+        android:paddingTop="2dp"
+        android:paddingEnd="7dp"
+        android:paddingBottom="2dp"
+        android:textColor="@color/pe_text_primary"
+        android:textSize="10.5sp"
+        android:textStyle="bold" />
+</LinearLayout>

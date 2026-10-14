@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Java runtime picker of the profile editor -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <View
+        android:id="@+id/rt_scrim"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/hm_scrim"
+        android:clickable="true"
+        android:focusable="true" />
+
+    <LinearLayout
+        android:id="@+id/rt_card"
+        android:layout_width="520dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:background="@drawable/bg_pp_card"
+        android:clickable="true"
+        android:elevation="16dp"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <LinearLayout
+            android:id="@+id/rt_header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <FrameLayout
+                android:layout_width="46dp"
+                android:layout_height="46dp"
+                android:background="@drawable/bg_pp_icon_tile"
+                android:padding="11dp">
+
+                <ImageView
+                    android:id="@+id/rt_icon"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_pe_java"
+                    android:tint="@color/hm_text" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:letterSpacing="0.3"
+                    android:text="@string/rt_eyebrow"
+                    android:textColor="@color/hm_accent"
+                    android:textSize="10.5sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:fontFamily="@font/noto_sans_bold"
+                    android:includeFontPadding="false"
+                    android:text="@string/pedit_java_runtime"
+                    android:textColor="@color/hm_text"
+                    android:textSize="19sp" />
+            </LinearLayout>
+
+            <ImageButton
+                android:id="@+id/rt_close"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_pp_round_btn"
+                android:contentDescription="@android:string/cancel"
+                android:padding="11dp"
+                android:src="@drawable/ic_pp_close" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/rt_subtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="@string/rt_subtitle"
+            android:textColor="@color/hm_text_dim"
+            android:textSize="12.5sp" />
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:fadingEdgeLength="20dp"
+            android:requiresFadingEdge="vertical"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/rt_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </androidx.core.widget.NestedScrollView>
+    </LinearLayout>
+</FrameLayout>

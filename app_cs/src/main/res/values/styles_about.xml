@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="About.Section" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">22dp</item>
+        <item name="android:fontFamily">@font/minecraft_ten</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textSize">17sp</item>
+    </style>
+    <style name="About.SectionSub" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">3dp</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:textSize">12.5sp</item>
+    </style>
+</resources>

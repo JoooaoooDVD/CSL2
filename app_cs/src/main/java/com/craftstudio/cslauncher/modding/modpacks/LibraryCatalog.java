@@ -127,9 +127,21 @@ public final class LibraryCatalog {
             new Category("minigame", "Minigame", TINT_GREEN),
     };
 
+    private static final Category[] WORLD_CATEGORIES = {
+            new Category("", "All", TINT_NEUTRAL),
+            new Category("adventure", "Adventure", TINT_GREEN),
+            new Category("survival", "Survival", TINT_AMBER),
+            new Category("creation", "Creation", TINT_BLUE),
+            new Category("game-map", "Game map", TINT_SLATE),
+            new Category("parkour", "Parkour", TINT_GREEN),
+            new Category("puzzle", "Puzzle", TINT_BLUE),
+            new Category("modded-world", "Modded", TINT_AMBER),
+    };
+
     @NonNull
     public static Category[] categoriesFor(@NonNull ContentType type) {
         switch (type) {
+            case WORLD: return WORLD_CATEGORIES;
             case RESOURCE_PACK: return RESOURCE_PACK_CATEGORIES;
             case SHADER_PACK: return SHADER_CATEGORIES;
             case MODPACK: return MODPACK_CATEGORIES;

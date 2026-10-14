@@ -269,5 +269,64 @@
                     android:tint="@color/pe_icon" />
             </LinearLayout>
         </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/st_about_row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/st_card_gap"
+            android:background="@drawable/bg_st_card"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:minHeight="64dp"
+            android:orientation="horizontal"
+            android:paddingStart="14dp"
+            android:paddingTop="10dp"
+            android:paddingEnd="14dp"
+            android:paddingBottom="10dp">
+
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_st_icon_box"
+                android:importantForAccessibility="no"
+                android:padding="6dp"
+                android:src="@drawable/ic_cs_full" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/noto_sans_bold"
+                    android:maxLines="1"
+                    android:text="@string/st_about_title"
+                    android:textColor="@color/pe_text_primary"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:ellipsize="end"
+                    android:maxLines="2"
+                    android:text="@string/st_about_desc"
+                    android:textColor="@color/pe_text_secondary"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_about_link"
+                android:tint="@color/pe_text_secondary" />
+        </LinearLayout>
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

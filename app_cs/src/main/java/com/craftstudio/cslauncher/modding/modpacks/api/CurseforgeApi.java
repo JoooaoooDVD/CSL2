@@ -160,6 +160,8 @@ public class CurseforgeApi implements ModpackApi{
     private static final int[] CATEGORY_IDS = {
             6814, 5191, 421, 422, 412, 419, 406,
             420, 424, 434, 436, 411};
+    private static final String[] WORLD_CATEGORY_SLUGS = {"adventure", "survival", "creation", "game-map", "parkour", "puzzle", "modded-world"};
+    private static final int[] WORLD_CATEGORY_IDS = {248, 253, 249, 250, 251, 252, 4464};
     private static final String[] PACK_CATEGORY_SLUGS = {"realistic", "16x", "32x", "64x", "128x"};
     private static final int[] PACK_CATEGORY_IDS = {400, 393, 394, 395, 396};
 
@@ -170,6 +172,7 @@ public class CurseforgeApi implements ModpackApi{
         switch (type) {
             case MOD: slugs = CATEGORY_SLUGS; ids = CATEGORY_IDS; break;
             case RESOURCE_PACK: slugs = PACK_CATEGORY_SLUGS; ids = PACK_CATEGORY_IDS; break;
+            case WORLD: slugs = WORLD_CATEGORY_SLUGS; ids = WORLD_CATEGORY_IDS; break;
             default: return 0;
         }
         for(int i = 0; i < slugs.length; i++) {
@@ -181,6 +184,7 @@ public class CurseforgeApi implements ModpackApi{
     private static String slugForCategoryId(int id) {
         for(int i = 0; i < CATEGORY_IDS.length; i++) if(CATEGORY_IDS[i] == id) return CATEGORY_SLUGS[i];
         for(int i = 0; i < PACK_CATEGORY_IDS.length; i++) if(PACK_CATEGORY_IDS[i] == id) return PACK_CATEGORY_SLUGS[i];
+        for(int i = 0; i < WORLD_CATEGORY_IDS.length; i++) if(WORLD_CATEGORY_IDS[i] == id) return WORLD_CATEGORY_SLUGS[i];
         return null;
     }
 

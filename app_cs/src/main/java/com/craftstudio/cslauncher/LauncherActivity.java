@@ -254,6 +254,13 @@ public class LauncherActivity extends BaseActivity {
             ViewGroup content = findViewById(android.R.id.content);
             if (content != null) content.post(() -> AnimationManager.playBrandIntro(content));
         }
+        // First launch: privacy policy & terms must be accepted before anything else
+        if (!com.craftstudio.cslauncher.about.WelcomePolicy.isAccepted()) {
+            View root = findViewById(android.R.id.content);
+            if (root != null) root.postDelayed(() -> {
+                if (!isFinishing() && !isDestroyed()) com.craftstudio.cslauncher.about.WelcomePolicy.showIfNeeded(this);
+            }, savedInstanceState == null ? 900L : 0L);
+        }
     }
 
     @Override
@@ -421,11 +428,8 @@ public class LauncherActivity extends BaseActivity {
             } else if (id == R.id.overflow_gamepad) {
                 Tools.swapFragment(this, GamepadMapperFragment.class, GamepadMapperFragment.TAG, null);
             } else if (id == R.id.overflow_about) {
-                new MaterialAlertDialogBuilder(this)
-                        .setTitle(R.string.brand_full_name)
-                        .setMessage(R.string.home_about_text)
-                        .setPositiveButton(android.R.string.ok, null)
-                        .show();
+                Tools.swapFragment(this, com.craftstudio.cslauncher.fragments.AboutFragment.class,
+                        com.craftstudio.cslauncher.fragments.AboutFragment.TAG, null);
             }
             return true;
         });

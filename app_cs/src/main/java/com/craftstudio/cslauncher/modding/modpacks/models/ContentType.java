@@ -27,7 +27,12 @@ public enum ContentType {
      * {@link com.craftstudio.cslauncher.modding.modpacks.InstalledContentIndex#setDatapackWorld}
      * at the world before opening the library. CurseForge classId 6945 = "Data Packs".
      */
-    DATAPACK("datapacks", ".zip", "datapack", 6945);
+    DATAPACK("datapacks", ".zip", "datapack", 6945),
+    /**
+     * Worlds are CurseForge-only (Modrinth has no world project type). The zip is downloaded
+     * into the profile's saves folder and extracted into its own world directory. classId 17.
+     */
+    WORLD("saves", ".zip", "world", 17);
 
     /** Folder name under the instance's game directory (e.g. ".minecraft/mods"). */
     public final String folderName;
@@ -53,6 +58,7 @@ public enum ContentType {
             case "shader":       return SHADER_PACK;
             case "modpack":      return MODPACK;
             case "datapack":     return DATAPACK;
+            case "world":        return WORLD;
             default:             return MOD;
         }
     }

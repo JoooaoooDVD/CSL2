@@ -62,6 +62,8 @@ public class MicrosoftBackgroundLogin implements BackgroundLogin{
     public String msXsts;
     public boolean doesOwnGame;
     public long expiresAt;
+    /** Xbox gamertag when the XSTS token exposes it; used when the account has no Java profile */
+    private String mXboxGamertag;
 
     private MicrosoftBackgroundLogin() {}
 
@@ -82,7 +84,11 @@ public class MicrosoftBackgroundLogin implements BackgroundLogin{
                 notifyProgress(loginListener, 4);
                 String token = acquireToken(xsts[0], xsts[1]);
                 notifyProgress(loginListener, 5);
-                fetchOwnedItems(token);
+                try {
+                    fetchOwnedItems(token);
+                } catch (Exception storeError) {
+                    Log.w("MicroAuth", "Store check failed, continuing", storeError);
+                }
                 checkProfile(token);
                 msXsts  = xsts[0];
                 continuation.call();
@@ -118,7 +124,15 @@ public class MicrosoftBackgroundLogin implements BackgroundLogin{
     @Override
     public void refreshAccount(@NonNull LoginListener loginListener, Account account) {
         acquireAccountDetails(loginListener, ()->{
-            if(doesOwnGame) fillAccount(account);
+            if(doesOwnGame) {
+                fillAccount(account);
+            } else {
+                // No profile: refresh the tokens but keep the name / UUID the user already has
+                String keepName = account.username, keepId = account.profileId;
+                fillAccount(account);
+                if (keepName != null && !keepName.isEmpty()) account.username = keepName;
+                if (keepId != null && !keepId.isEmpty()) account.profileId = keepId;
+            }
             account.save();
             Tools.runOnUiThread(() -> loginListener.onLoginDone(account));
             return null;
@@ -198,7 +212,9 @@ public class MicrosoftBackgroundLogin implements BackgroundLogin{
 
         if(conn.getResponseCode() >= 200 && conn.getResponseCode() < 300) {
             JSONObject jo = new JSONObject(Tools.read(conn.getInputStream()));
-            String uhs = jo.getJSONObject("DisplayClaims").getJSONArray("xui").getJSONObject(0).getString("uhs");
+            JSONObject xui = jo.getJSONObject("DisplayClaims").getJSONArray("xui").getJSONObject(0);
+            String uhs = xui.getString("uhs");
+            mXboxGamertag = xui.optString("gtg", null);
             String token = jo.getString("Token");
             conn.disconnect();
             Log.i("MicrosoftLogin","Xbl Xsts = " + token + "; Uhs = " + uhs);
@@ -285,10 +301,15 @@ public class MicrosoftBackgroundLogin implements BackgroundLogin{
             mcName=name;
             mcUuid=uuidDashes;
         }else{
-            Log.i("MicrosoftLogin","It seems that this Microsoft Account does not own the game.");
+            // No Java profile on this account (Game Pass without a profile, Bedrock-only, or a
+            // brand new account). Don't block the sign-in with a "buy the game" popup: keep the
+            // Microsoft session and fall back to an offline-style identity so the launcher
+            // stays usable for singleplayer and private servers.
+            Log.i("MicrosoftLogin","It seems that this Microsoft Account does not own the game; continuing without a profile.");
+            conn.disconnect();
             doesOwnGame = false;
-            throw new PresentableException(new RuntimeException(conn.getResponseMessage()), R.string.mc_not_owned);
-            //throwResponseError(conn);
+            mcName = mXboxGamertag != null && !mXboxGamertag.isEmpty() ? mXboxGamertag : "Player";
+            mcUuid = java.util.UUID.nameUUIDFromBytes(("OfflinePlayer:" + mcName).getBytes(StandardCharsets.UTF_8)).toString();
         }
     }
 

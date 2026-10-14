@@ -78,6 +78,14 @@ public final class ContentInstaller {
                 if (target.exists() && !target.delete()) Log.w(TAG, "Could not replace " + target);
                 if (!temp.renameTo(target)) throw new IOException("Unable to move the download into place");
 
+                if (type == ContentType.WORLD) {
+                    // A world zip becomes a folder in saves/; the zip itself is not kept
+                    ProgressLayout.setProgress(ProgressLayout.INSTALL_MODPACK, 90, R.string.lib_installing);
+                    File worldDir = extractWorld(target, dir, detail.title);
+                    if (!target.delete()) Log.w(TAG, "Could not remove the world archive " + target);
+                    target = worldDir;
+                }
+
                 if (oldFilePath != null) {
                     File old = new File(oldFilePath);
                     if (old.exists() && !old.getAbsolutePath().equals(target.getAbsolutePath()) && !old.delete()) {
@@ -108,9 +116,85 @@ public final class ContentInstaller {
         });
     }
 
-    /** Deletes an installed file. Returns whether it is gone afterwards */
+    /** Deletes an installed file (or world folder). Returns whether it is gone afterwards */
     public static boolean uninstall(@NonNull File file) {
+        if (file.isDirectory()) {
+            try {
+                org.apache.commons.io.FileUtils.deleteDirectory(file);
+            } catch (IOException e) {
+                Log.w(TAG, "Could not delete " + file + ": " + e.getMessage());
+            }
+            return !file.exists();
+        }
         return !file.exists() || file.delete();
+    }
+
+    /**
+     * Unpacks a downloaded world archive into its own folder under saves/. Handles both
+     * layouts CurseForge worlds come in: "WorldName/level.dat" and a bare "level.dat" at the root.
+     * @return the created world directory
+     */
+    @NonNull
+    static File extractWorld(@NonNull File zip, @NonNull File savesDir, @Nullable String fallbackName) throws IOException {
+        String rootFolder = null;
+        boolean levelAtRoot = false;
+        try (java.util.zip.ZipFile zipFile = new java.util.zip.ZipFile(zip)) {
+            java.util.Enumeration<? extends java.util.zip.ZipEntry> entries = zipFile.entries();
+            while (entries.hasMoreElements()) {
+                String name = entries.nextElement().getName().replace('\\', '/');
+                if (name.endsWith("level.dat")) {
+                    String parent = name.substring(0, name.length() - "level.dat".length());
+                    if (parent.isEmpty()) { levelAtRoot = true; break; }
+                    // Prefer the shallowest level.dat as the world root
+                    if (rootFolder == null || parent.length() < rootFolder.length()) rootFolder = parent;
+                }
+            }
+            if (!levelAtRoot && rootFolder == null) throw new IOException("This archive does not contain a Minecraft world (no level.dat)");
+
+            String baseName = levelAtRoot
+                    ? (fallbackName == null || fallbackName.trim().isEmpty() ? stripExtension(zip.getName()) : fallbackName.trim())
+                    : rootFolder.substring(0, rootFolder.length() - 1);
+            int slash = baseName.lastIndexOf('/');
+            if (slash >= 0) baseName = baseName.substring(slash + 1);
+            File worldDir = uniqueDir(savesDir, sanitize(baseName));
+            if (!worldDir.mkdirs()) throw new IOException("Unable to create " + worldDir);
+
+            String prefix = levelAtRoot ? "" : rootFolder;
+            String canonicalRoot = worldDir.getCanonicalPath() + File.separator;
+            entries = zipFile.entries();
+            byte[] buffer = new byte[64 * 1024];
+            while (entries.hasMoreElements()) {
+                java.util.zip.ZipEntry entry = entries.nextElement();
+                String name = entry.getName().replace('\\', '/');
+                if (!name.startsWith(prefix)) continue;
+                String relative = name.substring(prefix.length());
+                if (relative.isEmpty()) continue;
+                File out = new File(worldDir, relative);
+                if (!out.getCanonicalPath().startsWith(canonicalRoot)) continue; // zip-slip guard
+                if (entry.isDirectory()) { out.mkdirs(); continue; }
+                File parent = out.getParentFile();
+                if (parent != null && !parent.exists() && !parent.mkdirs()) throw new IOException("Unable to create " + parent);
+                try (java.io.InputStream in = zipFile.getInputStream(entry);
+                     java.io.OutputStream os = new java.io.FileOutputStream(out)) {
+                    int read;
+                    while ((read = in.read(buffer)) != -1) os.write(buffer, 0, read);
+                }
+            }
+            return worldDir;
+        }
+    }
+
+    private static File uniqueDir(File parent, String name) {
+        if (name.isEmpty()) name = "World";
+        File candidate = new File(parent, name);
+        int counter = 2;
+        while (candidate.exists()) candidate = new File(parent, name + " (" + counter++ + ")");
+        return candidate;
+    }
+
+    private static String stripExtension(String name) {
+        int dot = name.lastIndexOf('.');
+        return dot > 0 ? name.substring(0, dot) : name;
     }
 
     /**

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One runtime row of the runtime picker; activated = selected -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/bg_pp_row"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:minHeight="66dp"
+    android:orientation="horizontal"
+    android:paddingStart="14dp"
+    android:paddingTop="10dp"
+    android:paddingEnd="14dp"
+    android:paddingBottom="10dp">
+
+    <TextView
+        android:id="@+id/ro_badge"
+        android:layout_width="46dp"
+        android:layout_height="46dp"
+        android:background="@drawable/bg_pp_icon_tile"
+        android:fontFamily="@font/noto_sans_bold"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:textColor="@color/hm_text"
+        android:textSize="15sp" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="14dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/ro_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:fontFamily="@font/noto_sans_bold"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:textColor="@color/hm_text"
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/ro_desc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textColor="@color/hm_text_dim"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/ro_arch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:background="@drawable/bg_lib_badge_neutral"
+        android:paddingStart="7dp"
+        android:paddingTop="2dp"
+        android:paddingEnd="7dp"
+        android:paddingBottom="2dp"
+        android:textColor="@color/hm_text_dim"
+        android:textSize="10.5sp"
+        android:textStyle="bold" />
+
+    <ImageView
+        android:id="@+id/ro_check"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginStart="10dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_pp_check"
+        android:tint="@color/hm_text" />
+</LinearLayout>

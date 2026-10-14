@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- About page hero: deep navy gradient card with a soft highlight -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient android:angle="315" android:startColor="#1F2533" android:centerColor="#141821" android:endColor="#0E1117" />
+            <corners android:radius="24dp" />
+            <stroke android:width="1dp" android:color="#2C3340" />
+        </shape>
+    </item>
+    <item android:top="-120dp" android:left="-80dp" android:right="120dp" android:bottom="40dp">
+        <shape android:shape="oval">
+            <gradient android:type="radial" android:gradientRadius="220dp" android:startColor="#2EFFFFFF" android:endColor="#00FFFFFF" />
+        </shape>
+    </item>
+</layer-list>

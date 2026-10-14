@@ -121,7 +121,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
 
     // Views, null while the view is destroyed
     private TextView mTitle, mSubtitle, mContextPill;
-    private TextView mTabMods, mTabResourcePacks, mTabShaders;
+    private TextView mTabMods, mTabResourcePacks, mTabShaders, mTabWorlds;
     private EditText mSearchInput;
     private LinearLayout mChips;
     private View mProgress;
@@ -172,6 +172,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         mTabMods = view.findViewById(R.id.library_tab_mods);
         mTabResourcePacks = view.findViewById(R.id.library_tab_resourcepacks);
         mTabShaders = view.findViewById(R.id.library_tab_shaders);
+        mTabWorlds = view.findViewById(R.id.library_tab_worlds);
         mSearchInput = view.findViewById(R.id.library_search_input);
         mChips = view.findViewById(R.id.library_chips);
         mProgress = view.findViewById(R.id.library_progress);
@@ -248,7 +249,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
     public void onDestroyView() {
         super.onDestroyView();
         ProgressKeeper.removeTaskCountListener(mTaskCountListener);
-        mTitle = mSubtitle = mContextPill = mTabMods = mTabResourcePacks = mTabShaders = mStateText = null;
+        mTitle = mSubtitle = mContextPill = mTabMods = mTabResourcePacks = mTabShaders = mTabWorlds = mStateText = null;
         mSourceFrame = mSourceIndicator = mSourceModrinth = mSourceCurseforge = null;
         mSearchInput = null;
         mChips = null;
@@ -313,14 +314,19 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
     private void setupTabs(View view) {
         View.OnClickListener listener = v -> {
             ContentType type = v == mTabResourcePacks ? ContentType.RESOURCE_PACK
-                    : v == mTabShaders ? ContentType.SHADER_PACK : ContentType.MOD;
+                    : v == mTabShaders ? ContentType.SHADER_PACK
+                    : v == mTabWorlds ? ContentType.WORLD : ContentType.MOD;
             if (type == mFilters.contentType || isModpackMode()) return;
+            if (type == ContentType.WORLD && mCurseforgeKey == null) {
+                Toast.makeText(requireContext(), R.string.lib_worlds_curseforge_only, Toast.LENGTH_SHORT).show();
+                return;
+            }
             mItems.clear();
             applyContentType(type, true);
             startSearch();
             refreshInstalled();
         };
-        for (TextView tab : new TextView[]{mTabMods, mTabResourcePacks, mTabShaders}) {
+        for (TextView tab : new TextView[]{mTabMods, mTabResourcePacks, mTabShaders, mTabWorlds}) {
             tab.setOnClickListener(listener);
             CSAnimationEngine.attachPressFeedback(tab);
         }
@@ -340,6 +346,11 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
 
         View.OnClickListener listener = v -> {
             int engine = v == mSourceCurseforge ? Constants.ENGINE_CURSEFORGE : Constants.ENGINE_MODRINTH;
+            if (mFilters.contentType == ContentType.WORLD && engine != Constants.ENGINE_CURSEFORGE) {
+                Motion.shake(v);
+                Toast.makeText(requireContext(), R.string.lib_worlds_curseforge_only, Toast.LENGTH_SHORT).show();
+                return;
+            }
             if (engine == mFilters.engine) {
                 Motion.bounce(v.findViewById(engine == Constants.ENGINE_CURSEFORGE
                         ? R.id.library_source_curseforge_logo : R.id.library_source_modrinth_logo));
@@ -358,6 +369,14 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         mSourceCurseforge.setOnClickListener(listener);
         CSAnimationEngine.attachPressFeedback(mSourceModrinth);
         CSAnimationEngine.attachPressFeedback(mSourceCurseforge);
+    }
+
+    /** While browsing worlds the Modrinth option is dimmed and ignored */
+    private void setSourceLocked(boolean locked) {
+        if (mSourceModrinth == null) return;
+        mSourceModrinth.setEnabled(!locked);
+        mSourceModrinth.animate().cancel();
+        mSourceModrinth.animate().alpha(locked ? 0.35f : 1f).setDuration(Motion.MEDIUM).start();
     }
 
     /** Last source the user picked, falling back to Modrinth when CurseForge is unavailable */
@@ -594,19 +613,41 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         mTabMods.setSelected(type == ContentType.MOD);
         mTabResourcePacks.setSelected(type == ContentType.RESOURCE_PACK);
         mTabShaders.setSelected(type == ContentType.SHADER_PACK);
+        mTabWorlds.setSelected(type == ContentType.WORLD);
         tintTab(mTabMods, userAction);
         tintTab(mTabResourcePacks, userAction);
         tintTab(mTabShaders, userAction);
+        tintTab(mTabWorlds, userAction);
         TextView selectedTab = type == ContentType.RESOURCE_PACK ? mTabResourcePacks
-                : type == ContentType.SHADER_PACK ? mTabShaders : mTabMods;
+                : type == ContentType.SHADER_PACK ? mTabShaders
+                : type == ContentType.WORLD ? mTabWorlds : mTabMods;
         LibraryMotion.moveIndicator(mTabIndicator, selectedTab, userAction);
         if (userAction) {
             LibraryMotion.selectChip(selectedTab);
             Motion.swapText(mTitle, getString(type == ContentType.RESOURCE_PACK ? R.string.lib_title_resourcepacks
-                    : type == ContentType.SHADER_PACK ? R.string.lib_title_shaders : R.string.lib_title_mods));
+                    : type == ContentType.SHADER_PACK ? R.string.lib_title_shaders
+                    : type == ContentType.WORLD ? R.string.lib_title_worlds : R.string.lib_title_mods));
+        }
+        // Worlds exist on CurseForge only: lock the source switcher there while the tab is active
+        if (type == ContentType.WORLD) {
+            mFilters.engine = Constants.ENGINE_CURSEFORGE;
+            applySource(Constants.ENGINE_CURSEFORGE, userAction);
+            setSourceLocked(true);
+        } else {
+            setSourceLocked(false);
+            int restored = restoreSource();
+            if (mFilters.engine != restored) {
+                mFilters.engine = restored;
+                applySource(restored, userAction);
+            }
         }
 
         switch (type) {
+            case WORLD:
+                if (!userAction) mTitle.setText(R.string.lib_title_worlds);
+                mSubtitle.setText(R.string.lib_subtitle_worlds);
+                mSearchInput.setHint(R.string.lib_search_worlds);
+                break;
             case RESOURCE_PACK:
                 if (!userAction) mTitle.setText(R.string.lib_title_resourcepacks);
                 mSubtitle.setText(R.string.lib_subtitle_resourcepacks);
@@ -710,7 +751,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
             mAdapter.setContext(mFilters.contentType, null, "", mFilters.category);
             return;
         }
-        mAdapter.setContext(mFilters.contentType, mProfileVersion,
+        mAdapter.setContext(mFilters.contentType, mFilters.contentType == ContentType.WORLD ? null : mProfileVersion,
                 mFilters.contentType == ContentType.MOD ? mProfileLoader : "", mFilters.category);
     }
 
@@ -879,6 +920,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
             case SHADER_PACK: return R.string.lib_tab_shaders;
             case MODPACK: return R.string.lib_tab_modpacks;
             case DATAPACK: return R.string.lib_tab_datapacks;
+            case WORLD: return R.string.lib_tab_worlds;
             default: return R.string.lib_tab_mods;
         }
     }

@@ -857,77 +857,7 @@ public final class Tools {
      *  and the upload this flow still needs the host for. If the mclo.gs upload fails and a
      *  callback was given, the share dialog is shown again so the user can retry or cancel. */
     public static void shareLog(Context context, @Nullable Runnable onFinished){
-        View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_share_log, null);
-        final boolean[] picked = {false};
-
-        AlertDialog dialog = new MaterialAlertDialogBuilder(context)
-                .setTitle(R.string.share_log_dialog_title)
-                .setView(dialogView)
-                .setNegativeButton(android.R.string.cancel, null)
-                .setOnDismissListener(d -> {
-                    if(!picked[0] && onFinished != null) onFinished.run();
-                })
-                .create();
-
-        dialogView.findViewById(R.id.share_log_mclogs_button).setOnClickListener(v -> {
-            picked[0] = true;
-            dialog.dismiss();
-            shareLogToMcLogs(context, onFinished);
-        });
-        dialogView.findViewById(R.id.share_log_file_button).setOnClickListener(v -> {
-            picked[0] = true;
-            dialog.dismiss();
-            shareLogFile(context);
-            if(onFinished != null) onFinished.run();
-        });
-
-        dialog.show();
-    }
-
-    /** Triggers the share intent chooser, with the latestlog file attached to it */
-    private static void shareLogFile(Context context){
-        openPath(context, new File(Tools.DIR_GAME_HOME, "latestlog.txt"), true);
-    }
-
-    /** Uploads the latest log file to mclo.gs and shares the resulting link, copying it to the
-     *  clipboard as well so it isn't lost if the share sheet gets dismissed. */
-    private static void shareLogToMcLogs(Context context, @Nullable Runnable onFinished){
-        final File logFile = new File(Tools.DIR_GAME_HOME, "latestlog.txt");
-        final AlertDialog progressDialog = new MaterialAlertDialogBuilder(context)
-                .setView(R.layout.dialog_share_log_progress)
-                .setCancelable(false)
-                .show();
-
-        sExecutorService.execute(() -> {
-            try {
-                String url = McLogsApi.upload(logFile);
-                Tools.runOnUiThread(() -> {
-                    progressDialog.dismiss();
-
-                    ClipboardManager clipboardManager = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
-                    if(clipboardManager != null) clipboardManager.setPrimaryClip(ClipData.newPlainText("mclo.gs", url));
-                    Toast.makeText(context, R.string.share_log_mclogs_copied, Toast.LENGTH_SHORT).show();
-
-                    Intent shareIntent = new Intent(Intent.ACTION_SEND);
-                    shareIntent.setType("text/plain");
-                    shareIntent.putExtra(Intent.EXTRA_TEXT, url);
-                    Intent chooserIntent = Intent.createChooser(shareIntent, url);
-                    chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    context.startActivity(chooserIntent);
-                    if(onFinished != null) onFinished.run();
-                });
-            } catch (IOException e) {
-                Tools.runOnUiThread(() -> {
-                    progressDialog.dismiss();
-                    if(onFinished == null) {
-                        Tools.showError(context, R.string.share_log_mclogs_error, e);
-                    } else {
-                        Toast.makeText(context, context.getString(R.string.share_log_mclogs_error) + ": " + e.getMessage(), Toast.LENGTH_LONG).show();
-                        shareLog(context, onFinished);
-                    }
-                });
-            }
-        });
+        new com.kdt.mcgui.ShareLogDialog(context, onFinished).show();
     }
 
     /**

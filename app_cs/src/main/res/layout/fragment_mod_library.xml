@@ -122,6 +122,14 @@
                     android:layout_marginStart="2dp"
                     android:drawableStart="@drawable/ic_lib_sun"
                     android:text="@string/lib_tab_shaders" />
+
+                <TextView
+                    android:id="@+id/library_tab_worlds"
+                    style="@style/Library.Segment"
+                    android:background="@drawable/bg_lib_segment_tab"
+                    android:layout_marginStart="2dp"
+                    android:drawableStart="@drawable/ic_lib_world"
+                    android:text="@string/lib_tab_worlds" />
             </LinearLayout>
             </FrameLayout>
         </LinearLayout>
@@ -135,7 +143,8 @@
             android:layout_marginTop="14dp"
             android:layout_marginEnd="16dp"
             android:background="@drawable/bg_lib_source_track"
-            android:padding="4dp">
+            android:padding="4dp"
+            app:layout_scrollFlags="scroll|enterAlways|snap">
 
             <View
                 android:id="@+id/library_source_indicator"
@@ -292,11 +301,12 @@
             </LinearLayout>
         </FrameLayout>
 
-        <!-- Search, categories and sort stay pinned while the grid scrolls -->
+        <!-- Search, categories and sort scroll away with the header so the grid gets the full screen -->
         <LinearLayout
             android:id="@+id/library_toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            app:layout_scrollFlags="scroll|enterAlways|snap"
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:paddingStart="16dp"
@@ -451,6 +461,7 @@
             android:id="@+id/library_chips_row"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            app:layout_scrollFlags="scroll|enterAlways|snap"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
             android:paddingBottom="8dp"

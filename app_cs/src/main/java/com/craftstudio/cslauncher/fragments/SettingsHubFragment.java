@@ -137,6 +137,17 @@ public class SettingsHubFragment extends Fragment {
         });
         CSAnimationEngine.attachPressFeedback(notificationRow);
         updateNotificationRow();
+
+        View aboutRow = view.findViewById(R.id.st_about_row);
+        if (aboutRow != null) {
+            aboutRow.setOnClickListener(v -> {
+                if (getActivity() != null) {
+                    com.craftstudio.cslauncher.Tools.swapFragmentFullScreen(requireActivity(),
+                            AboutFragment.class, AboutFragment.TAG, null);
+                }
+            });
+            CSAnimationEngine.attachPressFeedback(aboutRow);
+        }
     }
 
     /** The permission row only shows while notifications are not allowed */
