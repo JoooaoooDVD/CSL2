@@ -282,6 +282,7 @@ public class LauncherActivity extends BaseActivity {
         mLegacyStorageLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
             if (mStorageSetupDialog != null) mStorageSetupDialog.onHostResumed();
         });
+        com.kdt.mcgui.DiscordInviteDialog.countLaunch(this);
         if (!com.craftstudio.cslauncher.about.WelcomePolicy.isAccepted()) {
             View root = findViewById(android.R.id.content);
             if (root != null) root.postDelayed(() -> {
@@ -298,8 +299,8 @@ public class LauncherActivity extends BaseActivity {
         } else if (!StorageRoot.isSetupDone(this)) {
             // Existing install from before the setup existed: keep its current folder silently
             StorageRoot.markSetupDone(this);
-        } else if (!com.kdt.mcgui.DiscordInviteDialog.wasShown(this)) {
-            // Setup already done (e.g. we just restarted into the custom folder): one-time community invite
+        } else if (com.kdt.mcgui.DiscordInviteDialog.isDue(this)) {
+            // Setup already done (e.g. we just restarted into the custom folder): scheduled community invite
             View root = findViewById(android.R.id.content);
             if (root != null) root.postDelayed(this::showDiscordInvite, savedInstanceState == null ? 1200L : 300L);
         }
@@ -309,7 +310,7 @@ public class LauncherActivity extends BaseActivity {
         if (isFinishing() || isDestroyed()) return;
         if (!com.craftstudio.cslauncher.about.WelcomePolicy.isAccepted() || !StorageRoot.isSetupDone(this)) return;
         if (mStorageSetupDialog != null && mStorageSetupDialog.isShowing()) return;
-        com.kdt.mcgui.DiscordInviteDialog.showIfNeeded(this);
+        com.kdt.mcgui.DiscordInviteDialog.showIfDue(this);
     }
 
     private androidx.activity.result.ActivityResultLauncher<Uri> mFolderPickerLauncher;

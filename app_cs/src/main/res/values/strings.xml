@@ -1178,6 +1178,15 @@
     <string name="ll_rule_chars">Letters, numbers and _ only</string>
     <string name="ll_rule_space">No spaces</string>
     <string name="ll_note">Offline names can\'t join online-mode servers. You can add a Microsoft account later and keep this one too.</string>
+    <string name="ll_premium_checking">Checking for a premium player…</string>
+    <string name="ll_premium_found">Premium player found: %1$s</string>
+    <string name="ll_premium_found_sub">Their skin and cape will be used</string>
+    <string name="ll_premium_found_skin_only">Their skin will be used (no cape)</string>
+    <string name="ll_premium_none">No premium player with this name</string>
+    <string name="ll_premium_none_sub">Default skin — you can pick one later in the skin editor</string>
+    <string name="ll_premium_offline">Couldn\'t check (offline) — default skin for now</string>
+    <string name="ll_premium_badge">PREMIUM SKIN</string>
+    <string name="ll_applying">Setting up the skin…</string>
     <string name="ll_err_fix">Fix the name first — see the rules.</string>
     <!-- Discord invite popup -->
     <string name="di_eyebrow">COMMUNITY</string>
@@ -1186,7 +1195,18 @@
     <string name="di_perk_support">Support</string>
     <string name="di_perk_updates">Early updates</string>
     <string name="di_perk_packs">Pack sharing</string>
+    <string name="di_perk_support_sub">Crashes, mods, performance — real people answer</string>
+    <string name="di_perk_updates_sub">Betas and release notes land there first</string>
+    <string name="di_perk_packs_sub">Show your modpacks, grab ready-made ones</string>
     <string name="di_join">Join Discord</string>
     <string name="di_later">Maybe later</string>
     <string name="di_invite_url" translatable="false">https://discord.gg/dmteYqZZyY</string>
+    <!-- Version picker popup -->
+    <string name="vp_filter_compatible">Compatible</string>
+    <string name="vp_filter_release">Releases</string>
+    <string name="vp_versions_for">VERSIONS FOR %1$s</string>
+    <string name="vp_count_fmt">%1$d of %2$d versions</string>
+    <string name="vp_jump_selected">Jump to selected</string>
+    <string name="vp_empty_hint">Nothing matches the search and filters.</string>
+    <string name="vp_clear_filters">Clear filters</string>
 </resources>

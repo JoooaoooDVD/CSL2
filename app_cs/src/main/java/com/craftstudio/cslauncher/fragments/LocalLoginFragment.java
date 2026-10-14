@@ -25,6 +25,17 @@ import com.craftstudio.cslauncher.utils.motion.Motion;
 import java.util.Random;
 import java.util.regex.Pattern;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
+
+import com.craftstudio.cslauncher.CSLauncherApplication;
+import com.craftstudio.cslauncher.skins.PlayerPreviewView;
+import com.craftstudio.cslauncher.skins.PremiumProfileLookup;
+import com.craftstudio.cslauncher.skins.SkinTextures;
+import com.google.android.material.materialswitch.MaterialSwitch;
+
 /**
  * Offline account: a name field with live validation (rules tick off as you type), a name
  * suggester and a big "Create & play" button.
@@ -44,6 +55,20 @@ public class LocalLoginFragment extends Fragment {
     private View mPlay, mAvatar;
     private final View[] mRuleRows = new View[3];
     private final boolean[] mRuleState = new boolean[3];
+
+    // Premium lookup (debounced while typing)
+    private static final long LOOKUP_DELAY = 650L;
+    private View mPremiumRow, mPreviewWrap;
+    private ProgressBar mPremiumSpinner;
+    private ImageView mPremiumIcon, mAvatarFace;
+    private TextView mPremiumTitle, mPremiumSub, mPlayText;
+    private MaterialSwitch mPremiumUse;
+    private PlayerPreviewView mPreview;
+    @Nullable private PremiumProfileLookup.Result mPremium;
+    @Nullable private String mLookedUpName;
+    private int mLookupSerial;
+    private boolean mSubmitting;
+    private final Runnable mLookupRunnable = this::startLookup;
 
     public LocalLoginFragment(){
         super(R.layout.fragment_local_login);
@@ -65,6 +90,22 @@ public class LocalLoginFragment extends Fragment {
         mPlay = view.findViewById(R.id.login_button);
         View random = view.findViewById(R.id.ll_random);
         LinearLayout rules = view.findViewById(R.id.ll_rules);
+        mPremiumRow = view.findViewById(R.id.ll_premium);
+        mPremiumSpinner = view.findViewById(R.id.ll_premium_spinner);
+        mPremiumIcon = view.findViewById(R.id.ll_premium_icon);
+        mPremiumTitle = view.findViewById(R.id.ll_premium_title);
+        mPremiumSub = view.findViewById(R.id.ll_premium_sub);
+        mPremiumUse = view.findViewById(R.id.ll_premium_use);
+        mAvatarFace = view.findViewById(R.id.ll_avatar_face);
+        mPreviewWrap = view.findViewById(R.id.ll_preview_wrap);
+        mPreview = view.findViewById(R.id.ll_preview);
+        mPlayText = view.findViewById(R.id.ll_play_text);
+        mPremiumUse.setOnCheckedChangeListener((b, checked) -> {
+            if (mPremium == null) return;
+            showFace(checked ? mPremium.face : null);
+            if (checked) { if (mPreviewWrap.getVisibility() != View.VISIBLE) { mPreviewWrap.setVisibility(View.VISIBLE); Motion.popIn(mPreviewWrap, 0L, 0.9f); } }
+            else Motion.hide(mPreviewWrap, true);
+        });
 
         int[] ruleTexts = {R.string.ll_rule_length, R.string.ll_rule_chars, R.string.ll_rule_space};
         LayoutInflater inflater = LayoutInflater.from(view.getContext());
@@ -127,6 +168,114 @@ public class LocalLoginFragment extends Fragment {
         boolean valid = lengthOk && charsOk && spaceOk;
         mPlay.setAlpha(valid ? 1f : 0.55f);
         if (valid && mError.getVisibility() == View.VISIBLE) Motion.hide(mError, true);
+
+        // Premium check: debounced, only for valid names; anything else clears the result
+        mName.removeCallbacks(mLookupRunnable);
+        if (valid) {
+            if (!name.equalsIgnoreCase(mLookedUpName)) mName.postDelayed(mLookupRunnable, LOOKUP_DELAY);
+        } else {
+            clearPremium();
+        }
+    }
+
+    private void clearPremium() {
+        mLookupSerial++;
+        mPremium = null;
+        mLookedUpName = null;
+        if (mPremiumRow.getVisibility() == View.VISIBLE) Motion.hide(mPremiumRow, true);
+        if (mPreviewWrap.getVisibility() == View.VISIBLE) Motion.hide(mPreviewWrap, true);
+        showFace(null);
+    }
+
+    private void startLookup() {
+        if (getView() == null) return;
+        final String name = mName.getText().toString();
+        if (!isValid()) return;
+        final int serial = ++mLookupSerial;
+        mLookedUpName = name;
+        mPremium = null;
+        showFace(null);
+        if (mPreviewWrap.getVisibility() == View.VISIBLE) Motion.hide(mPreviewWrap, true);
+        mPremiumSpinner.setVisibility(View.VISIBLE);
+        mPremiumIcon.setVisibility(View.GONE);
+        mPremiumUse.setVisibility(View.GONE);
+        mPremiumTitle.setText(R.string.ll_premium_checking);
+        mPremiumSub.setText("");
+        mPremiumSub.setVisibility(View.GONE);
+        if (mPremiumRow.getVisibility() != View.VISIBLE) { mPremiumRow.setVisibility(View.VISIBLE); Motion.riseIn(mPremiumRow, 0L, 8f); }
+        final boolean online = isOnline();
+        CSLauncherApplication.sExecutorService.execute(() -> {
+            PremiumProfileLookup.Result result = online ? PremiumProfileLookup.lookup(name) : null;
+            Tools.runOnUiThread(() -> {
+                if (getView() == null || serial != mLookupSerial) return;
+                onLookupDone(result, online);
+            });
+        });
+    }
+
+    private boolean isOnline() {
+        try {
+            android.net.ConnectivityManager manager = (android.net.ConnectivityManager)
+                    requireContext().getSystemService(android.content.Context.CONNECTIVITY_SERVICE);
+            if (manager == null) return true;
+            android.net.NetworkInfo info = manager.getActiveNetworkInfo();
+            return info != null && info.isConnected();
+        } catch (Exception e) {
+            return true;
+        }
+    }
+
+    private void onLookupDone(@Nullable PremiumProfileLookup.Result result, boolean online) {
+        mPremium = result;
+        mPremiumSpinner.setVisibility(View.GONE);
+        mPremiumIcon.setVisibility(View.VISIBLE);
+        mPremiumSub.setVisibility(View.VISIBLE);
+        if (result != null && result.skinPng != null) {
+            mPremiumIcon.setImageResource(R.drawable.ic_pp_check);
+            mPremiumIcon.setImageTintList(android.content.res.ColorStateList.valueOf(0xFF22C55E));
+            mPremiumTitle.setText(getString(R.string.ll_premium_found, result.name));
+            mPremiumSub.setText(result.capePng != null ? R.string.ll_premium_found_sub : R.string.ll_premium_found_skin_only);
+            mPremiumUse.setVisibility(View.VISIBLE);
+            mPremiumUse.setChecked(true);
+            Motion.popIn(mPremiumIcon, 0L, 0.3f);
+            // Exact casing from Mojang (e.g. "notch" -> "Notch"), keeps the cursor at the end
+            if (!result.name.equals(mName.getText().toString()) && result.name.equalsIgnoreCase(mName.getText().toString())) {
+                mLookedUpName = result.name;
+                mName.setText(result.name);
+                mName.setSelection(result.name.length());
+            }
+            showFace(result.face);
+            Bitmap skin = BitmapFactory.decodeByteArray(result.skinPng, 0, result.skinPng.length);
+            if (skin != null) {
+                mPreview.setSkin(SkinTextures.normalizeSkin(skin), result.slim);
+                if (result.capePng != null) {
+                    Bitmap cape = BitmapFactory.decodeByteArray(result.capePng, 0, result.capePng.length);
+                    mPreview.setCape(cape == null ? null : SkinTextures.normalizeCape(cape));
+                } else {
+                    mPreview.setCape(null);
+                }
+                mPreviewWrap.setVisibility(View.VISIBLE);
+                Motion.popIn(mPreviewWrap, 0L, 0.85f);
+            }
+        } else {
+            mPremiumIcon.setImageResource(R.drawable.ic_pe_person);
+            mPremiumIcon.setImageTintList(android.content.res.ColorStateList.valueOf(
+                    androidx.core.content.ContextCompat.getColor(requireContext(), R.color.hm_text_dim)));
+            mPremiumTitle.setText(online ? R.string.ll_premium_none : R.string.ll_premium_offline);
+            mPremiumSub.setText(R.string.ll_premium_none_sub);
+            mPremiumUse.setVisibility(View.GONE);
+        }
+    }
+
+    private void showFace(@Nullable Bitmap face) {
+        if (face == null) {
+            if (mAvatarFace.getVisibility() == View.VISIBLE) { mAvatarFace.setVisibility(View.GONE); mAvatarLetter.setVisibility(View.VISIBLE); }
+            return;
+        }
+        mAvatarFace.setImageBitmap(face);
+        mAvatarFace.setVisibility(View.VISIBLE);
+        mAvatarLetter.setVisibility(View.GONE);
+        Motion.popIn(mAvatarFace, 0L, 0.4f);
     }
 
     private void swapLetter(String letter) {
@@ -161,8 +310,39 @@ public class LocalLoginFragment extends Fragment {
             Motion.shake(requireView().findViewById(R.id.ll_field));
             return;
         }
-        ExtraCore.setValue(ExtraConstants.MOJANG_LOGIN_TODO, new String[]{ mName.getText().toString(), "" });
-        Tools.swapToMainMenu(requireActivity());
+        if (mSubmitting) return;
+        mName.removeCallbacks(mLookupRunnable);
+        final String name = mName.getText().toString();
+        final PremiumProfileLookup.Result premium = mPremium != null && mPremiumUse.isChecked()
+                && name.equalsIgnoreCase(mLookedUpName) ? mPremium : null;
+        if (premium == null || premium.skinPng == null) {
+            ExtraCore.setValue(ExtraConstants.MOJANG_LOGIN_TODO, new String[]{ name, "" });
+            Tools.swapToMainMenu(requireActivity());
+            return;
+        }
+        // Store skin + cape for this name first so the account shows the right head immediately
+        mSubmitting = true;
+        mPlayText.setText(R.string.ll_applying);
+        CSLauncherApplication.sExecutorService.execute(() -> {
+            try {
+                PremiumProfileLookup.applyToLocalAccount(premium, name);
+            } catch (Exception e) {
+                android.util.Log.w(TAG, "Could not apply the premium skin", e);
+            }
+            Tools.runOnUiThread(() -> {
+                mSubmitting = false;
+                if (getView() == null || !isAdded()) return;
+                ExtraCore.setValue(ExtraConstants.MOJANG_LOGIN_TODO, new String[]{ name, "" });
+                Tools.swapToMainMenu(requireActivity());
+            });
+        });
+    }
+
+    @Override
+    public void onDestroyView() {
+        if (mName != null) mName.removeCallbacks(mLookupRunnable);
+        mLookupSerial++;
+        super.onDestroyView();
     }
 
     /** Phones: rules card goes under the form */

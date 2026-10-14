@@ -29,6 +29,22 @@
             android:layout_height="132dp"
             android:background="@drawable/bg_di_hero">
 
+            <View
+                android:id="@+id/di_ring_outer"
+                android:layout_width="150dp"
+                android:layout_height="150dp"
+                android:layout_gravity="center"
+                android:alpha="0.14"
+                android:background="@drawable/bg_di_ring" />
+
+            <View
+                android:id="@+id/di_ring_inner"
+                android:layout_width="104dp"
+                android:layout_height="104dp"
+                android:layout_gravity="center"
+                android:alpha="0.22"
+                android:background="@drawable/bg_di_ring" />
+
             <ImageView
                 android:id="@+id/di_logo"
                 android:layout_width="72dp"
@@ -91,31 +107,131 @@
                 android:id="@+id/di_perks"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:orientation="horizontal">
+                android:layout_marginTop="6dp"
+                android:orientation="vertical">
 
-                <TextView
-                    style="@style/Library.Badge"
-                    android:background="@drawable/bg_lib_badge_neutral"
-                    android:text="@string/di_perk_support"
-                    android:textColor="@color/hm_text_dim"
-                    android:textStyle="normal" />
+                <LinearLayout
+                    android:id="@+id/di_perk_1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-                <TextView
-                    style="@style/Library.Badge"
-                    android:layout_marginStart="6dp"
-                    android:background="@drawable/bg_lib_badge_neutral"
-                    android:text="@string/di_perk_updates"
-                    android:textColor="@color/hm_text_dim"
-                    android:textStyle="normal" />
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="@drawable/bg_ss_step_num"
+                        android:importantForAccessibility="no"
+                        android:padding="7dp"
+                        android:src="@drawable/ic_lib_heart"
+                        android:tint="#8A95FF" />
 
-                <TextView
-                    style="@style/Library.Badge"
-                    android:layout_marginStart="6dp"
-                    android:background="@drawable/bg_lib_badge_neutral"
-                    android:text="@string/di_perk_packs"
-                    android:textColor="@color/hm_text_dim"
-                    android:textStyle="normal" />
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/di_perk_support"
+                            android:textColor="@color/hm_text"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/di_perk_support_sub"
+                            android:textColor="@color/hm_text_dim"
+                            android:textSize="11.5sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/di_perk_2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="@drawable/bg_ss_step_num"
+                        android:importantForAccessibility="no"
+                        android:padding="7dp"
+                        android:src="@drawable/ic_lib_update"
+                        android:tint="#8A95FF" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/di_perk_updates"
+                            android:textColor="@color/hm_text"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/di_perk_updates_sub"
+                            android:textColor="@color/hm_text_dim"
+                            android:textSize="11.5sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/di_perk_3"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="@drawable/bg_ss_step_num"
+                        android:importantForAccessibility="no"
+                        android:padding="7dp"
+                        android:src="@drawable/ic_lib_cube"
+                        android:tint="#8A95FF" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/di_perk_packs"
+                            android:textColor="@color/hm_text"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/di_perk_packs_sub"
+                            android:textColor="@color/hm_text_dim"
+                            android:textSize="11.5sp" />
+                    </LinearLayout>
+                </LinearLayout>
             </LinearLayout>
 
             <LinearLayout

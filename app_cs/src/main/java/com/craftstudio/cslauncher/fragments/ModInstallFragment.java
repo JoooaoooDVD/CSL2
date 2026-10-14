@@ -16,7 +16,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.drawable.RoundedBitmapDrawable;
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
@@ -54,7 +53,6 @@ import com.craftstudio.cslauncher.modding.modpacks.imagecache.GalleryImageLoader
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.checkbox.MaterialCheckBox;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.materialswitch.MaterialSwitch;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -1384,25 +1382,30 @@ public class ModInstallFragment extends Fragment {
     // ─── Version picker ──────────────────────────────────────────────────────
 
     private void showVersionPicker() {
-        if (mDetail == null || versionCount() == 0) return;
-        View content = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_lib_version_picker, null, false);
-        TextView subtitle = content.findViewById(R.id.picker_subtitle);
-        MaterialSwitch showAll = content.findViewById(R.id.picker_show_all);
-        RecyclerView list = content.findViewById(R.id.picker_list);
-        TextView empty = content.findViewById(R.id.picker_empty);
-
-        subtitle.setText(getString(R.string.lib_versions_for, profileLabel()));
-        boolean compatibleExists = hasAnyCompatible();
-        if (mProfileVersion == null) showAll.setVisibility(View.GONE);
-        showAll.setChecked(!compatibleExists || mProfileVersion == null
-                || (mSelectedIndex >= 0 && !isCompatible(mSelectedIndex)));
-
-        AlertDialog dialog = new MaterialAlertDialogBuilder(requireContext())
-                .setView(content)
-                .setNegativeButton(android.R.string.cancel, null)
-                .create();
-
-        VersionAdapter adapter = new VersionAdapter(index -> {
+        if (mDetail == null || versionCount() == 0 || getView() == null) return;
+        com.kdt.mcgui.VersionPickerDialog.Source source = new com.kdt.mcgui.VersionPickerDialog.Source() {
+            @NonNull @Override public List<Integer> orderedIndices() { return ModInstallFragment.this.orderedIndices(); }
+            @NonNull @Override public String title(int index) { return versionTitle(index); }
+            @NonNull @Override public String meta(int index) { return versionMeta(index); }
+            @NonNull @Override public String extra(int index) { return versionExtra(index); }
+            @NonNull @Override public String[] gameVersions(int index) { return gameVersionsOf(index); }
+            @Nullable @Override public String channel(int index) {
+                return mDetail != null && mDetail.versionTypes != null && index < mDetail.versionTypes.length ? mDetail.versionTypes[index] : null;
+            }
+            @Override public boolean compatible(int index) { return isCompatible(index); }
+            @Override public boolean downloadable(int index) { return isDownloadable(index); }
+            @Override public int mark(int index) {
+                if (index == mInstalledIndex) return com.kdt.mcgui.VersionPickerDialog.MARK_INSTALLED;
+                if (index == mRecommendedIndex) return com.kdt.mcgui.VersionPickerDialog.MARK_RECOMMENDED;
+                return com.kdt.mcgui.VersionPickerDialog.MARK_NONE;
+            }
+        };
+        ImageView icon = getView().findViewById(R.id.install_icon);
+        android.graphics.drawable.Drawable iconDrawable = icon != null ? icon.getDrawable() : null;
+        boolean hasProfile = mProfileVersion != null && mType != ContentType.WORLD && !isModpack();
+        new com.kdt.mcgui.VersionPickerDialog(requireContext(), source, mItem.title == null ? "" : mItem.title,
+                profileLabel(), iconDrawable, mSelectedIndex, hasProfile, hasAnyCompatible(), index -> {
+            if (getView() == null || index == mSelectedIndex) return;
             mSelectedIndex = index;
             mUserPicked = index != mRecommendedIndex;
             renderVersion();
@@ -1410,169 +1413,6 @@ public class ModInstallFragment extends Fragment {
             renderActions();
             InstallMotion.versionChanged(mVersionBox);
             InstallMotion.dependenciesIn(mDepsList);
-            dialog.dismiss();
-        });
-        list.setLayoutManager(new LinearLayoutManager(requireContext()));
-        list.setAdapter(adapter);
-
-        final android.widget.EditText search = content.findViewById(R.id.picker_search);
-        final LinearLayout chips = content.findViewById(R.id.picker_chips);
-        final String[] chipFilter = {""};
-
-        // Minecraft version chips, newest first, built from what this project actually offers
-        List<String> gameVersions = new ArrayList<>();
-        for (int index : orderedIndices()) {
-            String[] versions = gameVersionsOf(index);
-            if (versions == null) continue;
-            for (String version : versions) {
-                if (version != null && !gameVersions.contains(version)) gameVersions.add(version);
-            }
-        }
-        gameVersions.sort((a, b) -> LibraryCatalog.compareVersions(b, a));
-        if (gameVersions.size() > 1) {
-            content.findViewById(R.id.picker_chips_scroll).setVisibility(View.VISIBLE);
-        } else {
-            content.findViewById(R.id.picker_chips_scroll).setVisibility(View.GONE);
-        }
-
-        Runnable refresh = () -> {
-            String query = search.getText() == null ? "" : search.getText().toString().trim().toLowerCase(java.util.Locale.ROOT);
-            List<Integer> indices = new ArrayList<>();
-            for (int index : orderedIndices()) {
-                if (!showAll.isChecked() && !isCompatible(index)) continue;
-                if (!chipFilter[0].isEmpty() && !LibraryCatalog.containsVersion(gameVersionsOf(index), chipFilter[0])) continue;
-                if (!query.isEmpty()) {
-                    String hay = (versionTitle(index) + " " + versionMeta(index)).toLowerCase(java.util.Locale.ROOT);
-                    if (!hay.contains(query)) continue;
-                }
-                indices.add(index);
-            }
-            adapter.setIndices(indices);
-            empty.setVisibility(indices.isEmpty() ? View.VISIBLE : View.GONE);
-            list.setVisibility(indices.isEmpty() ? View.GONE : View.VISIBLE);
-            subtitle.setText(getString(R.string.lib_versions_for, profileLabel()) + "  \u00b7  " + getString(R.string.lib_picker_count, indices.size()));
-            int position = indices.indexOf(mSelectedIndex);
-            if (position > 0) list.scrollToPosition(position);
-        };
-
-        // Chips: "All" + each game version; tapping toggles the filter
-        if (gameVersions.size() > 1) {
-            List<String> labels = new ArrayList<>();
-            labels.add("");
-            labels.addAll(gameVersions.subList(0, Math.min(gameVersions.size(), 30)));
-            for (String label : labels) {
-                TextView chip = (TextView) LayoutInflater.from(requireContext()).inflate(R.layout.item_library_chip, chips, false);
-                chip.setText(label.isEmpty() ? getString(R.string.lib_picker_all) : label);
-                chip.setTag(label);
-                chip.setSelected(label.isEmpty());
-                chip.setOnClickListener(v -> {
-                    chipFilter[0] = label;
-                    for (int i = 0; i < chips.getChildCount(); i++) {
-                        View child = chips.getChildAt(i);
-                        child.setSelected(label.equals(child.getTag()));
-                    }
-                    LibraryMotion.selectChip(v);
-                    refresh.run();
-                });
-                chips.addView(chip);
-            }
-        }
-
-        search.addTextChangedListener(new android.text.TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s, int st, int c, int a) {}
-            @Override public void onTextChanged(CharSequence s, int st, int b, int c) {}
-            @Override public void afterTextChanged(android.text.Editable s) { refresh.run(); }
-        });
-        showAll.setOnCheckedChangeListener((button, checked) -> refresh.run());
-        refresh.run();
-        dialog.show();
-        // Use (almost) the whole screen: with 100+ versions the default dialog leaves the list a sliver
-        if (dialog.getWindow() != null) {
-            android.util.DisplayMetrics metrics = getResources().getDisplayMetrics();
-            int width = Math.min((int) (600 * metrics.density), metrics.widthPixels - (int) (32 * metrics.density));
-            int height = metrics.heightPixels - (int) (24 * metrics.density);
-            dialog.getWindow().setLayout(width, height);
-        }
-    }
-
-    private interface VersionClickListener {
-        void onVersionPicked(int index);
-    }
-
-    private final class VersionAdapter extends RecyclerView.Adapter<VersionAdapter.Holder> {
-        private final VersionClickListener mListener;
-        private List<Integer> mIndices = new ArrayList<>();
-
-        VersionAdapter(VersionClickListener listener) {
-            mListener = listener;
-        }
-
-        void setIndices(List<Integer> indices) {
-            mIndices = indices;
-            notifyDataSetChanged();
-        }
-
-        @NonNull
-        @Override
-        public Holder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return new Holder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_lib_version, parent, false));
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull Holder holder, int position) {
-            int index = mIndices.get(position);
-            holder.name.setText(versionTitle(index));
-            String meta = versionMeta(index);
-            String date = mDetail.versionDates != null && index < mDetail.versionDates.length
-                    ? LibraryCatalog.relativeDate(mDetail.versionDates[index]) : null;
-            if (!TextUtils.isEmpty(date)) meta = meta.isEmpty() ? date : meta + "  \u00b7  " + date;
-            holder.meta.setText(meta);
-
-            if (index == mInstalledIndex) {
-                holder.badge.setVisibility(View.VISIBLE);
-                holder.badge.setText(R.string.lib_badge_installed);
-                styleBadge(holder.badge, BADGE_GREEN);
-            } else if (index == mRecommendedIndex) {
-                holder.badge.setVisibility(View.VISIBLE);
-                holder.badge.setText(R.string.lib_badge_recommended);
-                styleBadge(holder.badge, BADGE_GREEN);
-            } else if (!isCompatible(index)) {
-                holder.badge.setVisibility(View.VISIBLE);
-                holder.badge.setText(R.string.lib_badge_incompatible);
-                styleBadge(holder.badge, BADGE_WARNING);
-            } else {
-                holder.badge.setVisibility(View.GONE);
-            }
-
-            boolean selected = index == mSelectedIndex;
-            holder.itemView.setSelected(selected);
-            holder.check.setVisibility(selected ? View.VISIBLE : View.INVISIBLE);
-            holder.itemView.setAlpha(isDownloadable(index) ? 1f : 0.5f);
-            holder.itemView.setOnClickListener(v -> {
-                if (!isDownloadable(index)) {
-                    Toast.makeText(v.getContext(), R.string.lib_restricted, Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                mListener.onVersionPicked(index);
-            });
-        }
-
-        @Override
-        public int getItemCount() {
-            return mIndices.size();
-        }
-
-        final class Holder extends RecyclerView.ViewHolder {
-            final TextView name, meta, badge;
-            final ImageView check;
-
-            Holder(@NonNull View itemView) {
-                super(itemView);
-                name = itemView.findViewById(R.id.pick_name);
-                meta = itemView.findViewById(R.id.pick_meta);
-                badge = itemView.findViewById(R.id.pick_badge);
-                check = itemView.findViewById(R.id.pick_check);
-            }
-        }
+        }).show();
     }
 }
