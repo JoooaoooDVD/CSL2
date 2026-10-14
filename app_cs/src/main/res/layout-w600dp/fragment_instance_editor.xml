@@ -740,6 +740,35 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="8dp" />
                         </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/pe_row_files"
+                            style="@style/PE.Row"
+                            android:layout_marginTop="10dp">
+
+                            <ImageView
+                                style="@style/PE.RowIcon"
+                                android:src="@drawable/ic_fm_zip" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="14dp"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    style="@style/PE.RowLabel"
+                                    android:text="@string/fm_open" />
+
+                                <TextView
+                                    style="@style/PE.RowValue"
+                                    android:text="@string/fm_open_desc" />
+                            </LinearLayout>
+
+                            <ImageView
+                                style="@style/PE.RowChevron" />
+                        </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>

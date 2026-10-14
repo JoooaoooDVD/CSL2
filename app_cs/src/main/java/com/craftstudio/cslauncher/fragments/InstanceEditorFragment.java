@@ -325,8 +325,10 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
         View rowRenderer = view.findViewById(R.id.pe_row_renderer);
         View rowShared = view.findViewById(R.id.pe_row_shared);
         View rowFiles = view.findViewById(R.id.pe_row_files);
-        rowFiles.setOnClickListener(v -> openFileManager());
-        CSAnimationEngine.attachPressFeedback(rowFiles);
+        if (rowFiles != null) {
+            rowFiles.setOnClickListener(v -> openFileManager());
+            CSAnimationEngine.attachPressFeedback(rowFiles);
+        }
 
         for (View v : new View[]{back, save, delete, cancel, controlSelect, iconGallery, iconAdd, iconBadge,
                 bannerChoose, bannerReset, bannerBadge, rowVersion, rowRuntime, rowControl, rowJvm, rowRenderer, rowShared}) {
