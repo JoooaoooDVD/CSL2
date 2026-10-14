@@ -284,6 +284,14 @@ public class LauncherPreferences {
         if (PREF_CURSEFORGE_API_KEY_OVERRIDE != null && !PREF_CURSEFORGE_API_KEY_OVERRIDE.trim().isEmpty()) {
             return PREF_CURSEFORGE_API_KEY_OVERRIDE.trim();
         }
-        return ctx.getString(R.string.curseforge_api_key);
+        String bundled = ctx.getString(R.string.curseforge_api_key);
+        if (bundled == null || bundled.trim().isEmpty() || "DUMMY".equals(bundled)) {
+            // Resource came out blank (e.g. a CI build with an empty CURSEFORGE_API_KEY env): use the launcher key
+            return BUILTIN_CURSEFORGE_API_KEY;
+        }
+        return bundled.trim();
     }
+
+    /** CS Launcher's own CurseForge key, mirrored from app_cs/build.gradle as a runtime fallback */
+    private static final String BUILTIN_CURSEFORGE_API_KEY = "$2a$10$wLCvTW6//Mw.DrPvRLkRGOuDsxaOAMgaZ28tP1ZPxc29jFHFzahEy";
 }

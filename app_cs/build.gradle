@@ -32,11 +32,12 @@ def getVersionName = {
 }
 
 def getCFApiKey = {
+    // CI exports CURSEFORGE_API_KEY from a secret that may be unset, which yields "" — treat blank as missing
     String key = System.getenv("CURSEFORGE_API_KEY")
-    if(key != null) return key
+    if(key != null && !key.trim().isEmpty()) return key.trim()
     File curseforgeKeyFile = new File("./curseforge_key.txt")
-    if(curseforgeKeyFile.canRead() && curseforgeKeyFile.isFile()) {
-        return curseforgeKeyFile.text
+    if(curseforgeKeyFile.canRead() && curseforgeKeyFile.isFile() && !curseforgeKeyFile.text.trim().isEmpty()) {
+        return curseforgeKeyFile.text.trim()
     }
     // Built-in CS Launcher CurseForge key, used when no env var / key file overrides it
     return '$2a$10$wLCvTW6//Mw.DrPvRLkRGOuDsxaOAMgaZ28tP1ZPxc29jFHFzahEy'
