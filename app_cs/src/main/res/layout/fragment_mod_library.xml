@@ -126,6 +126,172 @@
             </FrameLayout>
         </LinearLayout>
 
+        <!-- Content source switcher: Modrinth / CurseForge, the pill glides between them -->
+        <FrameLayout
+            android:id="@+id/library_source_frame"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="14dp"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/bg_lib_source_track"
+            android:padding="4dp">
+
+            <View
+                android:id="@+id/library_source_indicator"
+                android:layout_width="0dp"
+                android:layout_height="58dp"
+                android:background="@drawable/bg_lib_source_indicator_modrinth"
+                android:visibility="invisible" />
+
+            <LinearLayout
+                android:id="@+id/library_source_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:id="@+id/library_source_modrinth"
+                    android:layout_width="0dp"
+                    android:layout_height="58dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_lib_source_item"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="8dp">
+
+                    <FrameLayout
+                        android:id="@+id/library_source_modrinth_logo"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:background="@drawable/bg_lib_source_logo_modrinth"
+                        android:padding="7dp">
+
+                        <ImageView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:importantForAccessibility="no"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/ic_modrinth"
+                            android:tint="#0B2A17" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/library_source_modrinth_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:includeFontPadding="false"
+                            android:maxLines="1"
+                            android:text="@string/lib_source_modrinth"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/library_source_modrinth_desc"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:ellipsize="end"
+                            android:includeFontPadding="false"
+                            android:maxLines="1"
+                            android:text="@string/lib_source_modrinth_desc"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="11.5sp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/library_source_modrinth_check"
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_lib_check_badge"
+                        android:tint="@color/lib_src_modrinth" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/library_source_curseforge"
+                    android:layout_width="0dp"
+                    android:layout_height="58dp"
+                    android:layout_marginStart="4dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_lib_source_item"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="8dp">
+
+                    <FrameLayout
+                        android:id="@+id/library_source_curseforge_logo"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:background="@drawable/bg_lib_source_logo_curseforge"
+                        android:padding="7dp">
+
+                        <ImageView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:importantForAccessibility="no"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/ic_curseforge"
+                            android:tint="#FFFFFF" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/library_source_curseforge_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:includeFontPadding="false"
+                            android:maxLines="1"
+                            android:text="@string/lib_source_curseforge"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/library_source_curseforge_desc"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:ellipsize="end"
+                            android:includeFontPadding="false"
+                            android:maxLines="1"
+                            android:text="@string/lib_source_curseforge_desc"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="11.5sp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/library_source_curseforge_check"
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_lib_check_badge"
+                        android:tint="@color/lib_src_curseforge" />
+                </LinearLayout>
+            </LinearLayout>
+        </FrameLayout>
+
         <!-- Search, categories and sort stay pinned while the grid scrolls -->
         <LinearLayout
             android:id="@+id/library_toolbar"

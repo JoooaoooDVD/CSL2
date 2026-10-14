@@ -38,8 +38,8 @@ def getCFApiKey = {
     if(curseforgeKeyFile.canRead() && curseforgeKeyFile.isFile()) {
         return curseforgeKeyFile.text
     }
-    logger.warn('BUILD: You have no CurseForge key, the curseforge api will get disabled !')
-    return "DUMMY"
+    // Built-in CS Launcher CurseForge key, used when no env var / key file overrides it
+    return '$2a$10$wLCvTW6//Mw.DrPvRLkRGOuDsxaOAMgaZ28tP1ZPxc29jFHFzahEy'
 }
 
 configurations {

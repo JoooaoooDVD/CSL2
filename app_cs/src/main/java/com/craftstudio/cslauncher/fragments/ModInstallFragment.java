@@ -303,8 +303,28 @@ public class ModInstallFragment extends Fragment {
         TextView breadcrumb = view.findViewById(R.id.install_breadcrumb);
         breadcrumb.setText(getString(R.string.lib_breadcrumb, mLibraryTitle, mItem.title));
         TextView source = view.findViewById(R.id.install_source);
-        source.setText(mItem.apiSource == Constants.SOURCE_CURSEFORGE ? "CurseForge" : "Modrinth");
+        boolean fromCurseforge = mItem.apiSource == Constants.SOURCE_CURSEFORGE;
+        source.setText(fromCurseforge ? R.string.lib_source_curseforge : R.string.lib_source_modrinth);
         styleBadge(source, BADGE_NEUTRAL);
+        // Brand-coloured pill with the platform logo
+        int brand = androidx.core.content.ContextCompat.getColor(context,
+                fromCurseforge ? R.color.lib_src_curseforge : R.color.lib_src_modrinth);
+        android.graphics.drawable.GradientDrawable pill = new android.graphics.drawable.GradientDrawable();
+        pill.setCornerRadius(14 * getResources().getDisplayMetrics().density);
+        pill.setColor((brand & 0x00FFFFFF) | 0x2E000000);
+        pill.setStroke(Math.round(getResources().getDisplayMetrics().density), (brand & 0x00FFFFFF) | 0x99000000);
+        source.setBackground(pill);
+        source.setTextColor(brand);
+        source.setTypeface(source.getTypeface(), android.graphics.Typeface.BOLD);
+        android.graphics.drawable.Drawable logo = androidx.core.content.ContextCompat.getDrawable(context,
+                fromCurseforge ? R.drawable.ic_curseforge : R.drawable.ic_modrinth);
+        if (logo != null) {
+            logo = androidx.core.graphics.drawable.DrawableCompat.wrap(logo.mutate());
+            androidx.core.graphics.drawable.DrawableCompat.setTint(logo, brand);
+            int size = Math.round(14 * getResources().getDisplayMetrics().density);
+            logo.setBounds(0, 0, size, size);
+            source.setCompoundDrawablesRelative(logo, null, null, null);
+        }
 
         ((TextView) view.findViewById(R.id.install_title)).setText(mItem.title);
         TextView author = view.findViewById(R.id.install_author);

@@ -226,6 +226,7 @@ public class LibraryCardAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         private final TextView mTagLoader;
         private final TextView mTagVersion;
         private final MaterialButton mAction;
+        private final ImageView mSourceBadge;
         private ImageReceiver mReceiver;
         private ModItem mItem;
 
@@ -241,6 +242,7 @@ public class LibraryCardAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             mTagLoader = view.findViewById(R.id.card_tag_loader);
             mTagVersion = view.findViewById(R.id.card_tag_version);
             mAction = view.findViewById(R.id.card_action);
+            mSourceBadge = view.findViewById(R.id.card_source_badge);
             CSAnimationEngine.attachPressFeedback(mAction);
 
             view.setOnClickListener(v -> {
@@ -251,6 +253,21 @@ public class LibraryCardAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             });
         }
 
+        /** Round brand badge on the icon corner: green Modrinth wrench or orange CurseForge flame */
+        private void bindSourceBadge(Context context, int apiSource) {
+            if (mSourceBadge == null) return;
+            boolean curseforge = apiSource == Constants.SOURCE_CURSEFORGE;
+            android.graphics.drawable.Drawable bg = mSourceBadge.getBackground();
+            if (bg instanceof android.graphics.drawable.GradientDrawable) {
+                ((android.graphics.drawable.GradientDrawable) bg.mutate()).setColor(ContextCompat.getColor(context,
+                        curseforge ? R.color.lib_src_curseforge : R.color.lib_src_modrinth));
+            }
+            mSourceBadge.setImageResource(curseforge ? R.drawable.ic_curseforge : R.drawable.ic_modrinth);
+            mSourceBadge.setImageTintList(ColorStateList.valueOf(curseforge ? 0xFFFFFFFF : 0xFF0B2A17));
+            mSourceBadge.setContentDescription(context.getString(curseforge
+                    ? R.string.lib_source_badge_curseforge : R.string.lib_source_badge_modrinth));
+        }
+
         void bind(@NonNull ModItem item) {
             recycle();
             mItem = item;
@@ -258,6 +275,7 @@ public class LibraryCardAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
             mTitle.setText(item.title);
             mDescription.setText(item.description);
+            bindSourceBadge(context, item.apiSource);
 
             mIcon.setImageDrawable(null);
             mIcon.animate().cancel();

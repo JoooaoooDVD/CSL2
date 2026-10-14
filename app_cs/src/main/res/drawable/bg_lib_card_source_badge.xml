@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Small round source logo badge on the corner of a library card icon -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+    <solid android:color="#1BD96A" />
+    <stroke android:width="2dp" android:color="#1A1D24" />
+</shape>

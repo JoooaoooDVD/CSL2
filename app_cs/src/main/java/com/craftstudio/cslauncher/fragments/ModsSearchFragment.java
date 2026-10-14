@@ -132,6 +132,9 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
     private ImageView mStateIcon;
     private TextView mStateText;
     private View mTabIndicator, mTypeTabsFrame, mToolbar, mSearchBox, mSortChevron, mImportButton;
+    // Modrinth / CurseForge source switcher
+    private View mSourceFrame, mSourceIndicator, mSourceModrinth, mSourceCurseforge;
+    private static final String PREF_LIBRARY_SOURCE = "libraryContentSource";
 
     private final ActivityResultLauncher<String> mImportLauncher = registerForActivityResult(
             new ActivityResultContracts.GetContent(), this::importLocalModpack);
@@ -205,6 +208,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         });
 
         setupTabs(view);
+        setupSource(view);
         setupSearch(view);
         setupSort(view);
         mContextPill.setOnClickListener(v -> displayFilterDialog());
@@ -214,10 +218,13 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         if (!mInitialized) {
             mInitialized = true;
             applyPresetArgs();
+            mFilters.engine = restoreSource();
             applyContentType(mFilters.contentType, false);
+            applySource(mFilters.engine, false);
             startSearch();
         } else {
             applyContentType(mFilters.contentType, false);
+            applySource(mFilters.engine, false);
             mSearchInput.setText(mFilters.name);
             if (mItems.isEmpty()) {
                 startSearch();
@@ -234,6 +241,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         ProgressKeeper.addTaskCountListener(mTaskCountListener, false);
 
         LibraryMotion.playEntrance(mTitle, mSubtitle, isModpackMode() ? mImportButton : mTypeTabsFrame, mToolbar, mChips);
+        Motion.riseIn(mSourceFrame, 90L, 10f);
     }
 
     @Override
@@ -241,6 +249,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         super.onDestroyView();
         ProgressKeeper.removeTaskCountListener(mTaskCountListener);
         mTitle = mSubtitle = mContextPill = mTabMods = mTabResourcePacks = mTabShaders = mStateText = null;
+        mSourceFrame = mSourceIndicator = mSourceModrinth = mSourceCurseforge = null;
         mSearchInput = null;
         mChips = null;
         mProgress = null;
@@ -314,6 +323,101 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         for (TextView tab : new TextView[]{mTabMods, mTabResourcePacks, mTabShaders}) {
             tab.setOnClickListener(listener);
             CSAnimationEngine.attachPressFeedback(tab);
+        }
+    }
+
+    // ─── Content source (Modrinth / CurseForge) ──────────────────────────────
+
+    private void setupSource(View view) {
+        mSourceFrame = view.findViewById(R.id.library_source_frame);
+        mSourceIndicator = view.findViewById(R.id.library_source_indicator);
+        mSourceModrinth = view.findViewById(R.id.library_source_modrinth);
+        mSourceCurseforge = view.findViewById(R.id.library_source_curseforge);
+        if (mSourceFrame == null) return;
+
+        boolean curseforgeAvailable = mCurseforgeKey != null;
+        mSourceCurseforge.setVisibility(curseforgeAvailable ? View.VISIBLE : View.GONE);
+
+        View.OnClickListener listener = v -> {
+            int engine = v == mSourceCurseforge ? Constants.ENGINE_CURSEFORGE : Constants.ENGINE_MODRINTH;
+            if (engine == mFilters.engine) {
+                Motion.bounce(v.findViewById(engine == Constants.ENGINE_CURSEFORGE
+                        ? R.id.library_source_curseforge_logo : R.id.library_source_modrinth_logo));
+                return;
+            }
+            mFilters.engine = engine;
+            LauncherPreferences.DEFAULT_PREF.edit().putInt(PREF_LIBRARY_SOURCE, engine).apply();
+            mItems.clear();
+            applySource(engine, true);
+            startSearch();
+            Toast.makeText(requireContext(), engine == Constants.ENGINE_CURSEFORGE
+                    ? R.string.lib_source_switched_curseforge : R.string.lib_source_switched_modrinth,
+                    Toast.LENGTH_SHORT).show();
+        };
+        mSourceModrinth.setOnClickListener(listener);
+        mSourceCurseforge.setOnClickListener(listener);
+        CSAnimationEngine.attachPressFeedback(mSourceModrinth);
+        CSAnimationEngine.attachPressFeedback(mSourceCurseforge);
+    }
+
+    /** Last source the user picked, falling back to Modrinth when CurseForge is unavailable */
+    private int restoreSource() {
+        if (mCurseforgeKey == null) return Constants.ENGINE_MODRINTH;
+        int saved = LauncherPreferences.DEFAULT_PREF.getInt(PREF_LIBRARY_SOURCE, Constants.ENGINE_MODRINTH);
+        return saved == Constants.ENGINE_CURSEFORGE ? Constants.ENGINE_CURSEFORGE : Constants.ENGINE_MODRINTH;
+    }
+
+    /** Glides the brand pill under the chosen source and recolours both options */
+    private void applySource(int engine, boolean userAction) {
+        if (mSourceFrame == null) return;
+        if (engine == Constants.ENGINE_BOTH) engine = Constants.ENGINE_MODRINTH;
+        if (mCurseforgeKey == null) engine = Constants.ENGINE_MODRINTH;
+        mFilters.engine = engine;
+        boolean curseforge = engine == Constants.ENGINE_CURSEFORGE;
+        View selected = curseforge ? mSourceCurseforge : mSourceModrinth;
+
+        mSourceIndicator.setBackgroundResource(curseforge
+                ? R.drawable.bg_lib_source_indicator_curseforge : R.drawable.bg_lib_source_indicator_modrinth);
+        LibraryMotion.moveIndicator(mSourceIndicator, selected, userAction);
+
+        styleSourceOption(mSourceModrinth, R.id.library_source_modrinth_title, R.id.library_source_modrinth_desc,
+                R.id.library_source_modrinth_check, R.id.library_source_modrinth_logo,
+                R.color.lib_src_modrinth, !curseforge, userAction);
+        styleSourceOption(mSourceCurseforge, R.id.library_source_curseforge_title, R.id.library_source_curseforge_desc,
+                R.id.library_source_curseforge_check, R.id.library_source_curseforge_logo,
+                R.color.lib_src_curseforge, curseforge, userAction);
+        if (userAction && mGrid != null) mGrid.scrollToPosition(0);
+    }
+
+    private void styleSourceOption(View option, int titleId, int descId, int checkId, int logoId,
+                                   int brandColorRes, boolean selected, boolean animate) {
+        if (option == null) return;
+        android.content.Context context = option.getContext();
+        TextView title = option.findViewById(titleId);
+        TextView desc = option.findViewById(descId);
+        View check = option.findViewById(checkId);
+        View logo = option.findViewById(logoId);
+        int brand = androidx.core.content.ContextCompat.getColor(context, brandColorRes);
+        int onSurface = ThemeColors.get(context, com.google.android.material.R.attr.colorOnSurface);
+        int dim = ThemeColors.get(context, com.google.android.material.R.attr.colorOnSurfaceVariant);
+        LibraryMotion.tintTab(title, selected ? onSurface : dim, animate);
+        LibraryMotion.tintTab(desc, selected ? brand : dim, animate);
+
+        float logoScale = selected ? 1f : 0.86f;
+        float logoAlpha = selected ? 1f : 0.55f;
+        float checkAlpha = selected ? 1f : 0f;
+        float checkScale = selected ? 1f : 0.4f;
+        if (animate && Motion.buttons(option)) {
+            logo.animate().cancel();
+            logo.animate().scaleX(logoScale).scaleY(logoScale).alpha(logoAlpha)
+                    .setDuration(Motion.MEDIUM).setInterpolator(selected ? Motion.SPRING : Motion.STANDARD).start();
+            check.animate().cancel();
+            check.animate().alpha(checkAlpha).scaleX(checkScale).scaleY(checkScale)
+                    .setDuration(Motion.MEDIUM).setInterpolator(selected ? Motion.SPRING_STRONG : Motion.EXIT).start();
+            if (selected) Motion.pulse(logo);
+        } else {
+            logo.setScaleX(logoScale); logo.setScaleY(logoScale); logo.setAlpha(logoAlpha);
+            check.setAlpha(checkAlpha); check.setScaleX(checkScale); check.setScaleY(checkScale);
         }
     }
 
@@ -823,13 +927,12 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
             boolean curseforgeDisabled = mCurseforgeKey == null;
             final int[] engineValues = curseforgeDisabled
                     ? new int[]{Constants.ENGINE_MODRINTH}
-                    : new int[]{Constants.ENGINE_MODRINTH, Constants.ENGINE_CURSEFORGE, Constants.ENGINE_BOTH};
+                    : new int[]{Constants.ENGINE_MODRINTH, Constants.ENGINE_CURSEFORGE};
             if (engineSpinner != null) {
                 String[] engineLabels = curseforgeDisabled
                         ? new String[]{getString(R.string.search_mod_engine_modrinth)}
                         : new String[]{getString(R.string.search_mod_engine_modrinth),
-                        getString(R.string.search_mod_engine_curseforge),
-                        getString(R.string.search_mod_engine_both)};
+                        getString(R.string.search_mod_engine_curseforge)};
                 android.widget.ArrayAdapter<String> engineAdapter = new android.widget.ArrayAdapter<>(
                         requireContext(), R.layout.spinner_item_m3, engineLabels);
                 engineAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item_m3);
@@ -866,7 +969,13 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
             applyButton.setOnClickListener(v -> {
                 if (engineSpinner != null) {
                     int position = engineSpinner.getSelectedItemPosition();
-                    if (position >= 0 && position < engineValues.length) mFilters.engine = engineValues[position];
+                    if (position >= 0 && position < engineValues.length) {
+                        int picked = engineValues[position];
+                        if (picked != mFilters.engine) {
+                            LauncherPreferences.DEFAULT_PREF.edit().putInt(PREF_LIBRARY_SOURCE, picked).apply();
+                        }
+                        applySource(picked, true);
+                    }
                 }
                 if (showLoader && loaderSpinner != null) {
                     int position = loaderSpinner.getSelectedItemPosition();

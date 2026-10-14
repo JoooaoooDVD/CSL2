@@ -30,4 +30,11 @@
     <color name="lib_tag_amber_text">#5C4209</color>
     <color name="lib_badge_green_bg">#DDF5E3</color>
     <color name="lib_badge_green_text">#156B2E</color>
+    <!-- Content source brand colours -->
+    <color name="lib_src_modrinth">#1BD96A</color>
+    <color name="lib_src_modrinth_dim">#1F3A2C</color>
+    <color name="lib_src_curseforge">#F16436</color>
+    <color name="lib_src_curseforge_dim">#3F2A21</color>
+    <color name="lib_src_idle_bg">#1C1F26</color>
+    <color name="lib_src_idle_stroke">#2E3440</color>
 </resources>

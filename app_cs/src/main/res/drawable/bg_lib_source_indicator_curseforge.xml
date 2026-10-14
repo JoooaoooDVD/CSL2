@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Gliding pill behind the selected source, CurseForge flavour -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient android:angle="0" android:startColor="#5A3424" android:endColor="#48291C" />
+            <corners android:radius="13dp" />
+            <stroke android:width="1.5dp" android:color="@color/lib_src_curseforge" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <gradient android:angle="90" android:startColor="#00FFFFFF" android:endColor="#1AFFFFFF" />
+            <corners android:radius="13dp" />
+        </shape>
+    </item>
+</layer-list>

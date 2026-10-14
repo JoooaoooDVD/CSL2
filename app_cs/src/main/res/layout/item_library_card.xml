@@ -32,6 +32,20 @@
                 android:scaleType="fitCenter" />
         </FrameLayout>
 
+        <!-- Overlaps the icon box corner: which platform this card came from -->
+        <ImageView
+            android:id="@+id/card_source_badge"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_marginStart="-12dp"
+            android:layout_marginTop="46dp"
+            android:background="@drawable/bg_lib_card_source_badge"
+            android:elevation="2dp"
+            android:importantForAccessibility="no"
+            android:padding="4dp"
+            android:src="@drawable/ic_modrinth"
+            android:tint="#0B2A17" />
+
         <View
             android:layout_width="0dp"
             android:layout_height="1dp"

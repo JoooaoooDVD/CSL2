@@ -1037,4 +1037,13 @@
     <string name="lib_install_failed">Install failed: %1$s</string>
     <string name="lib_update_done">%1$s updated</string>
     <string name="lib_checking">Checking…</string>
+    <!-- Library content sources -->
+    <string name="lib_source_modrinth">Modrinth</string>
+    <string name="lib_source_curseforge">CurseForge</string>
+    <string name="lib_source_modrinth_desc">Open community platform</string>
+    <string name="lib_source_curseforge_desc">Largest mod library</string>
+    <string name="lib_source_switched_modrinth">Browsing Modrinth</string>
+    <string name="lib_source_switched_curseforge">Browsing CurseForge</string>
+    <string name="lib_source_badge_modrinth">From Modrinth</string>
+    <string name="lib_source_badge_curseforge">From CurseForge</string>
 </resources>
