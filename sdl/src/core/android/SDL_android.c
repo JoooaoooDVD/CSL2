@@ -181,6 +181,9 @@ static SDL_AtomicInt Android_WindowAvailable;
 JNIEXPORT jstring JNICALL SDL_JAVA_INTERFACE(nativeGetVersion)(
     JNIEnv *env, jclass cls);
 
+JNIEXPORT jlong JNICALL SDL_JAVA_INTERFACE(nativeGetFrameCount)(
+    JNIEnv *env, jclass cls);
+
 JNIEXPORT void JNICALL SDL_JAVA_INTERFACE(nativeSetupJNI)(
     JNIEnv *env, jclass cls);
 
@@ -360,6 +363,7 @@ JNIEXPORT void JNICALL SDL_JAVA_INTERFACE(onNativeFileDialog)(
 
 static JNINativeMethod SDLActivity_tab[] = {
     { "nativeGetVersion", "()Ljava/lang/String;", SDL_JAVA_INTERFACE(nativeGetVersion) },
+    { "nativeGetFrameCount", "()J", SDL_JAVA_INTERFACE(nativeGetFrameCount) },
     { "nativeSetupJNI", "()V", SDL_JAVA_INTERFACE(nativeSetupJNI) },
     { "nativeGetCompiledSubsystems", "()I", SDL_JAVA_INTERFACE(nativeGetCompiledSubsystems) },
     { "nativeIsHIDAPIEnabled", "()Z", SDL_JAVA_INTERFACE(nativeIsHIDAPIEnabled) },
@@ -598,6 +602,20 @@ void checkJNIReady(void)
 }
 
 // Get SDL version -- called before SDL_main() to verify JNI bindings
+// Presented frame counter, fed by Android_GLES_SwapWindow, read by the launcher FPS overlay
+static SDL_AtomicInt Android_PresentedFrames;
+
+void Android_CountPresentedFrame(void)
+{
+    SDL_AddAtomicInt(&Android_PresentedFrames, 1);
+}
+
+JNIEXPORT jlong JNICALL SDL_JAVA_INTERFACE(nativeGetFrameCount)(
+    JNIEnv *env, jclass cls)
+{
+    return (jlong) SDL_GetAtomicInt(&Android_PresentedFrames);
+}
+
 JNIEXPORT jstring JNICALL SDL_JAVA_INTERFACE(nativeGetVersion)(JNIEnv *env, jclass cls)
 {
     char version[128];

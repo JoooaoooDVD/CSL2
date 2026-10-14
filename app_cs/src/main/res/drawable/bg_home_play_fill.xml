@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Progress fill that grows left-to-right behind the downloading label -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient android:angle="0" android:startColor="#334F8CFF" android:endColor="#8C5B9BFF" />
+    <corners android:radius="16dp" />
+</shape>

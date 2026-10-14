@@ -15,5 +15,7 @@ EGLSurface _glfwManageEglSurfaceAndroid(_GLFWwindow*);
 GLFWbool _glfwSwapBuffersAttentionEglAndroid(_GLFWwindow*);
 
 void* _glfwLoadEglAndroid(void);
+// Called once per presented frame, feeds the in-launcher FPS counter
+void _glfwCountFrameAndroid(void);
 
 #endif //DNBOOTSTRAP_ANDROID_EGL_CONTEXT_HOOK_H

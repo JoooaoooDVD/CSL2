@@ -63,7 +63,10 @@ public class EditControlSideDialog extends SideDialogView {
     };
     private EditText mNameEditText, mWidthEditText, mHeightEditText;
     private MaterialSwitch mToggleSwitch, mPassthroughSwitch, mSwipeableSwitch, mForwardLockSwitch, mAbsoluteTrackingSwitch;
-    private Spinner mOrientationSpinner;
+    private Spinner mOrientationSpinner, mFpsStyleSpinner;
+    private TextView mFpsStyleTextView, mRemoveBackgroundBitmap;
+    private View mBitmapRow;
+    private android.widget.ImageView mBitmapPreview;
     private final TextView[] mKeycodeTextviews = new TextView[4];
     private SeekBar mStrokeWidthSeekbar, mCornerRadiusSeekbar, mAlphaSeekbar;
     private TextView mStrokePercentTextView, mCornerRadiusPercentTextView, mAlphaPercentTextView;
@@ -163,6 +166,8 @@ public class EditControlSideDialog extends SideDialogView {
         mOrientationSpinner.setVisibility(GONE);
         mForwardLockSwitch.setVisibility(GONE);
         mAbsoluteTrackingSwitch.setVisibility(GONE);
+        mFpsStyleTextView.setVisibility(GONE);
+        mFpsStyleSpinner.setVisibility(GONE);
 
         mNameEditText.setText(data.name);
         mWidthEditText.setText(String.valueOf(data.getWidth()));
@@ -193,12 +198,24 @@ public class EditControlSideDialog extends SideDialogView {
 
         setHasBitmap(Tools.isValidString(data.bitmapTag));
 
+        if (data.isFpsCounter()) {
+            mFpsStyleTextView.setVisibility(VISIBLE);
+            mFpsStyleSpinner.setVisibility(VISIBLE);
+            mFpsStyleSpinner.setSelection(Math.max(0, Math.min(ControlData.FPS_STYLE_COUNT - 1, data.fpsStyle)));
+            // A read-out has no key behaviour
+            mToggleSwitch.setVisibility(GONE);
+            mPassthroughSwitch.setVisibility(GONE);
+            mSwipeableSwitch.setVisibility(GONE);
+        }
+
         Context viewContext = mCurrentlyEditedButton.getControlView().getContext();
 
         // Don't allow editing the bitmap in-game (i don't want to bother with implementing that,
         // and it has potential to kill the game during icon selection)
-        if(!(viewContext instanceof CustomControlsActivity))
+        if(!(viewContext instanceof CustomControlsActivity)) {
             mSelectBackgroundBitmap.setVisibility(GONE);
+            mBitmapRow.setVisibility(GONE);
+        }
     }
 
     /**
@@ -295,6 +312,17 @@ public class EditControlSideDialog extends SideDialogView {
         adapter.setDropDownViewResource(android.R.layout.simple_list_item_single_choice);
 
         mOrientationSpinner.setAdapter(adapter);
+
+        // FPS counter style spinner
+        ArrayAdapter<String> fpsAdapter = new ArrayAdapter<>(mDialogContent.getContext(), android.R.layout.simple_spinner_item);
+        Context ctx = mDialogContent.getContext();
+        fpsAdapter.add(ctx.getString(R.string.customctrl_fps_style_classic));
+        fpsAdapter.add(ctx.getString(R.string.customctrl_fps_style_stacked));
+        fpsAdapter.add(ctx.getString(R.string.customctrl_fps_style_minimal));
+        fpsAdapter.add(ctx.getString(R.string.customctrl_fps_style_detailed));
+        fpsAdapter.add(ctx.getString(R.string.customctrl_fps_style_meter));
+        fpsAdapter.setDropDownViewResource(android.R.layout.simple_list_item_single_choice);
+        mFpsStyleSpinner.setAdapter(fpsAdapter);
     }
 
     private void setDefaultVisibilitySetting() {
@@ -308,20 +336,23 @@ public class EditControlSideDialog extends SideDialogView {
     }
 
     private void setHasBitmap(boolean hasBitmap) {
-        int visibility = (!hasBitmap) ? VISIBLE : GONE;
+        // Image buttons now honour the stroke and the corner radius, so every control stays
+        // available. Only the preview/remove row and the colour warning depend on the image.
         int visibilityOpposite = hasBitmap ? VISIBLE : GONE;
-
-        // Disable all settings not available in bitmap background mode
-        mSelectStrokeColor.setVisibility(visibility);
-        mStrokePercentTextView.setVisibility(visibility);
-        mStrokeWidthSeekbar.setVisibility(visibility);
-        mCornerRadiusSeekbar.setVisibility(visibility);
-        mCornerRadiusPercentTextView.setVisibility(visibility);
-        mCornerRadiusTextView.setVisibility(visibility);
-        mStrokeWidthTextView.setVisibility(visibility);
-
-        // Show the warning that will notify the user that color selection will reset the bitmap
         mColorSelectWarningTextView.setVisibility(visibilityOpposite);
+
+        Context viewContext = mCurrentlyEditedButton == null ? null : mCurrentlyEditedButton.getControlView().getContext();
+        boolean inEditor = viewContext instanceof CustomControlsActivity;
+        mBitmapRow.setVisibility(hasBitmap && inEditor ? VISIBLE : GONE);
+        if (hasBitmap && inEditor) {
+            try {
+                Bitmap preview = mCurrentlyEditedButton.getControlLayoutParent().getBitmaps()
+                        .getBitmap(mCurrentlyEditedButton.getProperties().bitmapTag);
+                mBitmapPreview.setImageBitmap(preview);
+            } catch (Exception e) {
+                mBitmapPreview.setImageBitmap(null);
+            }
+        }
     }
 
     private void bindLayout() {
@@ -342,6 +373,11 @@ public class EditControlSideDialog extends SideDialogView {
         mKeycodeTextviews[2] = mDialogContent.findViewById(R.id.mapping_3_textview);
         mKeycodeTextviews[3] = mDialogContent.findViewById(R.id.mapping_4_textview);
         mOrientationSpinner = mDialogContent.findViewById(R.id.editOrientation_spinner);
+        mFpsStyleSpinner = mDialogContent.findViewById(R.id.editFpsStyle_spinner);
+        mFpsStyleTextView = mDialogContent.findViewById(R.id.editFpsStyle_textView);
+        mBitmapRow = mDialogContent.findViewById(R.id.backgroundBitmap_row);
+        mBitmapPreview = mDialogContent.findViewById(R.id.backgroundBitmap_preview);
+        mRemoveBackgroundBitmap = mDialogContent.findViewById(R.id.removeBackgroundBitmap_textView);
         mStrokeWidthSeekbar = mDialogContent.findViewById(R.id.editStrokeWidth_seekbar);
         mCornerRadiusSeekbar = mDialogContent.findViewById(R.id.editCornerRadius_seekbar);
         mAlphaSeekbar = mDialogContent.findViewById(R.id.editButtonOpacity_seekbar);
@@ -494,6 +530,20 @@ public class EditControlSideDialog extends SideDialogView {
                 ((ControlDrawer) mCurrentlyEditedButton).drawerData.orientation = ControlDrawerData.intToOrientation(mOrientationSpinner.getSelectedItemPosition());
                 ((ControlDrawer) mCurrentlyEditedButton).syncButtons();
             }
+        });
+
+        mFpsStyleSpinner.setOnItemSelectedListener((SimpleItemSelectedListener) (parent, view, position, id) -> {
+            if (mCurrentlyEditedButton == null) return;
+            ControlData properties = mCurrentlyEditedButton.getProperties();
+            if (properties.fpsStyle == position) return;
+            properties.fpsStyle = position;
+            mCurrentlyEditedButton.getControlView().invalidate();
+        });
+
+        mRemoveBackgroundBitmap.setOnClickListener(v -> {
+            if (mCurrentlyEditedButton == null) return;
+            removeBitmap(mCurrentlyEditedButton);
+            mCurrentlyEditedButton.setBackground();
         });
 
         mDisplayInGameCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> {

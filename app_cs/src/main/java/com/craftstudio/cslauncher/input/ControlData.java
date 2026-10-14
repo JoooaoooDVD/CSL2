@@ -31,6 +31,15 @@ public class ControlData {
     public static final int SPECIALBTN_SCROLLDOWN = -8;
     public static final int SPECIALBTN_MENU = -9;
     public static final int SPECIALBTN_KEYBOARDPAN = -10;
+    public static final int SPECIALBTN_FPS = -11;
+
+    /** Visual styles for the FPS counter control, see {@link #fpsStyle} */
+    public static final int FPS_STYLE_CLASSIC = 0;   // "60 FPS"
+    public static final int FPS_STYLE_STACKED = 1;   // big number, small label under it
+    public static final int FPS_STYLE_MINIMAL = 2;   // number only
+    public static final int FPS_STYLE_DETAILED = 3;  // number + min/max line
+    public static final int FPS_STYLE_METER = 4;     // number + performance bar
+    public static final int FPS_STYLE_COUNT = 5;
 
     private static ControlData[] SPECIAL_BUTTONS;
     private static List<String> SPECIAL_BUTTON_NAME_ARRAY;
@@ -64,6 +73,8 @@ public class ControlData {
     public boolean displayInGame;
     public boolean displayInMenu;
     public String bitmapTag;
+    /** Only meaningful when {@link #isFpsCounter()}: one of the FPS_STYLE_* constants */
+    public int fpsStyle;
     private float width;         //Dp instead of Px now
     private float height;        //Dp instead of Px now
 
@@ -152,6 +163,27 @@ public class ControlData {
                 controlData.passThruEnabled,
                 controlData.bitmapTag
         );
+        this.fpsStyle = controlData.fpsStyle;
+    }
+
+    /** True when this control is the live FPS counter rather than a key button */
+    public boolean isFpsCounter() {
+        if (keycodes == null) return false;
+        for (int keycode : keycodes) {
+            if (keycode == SPECIALBTN_FPS) return true;
+        }
+        return false;
+    }
+
+    /** Ready-to-place FPS counter with sensible defaults */
+    public static ControlData createFpsCounter() {
+        ControlData data = new ControlData("FPS", new int[]{SPECIALBTN_FPS}, "0.5 * ${screen_width} - 0.5 * ${width}", "${margin}", 90, 40, false);
+        data.bgColor = 0x66000000;
+        data.strokeColor = 0x40FFFFFF;
+        data.strokeWidth = 1;
+        data.cornerRadius = 35;
+        data.fpsStyle = FPS_STYLE_CLASSIC;
+        return data;
     }
 
     public static ControlData[] getSpecialButtons() {
@@ -167,7 +199,8 @@ public class ControlData {
                     new ControlData("SCROLLUP", new int[]{SPECIALBTN_SCROLLUP}, "${margin}", "${margin}"),
                     new ControlData("SCROLLDOWN", new int[]{SPECIALBTN_SCROLLDOWN}, "${margin}", "${margin}"),
                     new ControlData("MENU", new int[]{SPECIALBTN_MENU}, "${margin}", "${margin}"),
-                    new ControlData("KeyboardPan", new int[]{SPECIALBTN_KEYBOARDPAN}, "${margin}", "${margin}")
+                    new ControlData("KeyboardPan", new int[]{SPECIALBTN_KEYBOARDPAN}, "${margin}", "${margin}"),
+                    new ControlData("FPS", new int[]{SPECIALBTN_FPS}, "${margin}", "${margin}", false)
             };
         }
 

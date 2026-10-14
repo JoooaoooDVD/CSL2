@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/file_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="4dp"
+    android:background="@drawable/bg_lib_row_selectable"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:padding="10dp">
+
+    <FrameLayout
+        android:layout_width="56dp"
+        android:layout_height="56dp">
+
+        <ImageView
+            android:id="@+id/file_icon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_lib_icon_box"
+            android:contentDescription="@null"
+            android:padding="12dp"
+            android:scaleType="centerCrop"
+            app:tint="?attr/colorOnSurfaceVariant"
+            tools:src="@drawable/ic_pe_folder" />
+
+        <ImageView
+            android:id="@+id/file_check"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_fm_check"
+            android:contentDescription="@null"
+            android:padding="16dp"
+            android:src="@drawable/ic_lib_check"
+            android:visibility="gone"
+            app:tint="#FFFFFFFF" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/file_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:ellipsize="middle"
+        android:gravity="center"
+        android:maxLines="2"
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        tools:text="resourcepacks" />
+
+    <TextView
+        android:id="@+id/file_detail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:gravity="center"
+        android:singleLine="true"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:textSize="10.5sp"
+        tools:text="4 items" />
+
+    <ImageButton
+        android:id="@+id/file_more"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@null"
+        android:contentDescription="@null"
+        android:visibility="gone" />
+</LinearLayout>

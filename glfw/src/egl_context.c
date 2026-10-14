@@ -322,6 +322,9 @@ static void swapBuffersEGL(_GLFWwindow* window)
 #endif
 
     eglSwapBuffers(_glfw.egl.display, window->context.egl.surface);
+#if defined(_GLFW_ANDROID)
+    _glfwCountFrameAndroid();
+#endif
 }
 
 static void swapIntervalEGL(int interval)

@@ -85,6 +85,10 @@ public class CustomControlsActivity extends BaseActivity implements EditorExitab
 			mControlLayout.addJoystickButton(new ControlJoystickData());
 			showHint(R.string.ce_added, 3500);
 		});
+		bindAction(R.id.ce_add_fps, () -> {
+			mControlLayout.addControlButton(ControlData.createFpsCounter());
+			showHint(R.string.ce_added, 3500);
+		});
 		bindAction(R.id.ce_load, () -> mControlLayout.openLoadDialog());
 		bindAction(R.id.ce_save, () -> mControlLayout.openSaveDialog(this));
 		bindAction(R.id.ce_default, () -> mControlLayout.openSetDefaultDialog());

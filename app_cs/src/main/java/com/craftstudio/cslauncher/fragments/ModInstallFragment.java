@@ -359,6 +359,7 @@ public class ModInstallFragment extends Fragment {
         switch (mType) {
             case RESOURCE_PACK: return R.drawable.ic_lib_image;
             case SHADER_PACK: return R.drawable.ic_lib_sun;
+            case DATAPACK: return R.drawable.ic_lib_world;
             case MODPACK: return R.drawable.ic_lib_world;
             default: return R.drawable.ic_lib_cube;
         }
@@ -809,7 +810,7 @@ public class ModInstallFragment extends Fragment {
     private String versionMeta(int index) {
         List<String> parts = new ArrayList<>();
         String[] loaders = loadersOf(index);
-        if (loaders != null && mType != ContentType.RESOURCE_PACK) {
+        if (loaders != null && mType != ContentType.RESOURCE_PACK && mType != ContentType.DATAPACK) {
             List<String> labels = new ArrayList<>();
             for (String loader : loaders) {
                 if (loader == null || "minecraft".equalsIgnoreCase(loader)) continue;
@@ -1236,6 +1237,7 @@ public class ModInstallFragment extends Fragment {
                 case RESOURCE_PACK: section = "texture-packs"; break;
                 case SHADER_PACK: section = "shaders"; break;
                 case MODPACK: section = "modpacks"; break;
+                case DATAPACK: section = "data-packs"; break;
                 default: section = "mc-mods"; break;
             }
             url = "https://www.curseforge.com/minecraft/" + section + "/"

@@ -324,6 +324,9 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
         View rowJvm = view.findViewById(R.id.pe_row_jvm);
         View rowRenderer = view.findViewById(R.id.pe_row_renderer);
         View rowShared = view.findViewById(R.id.pe_row_shared);
+        View rowFiles = view.findViewById(R.id.pe_row_files);
+        rowFiles.setOnClickListener(v -> openFileManager());
+        CSAnimationEngine.attachPressFeedback(rowFiles);
 
         for (View v : new View[]{back, save, delete, cancel, controlSelect, iconGallery, iconAdd, iconBadge,
                 bannerChoose, bannerReset, bannerBadge, rowVersion, rowRuntime, rowControl, rowJvm, rowRenderer, rowShared}) {
@@ -801,5 +804,20 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
     @Override
     public void onFailed(Exception exception) {
         Tools.showErrorRemote(exception);
+    }
+
+    /** Opens the sandboxed file manager rooted at this profile's game directory */
+    private void openFileManager() {
+        if (mInstance == null) return;
+        java.io.File root;
+        try {
+            root = mInstance.getGameDirectory();
+        } catch (Exception e) {
+            root = new java.io.File(Tools.DIR_GAME_NEW);
+        }
+        String title = mName != null && mName.getText() != null && mName.getText().length() > 0
+                ? mName.getText().toString() : (mInstance.name != null ? mInstance.name : "Profile");
+        Tools.swapFragment(requireActivity(), FileManagerFragment.class, FileManagerFragment.TAG,
+                FileManagerFragment.args(root, title, null));
     }
 }

@@ -124,8 +124,26 @@ public final class InstalledContentIndex {
 
     // ─── Building ───────────────────────────────────────────────────────────
 
+    /** World whose datapacks folder the DATAPACK content type currently targets */
+    @Nullable
+    private static volatile File sDatapackWorld;
+
+    /** Points every DATAPACK install/index at the given world (null clears it) */
+    public static void setDatapackWorld(@Nullable File worldDir) {
+        sDatapackWorld = worldDir;
+    }
+
+    @Nullable
+    public static File getDatapackWorld() {
+        return sDatapackWorld;
+    }
+
     @NonNull
     public static File contentDir(@NonNull ContentType type) {
+        if (type == ContentType.DATAPACK) {
+            File world = sDatapackWorld;
+            if (world != null) return new File(world, "datapacks");
+        }
         try {
             Instance instance = Instances.loadInstance(Instances.getSelectedInstanceKey());
             if (instance != null) return new File(instance.getGameDirectory(), type.folderName);
@@ -226,6 +244,9 @@ public final class InstalledContentIndex {
                     break;
                 case RESOURCE_PACK:
                     loaders.add("minecraft");
+                    break;
+                case DATAPACK:
+                    loaders.add("datapack");
                     break;
                 case SHADER_PACK:
                     loaders.add("iris");

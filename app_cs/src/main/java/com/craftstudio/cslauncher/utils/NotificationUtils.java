@@ -35,6 +35,7 @@ public class NotificationUtils {
         if(contentText != -1) notificationBuilder.setContentText(context.getString(contentText));
         if(actionIntent != null) notificationBuilder.setContentIntent(pendingIntent);
         notificationBuilder.setSmallIcon(R.drawable.notif_icon);
+        notificationBuilder.setLargeIcon(android.graphics.BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_cs_full));
 
         notificationManager.notify(notificationId, notificationBuilder.build());
     }

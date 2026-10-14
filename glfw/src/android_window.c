@@ -30,6 +30,7 @@
 #include "android_input_queue.h"
 
 #include <stdlib.h>
+#include <stdint.h>
 
 #include <poll.h>
 #include <stdio.h>
@@ -1401,6 +1402,18 @@ Java_com_craftstudio_glfw_GLFW_nativeSurfaceCreated(JNIEnv *env, jclass clazz,
         pthread_cond_broadcast(&nw_vulkan_cond);
         pthread_mutex_unlock(&nw_vulkan_mutex);
     }
+}
+
+// Presented frame counter, read by the launcher's FPS overlay control
+static volatile uint64_t presentedFrames = 0;
+
+void _glfwCountFrameAndroid(void) {
+    __atomic_fetch_add(&presentedFrames, 1, __ATOMIC_RELAXED);
+}
+
+JNIEXPORT jlong JNICALL
+Java_com_craftstudio_glfw_GLFW_nativeGetFrameCount(JNIEnv *env, jclass clazz) {
+    return (jlong) __atomic_load_n(&presentedFrames, __ATOMIC_RELAXED);
 }
 
 JNIEXPORT void JNICALL

@@ -114,20 +114,23 @@ public interface ControlInterface extends View.OnLongClickListener, PlatformGrab
     default void setBackground() {
         Drawable drawable = getControlView().getBackground();
         String bitmapTag = getProperties().bitmapTag;
+        float strokePx = Tools.dpToPx(getProperties().strokeWidth * (getControlLayoutParent().getLayoutScale()/100f));
+        float radiusPx = computeCornerRadius(getProperties().cornerRadius);
         if(Tools.isValidString(bitmapTag)) {
             LayoutBitmaps storage = getControlLayoutParent().getBitmaps();
             Bitmap bgBitmap = storage.getBitmap(getProperties().bitmapTag);
-            if(drawable instanceof BitmapDrawable && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                ((BitmapDrawable)drawable).setBitmap(bgBitmap);
-            }else {
-                drawable = new BitmapDrawable(getControlView().getResources(), bgBitmap);
+            if(drawable instanceof ControlImageDrawable) {
+                ((ControlImageDrawable) drawable).update(bgBitmap, radiusPx, strokePx, getProperties().strokeColor);
+                getControlView().invalidate();
+                return;
             }
+            drawable = new ControlImageDrawable(bgBitmap, radiusPx, strokePx, getProperties().strokeColor);
         }else {
             GradientDrawable gd = drawable instanceof GradientDrawable ?
                     (GradientDrawable) drawable : new GradientDrawable();
             gd.setColor(getProperties().bgColor);
-            gd.setStroke((int) Tools.dpToPx(getProperties().strokeWidth * (getControlLayoutParent().getLayoutScale()/100f)), getProperties().strokeColor);
-            gd.setCornerRadius(computeCornerRadius(getProperties().cornerRadius));
+            gd.setStroke((int) strokePx, getProperties().strokeColor);
+            gd.setCornerRadius(radiusPx);
             drawable = gd;
         }
 

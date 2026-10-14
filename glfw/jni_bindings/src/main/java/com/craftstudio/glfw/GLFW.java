@@ -119,6 +119,8 @@ public class GLFW {
     public static native void sendScrollEvent(double xoffset, double yoffset);
     public static native void nativeSurfaceCreated(Surface surface);
     public static native void nativeSurfaceDestroyed();
+    /** Number of frames presented through eglSwapBuffers since the game started */
+    public static native long nativeGetFrameCount();
     public static native void nativeSurfaceUpdated();
     public static native void nativeNotifyGamepadConnected();
     public static native void nativeSetWindowAttribs(int attrib, boolean value);

@@ -280,6 +280,29 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editOrientation_textView" />
 
+    <!-- FPS COUNTER STYLE SECTION -->
+    <TextView
+        android:id="@+id/editFpsStyle_textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/_2sdp"
+        android:gravity="center"
+        android:paddingEnd="5dp"
+        android:text="@string/customctrl_fps_style"
+
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editOrientation_spinner" />
+
+    <Spinner
+        android:id="@+id/editFpsStyle_spinner"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/_30sdp"
+        android:background="@android:color/transparent"
+
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editFpsStyle_textView" />
+
     <!-- TOGGLE SECTION -->
     <com.google.android.material.materialswitch.MaterialSwitch
         android:id="@+id/checkboxToggle"
@@ -288,7 +311,7 @@
         android:text="@string/customctrl_toggle"
 
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/editOrientation_spinner" />
+        app:layout_constraintTop_toBottomOf="@id/editFpsStyle_spinner" />
 
     <!-- MOUSE PASS THROUGH SECTION -->
     <com.google.android.material.materialswitch.MaterialSwitch
@@ -346,6 +369,51 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/checkboxAbsoluteFingerTracking" />
 
+    <!-- IMAGE PREVIEW + REMOVE (only when an image is set) -->
+    <LinearLayout
+        android:id="@+id/backgroundBitmap_row"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingBottom="6dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/setBackgroundBitmap_textView">
+
+        <ImageView
+            android:id="@+id/backgroundBitmap_preview"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_ce_row"
+            android:contentDescription="@null"
+            android:padding="3dp"
+            android:scaleType="centerCrop" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:text="@string/customctrl_image_hint"
+            android:textColor="@color/hm_text_dim"
+            android:textSize="11sp" />
+
+        <TextView
+            android:id="@+id/removeBackgroundBitmap_textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_ce_row"
+            android:paddingStart="12dp"
+            android:paddingTop="8dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="8dp"
+            android:text="@string/customctrl_remove_image"
+            android:textColor="#FFF87171"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
     <!-- BACKGROUND COLOR SECTION -->
     <fr.spse.extended_view.ExtendedTextView
         android:id="@+id/editBackgroundColor_textView"
@@ -362,7 +430,7 @@
 
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/setBackgroundBitmap_textView" />
+        app:layout_constraintTop_toBottomOf="@id/backgroundBitmap_row" />
 
     <fr.spse.extended_view.ExtendedTextView
         android:id="@+id/editBackgroundColorWarning_textView"

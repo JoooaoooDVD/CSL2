@@ -1,0 +1,413 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- World editor: icon + name, facts from level.dat, data packs, maintenance actions -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorSurface"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingTop="14dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="6dp">
+
+        <ImageButton
+            android:id="@+id/we_back"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_pp_round_btn"
+            android:contentDescription="@string/global_back"
+            android:padding="9dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_px_arrow_left" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/we_title"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/we_subtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="middle"
+                android:singleLine="true"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="12sp"
+                tools:text="saves/New World" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/we_files"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_pp_round_btn"
+            android:contentDescription="@string/we_open_files"
+            android:padding="9dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_pe_folder" />
+    </LinearLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/we_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="20dp"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/we_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Identity card -->
+            <LinearLayout
+                android:id="@+id/we_card_identity"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_lib_card"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="14dp">
+
+                <FrameLayout
+                    android:id="@+id/we_icon_frame"
+                    android:layout_width="84dp"
+                    android:layout_height="84dp"
+                    android:background="@drawable/bg_lib_icon_box"
+                    android:clickable="true"
+                    android:clipToOutline="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground">
+
+                    <ImageView
+                        android:id="@+id/we_icon"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:contentDescription="@null"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/ic_lib_world" />
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="26dp"
+                        android:layout_gravity="bottom"
+                        android:background="#99000000">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:drawablePadding="4dp"
+                            android:text="@string/we_change_icon"
+                            android:textColor="#FFFFFFFF"
+                            android:textSize="10.5sp"
+                            android:textStyle="bold"
+                            app:drawableStartCompat="@drawable/ic_pe_image"
+                            app:drawableTint="#FFFFFFFF" />
+                    </FrameLayout>
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/we_name_label"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <EditText
+                        android:id="@+id/we_name"
+                        android:layout_width="match_parent"
+                        android:layout_height="42dp"
+                        android:layout_marginTop="6dp"
+                        android:background="@drawable/bg_lib_field"
+                        android:hint="@string/we_name_hint"
+                        android:imeOptions="actionDone"
+                        android:importantForAutofill="no"
+                        android:inputType="text"
+                        android:maxLength="64"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:singleLine="true"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="14sp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/we_save_name"
+                            android:layout_width="wrap_content"
+                            android:layout_height="34dp"
+                            android:background="@drawable/bg_lib_chip"
+                            android:enabled="false"
+                            android:gravity="center"
+                            android:paddingStart="16dp"
+                            android:paddingEnd="16dp"
+                            android:text="@string/we_save_name"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="12.5sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/we_reset_icon"
+                            android:layout_width="wrap_content"
+                            android:layout_height="34dp"
+                            android:layout_marginStart="8dp"
+                            android:background="@drawable/bg_lib_chip"
+                            android:gravity="center"
+                            android:paddingStart="12dp"
+                            android:paddingEnd="12dp"
+                            android:text="@string/we_reset_icon"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="12sp"
+                            android:visibility="gone" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Facts -->
+            <LinearLayout
+                android:id="@+id/we_card_facts"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_lib_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/we_details"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="14.5sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/we_version_badge"
+                        style="@style/Library.Badge"
+                        android:layout_height="26dp"
+                        android:background="@drawable/bg_lib_badge_neutral"
+                        tools:text="1.21.4" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/we_unreadable"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/we_unreadable"
+                    android:textColor="@color/lib_warning"
+                    android:textSize="12sp"
+                    android:visibility="gone" />
+
+                <GridLayout
+                    android:id="@+id/we_facts_grid"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:columnCount="2"
+                    android:useDefaultMargins="false" />
+            </LinearLayout>
+
+            <!-- Data packs -->
+            <LinearLayout
+                android:id="@+id/we_card_datapacks"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_lib_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/we_datapacks"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="14.5sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/we_dp_count"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="11.5sp"
+                            tools:text="2 installed" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/we_dp_import"
+                        android:layout_width="wrap_content"
+                        android:layout_height="34dp"
+                        android:background="@drawable/bg_lib_chip"
+                        android:gravity="center"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:text="@string/we_dp_import"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/we_dp_browse"
+                        android:layout_width="wrap_content"
+                        android:layout_height="34dp"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_lib_update_pill"
+                        android:drawablePadding="6dp"
+                        android:gravity="center"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="14dp"
+                        android:text="@string/we_dp_browse"
+                        android:textColor="@color/lib_update_text"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        app:drawableStartCompat="@drawable/ic_lib_download"
+                        app:drawableTint="@color/lib_update_text" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/we_dp_empty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_lib_inner_box"
+                    android:gravity="center"
+                    android:padding="16dp"
+                    android:text="@string/we_dp_empty"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="12.5sp" />
+
+                <LinearLayout
+                    android:id="@+id/we_dp_list"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="vertical" />
+            </LinearLayout>
+
+            <!-- Maintenance -->
+            <LinearLayout
+                android:id="@+id/we_card_actions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_lib_card"
+                android:orientation="vertical"
+                android:padding="8dp">
+
+                <LinearLayout
+                    android:id="@+id/we_action_files"
+                    style="@style/WorldEdit.ActionRow">
+
+                    <ImageView
+                        style="@style/WorldEdit.ActionIcon"
+                        android:src="@drawable/ic_pe_folder" />
+
+                    <TextView
+                        style="@style/WorldEdit.ActionText"
+                        android:text="@string/we_open_files" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/we_action_backup"
+                    style="@style/WorldEdit.ActionRow">
+
+                    <ImageView
+                        style="@style/WorldEdit.ActionIcon"
+                        android:src="@drawable/ic_lib_open" />
+
+                    <TextView
+                        style="@style/WorldEdit.ActionText"
+                        android:text="@string/we_backup" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/we_action_duplicate"
+                    style="@style/WorldEdit.ActionRow">
+
+                    <ImageView
+                        style="@style/WorldEdit.ActionIcon"
+                        android:src="@drawable/ic_lib_swap" />
+
+                    <TextView
+                        style="@style/WorldEdit.ActionText"
+                        android:text="@string/we_duplicate" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/we_action_delete"
+                    style="@style/WorldEdit.ActionRow">
+
+                    <ImageView
+                        style="@style/WorldEdit.ActionIcon"
+                        android:src="@drawable/ic_lib_trash"
+                        app:tint="@color/lib_danger" />
+
+                    <TextView
+                        style="@style/WorldEdit.ActionText"
+                        android:text="@string/we_delete"
+                        android:textColor="@color/lib_danger" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

@@ -396,6 +396,32 @@
                         android:alpha="0"
                         android:background="@drawable/bg_home_play_glint"
                         android:rotation="0" />
+
+                    <!-- Downloading skin: dark face + growing fill + light sweep (all hidden at rest) -->
+                    <View
+                        android:id="@+id/home_play_download_bg"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:alpha="0"
+                        android:background="@drawable/bg_home_play_downloading"
+                        android:visibility="gone" />
+
+                    <View
+                        android:id="@+id/home_play_download_fill"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:alpha="0"
+                        android:background="@drawable/bg_home_play_fill"
+                        android:scaleX="0"
+                        android:visibility="gone" />
+
+                    <View
+                        android:id="@+id/home_play_download_sweep"
+                        android:layout_width="90dp"
+                        android:layout_height="match_parent"
+                        android:alpha="0"
+                        android:background="@drawable/bg_home_play_download_glint"
+                        android:visibility="gone" />
                 </FrameLayout>
 
                 <View
@@ -424,6 +450,29 @@
                         android:layout_height="30dp"
                         android:contentDescription="@null"
                         android:src="@drawable/ic_home_play_dark" />
+
+                    <!-- Download badge: pulsing halo + bobbing arrow -->
+                    <FrameLayout
+                        android:id="@+id/home_play_download_badge"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:visibility="gone">
+
+                        <View
+                            android:id="@+id/home_play_download_ring"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="@drawable/bg_home_play_download_ring" />
+
+                        <ImageView
+                            android:id="@+id/home_play_download_icon"
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_lib_download"
+                            app:tint="#FF8DB8FF" />
+                    </FrameLayout>
 
                     <View
                         android:id="@+id/home_play_divider"

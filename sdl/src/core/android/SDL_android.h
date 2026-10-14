@@ -57,6 +57,7 @@ void Android_SendLifecycleEvent(SDL_AndroidLifecycleEvent event);
 bool Android_WaitLifecycleEvent(SDL_AndroidLifecycleEvent *event, Sint64 timeoutNS);
 
 void Android_LockActivityMutex(void);
+void Android_CountPresentedFrame(void);
 void Android_UnlockActivityMutex(void);
 
 void Android_SetAllowRecreateActivity(bool enabled);

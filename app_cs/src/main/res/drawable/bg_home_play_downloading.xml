@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- PLAY while downloading: deep navy face with a cool blue sheen -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient android:angle="0" android:startColor="#FF0C1322" android:centerColor="#FF14213B" android:endColor="#FF0F1A30" />
+    <corners android:radius="16dp" />
+</shape>

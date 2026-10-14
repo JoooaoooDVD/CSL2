@@ -83,6 +83,9 @@ bool Android_GLES_SwapWindow(SDL_VideoDevice *_this, SDL_Window *window)
     }
 
     result = SDL_EGL_SwapBuffers(_this, window->internal->egl_surface);
+    if (result) {
+        Android_CountPresentedFrame();
+    }
 
     Android_UnlockActivityMutex();
 

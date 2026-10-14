@@ -21,7 +21,13 @@ public enum ContentType {
      * Modpacks are browsed with the same library screens, but installing one creates a new
      * profile instead of dropping a file into a folder. CurseForge classId 4471 = "Modpacks".
      */
-    MODPACK("modpacks", ".mrpack", "modpack", 4471);
+    MODPACK("modpacks", ".mrpack", "modpack", 4471),
+    /**
+     * Data packs live inside a single world (<world>/datapacks). The world editor points
+     * {@link com.craftstudio.cslauncher.modding.modpacks.InstalledContentIndex#setDatapackWorld}
+     * at the world before opening the library. CurseForge classId 6945 = "Data Packs".
+     */
+    DATAPACK("datapacks", ".zip", "datapack", 6945);
 
     /** Folder name under the instance's game directory (e.g. ".minecraft/mods"). */
     public final String folderName;
@@ -46,6 +52,7 @@ public enum ContentType {
             case "resourcepack": return RESOURCE_PACK;
             case "shader":       return SHADER_PACK;
             case "modpack":      return MODPACK;
+            case "datapack":     return DATAPACK;
             default:             return MOD;
         }
     }

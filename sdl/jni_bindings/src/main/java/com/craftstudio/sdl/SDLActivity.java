@@ -76,6 +76,8 @@ public class SDLActivity {
 
     // Native method declarations
     public static native String nativeGetVersion();
+    /** Frames presented through SDL's EGL swap since the game started */
+    public static native long nativeGetFrameCount();
     public static native void nativeSetupJNI();
     public static native int nativeGetCompiledSubsystems();
     public static native boolean nativeIsHIDAPIEnabled();

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/file_root"
+    android:layout_width="match_parent"
+    android:layout_height="60dp"
+    android:layout_marginStart="4dp"
+    android:layout_marginTop="3dp"
+    android:layout_marginEnd="4dp"
+    android:layout_marginBottom="3dp"
+    android:background="@drawable/bg_lib_row_selectable"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="8dp"
+    android:paddingEnd="2dp">
+
+    <FrameLayout
+        android:layout_width="42dp"
+        android:layout_height="42dp">
+
+        <ImageView
+            android:id="@+id/file_icon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_lib_icon_box"
+            android:contentDescription="@null"
+            android:padding="9dp"
+            android:scaleType="centerCrop"
+            app:tint="?attr/colorOnSurfaceVariant"
+            tools:src="@drawable/ic_pe_folder" />
+
+        <ImageView
+            android:id="@+id/file_check"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_fm_check"
+            android:contentDescription="@null"
+            android:padding="11dp"
+            android:src="@drawable/ic_lib_check"
+            android:visibility="gone"
+            app:tint="#FFFFFFFF" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/file_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="middle"
+            android:singleLine="true"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="13.5sp"
+            android:textStyle="bold"
+            tools:text="options.txt" />
+
+        <TextView
+            android:id="@+id/file_detail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="11sp"
+            tools:text="2.1 KB • 12 Oct 2026 14:02" />
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/file_more"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/fm_more"
+        android:padding="10dp"
+        android:src="@drawable/ic_fm_more"
+        app:tint="?attr/colorOnSurfaceVariant" />
+</LinearLayout>

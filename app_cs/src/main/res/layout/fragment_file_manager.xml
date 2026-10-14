@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- In-app file manager, scoped to one profile's game directory (no storage permission) -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorSurface">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- Header -->
+        <LinearLayout
+            android:id="@+id/fm_header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingTop="14dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="6dp">
+
+            <ImageButton
+                android:id="@+id/fm_back"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_pp_round_btn"
+                android:contentDescription="@string/global_back"
+                android:padding="9dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_px_arrow_left" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/fm_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:singleLine="true"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    tools:text="Survival files" />
+
+                <TextView
+                    android:id="@+id/fm_subtitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:ellipsize="end"
+                    android:singleLine="true"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="12sp"
+                    tools:text="12 folders • 8 files • 1.2 GB" />
+            </LinearLayout>
+
+            <ImageButton
+                android:id="@+id/fm_search_toggle"
+                style="@style/FileManager.HeaderButton"
+                android:contentDescription="@string/fm_search"
+                android:src="@drawable/ic_lib_search" />
+
+            <ImageButton
+                android:id="@+id/fm_sort"
+                style="@style/FileManager.HeaderButton"
+                android:contentDescription="@string/fm_sort"
+                android:src="@drawable/ic_lib_sort" />
+
+            <ImageButton
+                android:id="@+id/fm_view_toggle"
+                style="@style/FileManager.HeaderButton"
+                android:contentDescription="@string/fm_view"
+                android:src="@drawable/ic_fm_grid" />
+
+            <ImageButton
+                android:id="@+id/fm_add"
+                style="@style/FileManager.HeaderButton"
+                android:background="@drawable/bg_lib_update_pill"
+                android:contentDescription="@string/fm_new"
+                android:src="@drawable/ic_pe_plus"
+                app:tint="@color/lib_update_text" />
+        </LinearLayout>
+
+        <!-- Search field (slides in) -->
+        <FrameLayout
+            android:id="@+id/fm_search_frame"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="6dp"
+            android:visibility="gone">
+
+            <EditText
+                android:id="@+id/fm_search"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_lib_field"
+                android:drawablePadding="8dp"
+                android:hint="@string/fm_search_hint"
+                android:imeOptions="actionSearch"
+                android:importantForAutofill="no"
+                android:inputType="text"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:singleLine="true"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="13.5sp"
+                app:drawableStartCompat="@drawable/ic_lib_search"
+                app:drawableTint="?attr/colorOnSurfaceVariant" />
+        </FrameLayout>
+
+        <!-- Breadcrumbs -->
+        <HorizontalScrollView
+            android:id="@+id/fm_crumb_scroll"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/fm_crumbs"
+                android:layout_width="wrap_content"
+                android:layout_height="34dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal" />
+        </HorizontalScrollView>
+
+        <!-- Clipboard bar -->
+        <LinearLayout
+            android:id="@+id/fm_paste_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/bg_lib_badge_warning"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="12dp"
+            android:paddingTop="6dp"
+            android:paddingEnd="6dp"
+            android:paddingBottom="6dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/fm_paste_text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="12.5sp"
+                tools:text="3 items ready to move" />
+
+            <TextView
+                android:id="@+id/fm_paste_here"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:background="@drawable/bg_lib_update_pill"
+                android:gravity="center"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:text="@string/fm_paste_here"
+                android:textColor="@color/lib_update_text"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <ImageButton
+                android:id="@+id/fm_paste_cancel"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginStart="4dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@android:string/cancel"
+                android:padding="8dp"
+                android:src="@drawable/ic_lib_close"
+                app:tint="?attr/colorOnSurfaceVariant" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/fm_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:layoutAnimation="@anim/cs_layout_list"
+                android:paddingStart="12dp"
+                android:paddingTop="6dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="96dp"
+                android:scrollbars="vertical" />
+
+            <LinearLayout
+                android:id="@+id/fm_empty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="32dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:alpha="0.5"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_pe_folder"
+                    app:tint="?attr/colorOnSurfaceVariant" />
+
+                <TextView
+                    android:id="@+id/fm_empty_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:gravity="center"
+                    android:text="@string/fm_empty"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <ProgressBar
+                android:id="@+id/fm_progress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:visibility="gone" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <!-- Selection action bar -->
+    <LinearLayout
+        android:id="@+id/fm_selection_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/bg_fm_selection_bar"
+        android:elevation="8dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="6dp"
+        android:paddingTop="6dp"
+        android:paddingEnd="6dp"
+        android:paddingBottom="6dp"
+        android:visibility="gone">
+
+        <ImageButton
+            android:id="@+id/fm_sel_close"
+            style="@style/FileManager.SelButton"
+            android:contentDescription="@android:string/cancel"
+            android:src="@drawable/ic_lib_close" />
+
+        <TextView
+            android:id="@+id/fm_sel_count"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="#FFFFFFFF"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            tools:text="3 selected" />
+
+        <ImageButton
+            android:id="@+id/fm_sel_all"
+            style="@style/FileManager.SelButton"
+            android:contentDescription="@string/fm_select_all"
+            android:src="@drawable/ic_lib_check" />
+
+        <ImageButton
+            android:id="@+id/fm_sel_copy"
+            style="@style/FileManager.SelButton"
+            android:contentDescription="@string/fm_copy"
+            android:src="@drawable/ic_cc_copy" />
+
+        <ImageButton
+            android:id="@+id/fm_sel_move"
+            style="@style/FileManager.SelButton"
+            android:contentDescription="@string/fm_move"
+            android:src="@drawable/ic_px_move" />
+
+        <ImageButton
+            android:id="@+id/fm_sel_zip"
+            style="@style/FileManager.SelButton"
+            android:contentDescription="@string/fm_zip"
+            android:src="@drawable/ic_fm_zip" />
+
+        <ImageButton
+            android:id="@+id/fm_sel_share"
+            style="@style/FileManager.SelButton"
+            android:contentDescription="@string/fm_share"
+            android:src="@drawable/ic_lib_open" />
+
+        <ImageButton
+            android:id="@+id/fm_sel_delete"
+            style="@style/FileManager.SelButton"
+            android:contentDescription="@string/global_delete"
+            android:src="@drawable/ic_lib_trash"
+            app:tint="#FFFF8A80" />
+    </LinearLayout>
+</FrameLayout>

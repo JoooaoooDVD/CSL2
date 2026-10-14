@@ -53,6 +53,7 @@ public class ManageWorldsFragment extends Fragment {
     private TextView mSubtitle;
     private TextView mEmpty;
     private final List<WorldInfo> mWorlds = new ArrayList<>();
+    private final java.util.Map<String, com.craftstudio.cslauncher.worlds.WorldDetails> mDetails = new java.util.HashMap<>();
     private WorldAdapter mAdapter;
     private WorldInfo mDatapackTarget;
 
@@ -71,9 +72,24 @@ public class ManageWorldsFragment extends Fragment {
         mEmpty = view.findViewById(R.id.worlds_empty);
         mAdapter = new WorldAdapter(requireContext());
         mList.setAdapter(mAdapter);
-        mList.setOnItemClickListener((parent, row, position, id) -> showActions(mWorlds.get(position)));
+        mList.setOnItemClickListener((parent, row, position, id) -> openEditor(mWorlds.get(position)));
+        mList.setOnItemLongClickListener((parent, row, position, id) -> {
+            showActions(mWorlds.get(position));
+            return true;
+        });
         view.findViewById(R.id.worlds_back).setOnClickListener(v -> getParentFragmentManager().popBackStack());
         reload();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (mAdapter != null && !mWorlds.isEmpty()) reload();
+    }
+
+    private void openEditor(@NonNull WorldInfo world) {
+        Tools.swapFragment(requireActivity(), WorldEditFragment.class, WorldEditFragment.TAG,
+                WorldEditFragment.args(world.dir));
     }
 
     private void reload() {
@@ -81,9 +97,15 @@ public class ManageWorldsFragment extends Fragment {
             File gameDir = gameDirectory();
             final List<WorldInfo> worlds = WorldSaves.listWorlds(gameDir);
             final String profile = profileName();
+            final java.util.Map<String, com.craftstudio.cslauncher.worlds.WorldDetails> details = new java.util.HashMap<>();
+            for (WorldInfo world : worlds) {
+                details.put(world.dir.getAbsolutePath(), com.craftstudio.cslauncher.worlds.WorldDetails.load(world.dir));
+            }
             if (getActivity() == null) return;
             requireActivity().runOnUiThread(() -> {
                 if (getView() == null) return;
+                mDetails.clear();
+                mDetails.putAll(details);
                 mWorlds.clear();
                 mWorlds.addAll(worlds);
                 mAdapter.notifyDataSetChanged();
@@ -98,6 +120,7 @@ public class ManageWorldsFragment extends Fragment {
         Context context = getContext();
         if (context == null) return;
         String[] items = {
+                getString(R.string.we_edit),
                 getString(R.string.mcl_world_rename),
                 getString(R.string.mcl_world_view_files),
                 getString(R.string.mcl_world_install_datapack),
@@ -106,12 +129,13 @@ public class ManageWorldsFragment extends Fragment {
         new MaterialAlertDialogBuilder(context)
                 .setTitle(getString(R.string.mcl_world_actions, world.name))
                 .setItems(items, (dialog, which) -> {
-                    if (which == 0) showRename(world);
-                    else if (which == 1) Tools.openPath(context, world.dir, false);
-                    else if (which == 2) {
+                    if (which == 0) openEditor(world);
+                    else if (which == 1) showRename(world);
+                    else if (which == 2) Tools.openPath(context, world.dir, false);
+                    else if (which == 3) {
                         mDatapackTarget = world;
                         mDatapackPicker.launch(new String[]{"application/zip"});
-                    } else if (which == 3) showDelete(world);
+                    } else if (which == 4) showDelete(world);
                 })
                 .show();
     }
@@ -279,11 +303,17 @@ public class ManageWorldsFragment extends Fragment {
             ImageView icon = row.findViewById(R.id.world_icon);
             TextView name = row.findViewById(R.id.world_name);
             TextView detail = row.findViewById(R.id.world_detail);
-            name.setText(world.name);
+            com.craftstudio.cslauncher.worlds.WorldDetails details = mDetails.get(world.dir.getAbsolutePath());
+            name.setText(details != null ? details.levelName : world.name);
             String date = android.text.format.DateFormat.getMediumDateFormat(getContext())
                     .format(new java.util.Date(world.lastPlayed));
-            detail.setText(getString(R.string.mcl_world_detail,
-                    WorldSaves.formatSize(world.sizeBytes), date));
+            String line = getString(R.string.mcl_world_detail, WorldSaves.formatSize(world.sizeBytes), date);
+            if (details != null && details.versionName != null) {
+                line = details.versionName + " • " + details.gameModeLabel() + " • " + line;
+            }
+            detail.setText(line);
+            View edit = row.findViewById(R.id.world_edit);
+            if (edit != null) edit.setOnClickListener(v -> openEditor(world));
             if (world.iconFile != null) {
                 try {
                     icon.setImageBitmap(BitmapFactory.decodeFile(world.iconFile.getAbsolutePath()));

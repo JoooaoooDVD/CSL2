@@ -456,6 +456,21 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         mFilters.modLoader = usesLoader(type) ? mPreferredLoader : "";
         if (userAction) mFilters.category = "";
 
+        if (type == ContentType.DATAPACK) {
+            // World data pack browser: no type tabs, the world name is the context
+            mTypeTabsFrame.setVisibility(View.GONE);
+            if (mImportButton != null) mImportButton.setVisibility(View.GONE);
+            mTitle.setText(R.string.lib_title_datapacks);
+            File world = InstalledContentIndex.getDatapackWorld();
+            mSubtitle.setText(getString(R.string.lib_subtitle_datapacks, world == null ? "" : world.getName()));
+            mSearchInput.setHint(R.string.lib_search_datapacks);
+            buildChips();
+            updateContextPill();
+            updateAdapterContext();
+            InstalledContentIndex cachedDp = mIndexCache.get(type);
+            mAdapter.setInstalledIndex(cachedDp != null ? cachedDp : InstalledContentIndex.empty(type));
+            return;
+        }
         if (type == ContentType.MODPACK) {
             // Modpack browser: no type tabs, an Import button instead
             mTypeTabsFrame.setVisibility(View.GONE);
@@ -759,6 +774,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
             case RESOURCE_PACK: return R.string.lib_tab_resourcepacks;
             case SHADER_PACK: return R.string.lib_tab_shaders;
             case MODPACK: return R.string.lib_tab_modpacks;
+            case DATAPACK: return R.string.lib_tab_datapacks;
             default: return R.string.lib_tab_mods;
         }
     }

@@ -63,6 +63,12 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
     private TextView mPlayTitle;
     private TextView mPlaySubtitle;
     private OutlineArcProgressView mPlayArc;
+    /** Downloading skin pieces (see applyPlayDownloadState) */
+    private View mDlBg, mDlFill, mDlSweep, mDlBadge, mDlRing, mDlIcon, mPlayMore;
+    private android.animation.AnimatorSet mDlLoop;
+    private android.animation.ValueAnimator mDlFillAnimator;
+    private static final int PLAY_TITLE_DARK = 0xFF0E1525, PLAY_SUB_DARK = 0xFF1B2740;
+    private static final int PLAY_TITLE_LIGHT = 0xFFF4F7FF, PLAY_SUB_LIGHT = 0xFF8DB8FF;
     private boolean mDownloading;
     private int mAggregateProgress = -1;
     /** One listener covers every progress record + the initial state on registration */
@@ -116,6 +122,14 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         mPlayTitle = view.findViewById(R.id.home_play_title);
         mPlaySubtitle = view.findViewById(R.id.home_play_subtitle);
         mPlayArc = view.findViewById(R.id.home_play_arc);
+        mDlBg = view.findViewById(R.id.home_play_download_bg);
+        mDlFill = view.findViewById(R.id.home_play_download_fill);
+        mDlSweep = view.findViewById(R.id.home_play_download_sweep);
+        mDlBadge = view.findViewById(R.id.home_play_download_badge);
+        mDlRing = view.findViewById(R.id.home_play_download_ring);
+        mDlIcon = view.findViewById(R.id.home_play_download_icon);
+        mPlayMore = view.findViewById(R.id.home_play_more);
+        if (mDlFill != null) mDlFill.setPivotX(0f);
 
         view.findViewById(R.id.home_card_browser).setOnClickListener(v -> {
             HomeMotion.cardTapped(v, view.findViewById(R.id.home_card_browser_chevron), () -> openContentPicker(false));
@@ -322,6 +336,7 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
             updateDownloadSubtitle();
             mPlayArc.setProgress(mAggregateProgress);
             mPlayArc.setDownloading(true);
+            enterDownloadSkin();
         } else {
             mPlayArc.setDownloading(false);
             mPlayArc.setProgress(-1);
@@ -330,7 +345,120 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
             CSAnimationEngine.animateValueRefresh(mPlayTitle, getString(R.string.home_play));
             // Restore the version/loader subtitle
             refreshVersionInfo();
+            exitDownloadSkin();
         }
+    }
+
+    /** Dark face, light text, pulsing badge, looping sweep and a growing fill */
+    private void enterDownloadSkin() {
+        if (mDlBg == null) return;
+        android.view.animation.Interpolator ease = new android.view.animation.DecelerateInterpolator(1.6f);
+        for (View v : new View[]{mDlBg, mDlFill, mDlSweep}) {
+            v.setVisibility(View.VISIBLE);
+        }
+        mDlBg.animate().alpha(1f).setDuration(360).setInterpolator(ease).start();
+        mDlFill.animate().alpha(1f).setDuration(360).setStartDelay(80).start();
+        if (mPlayMore != null) mPlayMore.animate().alpha(0f).setDuration(200).start();
+        animateTextColor(mPlayTitle, PLAY_TITLE_LIGHT);
+        animateTextColor(mPlaySubtitle, PLAY_SUB_LIGHT);
+
+        mDlBadge.setVisibility(View.VISIBLE);
+        mDlBadge.setScaleX(0.4f);
+        mDlBadge.setScaleY(0.4f);
+        mDlBadge.setAlpha(0f);
+        mDlBadge.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(420)
+                .setInterpolator(new android.view.animation.OvershootInterpolator(2.2f)).start();
+
+        stopDownloadLoop();
+        android.animation.ObjectAnimator bob = android.animation.ObjectAnimator.ofFloat(mDlIcon, View.TRANSLATION_Y, -3f, 4f);
+        bob.setDuration(640);
+        bob.setRepeatCount(android.animation.ValueAnimator.INFINITE);
+        bob.setRepeatMode(android.animation.ValueAnimator.REVERSE);
+        bob.setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator());
+
+        android.animation.ObjectAnimator ringX = android.animation.ObjectAnimator.ofFloat(mDlRing, View.SCALE_X, 0.85f, 1.18f);
+        android.animation.ObjectAnimator ringY = android.animation.ObjectAnimator.ofFloat(mDlRing, View.SCALE_Y, 0.85f, 1.18f);
+        android.animation.ObjectAnimator ringA = android.animation.ObjectAnimator.ofFloat(mDlRing, View.ALPHA, 1f, 0.15f);
+        for (android.animation.ObjectAnimator a : new android.animation.ObjectAnimator[]{ringX, ringY, ringA}) {
+            a.setDuration(1100);
+            a.setRepeatCount(android.animation.ValueAnimator.INFINITE);
+            a.setRepeatMode(android.animation.ValueAnimator.RESTART);
+            a.setInterpolator(new android.view.animation.DecelerateInterpolator());
+        }
+
+        android.animation.ValueAnimator sweep = android.animation.ValueAnimator.ofFloat(0f, 1f);
+        sweep.setDuration(1700);
+        sweep.setStartDelay(300);
+        sweep.setRepeatCount(android.animation.ValueAnimator.INFINITE);
+        sweep.setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator());
+        sweep.addUpdateListener(a -> {
+            View parent = (View) mDlSweep.getParent();
+            if (parent == null) return;
+            float f = (float) a.getAnimatedValue();
+            float travel = parent.getWidth() + mDlSweep.getWidth();
+            mDlSweep.setTranslationX(-mDlSweep.getWidth() + travel * f);
+            // Fade in/out at both ends so the sweep never pops
+            float edge = Math.min(f, 1f - f) * 4f;
+            mDlSweep.setAlpha(Math.min(1f, edge));
+        });
+
+        mDlLoop = new android.animation.AnimatorSet();
+        mDlLoop.playTogether(bob, ringX, ringY, ringA, sweep);
+        mDlLoop.start();
+        updateDownloadFill();
+    }
+
+    private void exitDownloadSkin() {
+        if (mDlBg == null) return;
+        stopDownloadLoop();
+        Runnable hide = () -> {
+            for (View v : new View[]{mDlBg, mDlFill, mDlSweep, mDlBadge}) {
+                v.setVisibility(View.GONE);
+            }
+            mDlFill.setScaleX(0f);
+        };
+        mDlBg.animate().alpha(0f).setDuration(300).withEndAction(hide).start();
+        mDlFill.animate().alpha(0f).setDuration(220).start();
+        mDlSweep.animate().alpha(0f).setDuration(150).start();
+        mDlBadge.animate().alpha(0f).scaleX(0.5f).scaleY(0.5f).setDuration(220).start();
+        if (mPlayMore != null) mPlayMore.animate().alpha(1f).setDuration(260).setStartDelay(120).start();
+        animateTextColor(mPlayTitle, PLAY_TITLE_DARK);
+        animateTextColor(mPlaySubtitle, PLAY_SUB_DARK);
+    }
+
+    private void stopDownloadLoop() {
+        if (mDlLoop != null) {
+            mDlLoop.cancel();
+            mDlLoop = null;
+        }
+        if (mDlIcon != null) mDlIcon.setTranslationY(0f);
+        if (mDlRing != null) {
+            mDlRing.setScaleX(1f);
+            mDlRing.setScaleY(1f);
+            mDlRing.setAlpha(1f);
+        }
+    }
+
+    /** Grows the fill to the aggregate percentage; indeterminate shows a gentle breathing fill */
+    private void updateDownloadFill() {
+        if (mDlFill == null || !mDownloading) return;
+        float target = mAggregateProgress >= 0 ? Math.max(0.03f, mAggregateProgress / 100f) : 0.08f;
+        if (mDlFillAnimator != null) mDlFillAnimator.cancel();
+        mDlFillAnimator = android.animation.ValueAnimator.ofFloat(mDlFill.getScaleX(), target);
+        mDlFillAnimator.setDuration(380);
+        mDlFillAnimator.setInterpolator(new android.view.animation.DecelerateInterpolator());
+        mDlFillAnimator.addUpdateListener(a -> mDlFill.setScaleX((float) a.getAnimatedValue()));
+        mDlFillAnimator.start();
+    }
+
+    private static void animateTextColor(TextView view, int to) {
+        if (view == null) return;
+        int from = view.getCurrentTextColor();
+        if (from == to) return;
+        android.animation.ValueAnimator anim = android.animation.ValueAnimator.ofObject(new android.animation.ArgbEvaluator(), from, to);
+        anim.setDuration(320);
+        anim.addUpdateListener(a -> view.setTextColor((int) a.getAnimatedValue()));
+        anim.start();
     }
 
     private static void setPlayDividerVisible(@NonNull View root, boolean visible) {
@@ -345,6 +473,7 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
                 : getString(R.string.home_downloading_wait);
         CSAnimationEngine.animateValueRefresh(mPlaySubtitle, text);
         if (mPlayArc != null) mPlayArc.setProgress(mAggregateProgress);
+        updateDownloadFill();
     }
 
     /** The spinner broadcasts a refresh through ExtraCore whenever the selection changed */
@@ -440,6 +569,8 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        stopDownloadLoop();
+        if (mDlFillAnimator != null) mDlFillAnimator.cancel();
         mLoadId++;
         if (mVideo != null) mVideo.release();
         setImageAnimation(false);

@@ -113,12 +113,27 @@ public final class LibraryCatalog {
             {"challenging", "Challenging"}, {"quests", "Quests"}, {"tech", "Tech"},
     };
 
+    private static final Category[] DATAPACK_CATEGORIES = {
+            new Category("", "All", TINT_NEUTRAL),
+            new Category("adventure", "Adventure", TINT_GREEN),
+            new Category("utility", "Utility", TINT_BLUE),
+            new Category("game-mechanics", "Mechanics", TINT_SLATE),
+            new Category("magic", "Magic", TINT_AMBER),
+            new Category("worldgen", "Worldgen", TINT_GREEN),
+            new Category("equipment", "Equipment", TINT_AMBER),
+            new Category("decoration", "Decoration", TINT_BLUE),
+            new Category("mobs", "Mobs", TINT_AMBER),
+            new Category("technology", "Technology", TINT_SLATE),
+            new Category("minigame", "Minigame", TINT_GREEN),
+    };
+
     @NonNull
     public static Category[] categoriesFor(@NonNull ContentType type) {
         switch (type) {
             case RESOURCE_PACK: return RESOURCE_PACK_CATEGORIES;
             case SHADER_PACK: return SHADER_CATEGORIES;
             case MODPACK: return MODPACK_CATEGORIES;
+            case DATAPACK: return DATAPACK_CATEGORIES;
             default: return MOD_CATEGORIES;
         }
     }

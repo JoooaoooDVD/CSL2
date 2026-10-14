@@ -56,4 +56,15 @@
             android:textSize="11.5sp"
             tools:text="48.2 MB • played 12 Oct 2026" />
     </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/world_edit"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginStart="8dp"
+        android:background="@drawable/bg_pp_round_btn"
+        android:contentDescription="@string/we_edit"
+        android:padding="9dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_pe_edit" />
 </LinearLayout>

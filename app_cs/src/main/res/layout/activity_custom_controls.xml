@@ -20,25 +20,26 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
-        <!-- Small tab at the top edge: opens the menu -->
+        <!-- Bare gear at the top edge: opens the menu (no box, no outline) -->
         <FrameLayout
             android:id="@+id/drawer_button"
-            android:layout_width="64dp"
-            android:layout_height="28dp"
+            android:layout_width="44dp"
+            android:layout_height="36dp"
             android:layout_gravity="top|center_horizontal"
-            android:background="@drawable/bg_ce_tab"
+            android:background="@null"
             android:clickable="true"
             android:contentDescription="@string/ce_title"
             android:elevation="10dp"
-            android:focusable="true">
+            android:focusable="true"
+            android:outlineProvider="none">
 
             <ImageView
-                android:layout_width="16dp"
-                android:layout_height="16dp"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
                 android:layout_gravity="center"
                 android:contentDescription="@null"
                 android:src="@drawable/ic_sharp_settings_24"
-                app:tint="@color/hm_icon" />
+                app:tint="#FFFFFFFF" />
         </FrameLayout>
 
         <!-- Short hint under the tab, fades away by itself -->
@@ -208,6 +209,37 @@
                         android:ellipsize="end"
                         android:maxLines="1"
                         android:text="@string/customctrl_addbutton_joystick"
+                        android:textColor="@color/hm_text"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/ce_add_fps"
+                    android:layout_width="match_parent"
+                    android:layout_height="46dp"
+                    android:background="@drawable/bg_ce_row"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_cc_fps"
+                        app:tint="@color/hm_icon" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="@string/customctrl_addbutton_fps"
                         android:textColor="@color/hm_text"
                         android:textSize="14sp" />
                 </LinearLayout>
