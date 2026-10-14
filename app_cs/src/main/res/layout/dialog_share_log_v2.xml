@@ -15,14 +15,17 @@
 
     <LinearLayout
         android:id="@+id/sl_card"
-        android:layout_width="520dp"
+        android:layout_width="440dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:background="@drawable/bg_pp_card"
         android:clickable="true"
         android:elevation="16dp"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:paddingStart="20dp"
+        android:paddingTop="18dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="18dp">
 
         <!-- Header -->
         <LinearLayout
@@ -32,9 +35,25 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
+            <FrameLayout
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_pp_icon_tile">
+
+                <ImageView
+                    android:id="@+id/sl_header_icon"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_sl_file"
+                    android:tint="@color/hm_text" />
+            </FrameLayout>
+
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
                 android:layout_weight="1"
                 android:orientation="vertical">
 
@@ -44,60 +63,63 @@
                     android:letterSpacing="0.3"
                     android:text="@string/sl_eyebrow"
                     android:textColor="@color/hm_accent"
-                    android:textSize="10.5sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/sl_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="3dp"
+                    android:layout_marginTop="1dp"
                     android:fontFamily="@font/noto_sans_bold"
                     android:includeFontPadding="false"
                     android:text="@string/share_log_dialog_title"
                     android:textColor="@color/hm_text"
-                    android:textSize="19sp" />
-
-                <TextView
-                    android:id="@+id/sl_subtitle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="3dp"
-                    android:text="@string/sl_subtitle"
-                    android:textColor="@color/hm_text_dim"
-                    android:textSize="12.5sp" />
+                    android:textSize="18sp" />
             </LinearLayout>
 
             <ImageButton
                 android:id="@+id/sl_close"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:layout_marginStart="12dp"
                 android:background="@drawable/bg_pp_round_btn"
                 android:contentDescription="@android:string/cancel"
-                android:padding="11dp"
+                android:padding="10dp"
                 android:src="@drawable/ic_pp_close" />
         </LinearLayout>
 
-        <!-- Log facts -->
+        <!-- Subtitle + facts on one line -->
         <LinearLayout
             android:id="@+id/sl_facts"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
+            android:layout_marginTop="12dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <TextView
+                android:id="@+id/sl_subtitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:text="@string/sl_subtitle"
+                android:textColor="@color/hm_text_dim"
+                android:textSize="12.5sp" />
+
+            <TextView
                 android:id="@+id/sl_fact_size"
                 style="@style/Library.Badge"
+                android:layout_marginStart="10dp"
                 android:background="@drawable/bg_lib_badge_neutral"
                 android:textColor="@color/hm_text" />
 
             <TextView
                 android:id="@+id/sl_fact_time"
                 style="@style/Library.Badge"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="6dp"
                 android:background="@drawable/bg_lib_badge_neutral"
                 android:textColor="@color/hm_text_dim"
                 android:textStyle="normal" />
@@ -109,132 +131,179 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:baselineAligned="false"
-            android:orientation="horizontal">
+            android:orientation="vertical">
 
             <LinearLayout
                 android:id="@+id/sl_opt_cloud"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:background="@drawable/bg_sl_option"
                 android:clickable="true"
                 android:focusable="true"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:gravity="center_vertical"
+                android:minHeight="72dp"
+                android:orientation="horizontal"
+                android:paddingStart="12dp"
+                android:paddingTop="12dp"
+                android:paddingEnd="10dp"
+                android:paddingBottom="12dp">
 
                 <FrameLayout
                     android:id="@+id/sl_cloud_tile"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:background="@drawable/bg_sl_tile_cloud"
-                    android:padding="12dp">
+                    android:layout_width="46dp"
+                    android:layout_height="46dp"
+                    android:background="@drawable/bg_sl_tile_cloud">
 
                     <ImageView
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
                         android:importantForAccessibility="no"
                         android:src="@drawable/ic_sl_cloud"
                         android:tint="#FFFFFF" />
                 </FrameLayout>
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:fontFamily="@font/noto_sans_bold"
-                    android:includeFontPadding="false"
-                    android:text="@string/share_log_mclogs_option"
-                    android:textColor="@color/hm_text"
-                    android:textSize="15sp" />
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="@string/sl_cloud_desc"
-                    android:textColor="@color/hm_text_dim"
-                    android:textSize="12sp" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:background="@drawable/bg_cc_badge_amber"
-                    android:paddingStart="7dp"
-                    android:paddingTop="2dp"
-                    android:paddingEnd="7dp"
-                    android:paddingBottom="2dp"
-                    android:text="@string/sl_recommended"
-                    android:textColor="#5A3A00"
-                    android:textSize="10sp"
-                    android:textStyle="bold" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/noto_sans_bold"
+                            android:includeFontPadding="false"
+                            android:text="@string/sl_opt_cloud_title"
+                            android:textColor="@color/hm_text"
+                            android:textSize="14.5sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:background="@drawable/bg_cc_badge_amber"
+                            android:paddingStart="7dp"
+                            android:paddingTop="1dp"
+                            android:paddingEnd="7dp"
+                            android:paddingBottom="1dp"
+                            android:text="@string/sl_recommended"
+                            android:textColor="#8A5A00"
+                            android:textSize="9.5sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/sl_opt_cloud_desc"
+                        android:textColor="@color/hm_text_dim"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_marginStart="6dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_sl_chevron"
+                    android:tint="@color/hm_text_dim" />
             </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/sl_opt_file"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_weight="1"
+                android:layout_marginTop="8dp"
                 android:background="@drawable/bg_sl_option"
                 android:clickable="true"
                 android:focusable="true"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:gravity="center_vertical"
+                android:minHeight="72dp"
+                android:orientation="horizontal"
+                android:paddingStart="12dp"
+                android:paddingTop="12dp"
+                android:paddingEnd="10dp"
+                android:paddingBottom="12dp">
 
                 <FrameLayout
                     android:id="@+id/sl_file_tile"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:background="@drawable/bg_sl_tile_file"
-                    android:padding="12dp">
+                    android:layout_width="46dp"
+                    android:layout_height="46dp"
+                    android:background="@drawable/bg_sl_tile_file">
 
                     <ImageView
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
                         android:importantForAccessibility="no"
                         android:src="@drawable/ic_sl_file"
                         android:tint="#FFFFFF" />
                 </FrameLayout>
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:fontFamily="@font/noto_sans_bold"
-                    android:includeFontPadding="false"
-                    android:text="@string/main_share_logs"
-                    android:textColor="@color/hm_text"
-                    android:textSize="15sp" />
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="@string/sl_file_desc"
-                    android:textColor="@color/hm_text_dim"
-                    android:textSize="12sp" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/noto_sans_bold"
+                        android:includeFontPadding="false"
+                        android:text="@string/sl_opt_file_title"
+                        android:textColor="@color/hm_text"
+                        android:textSize="14.5sp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/sl_opt_file_desc"
+                        android:textColor="@color/hm_text_dim"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_marginStart="6dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_sl_chevron"
+                    android:tint="@color/hm_text_dim" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Uploading state -->
+        <!-- Upload progress -->
         <LinearLayout
             android:id="@+id/sl_progress"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:background="@drawable/bg_sl_option"
+            android:background="@drawable/bg_sl_link"
             android:gravity="center_vertical"
+            android:minHeight="72dp"
             android:orientation="horizontal"
-            android:padding="18dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
             android:visibility="gone">
 
             <com.google.android.material.progressindicator.CircularProgressIndicator
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:indeterminate="true"
-                app:indicatorSize="28dp"
+                app:indicatorColor="#3B82F6"
+                app:indicatorSize="26dp"
                 app:trackThickness="3dp" />
 
             <TextView
@@ -245,10 +314,10 @@
                 android:layout_weight="1"
                 android:text="@string/share_log_mclogs_uploading"
                 android:textColor="@color/hm_text"
-                android:textSize="14sp" />
+                android:textSize="13.5sp" />
         </LinearLayout>
 
-        <!-- Result state -->
+        <!-- Result: link + actions -->
         <LinearLayout
             android:id="@+id/sl_result"
             android:layout_width="match_parent"
@@ -257,55 +326,62 @@
             android:orientation="vertical"
             android:visibility="gone">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/sl_result_title"
-                android:textColor="@color/hm_text"
-                android:textSize="13.5sp"
-                android:textStyle="bold" />
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
                 android:background="@drawable/bg_sl_link"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingStart="16dp"
+                android:paddingStart="14dp"
                 android:paddingTop="12dp"
                 android:paddingEnd="8dp"
                 android:paddingBottom="12dp">
 
-                <TextView
-                    android:id="@+id/sl_link"
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:ellipsize="middle"
-                    android:fontFamily="monospace"
-                    android:maxLines="1"
-                    android:textColor="#FFFFFF"
-                    android:textSize="14sp" />
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:letterSpacing="0.2"
+                        android:text="@string/sl_link_label"
+                        android:textColor="@color/hm_text_dim"
+                        android:textSize="10sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/sl_link"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:fontFamily="@font/noto_sans_bold"
+                        android:includeFontPadding="false"
+                        android:textColor="@color/hm_text"
+                        android:textIsSelectable="true"
+                        android:textSize="16sp" />
+                </LinearLayout>
 
                 <ImageButton
                     android:id="@+id/sl_copy"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_pp_round_btn"
                     android:contentDescription="@string/sl_copy"
-                    android:padding="8dp"
-                    android:src="@drawable/ic_sl_copy"
-                    android:tint="#FFFFFF" />
+                    android:padding="10dp"
+                    android:src="@drawable/ic_sl_copy" />
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
+                android:baselineAligned="false"
                 android:orientation="horizontal">
 
-                <TextView
+                <LinearLayout
                     android:id="@+id/sl_open"
                     android:layout_width="0dp"
                     android:layout_height="46dp"
@@ -314,25 +390,53 @@
                     android:clickable="true"
                     android:focusable="true"
                     android:gravity="center"
-                    android:text="@string/sl_open"
-                    android:textColor="@color/hm_text"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:orientation="horizontal">
 
-                <TextView
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_sl_open"
+                        android:tint="@color/hm_text" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/sl_open"
+                        android:textColor="@color/hm_text"
+                        android:textSize="13.5sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <LinearLayout
                     android:id="@+id/sl_share"
                     android:layout_width="0dp"
                     android:layout_height="46dp"
                     android:layout_marginStart="10dp"
                     android:layout_weight="1"
-                    android:background="@drawable/bg_sl_link"
+                    android:background="@drawable/bg_sl_action_primary"
                     android:clickable="true"
                     android:focusable="true"
                     android:gravity="center"
-                    android:text="@string/sl_share"
-                    android:textColor="#FFFFFF"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_sl_share"
+                        android:tint="#FFFFFF" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/sl_share"
+                        android:textColor="#FFFFFF"
+                        android:textSize="13.5sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
 
@@ -342,7 +446,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:textColor="@color/lib_danger"
-            android:textSize="12.5sp"
+            android:textSize="12sp"
             android:visibility="gone" />
     </LinearLayout>
 </FrameLayout>

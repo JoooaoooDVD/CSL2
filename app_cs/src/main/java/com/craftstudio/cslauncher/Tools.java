@@ -131,6 +131,10 @@ public final class Tools {
 
 
     private static @Nullable File getAppStorageRoot(Context ctx) {
+        // User-chosen folder from the first-launch setup (falls back to the default when it
+        // became unreachable, e.g. the permission was revoked or the SD card was removed)
+        File custom = com.craftstudio.cslauncher.utils.storage.StorageRoot.resolveCustomRoot(ctx);
+        if (custom != null) return custom;
         if(SDK_INT >= 29) {
             return ctx.getExternalFilesDir(null);
         }

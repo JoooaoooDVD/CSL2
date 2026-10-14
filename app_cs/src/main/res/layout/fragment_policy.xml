@@ -90,12 +90,10 @@
             android:layout_height="0dp"
             android:layout_weight="1"
             android:clipToPadding="false"
-            android:fadingEdgeLength="28dp"
             android:paddingStart="18dp"
             android:paddingTop="6dp"
             android:paddingEnd="18dp"
             android:paddingBottom="12dp"
-            android:requiresFadingEdge="vertical"
             android:scrollbars="none">
 
             <LinearLayout

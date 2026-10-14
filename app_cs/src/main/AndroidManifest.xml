@@ -11,9 +11,12 @@
         android:required="false" />
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Only used when the user picks a custom game folder in the first-launch setup -->
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="28" />
+        android:maxSdkVersion="29" />
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
@@ -40,6 +43,7 @@
         android:theme="@style/AppTheme"
         android:networkSecurityConfig="@xml/netconfig"
         android:enableOnBackInvokedCallback="false"
+        android:requestLegacyExternalStorage="true"
         tools:ignore="UnusedAttribute">
         <activity
             android:name=".MissingStorageActivity"

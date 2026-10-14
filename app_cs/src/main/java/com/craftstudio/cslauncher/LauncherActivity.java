@@ -8,6 +8,8 @@ import android.Manifest;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
+import android.util.Log;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -22,6 +24,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import com.craftstudio.cslauncher.utils.storage.StorageRoot;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -254,13 +257,65 @@ public class LauncherActivity extends BaseActivity {
             ViewGroup content = findViewById(android.R.id.content);
             if (content != null) content.post(() -> AnimationManager.playBrandIntro(content));
         }
-        // First launch: privacy policy & terms must be accepted before anything else
+        // First launch: privacy policy & terms, then the storage setup (where game files live)
+        mFolderPickerLauncher = registerForActivityResult(new ActivityResultContracts.OpenDocumentTree(), uri -> {
+            if (mStorageSetupDialog != null) mStorageSetupDialog.onFolderPicked(uri);
+        });
+        mLegacyStorageLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
+            if (mStorageSetupDialog != null) mStorageSetupDialog.onHostResumed();
+        });
         if (!com.craftstudio.cslauncher.about.WelcomePolicy.isAccepted()) {
             View root = findViewById(android.R.id.content);
             if (root != null) root.postDelayed(() -> {
-                if (!isFinishing() && !isDestroyed()) com.craftstudio.cslauncher.about.WelcomePolicy.showIfNeeded(this);
+                if (isFinishing() || isDestroyed()) return;
+                com.craftstudio.cslauncher.about.WelcomePolicy.showIfNeeded(this, () -> {
+                    StorageRoot.markSetupPending(this);
+                    showStorageSetup();
+                });
             }, savedInstanceState == null ? 900L : 0L);
+        } else if (StorageRoot.isSetupPending(this)) {
+            // Policy accepted but the setup never finished (app closed in between): resume it
+            View root = findViewById(android.R.id.content);
+            if (root != null) root.postDelayed(this::showStorageSetup, savedInstanceState == null ? 900L : 0L);
+        } else if (!StorageRoot.isSetupDone(this)) {
+            // Existing install from before the setup existed: keep its current folder silently
+            StorageRoot.markSetupDone(this);
         }
+    }
+
+    private androidx.activity.result.ActivityResultLauncher<Uri> mFolderPickerLauncher;
+    private androidx.activity.result.ActivityResultLauncher<String> mLegacyStorageLauncher;
+    @Nullable private com.kdt.mcgui.StorageSetupDialog mStorageSetupDialog;
+
+    private void showStorageSetup() {
+        if (isFinishing() || isDestroyed() || StorageRoot.isSetupDone(this)) return;
+        if (mStorageSetupDialog != null && mStorageSetupDialog.isShowing()) return;
+        mStorageSetupDialog = new com.kdt.mcgui.StorageSetupDialog(this, new com.kdt.mcgui.StorageSetupDialog.Host() {
+            @Override
+            public void requestAllFilesAccess() {
+                if (Build.VERSION.SDK_INT >= 30) {
+                    Intent intent = StorageRoot.allFilesAccessIntent(LauncherActivity.this);
+                    if (intent != null) {
+                        try { startActivity(intent); } catch (Exception e) { Log.w("StorageSetup", "No settings screen", e); }
+                    }
+                } else if (Build.VERSION.SDK_INT >= 23) {
+                    mLegacyStorageLauncher.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
+                } else if (mStorageSetupDialog != null) {
+                    mStorageSetupDialog.onHostResumed();
+                }
+            }
+
+            @Override
+            public void pickFolder() {
+                try {
+                    mFolderPickerLauncher.launch(null);
+                } catch (Exception e) {
+                    Toast.makeText(LauncherActivity.this, R.string.ss_err_unsupported, Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+        mStorageSetupDialog.setOnDismissListener(d -> mStorageSetupDialog = null);
+        mStorageSetupDialog.show();
     }
 
     @Override
@@ -268,6 +323,7 @@ public class LauncherActivity extends BaseActivity {
         super.onResume();
         ContextExecutor.setActivity(this);
         InstanceInstaller.postInstallCheck(this);
+        if (mStorageSetupDialog != null) mStorageSetupDialog.onHostResumed();
     }
 
     @Override

@@ -771,6 +771,12 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
     }
 
     private void startSearch() {
+        // A new result set starts at the top: bring the header back so the user sees the context
+        View root = getView();
+        if (root != null) {
+            com.google.android.material.appbar.AppBarLayout appBar = root.findViewById(R.id.library_appbar);
+            if (appBar != null) appBar.setExpanded(true, true);
+        }
         if (mSearchTask != null) mSearchTask.cancel(true);
         final int generation = ++mSearchGeneration;
         final SearchFilters query = copyOf(mFilters);

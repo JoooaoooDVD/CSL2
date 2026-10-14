@@ -1112,6 +1112,11 @@
     <string name="sl_file_desc">Send latestlog.txt through any app on your device.</string>
     <string name="sl_recommended">RECOMMENDED</string>
     <string name="sl_result_title">Your log is online</string>
+    <string name="sl_opt_cloud_title">Upload to mclo.gs</string>
+    <string name="sl_opt_cloud_desc">Get a short link you can paste anywhere.</string>
+    <string name="sl_opt_file_title">Share the file</string>
+    <string name="sl_opt_file_desc">Send latestlog.txt through any app.</string>
+    <string name="sl_link_label">MCLO.GS LINK</string>
     <string name="sl_copy">Copy link</string>
     <string name="sl_open">Open</string>
     <string name="sl_share">Share link</string>
@@ -1127,4 +1132,27 @@
     <string name="lib_picker_search">Search versions…</string>
     <string name="lib_picker_all">All</string>
     <string name="lib_picker_count">%1$d versions</string>
+    <!-- First-launch storage setup -->
+    <string name="ss_eyebrow">FIRST-TIME SETUP</string>
+    <string name="ss_title">Where should your game files live?</string>
+    <string name="ss_subtitle">Minecraft versions, mods, worlds and resource packs are stored in one folder. You can\'t change this later without starting over, so pick what suits you.</string>
+    <string name="ss_default_title">App folder</string>
+    <string name="ss_default_desc">Private app storage. Works instantly, no extra permission. Removed when the app is uninstalled.</string>
+    <string name="ss_custom_title">Custom folder</string>
+    <string name="ss_custom_desc">Pick any folder on your phone or SD card. Easy to browse with a file manager and survives reinstalling.</string>
+    <string name="ss_step_perm_title">Allow all files access</string>
+    <string name="ss_step_perm_desc">Android needs this so the game can read and write outside the app folder.</string>
+    <string name="ss_step_perm_done">Granted. The game can use any folder.</string>
+    <string name="ss_step_pick_title">Choose the folder</string>
+    <string name="ss_step_pick_desc">Create a new, empty folder like “CSLauncher” and select it.</string>
+    <string name="ss_allow">Allow</string>
+    <string name="ss_pick">Browse</string>
+    <string name="ss_continue">Continue</string>
+    <string name="ss_restarting">Restarting…</string>
+    <string name="ss_footnote">The launcher restarts once after you choose a custom folder.</string>
+    <string name="ss_err_perm">All files access is still off. Tap Allow and switch it on for CS Launcher Plus.</string>
+    <string name="ss_err_unsupported">That location can\'t be used. Pick a folder on internal storage or the SD card.</string>
+    <string name="ss_err_not_writable">Can\'t write in that folder. Try another one.</string>
+    <string name="ss_err_not_empty">That folder isn\'t empty. Please pick or create an empty folder so your files don\'t get mixed up.</string>
+    <string name="ss_err_pick_first">Pick a folder first, or go with the app folder.</string>
 </resources>

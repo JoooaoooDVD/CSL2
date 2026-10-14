@@ -43,8 +43,13 @@ public class PlayerPreviewView extends View {
     private static final float MODEL_FIT_WIDTH = 24f;
 
     /** One textured box (plus, for body parts, its outer layer) */
+    private static final int ROLE_HEAD = 0, ROLE_BODY = 1, ROLE_RIGHT_ARM = 2, ROLE_LEFT_ARM = 3,
+            ROLE_RIGHT_LEG = 4, ROLE_LEFT_LEG = 5, ROLE_CAPE = 6;
+
     private static final class Part {
         final boolean cape;
+        /** Stable body-part identity (the draw list gets depth-sorted every frame) */
+        int role;
         final float[][] baseFaces = new float[6][12];
         final float[][] overlayFaces = new float[6][12];
         final Rect[] baseRects = new Rect[6];
@@ -155,6 +160,7 @@ public class PlayerPreviewView extends View {
         addBody(s, -4,            0,  -2, 4,        12, 4,  0, 16,  0, 32, 0.25f); // right leg
         addBody(s,  0,            0,  -2, 4,        12, 4, 16, 48,  0, 48, 0.25f); // left leg
 
+        for (int i = 0; i < mParts.size(); i++) mParts.get(i).role = i;   // head, body, R arm, L arm, R leg, L leg
         if (mCape != null) addCape(mCape.getWidth() / 64);
     }
 
@@ -172,6 +178,7 @@ public class PlayerPreviewView extends View {
 
     private void addCape(int s) {
         Part part = new Part(true);
+        part.role = ROLE_CAPE;
         // 10x16x1 box hanging off the back of the body
         float x = -5, y = 8, z = -3, w = 10, h = 16, d = 1;
         fillFaces(part.baseFaces, x, y, z, w, h, d, 0);
@@ -277,7 +284,9 @@ public class PlayerPreviewView extends View {
 
         // Far parts first
         for (Part part : mParts) {
-            part.depth = transformZ(part.centerX, part.centerY, part.centerZ, cy, sy, cp, sp);
+            mPt[0] = part.centerX; mPt[1] = part.centerY; mPt[2] = part.centerZ;
+            rotatePoint(mPt, part.animRotX, part.animRotY, part.animRotZ, part.animPivX, part.animPivY, part.animPivZ);
+            part.depth = transformZ(mPt[0], mPt[1], mPt[2], cy, sy, cp, sp);
         }
         Collections.sort(mParts, mDepthOrder);
 
@@ -308,11 +317,11 @@ public class PlayerPreviewView extends View {
                 mNextAutoWave = mAnimT + WAVE_EVERY;
             } else {
                 float lower = WAVE_DURATION - WAVE_RAISE;
-                if (t < WAVE_RAISE) waveLift = easeOutBack(t / WAVE_RAISE);
+                if (t < WAVE_RAISE) waveLift = easeInOut(t / WAVE_RAISE);
                 else if (t > lower) waveLift = 1f - easeInOut((t - lower) / WAVE_RAISE);
                 else waveLift = 1f;
                 float shakeT = Math.max(0f, t - WAVE_RAISE * 0.6f);
-                waveShake = (float) Math.sin(shakeT * 11.0) * 22f * waveLift;
+                waveShake = (float) Math.sin(shakeT * 9.0) * 16f * waveLift;
                 waveHeadTilt = (float) Math.sin(Math.min(1f, t / 0.6f) * Math.PI) * 6f;
             }
         }
@@ -324,19 +333,19 @@ public class PlayerPreviewView extends View {
             part.animPivX = 0f;
             part.animPivY = 24f;
             part.animPivZ = 0f;
-            if (i == 2) {          // right arm swings from the shoulder, or waves hello
+            if (part.role == ROLE_RIGHT_ARM) {   // right arm swings from the shoulder, or waves hello
                 part.animPivX = -4f;
                 if (waveLift > 0f) {
                     // Raise the arm sideways-up (Z), then shake the forearm around the raised pose
-                    part.animRotZ = -150f * waveLift + waveShake;
-                    part.animRotX = arm * (1f - waveLift) - 10f * waveLift;
+                    part.animRotZ = -145f * waveLift + waveShake;
+                    part.animRotX = arm * (1f - waveLift);
                 } else {
                     part.animRotX = arm;
                 }
-            } else if (i == 3) {   // left arm swings the opposite way
+            } else if (part.role == ROLE_LEFT_ARM) {   // left arm swings the opposite way
                 part.animRotX = -arm;
                 part.animPivX = 4f;
-            } else if (i == 0) {   // head looks around the neck, tilts a little while waving
+            } else if (part.role == ROLE_HEAD) {   // head looks around the neck, tilts a little while waving
                 part.animRotY = head;
                 part.animRotZ = waveHeadTilt;
             } else if (part.cape) {

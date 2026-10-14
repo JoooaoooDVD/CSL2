@@ -22,7 +22,7 @@ import com.craftstudio.cslauncher.utils.motion.Motion;
 
 /**
  * About CS Launcher Plus: version, community links, the launchers it is built on
- * (PojavLauncher, Amethyst, MojoLauncher), every open source component and the legal bits.
+ * (PojavLauncher, Amethyst), every open source component and the legal bits.
  */
 public class AboutFragment extends Fragment {
     public static final String TAG = "AboutFragment";
@@ -62,8 +62,6 @@ public class AboutFragment extends Fragment {
                     "LGPL-3.0", "https://github.com/PojavLauncherTeam/PojavLauncher"),
             new Project(R.drawable.about_logo_amethyst, "Amethyst", R.string.about_role_successor, R.string.about_amethyst_desc,
                     "LGPL-3.0", "https://github.com/AngelAuraMC/Amethyst-Android"),
-            new Project(R.drawable.about_logo_mojo, "MojoLauncher", R.string.about_role_upstream, R.string.about_mojo_desc,
-                    "LGPL-3.0", "https://github.com/MojoLauncher/MojoLauncher"),
     };
 
     private static final Credit[] LIBRARIES = {
@@ -147,19 +145,90 @@ public class AboutFragment extends Fragment {
         addLegal(inflater, legal, R.drawable.ic_about_heart, R.string.about_legal_mojang, R.string.about_legal_mojang_desc,
                 null, () -> open("https://www.minecraft.net/eula"));
 
-        // Entrance choreography
+        // Entrance choreography: hero first, then the rest reveals itself as it scrolls into view
         Motion.riseIn(view.findViewById(R.id.about_hero), 30L, 16f);
         Motion.popIn(view.findViewById(R.id.about_logo), 120L, 0.5f);
         Motion.popChildren(view.findViewById(R.id.about_links), 180L, 60L, 0.9f);
-        Motion.cascadeChildren(projects, 260L, 70L, 18f);
-        Motion.fadeIn(view.findViewById(R.id.about_libraries), 420L, Motion.LONG);
-        Motion.fadeIn(view.findViewById(R.id.about_services), 480L, Motion.LONG);
-        Motion.fadeIn(legal, 540L, Motion.LONG);
+        Motion.fadeIn(view.findViewById(R.id.about_section_built), 300L, Motion.LONG);
+        Motion.cascadeChildren(projects, 340L, 90L, 22f);
         Motion.fadeIn(view.findViewById(R.id.about_footer), 640L, Motion.LONG);
 
-        // A little delight: tapping the logo makes it bounce
+        androidx.core.widget.NestedScrollView scroll = view.findViewById(R.id.about_scroll);
+        View hero = view.findViewById(R.id.about_hero);
         View logo = view.findViewById(R.id.about_logo);
-        logo.setOnClickListener(v -> Motion.bounce(v));
+        ScrollReveal reveal = new ScrollReveal(scroll);
+        reveal.track(view.findViewById(R.id.about_libraries));
+        reveal.track(view.findViewById(R.id.about_services));
+        reveal.track(legal);
+        scroll.setOnScrollChangeListener((androidx.core.widget.NestedScrollView.OnScrollChangeListener) (v, x, y, ox, oy) -> {
+            // Soft parallax on the hero while it leaves the screen
+            float shift = Math.min(y, hero.getHeight()) * 0.35f;
+            hero.setTranslationY(shift);
+            hero.setAlpha(1f - Math.min(1f, y / (float) Math.max(1, hero.getHeight() * 1.4f)));
+            reveal.onScroll();
+        });
+        scroll.post(reveal::onScroll);
+
+        // Idle life: the logo floats gently; tapping it spins it once
+        startFloating(logo);
+        logo.setOnClickListener(v -> {
+            v.animate().cancel();
+            v.animate().rotationBy(360f).setDuration(650L)
+                    .setInterpolator(new android.view.animation.OvershootInterpolator(0.8f))
+                    .withEndAction(() -> startFloating(v)).start();
+        });
+    }
+
+    private void startFloating(View logo) {
+        if (logo == null || !com.craftstudio.cslauncher.utils.AnimationManager.isEnabled(logo.getContext(),
+                com.craftstudio.cslauncher.utils.AnimationManager.TYPE_CONTENT)) return;
+        android.animation.ObjectAnimator floatAnim = android.animation.ObjectAnimator.ofFloat(logo, View.TRANSLATION_Y, 0f, -6f * logo.getResources().getDisplayMetrics().density, 0f);
+        floatAnim.setDuration(3200L);
+        floatAnim.setRepeatCount(android.animation.ValueAnimator.INFINITE);
+        floatAnim.setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator());
+        floatAnim.start();
+        logo.setTag(R.id.about_logo, floatAnim);
+    }
+
+    /** Reveals the children of tracked groups the first time they scroll into view */
+    private static final class ScrollReveal {
+        private final View mScroller;
+        private final java.util.List<View> mPending = new java.util.ArrayList<>();
+        private final int[] mLoc = new int[2];
+        private final int[] mScrollerLoc = new int[2];
+
+        ScrollReveal(View scroller) { mScroller = scroller; }
+
+        void track(ViewGroup group) {
+            if (group == null) return;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                View child = group.getChildAt(i);
+                child.setAlpha(0f);
+                child.setTranslationY(28f * child.getResources().getDisplayMetrics().density);
+                mPending.add(child);
+            }
+        }
+
+        void onScroll() {
+            if (mPending.isEmpty()) return;
+            mScroller.getLocationInWindow(mScrollerLoc);
+            int limit = mScrollerLoc[1] + mScroller.getHeight();
+            long delay = 0L;
+            java.util.Iterator<View> it = mPending.iterator();
+            while (it.hasNext()) {
+                View child = it.next();
+                child.getLocationInWindow(mLoc);
+                // mLoc already includes the pending translation; compare the untranslated top
+                float top = mLoc[1] - child.getTranslationY();
+                if (top < limit - child.getHeight() * 0.25f) {
+                    child.animate().alpha(1f).translationY(0f).setStartDelay(delay)
+                            .setDuration(Motion.MEDIUM + 80)
+                            .setInterpolator(new android.view.animation.DecelerateInterpolator(1.8f)).start();
+                    delay += 55L;
+                    it.remove();
+                }
+            }
+        }
     }
 
     private void fillCredits(LayoutInflater inflater, ViewGroup container, Credit[] credits, @DrawableRes int icon) {

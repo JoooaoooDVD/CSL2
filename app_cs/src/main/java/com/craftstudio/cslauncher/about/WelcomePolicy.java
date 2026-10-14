@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.craftstudio.cslauncher.R;
 import com.craftstudio.cslauncher.prefs.LauncherPreferences;
@@ -27,6 +28,11 @@ public final class WelcomePolicy {
 
     /** Adds the overlay if it has not been accepted yet. Safe to call on every launch. */
     public static void showIfNeeded(@NonNull Activity activity) {
+        showIfNeeded(activity, null);
+    }
+
+    /** Same, with a callback once the user accepted (used to chain the storage setup). */
+    public static void showIfNeeded(@NonNull Activity activity, @Nullable Runnable onAccepted) {
         if (isAccepted()) return;
         ViewGroup content = activity.findViewById(android.R.id.content);
         if (content == null || content.findViewById(R.id.policy_root) != null) return;
@@ -41,7 +47,10 @@ public final class WelcomePolicy {
             LauncherPreferences.DEFAULT_PREF.edit().putBoolean(PREF_KEY, true).apply();
             root.animate().alpha(0f).scaleX(1.03f).scaleY(1.03f)
                     .setDuration(Motion.MEDIUM).setInterpolator(Motion.EXIT)
-                    .withEndAction(() -> content.removeView(root)).start();
+                    .withEndAction(() -> {
+                        content.removeView(root);
+                        if (onAccepted != null) onAccepted.run();
+                    }).start();
         });
 
         // Swallow back while the policy is up
