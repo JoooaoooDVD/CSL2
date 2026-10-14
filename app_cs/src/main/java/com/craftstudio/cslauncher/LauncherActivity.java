@@ -267,10 +267,17 @@ public class LauncherActivity extends BaseActivity {
             // The picker is portrait, so this activity may have been recreated meanwhile and the
             // dialog isn't up yet: remember the pick, the re-shown dialog restores it
             java.io.File dir = StorageRoot.treeUriToFile(uri);
-            if (dir != null && StorageRoot.isEmptyOrMissing(dir)) {
+            if (dir == null) {
+                StorageRoot.setPendingError(this, R.string.ss_err_unsupported);
+            } else if (!StorageRoot.isEmptyOrMissing(dir)) {
+                StorageRoot.setPendingError(this, R.string.ss_err_not_empty);
+            } else {
                 StorageRoot.persistTreeGrant(this, uri);
                 StorageRoot.setPendingPick(this, dir.getAbsolutePath());
             }
+            // Make sure the setup comes back up right away with the result
+            View root = findViewById(android.R.id.content);
+            if (root != null) root.post(this::showStorageSetup);
         });
         mLegacyStorageLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
             if (mStorageSetupDialog != null) mStorageSetupDialog.onHostResumed();
@@ -291,7 +298,18 @@ public class LauncherActivity extends BaseActivity {
         } else if (!StorageRoot.isSetupDone(this)) {
             // Existing install from before the setup existed: keep its current folder silently
             StorageRoot.markSetupDone(this);
+        } else if (!com.kdt.mcgui.DiscordInviteDialog.wasShown(this)) {
+            // Setup already done (e.g. we just restarted into the custom folder): one-time community invite
+            View root = findViewById(android.R.id.content);
+            if (root != null) root.postDelayed(this::showDiscordInvite, savedInstanceState == null ? 1200L : 300L);
         }
+    }
+
+    private void showDiscordInvite() {
+        if (isFinishing() || isDestroyed()) return;
+        if (!com.craftstudio.cslauncher.about.WelcomePolicy.isAccepted() || !StorageRoot.isSetupDone(this)) return;
+        if (mStorageSetupDialog != null && mStorageSetupDialog.isShowing()) return;
+        com.kdt.mcgui.DiscordInviteDialog.showIfNeeded(this);
     }
 
     private androidx.activity.result.ActivityResultLauncher<Uri> mFolderPickerLauncher;
@@ -325,7 +343,13 @@ public class LauncherActivity extends BaseActivity {
                 }
             }
         });
-        mStorageSetupDialog.setOnDismissListener(d -> mStorageSetupDialog = null);
+        mStorageSetupDialog.setOnDismissListener(d -> {
+            mStorageSetupDialog = null;
+            if (StorageRoot.isSetupDone(this)) {
+                View root = findViewById(android.R.id.content);
+                if (root != null) root.postDelayed(this::showDiscordInvite, 450L);
+            }
+        });
         mStorageSetupDialog.show();
     }
 

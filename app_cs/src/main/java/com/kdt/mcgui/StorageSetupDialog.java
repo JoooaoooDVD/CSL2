@@ -92,9 +92,14 @@ public class StorageSetupDialog extends CSPopupDialog {
 
         // A pick from before the activity got recreated (the system picker is portrait)
         String pending = StorageRoot.getPendingPick(getContext());
+        int pendingError = StorageRoot.takePendingError(getContext());
         if (pending != null) {
             mPickedDir = new File(pending);
             select(true);
+            if (findViewById(R.id.ss_step_perm).getVisibility() == View.VISIBLE) showError(R.string.ss_err_perm_needed);
+        } else if (pendingError != 0) {
+            select(true);
+            showError(pendingError);
         } else {
             select(false);
         }

@@ -167,18 +167,42 @@ public final class StorageRoot {
         } catch (IllegalArgumentException e) {
             return null;
         }
-        if (docId == null || !"com.android.externalstorage.documents".equals(treeUri.getAuthority())) return null;
-        int colon = docId.indexOf(':');
-        String volume = colon >= 0 ? docId.substring(0, colon) : docId;
-        String rel = colon >= 0 ? docId.substring(colon + 1) : "";
-        File base;
-        if ("primary".equalsIgnoreCase(volume)) {
-            base = Environment.getExternalStorageDirectory();
-        } else {
-            base = new File("/storage/" + volume);
-            if (!base.isDirectory()) return null;
+        if (docId == null) return null;
+        String authority = treeUri.getAuthority();
+        if ("com.android.externalstorage.documents".equals(authority)) {
+            int colon = docId.indexOf(':');
+            String volume = colon >= 0 ? docId.substring(0, colon) : docId;
+            String rel = colon >= 0 ? docId.substring(colon + 1) : "";
+            File base;
+            if ("primary".equalsIgnoreCase(volume) || "home".equalsIgnoreCase(volume)) {
+                base = Environment.getExternalStorageDirectory();
+                if ("home".equalsIgnoreCase(volume)) base = new File(base, Environment.DIRECTORY_DOCUMENTS);
+            } else {
+                base = new File("/storage/" + volume);
+                if (!base.isDirectory()) return null;
+            }
+            return rel.isEmpty() ? base : new File(base, rel);
         }
-        return rel.isEmpty() ? base : new File(base, rel);
+        if ("com.android.providers.downloads.documents".equals(authority)) {
+            // The "Downloads" entry of the picker: "downloads" (the root) or "raw:/storage/emulated/0/Download/x"
+            if (docId.startsWith("raw:")) return new File(docId.substring(4));
+            if ("downloads".equals(docId)) return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+            return null;
+        }
+        return null;
+    }
+
+    /** Error for a pick that couldn't be used, kept until the dialog can show it. */
+    private static final String PREF_PENDING_ERROR = "storageSetupPendingError";
+
+    public static void setPendingError(@NonNull Context context, int stringRes) {
+        prefs(context).edit().putInt(PREF_PENDING_ERROR, stringRes).apply();
+    }
+
+    public static int takePendingError(@NonNull Context context) {
+        int res = prefs(context).getInt(PREF_PENDING_ERROR, 0);
+        if (res != 0) prefs(context).edit().remove(PREF_PENDING_ERROR).apply();
+        return res;
     }
 
     /** True when files can really be created inside {@code dir} (creating it if needed). */

@@ -1164,4 +1164,29 @@
     <string name="auth_discord_linked">Connected as %1$s · tap to disconnect</string>
     <string name="lp_search_hint">Search…</string>
     <string name="lp_empty">Nothing matches.</string>
+    <!-- Local account page -->
+    <string name="ll_eyebrow">OFFLINE ACCOUNT</string>
+    <string name="ll_greeting_empty">Who\'s playing?</string>
+    <string name="ll_greeting_fmt">Hey, %1$s!</string>
+    <string name="ll_intro">Pick a player name. No login, no internet needed — great for singleplayer and LAN.</string>
+    <string name="ll_name_label">PLAYER NAME</string>
+    <string name="ll_name_hint">e.g. Steve_07</string>
+    <string name="ll_random">Suggest a name</string>
+    <string name="ll_play">Create &amp; play</string>
+    <string name="ll_rules_title">NAME RULES</string>
+    <string name="ll_rule_length">3 to 16 characters</string>
+    <string name="ll_rule_chars">Letters, numbers and _ only</string>
+    <string name="ll_rule_space">No spaces</string>
+    <string name="ll_note">Offline names can\'t join online-mode servers. You can add a Microsoft account later and keep this one too.</string>
+    <string name="ll_err_fix">Fix the name first — see the rules.</string>
+    <!-- Discord invite popup -->
+    <string name="di_eyebrow">COMMUNITY</string>
+    <string name="di_title">Join the CS Launcher Discord</string>
+    <string name="di_body">Get help fast, catch new releases first and share your packs with other players.</string>
+    <string name="di_perk_support">Support</string>
+    <string name="di_perk_updates">Early updates</string>
+    <string name="di_perk_packs">Pack sharing</string>
+    <string name="di_join">Join Discord</string>
+    <string name="di_later">Maybe later</string>
+    <string name="di_invite_url" translatable="false">https://discord.gg/dmteYqZZyY</string>
 </resources>

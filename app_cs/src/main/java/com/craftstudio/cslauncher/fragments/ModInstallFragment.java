@@ -1486,6 +1486,13 @@ public class ModInstallFragment extends Fragment {
         showAll.setOnCheckedChangeListener((button, checked) -> refresh.run());
         refresh.run();
         dialog.show();
+        // Use (almost) the whole screen: with 100+ versions the default dialog leaves the list a sliver
+        if (dialog.getWindow() != null) {
+            android.util.DisplayMetrics metrics = getResources().getDisplayMetrics();
+            int width = Math.min((int) (600 * metrics.density), metrics.widthPixels - (int) (32 * metrics.density));
+            int height = metrics.heightPixels - (int) (24 * metrics.density);
+            dialog.getWindow().setLayout(width, height);
+        }
     }
 
     private interface VersionClickListener {
