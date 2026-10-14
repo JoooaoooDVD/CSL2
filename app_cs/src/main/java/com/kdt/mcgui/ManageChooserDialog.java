@@ -85,11 +85,8 @@ public class ManageChooserDialog extends CSPopupDialog {
         });
 
         View close = findViewById(R.id.mc_close);
-        View filter = findViewById(R.id.mc_filter);
         close.setOnClickListener(v -> close(null));
-        filter.setOnClickListener(v -> mCallback.onFilterRequested());
         CSAnimationEngine.attachPressFeedback(close);
-        CSAnimationEngine.attachPressFeedback(filter);
 
         TextView subtitle = findViewById(R.id.mc_subtitle);
         String profileName = profileName();

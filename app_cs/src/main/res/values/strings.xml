@@ -1141,10 +1141,11 @@
     <string name="ss_custom_title">Custom folder</string>
     <string name="ss_custom_desc">Pick any folder on your phone or SD card. Easy to browse with a file manager and survives reinstalling.</string>
     <string name="ss_step_perm_title">Allow all files access</string>
-    <string name="ss_step_perm_desc">Android needs this so the game can read and write outside the app folder.</string>
+    <string name="ss_step_perm_desc">Android blocks the game from writing in this folder without it. Tip: a folder inside Download or Documents usually needs no permission.</string>
+    <string name="ss_err_perm_needed">This folder needs “All files access” on your Android version. Allow it, or pick a folder inside Download / Documents.</string>
     <string name="ss_step_perm_done">Granted. The game can use any folder.</string>
     <string name="ss_step_pick_title">Choose the folder</string>
-    <string name="ss_step_pick_desc">Create a new, empty folder like “CSLauncher” and select it.</string>
+    <string name="ss_step_pick_desc">Create a new, empty folder (e.g. Download/CSLauncher) and tap “Use this folder”.</string>
     <string name="ss_allow">Allow</string>
     <string name="ss_pick">Browse</string>
     <string name="ss_continue">Continue</string>
@@ -1155,4 +1156,12 @@
     <string name="ss_err_not_writable">Can\'t write in that folder. Try another one.</string>
     <string name="ss_err_not_empty">That folder isn\'t empty. Please pick or create an empty folder so your files don\'t get mixed up.</string>
     <string name="ss_err_pick_first">Pick a folder first, or go with the app folder.</string>
+    <string name="auth_select_banner_sub">Choose how you want to sign in</string>
+    <string name="auth_select_section_signin">SIGN IN WITH</string>
+    <string name="auth_select_section_discord">EXTRAS</string>
+    <string name="auth_select_discord">Link with Discord</string>
+    <string name="auth_desc_discord">Show what you\'re playing as your Discord status.</string>
+    <string name="auth_discord_linked">Connected as %1$s · tap to disconnect</string>
+    <string name="lp_search_hint">Search…</string>
+    <string name="lp_empty">Nothing matches.</string>
 </resources>

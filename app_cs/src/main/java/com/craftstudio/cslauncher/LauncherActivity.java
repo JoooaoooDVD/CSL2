@@ -259,7 +259,18 @@ public class LauncherActivity extends BaseActivity {
         }
         // First launch: privacy policy & terms, then the storage setup (where game files live)
         mFolderPickerLauncher = registerForActivityResult(new ActivityResultContracts.OpenDocumentTree(), uri -> {
-            if (mStorageSetupDialog != null) mStorageSetupDialog.onFolderPicked(uri);
+            if (uri == null) return;
+            if (mStorageSetupDialog != null && mStorageSetupDialog.isShowing()) {
+                mStorageSetupDialog.onFolderPicked(uri);
+                return;
+            }
+            // The picker is portrait, so this activity may have been recreated meanwhile and the
+            // dialog isn't up yet: remember the pick, the re-shown dialog restores it
+            java.io.File dir = StorageRoot.treeUriToFile(uri);
+            if (dir != null && StorageRoot.isEmptyOrMissing(dir)) {
+                StorageRoot.persistTreeGrant(this, uri);
+                StorageRoot.setPendingPick(this, dir.getAbsolutePath());
+            }
         });
         mLegacyStorageLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
             if (mStorageSetupDialog != null) mStorageSetupDialog.onHostResumed();

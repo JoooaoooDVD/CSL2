@@ -295,7 +295,8 @@ public class FileManagerFragment extends Fragment {
             TextView crumb = (TextView) inflater.inflate(R.layout.item_fm_crumb, mCrumbs, false);
             crumb.setText(i == 0 ? mTitleName : target.getName());
             crumb.setSelected(i == chain.size() - 1);
-            crumb.setTextColor(i == chain.size() - 1 ? 0xFFFFFFFF
+            crumb.setTextColor(i == chain.size() - 1
+                    ? androidx.core.content.ContextCompat.getColor(requireContext(), R.color.lib_update_text)
                     : com.craftstudio.cslauncher.utils.ThemeColors.get(requireContext(), com.google.android.material.R.attr.colorOnSurfaceVariant));
             crumb.setOnClickListener(v -> {
                 if (!target.equals(mCurrent)) navigateTo(target, true);
@@ -951,11 +952,40 @@ public class FileManagerFragment extends Fragment {
     private static boolean isImage(String ext) { return IMAGE_EXT.contains(ext); }
 
     private static int iconFor(File file, String ext) {
-        if (file.isDirectory()) return R.drawable.ic_pe_folder;
-        if (isImage(ext)) return R.drawable.ic_lib_image;
-        if (ext.equals("zip") || ext.equals("mrpack")) return R.drawable.ic_fm_zip;
-        if (ext.equals("jar")) return R.drawable.ic_pe_java;
-        if (ext.equals("dat") || ext.equals("dat_old") || ext.equals("mca") || ext.equals("nbt")) return R.drawable.ic_lib_cube;
+        if (file.isDirectory()) {
+            // Well-known game folders get their own icon
+            String name = file.getName().toLowerCase(java.util.Locale.ROOT);
+            File parent = file.getParentFile();
+            String parentName = parent == null ? "" : parent.getName().toLowerCase(java.util.Locale.ROOT);
+            switch (name) {
+                case "mods": return R.drawable.ic_nav_mods;
+                case "resourcepacks": case "texturepacks": return R.drawable.ic_pe_image;
+                case "shaderpacks": return R.drawable.ic_pe_layers;
+                case "saves": return R.drawable.ic_lib_cube;
+                case "datapacks": return R.drawable.ic_fm_code;
+                case "config": return R.drawable.ic_pe_gear;
+                case "screenshots": return R.drawable.ic_pe_image_filled;
+                case "logs": case "crash-reports": return R.drawable.ic_pe_terminal;
+                case "skins": return R.drawable.ic_pe_person;
+                case "servers": return R.drawable.ic_nav_servers;
+                case "versions": return R.drawable.ic_nav_versions;
+            }
+            if (parentName.equals("saves") && new File(file, "level.dat").exists()) return R.drawable.ic_lib_cube;
+            return R.drawable.ic_pe_folder;
+        }
+        String parentName = file.getParentFile() == null ? "" : file.getParentFile().getName().toLowerCase(java.util.Locale.ROOT);
+        if (isImage(ext)) return parentName.equals("skins") ? R.drawable.ic_pe_person : R.drawable.ic_lib_image;
+        if (ext.equals("jar")) return R.drawable.ic_nav_mods;                   // a mod
+        if (ext.equals("mrpack")) return R.drawable.ic_nav_mods;                // a modpack
+        if (ext.equals("zip")) {
+            if (parentName.equals("resourcepacks") || parentName.equals("texturepacks")) return R.drawable.ic_pe_image;
+            if (parentName.equals("shaderpacks")) return R.drawable.ic_pe_layers;
+            if (parentName.equals("datapacks")) return R.drawable.ic_fm_code;
+            return R.drawable.ic_fm_zip;
+        }
+        if (ext.equals("dat") || ext.equals("dat_old") || ext.equals("mca") || ext.equals("nbt") || ext.equals("mcr")) return R.drawable.ic_lib_cube;
+        if (ext.equals("log") || ext.equals("gz")) return R.drawable.ic_pe_terminal;
+        if (ext.equals("jks") || ext.equals("options") ) return R.drawable.ic_pe_gear;
         if (CODE_EXT.contains(ext)) return R.drawable.ic_fm_code;
         if (isText(ext)) return R.drawable.ic_fm_text;
         return R.drawable.ic_fm_file;

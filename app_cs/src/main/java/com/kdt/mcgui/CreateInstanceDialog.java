@@ -756,31 +756,24 @@ public class CreateInstanceDialog extends CSPopupDialog {
         if (mBusyRunning || items.isEmpty()) return;
         hideKeyboard();
         if (mDropdown != null) mDropdown.dismiss();
-        float d = dp();
-        ListPopupWindow popup = new ListPopupWindow(getContext());
-        popup.setAnchorView(anchor);
-        popup.setModal(true);
-        popup.setInputMethodMode(ListPopupWindow.INPUT_METHOD_NOT_NEEDED);
-        popup.setBackgroundDrawable(androidx.core.content.ContextCompat.getDrawable(getContext(), R.drawable.bg_ci_popup));
-        popup.setAnimationStyle(R.style.CS_DropdownAnimation);
-        popup.setVerticalOffset((int) (4 * d));
-        popup.setWidth(Math.max(anchor.getWidth(), (int) (180 * d)));
-        popup.setHeight(items.size() > 6 ? (int) (6 * 42 * d + 12 * d) : ListPopupWindow.WRAP_CONTENT);
-        popup.setAdapter(new DropdownAdapter(items, selected));
-        popup.setOnItemClickListener((parent, view, position, id) -> {
-            popup.dismiss();
-            if (position != selected) onPicked.onPicked(position);
-        });
-        popup.setOnDismissListener(() -> {
-            if (mDropdown == popup) mDropdown = null;
-        });
-        mDropdown = popup;
-        popup.show();
-        if (popup.getListView() != null) {
-            popup.getListView().setDivider(null);
-            popup.getListView().setVerticalScrollBarEnabled(true);
-            if (selected > 2) popup.setSelection(selected);
+        // Title from the field's label so the picker says what it is for
+        CharSequence title = anchor == mMcField ? getContext().getText(R.string.ci_mc_version)
+                : anchor == mLoaderField ? getContext().getText(R.string.ci_loader_version)
+                : anchor.getId() == R.id.ci_java_field ? getContext().getText(R.string.ci_java)
+                : getContext().getText(R.string.ci_renderer);
+        new ListPickerDialog(getContext(), getContext().getText(R.string.ci_title), titleCase(title), items, null, selected,
+                onPicked::onPicked).show();
+    }
+
+    /** "MINECRAFT VERSION" → "Minecraft Version" */
+    private static String titleCase(CharSequence upper) {
+        StringBuilder sb = new StringBuilder();
+        boolean start = true;
+        for (char c : upper.toString().toLowerCase(java.util.Locale.ROOT).toCharArray()) {
+            sb.append(start ? Character.toUpperCase(c) : c);
+            start = c == ' ';
         }
+        return sb.toString();
     }
 
     private final class DropdownAdapter extends BaseAdapter {

@@ -185,6 +185,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         mTabIndicator = view.findViewById(R.id.library_tab_indicator);
         mTypeTabsFrame = view.findViewById(R.id.library_type_tabs_frame);
         mToolbar = view.findViewById(R.id.library_toolbar);
+        setupHeaderCollapse(view);
         mSearchBox = view.findViewById(R.id.library_search_box);
         mSortChevron = view.findViewById(R.id.library_sort_chevron);
         mImportButton = view.findViewById(R.id.library_import_button);
@@ -768,6 +769,29 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         copy.category = source.category;
         copy.sort = source.sort;
         return copy;
+    }
+
+    /**
+     * The header block hides as the grid scrolls and only comes back at the very top. While it
+     * moves, its content fades and shrinks a little so the hand-off to the full-screen grid feels
+     * deliberate instead of a hard cut.
+     */
+    private void setupHeaderCollapse(@NonNull View root) {
+        com.google.android.material.appbar.AppBarLayout appBar = root.findViewById(R.id.library_appbar);
+        View block = root.findViewById(R.id.library_collapsing);
+        if (appBar == null || block == null) return;
+        block.setPivotY(0f);
+        appBar.addOnOffsetChangedListener((bar, offset) -> {
+            int range = bar.getTotalScrollRange();
+            if (range <= 0) return;
+            float fraction = Math.min(1f, -offset / (float) range);
+            float eased = 1f - (1f - fraction) * (1f - fraction);
+            block.setAlpha(1f - Math.min(1f, eased * 1.35f));
+            float scale = 1f - 0.04f * eased;
+            block.setScaleX(scale);
+            block.setScaleY(scale);
+            block.setPivotX(block.getWidth() / 2f);
+        });
     }
 
     private void startSearch() {

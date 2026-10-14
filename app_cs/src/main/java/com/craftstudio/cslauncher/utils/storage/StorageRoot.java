@@ -29,6 +29,7 @@ public final class StorageRoot {
     private static final String PREF_CUSTOM_ROOT = "customStorageRoot";
     private static final String PREF_SETUP_DONE = "storageSetupDoneV1";
     private static final String PREF_SETUP_PENDING = "storageSetupPendingV1";
+    private static final String PREF_PENDING_PICK = "storageSetupPendingPick";
 
     private StorageRoot() {}
 
@@ -56,6 +57,18 @@ public final class StorageRoot {
         prefs(context).edit().putBoolean(PREF_SETUP_DONE, true).remove(PREF_SETUP_PENDING).apply();
     }
 
+    /** Folder picked during the setup but not confirmed yet (survives the activity being recreated). */
+    @Nullable
+    public static String getPendingPick(@NonNull Context context) {
+        String path = prefs(context).getString(PREF_PENDING_PICK, null);
+        return path == null || path.trim().isEmpty() ? null : path;
+    }
+
+    public static void setPendingPick(@NonNull Context context, @Nullable String path) {
+        if (path == null) prefs(context).edit().remove(PREF_PENDING_PICK).apply();
+        else prefs(context).edit().putString(PREF_PENDING_PICK, path).apply();
+    }
+
     // ───────────────────────── roots ─────────────────────────
 
     /** Custom folder chosen by the user, or null when the default is used. */
@@ -77,7 +90,6 @@ public final class StorageRoot {
     public static File resolveCustomRoot(@NonNull Context context) {
         String path = getCustomRoot(context);
         if (path == null) return null;
-        if (!hasAllFilesAccess(context)) return null;
         File dir = new File(path);
         // The write probe is cheap but this runs on every storage check; only probe once per path
         if (!path.equals(sProbedPath)) {
@@ -108,6 +120,7 @@ public final class StorageRoot {
                 .putString(PREF_CUSTOM_ROOT, dir.getAbsolutePath())
                 .putBoolean(PREF_SETUP_DONE, true)
                 .remove(PREF_SETUP_PENDING)
+                .remove(PREF_PENDING_PICK)
                 .apply();
     }
 
@@ -116,6 +129,7 @@ public final class StorageRoot {
                 .remove(PREF_CUSTOM_ROOT)
                 .putBoolean(PREF_SETUP_DONE, true)
                 .remove(PREF_SETUP_PENDING)
+                .remove(PREF_PENDING_PICK)
                 .apply();
     }
 
@@ -187,6 +201,14 @@ public final class StorageRoot {
         if (!dir.exists()) return true;
         String[] list = dir.list();
         return list == null || list.length == 0;
+    }
+
+    /** Keeps the SAF grant on the picked tree too (best effort; the game itself uses plain paths). */
+    public static void persistTreeGrant(@NonNull Context context, @NonNull Uri treeUri) {
+        try {
+            context.getContentResolver().takePersistableUriPermission(treeUri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        } catch (Exception ignored) {}
     }
 
     /** Restarts the whole process so every path constant is rebuilt from the new root. */

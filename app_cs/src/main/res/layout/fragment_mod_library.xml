@@ -20,7 +20,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            app:layout_scrollFlags="scroll|enterAlways|snap|snapMargins">
+            app:layout_scrollFlags="scroll|snap|snapMargins">
 
         <!-- Title block, scrolls away to give the grid more room -->
         <LinearLayout

@@ -74,23 +74,6 @@
                     android:textSize="12sp" />
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/mc_filter"
-                android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:layout_marginStart="10dp"
-                android:background="@drawable/bg_ci_button_outline"
-                android:drawableStart="@drawable/ic_filter"
-                android:drawablePadding="6dp"
-                android:gravity="center"
-                android:paddingStart="12dp"
-                android:paddingEnd="14dp"
-                android:text="@string/mc_filters"
-                android:textColor="@color/hm_text"
-                android:textSize="12.5sp"
-                android:textStyle="bold"
-                app:drawableTint="@color/hm_icon" />
-
             <ImageButton
                 android:id="@+id/mc_close"
                 android:layout_width="36dp"

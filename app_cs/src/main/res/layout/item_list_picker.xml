@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Row of the big picker; activated = selected -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="52dp"
+    android:layout_marginBottom="6dp"
+    android:background="@drawable/bg_pp_row"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="14dp"
+    android:paddingEnd="12dp">
+
+    <TextView
+        android:id="@+id/lpi_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:ellipsize="end"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:textColor="@color/hm_text"
+        android:textSize="15sp" />
+
+    <TextView
+        android:id="@+id/lpi_badge"
+        style="@style/Library.Badge"
+        android:layout_marginStart="8dp"
+        android:background="@drawable/bg_lib_badge_neutral"
+        android:textColor="@color/hm_text_dim"
+        android:textStyle="normal"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/lpi_check"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_marginStart="10dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_pp_check"
+        android:tint="@color/hm_text" />
+</LinearLayout>

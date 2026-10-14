@@ -83,11 +83,6 @@ public class StorageSetupDialog extends CSPopupDialog {
         });
         mPickBtn.setOnClickListener(v -> {
             hideError();
-            if (!StorageRoot.hasAllFilesAccess(getContext())) {
-                showError(R.string.ss_err_perm);
-                Motion.shake(findViewById(R.id.ss_step_perm));
-                return;
-            }
             mHost.pickFolder();
         });
         mContinue.setOnClickListener(v -> onContinue());
@@ -95,7 +90,14 @@ public class StorageSetupDialog extends CSPopupDialog {
             CSAnimationEngine.attachPressFeedback(v);
         }
 
-        select(false);
+        // A pick from before the activity got recreated (the system picker is portrait)
+        String pending = StorageRoot.getPendingPick(getContext());
+        if (pending != null) {
+            mPickedDir = new File(pending);
+            select(true);
+        } else {
+            select(false);
+        }
         CreatePopupMotion.chooserContent(findViewById(R.id.ss_header), new View[]{mOptDefault, mOptCustom}, findViewById(R.id.ss_subtitle));
     }
 
@@ -129,22 +131,24 @@ public class StorageSetupDialog extends CSPopupDialog {
         Motion.swapText(mContinueText, getContext().getString(R.string.ss_continue));
     }
 
-    /** Re-evaluates the permission state and the picked folder. */
+    /** Re-evaluates the picked folder; the permission row only shows when that folder needs it. */
     private void refreshSteps() {
-        boolean granted = StorageRoot.hasAllFilesAccess(getContext());
-        mPermDesc.setText(granted ? R.string.ss_step_perm_done : R.string.ss_step_perm_desc);
-        mPermBtn.setVisibility(granted ? View.GONE : View.VISIBLE);
-        mPermNum.setText(granted ? "\u2713" : "1");
-        mPermNum.setAlpha(granted ? 0.75f : 1f);
-        findViewById(R.id.ss_step_pick).setAlpha(granted ? 1f : 0.55f);
+        boolean needsPermission = mPickedDir != null && !StorageRoot.isWritableDirectory(mPickedDir)
+                && !StorageRoot.hasAllFilesAccess(getContext());
+        View permRow = findViewById(R.id.ss_step_perm);
+        View divider = findViewById(R.id.ss_step_divider);
+        permRow.setVisibility(needsPermission ? View.VISIBLE : View.GONE);
+        divider.setVisibility(needsPermission ? View.VISIBLE : View.GONE);
+        mPermDesc.setText(R.string.ss_step_perm_desc);
+        mPermBtn.setVisibility(View.VISIBLE);
+        mPermNum.setText("2");
+        mPickNum.setText(mPickedDir != null ? "\u2713" : "1");
         if (mPickedDir != null) {
             mPickDesc.setText(mPickedDir.getAbsolutePath());
-            mPickNum.setText("\u2713");
             mCustomPath.setText(mPickedDir.getAbsolutePath());
             mCustomPath.setVisibility(View.VISIBLE);
         } else {
             mPickDesc.setText(R.string.ss_step_pick_desc);
-            mPickNum.setText("2");
             mCustomPath.setVisibility(View.GONE);
         }
     }
@@ -152,9 +156,12 @@ public class StorageSetupDialog extends CSPopupDialog {
     /** Host activity came back to the foreground (e.g. from the permission settings screen). */
     public void onHostResumed() {
         if (!isShowing() || !mCustom || mFinishing) return;
-        boolean granted = StorageRoot.hasAllFilesAccess(getContext());
+        boolean wasBlocked = findViewById(R.id.ss_step_perm).getVisibility() == View.VISIBLE;
         refreshSteps();
-        if (granted) Motion.pulse(findViewById(R.id.ss_step_perm));
+        if (wasBlocked && findViewById(R.id.ss_step_perm).getVisibility() != View.VISIBLE) {
+            hideError();
+            Motion.pulse(mContinue);
+        }
     }
 
     /** Result of the system folder picker. */
@@ -164,12 +171,25 @@ public class StorageSetupDialog extends CSPopupDialog {
         File dir = StorageRoot.treeUriToFile(treeUri);
         if (dir == null) { showError(R.string.ss_err_unsupported); return; }
         if (!StorageRoot.isEmptyOrMissing(dir)) { showError(R.string.ss_err_not_empty); return; }
-        if (!StorageRoot.isWritableDirectory(dir)) { showError(R.string.ss_err_not_writable); return; }
+        StorageRoot.persistTreeGrant(getContext(), treeUri);
+        acceptPick(dir);
+    }
+
+    /** Folder resolved from a pick (possibly delivered while the dialog was being recreated). */
+    public void acceptPick(@NonNull File dir) {
         hideError();
         mPickedDir = dir;
-        refreshSteps();
+        StorageRoot.setPendingPick(getContext(), dir.getAbsolutePath());
+        if (!mCustom) select(true); else refreshSteps();
         Motion.bounce(mCustomPath);
-        Motion.pulse(mContinue);
+        if (findViewById(R.id.ss_step_perm).getVisibility() == View.VISIBLE) {
+            // Selected through the picker but plain file access is blocked here (Android 11+ outside
+            // the app's own folders): one more tap is needed
+            showError(R.string.ss_err_perm_needed);
+            Motion.shake(findViewById(R.id.ss_step_perm));
+        } else {
+            Motion.pulse(mContinue);
+        }
     }
 
     private void onContinue() {
@@ -177,12 +197,8 @@ public class StorageSetupDialog extends CSPopupDialog {
         if (!mCustom) {
             mFinishing = true;
             StorageRoot.useDefaultRoot(getContext());
+            StorageRoot.setPendingPick(getContext(), null);
             CreatePopupMotion.optionChosen(mOptDefault, () -> close(null));
-            return;
-        }
-        if (!StorageRoot.hasAllFilesAccess(getContext())) {
-            showError(R.string.ss_err_perm);
-            Motion.shake(findViewById(R.id.ss_step_perm));
             return;
         }
         if (mPickedDir == null) {
@@ -191,7 +207,13 @@ public class StorageSetupDialog extends CSPopupDialog {
             return;
         }
         if (!StorageRoot.isWritableDirectory(mPickedDir)) {
-            showError(R.string.ss_err_not_writable);
+            refreshSteps();
+            if (findViewById(R.id.ss_step_perm).getVisibility() == View.VISIBLE) {
+                showError(R.string.ss_err_perm_needed);
+                Motion.shake(findViewById(R.id.ss_step_perm));
+            } else {
+                showError(R.string.ss_err_not_writable);
+            }
             return;
         }
         mFinishing = true;
