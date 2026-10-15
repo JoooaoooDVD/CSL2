@@ -95,14 +95,19 @@ public class DiscordInviteDialog extends CSPopupDialog {
                 if (activity != null) Tools.openURL(activity, getContext().getString(R.string.di_invite_url));
             }));
         });
-        for (View v : new View[]{close, later, join}) CSAnimationEngine.attachPressFeedback(v);
+        View youtube = findViewById(R.id.di_youtube);
+        youtube.setOnClickListener(v -> {
+            android.app.Activity activity = findActivity(getContext());
+            if (activity != null) Tools.openURL(activity, getContext().getString(R.string.di_youtube_url));
+        });
+        for (View v : new View[]{close, later, join, youtube}) CSAnimationEngine.attachPressFeedback(v);
 
         // Entrance: logo pops, rings bloom, bubbles drop in, content cascades
         View ringInner = findViewById(R.id.di_ring_inner), ringOuter = findViewById(R.id.di_ring_outer);
         View bubble1 = findViewById(R.id.di_bubble_1), bubble2 = findViewById(R.id.di_bubble_2);
-        Motion.popIn(logo, 140L, 0.3f);
-        Motion.popIn(ringInner, 200L, 0.4f);
-        Motion.popIn(ringOuter, 260L, 0.4f);
+        Motion.popIn(ringInner, 120L, 0.4f);
+        Motion.popIn(logo, 200L, 0.3f);
+        bloom(ringOuter, 260L);
         Motion.popIn(bubble1, 420L, 0.6f);
         Motion.popIn(bubble2, 520L, 0.6f);
         Motion.riseIn(findViewById(R.id.di_hero_caption), 480L, 8f);
@@ -119,6 +124,14 @@ public class DiscordInviteDialog extends CSPopupDialog {
             breathe(ringOuter, 1.12f, 3100L);
             pulse(findViewById(R.id.di_online));
         }, 800L);
+    }
+
+    /** Scale-only entrance that keeps the view's translucent alpha intact */
+    private static void bloom(@NonNull View view, long delay) {
+        view.setScaleX(0.4f);
+        view.setScaleY(0.4f);
+        view.animate().scaleX(1f).scaleY(1f).setStartDelay(delay).setDuration(520L)
+                .setInterpolator(new android.view.animation.OvershootInterpolator(1.1f)).start();
     }
 
     private void floatY(@NonNull View view, float dpAmount, long duration, long delay) {

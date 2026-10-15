@@ -1,485 +1,724 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Add account: one artwork banner, then a clean card per sign-in method
-    (Microsoft | Ely.by | Local) and a "Link with Discord" row for the game status.
+    Add account: compact header, three tall choice cards (Microsoft | Ely.by | Offline) with their
+    own colour, icon, badge and feature list, and a slim "Link with Discord" row at the bottom.
+    Narrow screens: the cards stack (see SelectAuthFragment.adaptToWidth).
 -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/select_auth_scroll"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSurface"
-    android:orientation="vertical">
+    android:fillViewport="true"
+    android:overScrollMode="never"
+    android:scrollbars="none">
 
-    <ScrollView
+    <LinearLayout
+        android:id="@+id/select_auth_root"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:clipToPadding="false"
-        android:fillViewport="true"
-        android:overScrollMode="never"
-        android:paddingStart="12dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="14dp"
         android:paddingTop="10dp"
-        android:paddingEnd="12dp"
-        android:paddingBottom="12dp"
-        android:scrollbars="none">
+        android:paddingEnd="14dp"
+        android:paddingBottom="12dp">
 
+        <!-- Header -->
         <LinearLayout
+            android:id="@+id/select_auth_banner"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-            <!-- Artwork banner (the only image on this screen) -->
-            <FrameLayout
-                android:id="@+id/select_auth_banner"
-                android:layout_width="match_parent"
-                android:layout_height="128dp"
-                android:background="@drawable/bg_banner_card"
-                android:clipToOutline="true">
-
-                <ImageView
-                    android:id="@+id/select_auth_banner_art"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:contentDescription="@null"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/banner_accounts" />
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/settings_header_scrim" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp">
-
-                    <ImageView
-                        android:id="@+id/select_auth_banner_icon"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:background="@drawable/bg_settings_icon_box"
-                        android:contentDescription="@null"
-                        android:padding="10dp"
-                        android:scaleType="fitCenter"
-                        android:src="@drawable/ic_nav_profiles" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:letterSpacing="0.3"
-                            android:text="@string/auth_select_eyebrow"
-                            android:textColor="#B3FFFFFF"
-                            android:textSize="10.5sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:ellipsize="end"
-                            android:fontFamily="@font/minecraft_ten"
-                            android:includeFontPadding="false"
-                            android:shadowColor="#66000000"
-                            android:shadowDy="3"
-                            android:shadowRadius="1"
-                            android:singleLine="true"
-                            android:text="@string/mcl_title_add_account"
-                            android:textColor="#FFFFFFFF"
-                            android:textSize="24sp" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="3dp"
-                            android:ellipsize="end"
-                            android:singleLine="true"
-                            android:text="@string/auth_select_banner_sub"
-                            android:textColor="#B3FFFFFF"
-                            android:textSize="12.5sp" />
-                    </LinearLayout>
-                </LinearLayout>
-            </FrameLayout>
-
-            <!-- Section: sign in -->
-            <TextView
-                android:id="@+id/select_auth_section_signin"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:layout_marginTop="16dp"
-                android:letterSpacing="0.3"
-                android:text="@string/auth_select_section_signin"
-                android:textColor="@color/hm_accent"
-                android:textSize="10.5sp"
-                android:textStyle="bold" />
+            <ImageButton
+                android:id="@+id/select_auth_back"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_pp_round_btn"
+                android:contentDescription="@string/pe_back"
+                android:padding="11dp"
+                android:src="@drawable/ic_pe_back" />
 
             <LinearLayout
-                android:id="@+id/select_auth_cards_container"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
                 android:orientation="vertical">
 
-            <LinearLayout
-                android:id="@+id/button_microsoft_authentication"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/bg_pp_row"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center_vertical"
-                android:minHeight="76dp"
-                android:orientation="horizontal"
-                android:paddingStart="12dp"
-                android:paddingTop="12dp"
-                android:paddingEnd="10dp"
-                android:paddingBottom="12dp">
-
-                <FrameLayout
-                    android:id="@+id/auth_microsoft_tile"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:background="@drawable/bg_pp_icon_tile">
-
-                    <ImageView
-                        android:layout_width="26dp"
-                        android:layout_height="26dp"
-                        android:layout_gravity="center"
-                        android:importantForAccessibility="no"
-                        android:scaleType="fitCenter"
-                        android:src="@drawable/ic_auth_ms" />
-                </FrameLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:letterSpacing="0.3"
+                    android:text="@string/auth_select_eyebrow"
+                    android:textColor="@color/hm_accent"
+                    android:textSize="10.5sp"
+                    android:textStyle="bold" />
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/noto_sans_bold"
-                            android:includeFontPadding="false"
-                            android:text="@string/auth_select_microsoft"
-                            android:textColor="@color/hm_text"
-                            android:textSize="15sp" />
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:background="@drawable/bg_cc_badge_amber"
-                            android:paddingStart="7dp"
-                            android:paddingTop="1dp"
-                            android:paddingEnd="7dp"
-                            android:paddingBottom="1dp"
-                            android:text="@string/auth_badge_recommended"
-                            android:textColor="#8A5A00"
-                            android:textSize="9.5sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="@string/auth_desc_microsoft"
-                        android:textColor="@color/hm_text_dim"
-                        android:textSize="12sp" />
-                </LinearLayout>
-
-                <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_marginStart="6dp"
-                    android:importantForAccessibility="no"
-                    android:src="@drawable/ic_sl_chevron"
-                    android:tint="@color/hm_text_dim" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/button_elyby_authentication"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/bg_pp_row"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center_vertical"
-                android:minHeight="76dp"
-                android:orientation="horizontal"
-                android:paddingStart="12dp"
-                android:paddingTop="12dp"
-                android:paddingEnd="10dp"
-                android:paddingBottom="12dp">
-
-                <FrameLayout
-                    android:id="@+id/auth_elyby_tile"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:background="@drawable/bg_pp_icon_tile">
-
-                    <ImageView
-                        android:layout_width="26dp"
-                        android:layout_height="26dp"
-                        android:layout_gravity="center"
-                        android:importantForAccessibility="no"
-                        android:scaleType="fitCenter"
-                        android:src="@drawable/ic_auth_elyby" />
-                </FrameLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
+                <TextView
+                    android:id="@+id/select_auth_title"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/noto_sans_bold"
-                            android:includeFontPadding="false"
-                            android:text="@string/auth_select_elyby"
-                            android:textColor="@color/hm_text"
-                            android:textSize="15sp" />
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:background="@drawable/bg_lib_badge_neutral"
-                            android:paddingStart="7dp"
-                            android:paddingTop="1dp"
-                            android:paddingEnd="7dp"
-                            android:paddingBottom="1dp"
-                            android:text="@string/auth_badge_skins"
-                            android:textColor="@color/hm_text_dim"
-                            android:textSize="9.5sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="@string/auth_desc_elyby"
-                        android:textColor="@color/hm_text_dim"
-                        android:textSize="12sp" />
-                </LinearLayout>
-
-                <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_marginStart="6dp"
-                    android:importantForAccessibility="no"
-                    android:src="@drawable/ic_sl_chevron"
-                    android:tint="@color/hm_text_dim" />
+                    android:layout_marginTop="1dp"
+                    android:fontFamily="@font/minecraft_ten"
+                    android:includeFontPadding="false"
+                    android:text="@string/mcl_title_add_account"
+                    android:textColor="@color/hm_text"
+                    android:textSize="22sp" />
             </LinearLayout>
 
-            <LinearLayout
-                android:id="@+id/button_local_authentication"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/bg_pp_row"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center_vertical"
-                android:minHeight="76dp"
-                android:orientation="horizontal"
-                android:paddingStart="12dp"
-                android:paddingTop="12dp"
-                android:paddingEnd="10dp"
-                android:paddingBottom="12dp">
-
-                <FrameLayout
-                    android:id="@+id/auth_local_tile"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:background="@drawable/bg_pp_icon_tile">
-
-                    <ImageView
-                        android:layout_width="26dp"
-                        android:layout_height="26dp"
-                        android:layout_gravity="center"
-                        android:importantForAccessibility="no"
-                        android:scaleType="fitCenter"
-                        android:src="@drawable/ic_nav_profiles" />
-                </FrameLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/noto_sans_bold"
-                            android:includeFontPadding="false"
-                            android:text="@string/auth_select_local"
-                            android:textColor="@color/hm_text"
-                            android:textSize="15sp" />
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:background="@drawable/bg_lib_badge_neutral"
-                            android:paddingStart="7dp"
-                            android:paddingTop="1dp"
-                            android:paddingEnd="7dp"
-                            android:paddingBottom="1dp"
-                            android:text="@string/auth_badge_offline"
-                            android:textColor="@color/hm_text_dim"
-                            android:textSize="9.5sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="@string/auth_desc_local"
-                        android:textColor="@color/hm_text_dim"
-                        android:textSize="12sp" />
-                </LinearLayout>
-
-                <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_marginStart="6dp"
-                    android:importantForAccessibility="no"
-                    android:src="@drawable/ic_sl_chevron"
-                    android:tint="@color/hm_text_dim" />
-            </LinearLayout>
-
-            </LinearLayout>
-
-            <!-- Section: Discord -->
             <TextView
-                android:id="@+id/select_auth_section_discord"
+                android:id="@+id/select_auth_sub"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:layout_marginTop="16dp"
-                android:letterSpacing="0.3"
-                android:text="@string/auth_select_section_discord"
-                android:textColor="@color/hm_accent"
-                android:textSize="10.5sp"
-                android:textStyle="bold" />
+                android:text="@string/auth_select_banner_sub"
+                android:textColor="@color/hm_text_dim"
+                android:textSize="12.5sp" />
+        </LinearLayout>
 
+        <!-- Choice cards -->
+        <LinearLayout
+            android:id="@+id/select_auth_cards_container"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="12dp"
+            android:baselineAligned="false"
+            android:minHeight="240dp"
+            android:orientation="horizontal">
+
+            <!-- auth_select_microsoft -->
             <LinearLayout
-                android:id="@+id/button_discord_link"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/bg_pp_row"
+                android:id="@+id/button_microsoft_authentication"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/bg_ac_card"
                 android:clickable="true"
                 android:focusable="true"
-                android:gravity="center_vertical"
-                android:minHeight="76dp"
-                android:orientation="horizontal"
-                android:paddingStart="12dp"
-                android:paddingTop="12dp"
-                android:paddingEnd="10dp"
-                android:paddingBottom="12dp">
+                android:orientation="vertical">
 
                 <FrameLayout
-                    android:id="@+id/auth_discord_tile"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:background="@drawable/bg_pp_icon_tile">
+                    android:layout_width="match_parent"
+                    android:layout_height="84dp"
+                    android:background="@drawable/bg_ac_top_ms">
 
-                    <ImageView
-                        android:layout_width="26dp"
-                        android:layout_height="26dp"
+                    <View
+                        android:id="@+id/button_microsoft_authentication_shine"
+                        android:layout_width="80dp"
+                        android:layout_height="match_parent"
+                        android:alpha="0"
+                        android:background="@drawable/bg_ac_shine" />
+
+                    <FrameLayout
+                        android:id="@+id/auth_microsoft_tile"
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
                         android:layout_gravity="center"
-                        android:importantForAccessibility="no"
-                        android:scaleType="fitCenter"
-                        android:src="@drawable/ic_discord_mark" />
+                        android:background="@drawable/bg_ac_icon"
+                        android:elevation="6dp">
+
+                        <ImageView
+                            android:layout_width="34dp"
+                            android:layout_height="34dp"
+                            android:layout_gravity="center"
+                            android:importantForAccessibility="no"
+                            android:src="@drawable/ic_auth_ms" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:id="@+id/ac_badge_ms"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="top|end"
+                        android:layout_margin="10dp"
+                        android:background="@drawable/bg_ac_badge_light"
+                        android:letterSpacing="0.1"
+                        android:paddingStart="8dp"
+                        android:paddingTop="3dp"
+                        android:paddingEnd="8dp"
+                        android:paddingBottom="3dp"
+                        android:text="@string/auth_badge_recommended"
+                        android:textColor="#FFFFFF"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold" />
                 </FrameLayout>
 
                 <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
                     android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:paddingStart="14dp"
+                    android:paddingTop="12dp"
+                    android:paddingEnd="14dp"
+                    android:paddingBottom="12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/noto_sans_bold"
+                        android:includeFontPadding="false"
+                        android:text="@string/auth_select_microsoft"
+                        android:textColor="@color/hm_text"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="@string/ac_desc_microsoft"
+                        android:textColor="@color/hm_text_dim"
+                        android:textSize="11.5sp" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_pp_check"
+                        android:tint="#22C55E" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:text="@string/ac_f_ms_1"
+                        android:textColor="@color/hm_text"
+                        android:textSize="12sp" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_pp_check"
+                        android:tint="#22C55E" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:text="@string/ac_f_ms_2"
+                        android:textColor="@color/hm_text"
+                        android:textSize="12sp" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_pp_check"
+                        android:tint="#22C55E" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:text="@string/ac_f_ms_3"
+                        android:textColor="@color/hm_text"
+                        android:textSize="12sp" />
+                </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
                         <TextView
-                            android:layout_width="wrap_content"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:fontFamily="@font/noto_sans_bold"
-                            android:includeFontPadding="false"
-                            android:text="@string/auth_select_discord"
-                            android:textColor="@color/hm_text"
-                            android:textSize="15sp" />
+                            android:layout_weight="1"
+                            android:text="@string/ac_continue"
+                            android:textColor="@color/hm_accent"
+                            android:textSize="12.5sp"
+                            android:textStyle="bold" />
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:importantForAccessibility="no"
+                            android:src="@drawable/ic_sl_chevron"
+                            android:tint="@color/hm_accent" />
                     </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- auth_select_elyby -->
+            <LinearLayout
+                android:id="@+id/button_elyby_authentication"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="10dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_ac_card"
+                android:clickable="true"
+                android:focusable="true"
+                android:orientation="vertical">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="84dp"
+                    android:background="@drawable/bg_ac_top_ely">
+
+                    <View
+                        android:id="@+id/button_elyby_authentication_shine"
+                        android:layout_width="80dp"
+                        android:layout_height="match_parent"
+                        android:alpha="0"
+                        android:background="@drawable/bg_ac_shine" />
+
+                    <FrameLayout
+                        android:id="@+id/auth_elyby_tile"
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/bg_ac_icon"
+                        android:elevation="6dp">
+
+                        <ImageView
+                            android:layout_width="34dp"
+                            android:layout_height="34dp"
+                            android:layout_gravity="center"
+                            android:importantForAccessibility="no"
+                            android:src="@drawable/ic_auth_elyby" />
+                    </FrameLayout>
 
                     <TextView
-                        android:id="@+id/auth_discord_status"
+                        android:id="@+id/ac_badge_ely"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="top|end"
+                        android:layout_margin="10dp"
+                        android:background="@drawable/bg_ac_badge_light"
+                        android:letterSpacing="0.1"
+                        android:paddingStart="8dp"
+                        android:paddingTop="3dp"
+                        android:paddingEnd="8dp"
+                        android:paddingBottom="3dp"
+                        android:text="@string/auth_badge_skins"
+                        android:textColor="#FFFFFF"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:paddingStart="14dp"
+                    android:paddingTop="12dp"
+                    android:paddingEnd="14dp"
+                    android:paddingBottom="12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/noto_sans_bold"
+                        android:includeFontPadding="false"
+                        android:text="@string/auth_select_elyby"
+                        android:textColor="@color/hm_text"
+                        android:textSize="16sp" />
+
+                    <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="@string/auth_desc_discord"
+                        android:layout_marginTop="4dp"
+                        android:text="@string/ac_desc_elyby"
                         android:textColor="@color/hm_text_dim"
+                        android:textSize="11.5sp" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_pp_check"
+                        android:tint="#22C55E" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:text="@string/ac_f_ely_1"
+                        android:textColor="@color/hm_text"
+                        android:textSize="12sp" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_pp_check"
+                        android:tint="#22C55E" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:text="@string/ac_f_ely_2"
+                        android:textColor="@color/hm_text"
+                        android:textSize="12sp" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_pp_check"
+                        android:tint="#22C55E" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:text="@string/ac_f_ely_3"
+                        android:textColor="@color/hm_text"
                         android:textSize="12sp" />
                 </LinearLayout>
 
-                <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_marginStart="6dp"
-                    android:importantForAccessibility="no"
-                    android:src="@drawable/ic_sl_chevron"
-                    android:tint="@color/hm_text_dim" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/ac_continue"
+                            android:textColor="@color/hm_accent"
+                            android:textSize="12.5sp"
+                            android:textStyle="bold" />
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:importantForAccessibility="no"
+                            android:src="@drawable/ic_sl_chevron"
+                            android:tint="@color/hm_accent" />
+                    </LinearLayout>
+                </LinearLayout>
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/select_auth_footnote"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:layout_marginTop="14dp"
-                android:text="@string/auth_select_footnote"
-                android:textColor="@color/hm_text_dim"
-                android:textSize="11.5sp" />
+            <!-- ac_title_local -->
+            <LinearLayout
+                android:id="@+id/button_local_authentication"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="10dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_ac_card"
+                android:clickable="true"
+                android:focusable="true"
+                android:orientation="vertical">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="84dp"
+                    android:background="@drawable/bg_ac_top_local">
+
+                    <View
+                        android:id="@+id/button_local_authentication_shine"
+                        android:layout_width="80dp"
+                        android:layout_height="match_parent"
+                        android:alpha="0"
+                        android:background="@drawable/bg_ac_shine" />
+
+                    <FrameLayout
+                        android:id="@+id/auth_local_tile"
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/bg_ac_icon"
+                        android:elevation="6dp">
+
+                        <ImageView
+                            android:layout_width="34dp"
+                            android:layout_height="34dp"
+                            android:layout_gravity="center"
+                            android:importantForAccessibility="no"
+                            android:src="@drawable/ic_pe_person"
+                            android:tint="#3E4756" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:id="@+id/ac_badge_local"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="top|end"
+                        android:layout_margin="10dp"
+                        android:background="@drawable/bg_ac_badge_light"
+                        android:letterSpacing="0.1"
+                        android:paddingStart="8dp"
+                        android:paddingTop="3dp"
+                        android:paddingEnd="8dp"
+                        android:paddingBottom="3dp"
+                        android:text="@string/auth_badge_offline"
+                        android:textColor="#FFFFFF"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:paddingStart="14dp"
+                    android:paddingTop="12dp"
+                    android:paddingEnd="14dp"
+                    android:paddingBottom="12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/noto_sans_bold"
+                        android:includeFontPadding="false"
+                        android:text="@string/ac_title_local"
+                        android:textColor="@color/hm_text"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="@string/ac_desc_local"
+                        android:textColor="@color/hm_text_dim"
+                        android:textSize="11.5sp" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_pp_check"
+                        android:tint="#22C55E" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:text="@string/ac_f_local_1"
+                        android:textColor="@color/hm_text"
+                        android:textSize="12sp" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_pp_check"
+                        android:tint="#22C55E" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:text="@string/ac_f_local_2"
+                        android:textColor="@color/hm_text"
+                        android:textSize="12sp" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_pp_check"
+                        android:tint="#22C55E" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:text="@string/ac_f_local_3"
+                        android:textColor="@color/hm_text"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/ac_continue"
+                            android:textColor="@color/hm_accent"
+                            android:textSize="12.5sp"
+                            android:textStyle="bold" />
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:importantForAccessibility="no"
+                            android:src="@drawable/ic_sl_chevron"
+                            android:tint="@color/hm_accent" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
         </LinearLayout>
-    </ScrollView>
-</LinearLayout>
+
+        <!-- Discord link -->
+        <LinearLayout
+            android:id="@+id/button_discord_link"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_ac_discord"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="12dp"
+            android:paddingTop="9dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="9dp">
+
+            <FrameLayout
+                android:id="@+id/auth_discord_tile"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_di_join">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_discord_mark"
+                    android:tint="#FFFFFF" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/auth_select_discord"
+                    android:textColor="@color/hm_text"
+                    android:textSize="13.5sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/auth_discord_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="1dp"
+                    android:text="@string/auth_desc_discord"
+                    android:textColor="@color/hm_text_dim"
+                    android:textSize="11.5sp" />
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_sl_chevron"
+                android:tint="@color/hm_text_dim" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/select_auth_footnote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="@string/auth_select_footnote"
+            android:textColor="@color/hm_text_dim"
+            android:textSize="11sp" />
+    </LinearLayout>
+</ScrollView>

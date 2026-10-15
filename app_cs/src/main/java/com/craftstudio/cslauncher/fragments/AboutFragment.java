@@ -29,6 +29,7 @@ public class AboutFragment extends Fragment {
 
     public static final String URL_DISCORD = "https://discord.gg/dmteYqZZyY";
     public static final String URL_GITHUB = "https://github.com/craftstudioteam";
+    public static final String URL_YOUTUBE = "https://youtube.com/@craft-studio-official";
 
     /** One of the launchers this project stands on */
     private static final class Project {
@@ -116,6 +117,9 @@ public class AboutFragment extends Fragment {
         View github = view.findViewById(R.id.about_github);
         discord.setOnClickListener(v -> open(URL_DISCORD));
         github.setOnClickListener(v -> open(URL_GITHUB));
+        View youtube = view.findViewById(R.id.about_youtube);
+        youtube.setOnClickListener(v -> open(URL_YOUTUBE));
+        com.craftstudio.cslauncher.utils.CSAnimationEngine.attachPressFeedback(youtube);
         CSAnimationEngine.attachPressFeedback(discord);
         CSAnimationEngine.attachPressFeedback(github);
 

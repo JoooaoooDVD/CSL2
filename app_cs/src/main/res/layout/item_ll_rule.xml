@@ -1,35 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- One name rule, a chip that turns green when satisfied -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:id="@+id/rule_root"
+    android:layout_width="wrap_content"
+    android:layout_height="30dp"
+    android:layout_marginEnd="6dp"
+    android:layout_marginBottom="6dp"
+    android:background="@drawable/bg_ll_chip"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:paddingTop="5dp"
-    android:paddingBottom="5dp">
+    android:paddingStart="8dp"
+    android:paddingEnd="10dp">
 
     <FrameLayout
         android:id="@+id/rule_dot"
-        android:layout_width="22dp"
-        android:layout_height="22dp"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
         android:background="@drawable/bg_ss_step_num">
 
         <ImageView
             android:id="@+id/rule_check"
-            android:layout_width="14dp"
-            android:layout_height="14dp"
+            android:layout_width="11dp"
+            android:layout_height="11dp"
             android:layout_gravity="center"
             android:importantForAccessibility="no"
             android:src="@drawable/ic_pp_check"
-            android:tint="@color/hm_text"
+            android:tint="#FFFFFF"
             android:visibility="invisible" />
     </FrameLayout>
 
     <TextView
         android:id="@+id/rule_text"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
-        android:layout_weight="1"
+        android:layout_marginStart="6dp"
         android:textColor="@color/hm_text_dim"
-        android:textSize="13sp" />
+        android:textSize="11.5sp" />
 </LinearLayout>

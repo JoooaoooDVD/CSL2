@@ -1059,6 +1059,8 @@
     <string name="about_version_fmt">Version %1$s</string>
     <string name="about_discord">Discord</string>
     <string name="about_discord_desc">Community &amp; support</string>
+    <string name="about_youtube">YouTube</string>
+    <string name="about_youtube_desc">Tutorials &amp; showcases</string>
     <string name="about_github">GitHub</string>
     <string name="about_github_desc">Source code &amp; issues</string>
     <string name="about_section_built">BUILT ON</string>
@@ -1166,6 +1168,10 @@
     <string name="lp_empty">Nothing matches.</string>
     <!-- Local account page -->
     <string name="ll_eyebrow">OFFLINE ACCOUNT</string>
+    <string name="ll_title">Create your player</string>
+    <string name="ll_nametag_default">Player</string>
+    <string name="ll_tag_default">DEFAULT SKIN</string>
+    <string name="ll_drag_hint">drag to rotate</string>
     <string name="ll_greeting_empty">Who\'s playing?</string>
     <string name="ll_greeting_fmt">Hey, %1$s!</string>
     <string name="ll_intro">Pick a player name. No login, no internet needed — great for singleplayer and LAN.</string>
@@ -1174,8 +1180,8 @@
     <string name="ll_random">Suggest a name</string>
     <string name="ll_play">Create &amp; play</string>
     <string name="ll_rules_title">NAME RULES</string>
-    <string name="ll_rule_length">3 to 16 characters</string>
-    <string name="ll_rule_chars">Letters, numbers and _ only</string>
+    <string name="ll_rule_length">3–16 characters</string>
+    <string name="ll_rule_chars">A–Z, 0–9, _</string>
     <string name="ll_rule_space">No spaces</string>
     <string name="ll_note">Offline names can\'t join online-mode servers. You can add a Microsoft account later and keep this one too.</string>
     <string name="ll_premium_checking">Checking for a premium player…</string>
@@ -1187,6 +1193,7 @@
     <string name="ll_premium_offline">Couldn\'t check (offline) — default skin for now</string>
     <string name="ll_premium_offline_sub">Check your connection and retype the name to try again</string>
     <string name="ll_premium_badge">PREMIUM SKIN</string>
+    <string name="ll_tag_premium_cape">PREMIUM SKIN + CAPE</string>
     <string name="ll_applying">Setting up the skin…</string>
     <string name="ll_err_fix">Fix the name first — see the rules.</string>
     <!-- Discord invite popup -->
@@ -1200,6 +1207,8 @@
     <string name="di_bubble_2">new build is up 🚀</string>
     <string name="di_hero_caption">Players and the CS team, one server</string>
     <string name="di_join">Join Discord</string>
+    <string name="di_youtube">Also on YouTube</string>
+    <string name="di_youtube_url" translatable="false">https://youtube.com/@craft-studio-official</string>
     <string name="di_later">Maybe later</string>
     <string name="di_invite_url" translatable="false">https://discord.gg/dmteYqZZyY</string>
     <!-- Version picker popup -->
@@ -1233,4 +1242,19 @@
     <string name="pi_model_classic">CLASSIC</string>
     <string name="skin_editor_import_player">Import from player</string>
     <string name="skin_editor_imported">Imported %1$s\'s look</string>
+    <!-- Add account cards -->
+    <string name="ac_continue">Continue</string>
+    <string name="ac_title_local">Offline account</string>
+    <string name="ac_desc_microsoft">The official account you own Minecraft with.</string>
+    <string name="ac_desc_elyby">Free account with its own skin system.</string>
+    <string name="ac_desc_local">Just a name. Works without internet.</string>
+    <string name="ac_f_ms_1">Online servers &amp; Realms</string>
+    <string name="ac_f_ms_2">Your own skins &amp; capes</string>
+    <string name="ac_f_ms_3">Sign in with Microsoft</string>
+    <string name="ac_f_ely_1">Skins &amp; capes on offline servers</string>
+    <string name="ac_f_ely_2">Free to register</string>
+    <string name="ac_f_ely_3">Email &amp; password</string>
+    <string name="ac_f_local_1">Singleplayer &amp; LAN</string>
+    <string name="ac_f_local_2">Premium skin auto-detect</string>
+    <string name="ac_f_local_3">Ready in two seconds</string>
 </resources>
