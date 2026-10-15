@@ -24,13 +24,20 @@ import com.craftstudio.cslauncher.utils.motion.Motion;
  * again once the user actually tapped Join.
  */
 public class DiscordInviteDialog extends CSPopupDialog {
+    /** Which community link the popup promotes */
+    public enum Kind { DISCORD, YOUTUBE }
+
     private static final String PREF_LAUNCHES = "discordInviteLaunches";
     private static final String PREF_LAST_SHOWN = "discordInviteLastShown";
     private static final String PREF_JOINED = "discordInviteJoined";
+    private static final String PREF_YT_DONE = "youtubeInviteOpened";
     private static final String PREF_LEGACY_SHOWN = "discordInviteShownV1";
-    private static final int SECOND_SHOW = 7, PERIOD = 8;
+    /** Discord: launches 1, 7, 15, 23 ... YouTube: launches 3, 11, 19 ... (never the same launch) */
+    private static final int SECOND_SHOW = 7, PERIOD = 8, YT_FIRST = 3;
     private static final long MIN_GAP = 24L * 60 * 60 * 1000;
     private static boolean sCountedThisProcess;
+
+    private final Kind mKind;
 
     private static SharedPreferences prefs(@NonNull Context context) {
         return PreferenceManager.getDefaultSharedPreferences(context);
@@ -47,30 +54,49 @@ public class DiscordInviteDialog extends CSPopupDialog {
         p.edit().putInt(PREF_LAUNCHES, launches + 1).apply();
     }
 
-    /** Whether this launch is one where the invite should appear. */
-    public static boolean isDue(@NonNull Context context) {
+    /** Which popup (if any) is due on this launch */
+    @androidx.annotation.Nullable
+    public static Kind dueKind(@NonNull Context context) {
         SharedPreferences p = prefs(context);
-        if (p.getBoolean(PREF_JOINED, false)) return false;
         int launch = p.getInt(PREF_LAUNCHES, 0);
-        if (launch <= 0) return false;
+        if (launch <= 0) return null;
         long last = p.getLong(PREF_LAST_SHOWN, 0L);
-        boolean scheduled = launch == 1 || launch == SECOND_SHOW
+        if (System.currentTimeMillis() - last < MIN_GAP) return null;
+        boolean discordDone = p.getBoolean(PREF_JOINED, false);
+        boolean youtubeDone = p.getBoolean(PREF_YT_DONE, false);
+        boolean discordSlot = launch == 1 || launch == SECOND_SHOW
                 || (launch > SECOND_SHOW && (launch - SECOND_SHOW) % PERIOD == 0)
                 // Never shown yet (e.g. the first launch restarted into a custom storage folder)
-                || (last == 0L && launch <= 3);
-        if (!scheduled) return false;
-        return System.currentTimeMillis() - last >= MIN_GAP;
+                || (last == 0L && launch <= 2);
+        boolean youtubeSlot = launch == YT_FIRST || (launch > YT_FIRST && (launch - YT_FIRST) % PERIOD == 0);
+        if (discordSlot && !discordDone) return Kind.DISCORD;
+        if (youtubeSlot && !youtubeDone) return Kind.YOUTUBE;
+        // One of them is done for good: the other one takes over its slots
+        if (discordSlot && discordDone && !youtubeDone) return Kind.YOUTUBE;
+        if (youtubeSlot && youtubeDone && !discordDone) return Kind.DISCORD;
+        return null;
+    }
+
+    /** Whether this launch is one where an invite should appear. */
+    public static boolean isDue(@NonNull Context context) {
+        return dueKind(context) != null;
     }
 
     /** Shows the invite when it is due on this launch (at most once per launch). */
     public static void showIfDue(@NonNull Context context) {
-        if (!isDue(context)) return;
+        Kind kind = dueKind(context);
+        if (kind == null) return;
         prefs(context).edit().putLong(PREF_LAST_SHOWN, System.currentTimeMillis()).putBoolean(PREF_LEGACY_SHOWN, true).apply();
-        new DiscordInviteDialog(context).show();
+        new DiscordInviteDialog(context, kind).show();
     }
 
     public DiscordInviteDialog(@NonNull Context context) {
+        this(context, Kind.DISCORD);
+    }
+
+    public DiscordInviteDialog(@NonNull Context context, @NonNull Kind kind) {
         super(context);
+        mKind = kind;
     }
 
     @Override
@@ -79,6 +105,8 @@ public class DiscordInviteDialog extends CSPopupDialog {
         setContentView(R.layout.dialog_discord_invite);
         View card = findViewById(R.id.di_card);
         setupPopup(findViewById(R.id.di_scrim), card, true);
+        final boolean youtube = mKind == Kind.YOUTUBE;
+        if (youtube) applyYoutubeLook();
         layoutCard(card);
 
         View close = findViewById(R.id.di_close);
@@ -89,18 +117,18 @@ public class DiscordInviteDialog extends CSPopupDialog {
         later.setOnClickListener(v -> onDismissRequested());
         join.setOnClickListener(v -> {
             Motion.bounce(logo);
-            prefs(getContext()).edit().putBoolean(PREF_JOINED, true).apply();
+            prefs(getContext()).edit().putBoolean(youtube ? PREF_YT_DONE : PREF_JOINED, true).apply();
             CreatePopupMotion.optionChosen(join, () -> close(() -> {
                 android.app.Activity activity = findActivity(getContext());
-                if (activity != null) Tools.openURL(activity, getContext().getString(R.string.di_invite_url));
+                if (activity != null) Tools.openURL(activity, getContext().getString(youtube ? R.string.di_youtube_url : R.string.di_invite_url));
             }));
         });
-        View youtube = findViewById(R.id.di_youtube);
-        youtube.setOnClickListener(v -> {
+        View other = findViewById(R.id.di_youtube);
+        other.setOnClickListener(v -> {
             android.app.Activity activity = findActivity(getContext());
-            if (activity != null) Tools.openURL(activity, getContext().getString(R.string.di_youtube_url));
+            if (activity != null) Tools.openURL(activity, getContext().getString(youtube ? R.string.di_invite_url : R.string.di_youtube_url));
         });
-        for (View v : new View[]{close, later, join, youtube}) CSAnimationEngine.attachPressFeedback(v);
+        for (View v : new View[]{close, later, join, other}) CSAnimationEngine.attachPressFeedback(v);
 
         // Entrance: logo pops, rings bloom, bubbles drop in, content cascades
         View ringInner = findViewById(R.id.di_ring_inner), ringOuter = findViewById(R.id.di_ring_outer);
@@ -124,6 +152,42 @@ public class DiscordInviteDialog extends CSPopupDialog {
             breathe(ringOuter, 1.12f, 3100L);
             pulse(findViewById(R.id.di_online));
         }, 800L);
+    }
+
+    /** Same popup, YouTube colours, texts and icons */
+    private void applyYoutubeLook() {
+        int red = 0xFFFF0033;
+        android.content.res.ColorStateList redTint = android.content.res.ColorStateList.valueOf(red);
+        findViewById(R.id.di_hero).setBackgroundResource(R.drawable.bg_yt_hero_side);
+        android.widget.ImageView logo = findViewById(R.id.di_logo);
+        logo.setImageResource(R.drawable.ic_youtube_mark);
+        logo.setImageTintList(redTint);
+        findViewById(R.id.di_online).setVisibility(View.GONE);
+        ((android.widget.TextView) findViewById(R.id.di_bubble_1)).setText(R.string.yt_bubble_1);
+        ((android.widget.TextView) findViewById(R.id.di_bubble_2)).setText(R.string.yt_bubble_2);
+        ((android.widget.TextView) findViewById(R.id.di_hero_caption)).setText(R.string.yt_hero_caption);
+        ((android.widget.TextView) findViewById(R.id.di_eyebrow)).setText(R.string.yt_eyebrow);
+        ((android.widget.TextView) findViewById(R.id.di_eyebrow)).setTextColor(0xFFFF6B6B);
+        ((android.widget.TextView) findViewById(R.id.di_title)).setText(R.string.yt_title);
+        ((android.widget.TextView) findViewById(R.id.di_body_text)).setText(R.string.yt_body);
+        int[] icons = {R.drawable.ic_yt_play, R.drawable.ic_lib_star, R.drawable.ic_lib_cube};
+        int[] texts = {R.string.yt_perk_1, R.string.yt_perk_2, R.string.yt_perk_3};
+        int[] iconIds = {R.id.di_perk_1_icon, R.id.di_perk_2_icon, R.id.di_perk_3_icon};
+        int[] textIds = {R.id.di_perk_1_text, R.id.di_perk_2_text, R.id.di_perk_3_text};
+        for (int i = 0; i < 3; i++) {
+            android.widget.ImageView icon = findViewById(iconIds[i]);
+            icon.setImageResource(icons[i]);
+            icon.setBackgroundResource(R.drawable.bg_yt_perk_icon);
+            icon.setImageTintList(android.content.res.ColorStateList.valueOf(0xFFFF6B6B));
+            ((android.widget.TextView) findViewById(textIds[i])).setText(getContext().getText(texts[i]));
+        }
+        findViewById(R.id.di_join).setBackgroundResource(R.drawable.bg_yt_join);
+        ((android.widget.ImageView) findViewById(R.id.di_join_icon)).setImageResource(R.drawable.ic_youtube_mark);
+        ((android.widget.TextView) findViewById(R.id.di_join_text)).setText(R.string.yt_subscribe);
+        android.widget.ImageView otherIcon = findViewById(R.id.di_other_icon);
+        otherIcon.setImageResource(R.drawable.ic_discord_mark);
+        otherIcon.setImageTintList(android.content.res.ColorStateList.valueOf(0xFF8A95FF));
+        ((android.widget.TextView) findViewById(R.id.di_other_text)).setText(R.string.yt_also_discord);
     }
 
     /** Scale-only entrance that keeps the view's translucent alpha intact */
@@ -187,7 +251,7 @@ public class DiscordInviteDialog extends CSPopupDialog {
         } else {
             root.setOrientation(android.widget.LinearLayout.VERTICAL);
             params.width = Math.min((int) (400 * d), metrics.widthPixels - (int) (28 * d));
-            hero.setBackgroundResource(R.drawable.bg_di_hero_top);
+            hero.setBackgroundResource(mKind == Kind.YOUTUBE ? R.drawable.bg_yt_hero_top : R.drawable.bg_di_hero_top);
             android.widget.LinearLayout.LayoutParams hp = new android.widget.LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, (int) (150 * d));
             hero.setLayoutParams(hp);

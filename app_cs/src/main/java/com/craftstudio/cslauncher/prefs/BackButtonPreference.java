@@ -20,8 +20,9 @@ public class BackButtonPreference extends Preference {
     }
 
     private void init(){
+        setLayoutResource(R.layout.item_setting_back);
         if(getTitle() == null){
-            setTitle(R.string.preference_back_title);
+            setTitle(R.string.settings_screen_back);
         }
         if(getIcon() == null){
             setIcon(R.drawable.ic_px_arrow_left);

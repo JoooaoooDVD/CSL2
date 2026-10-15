@@ -147,7 +147,7 @@
             android:orientation="horizontal">
 
             <LinearLayout
-                android:id="@+id/st_force_english_row"
+                android:id="@+id/st_language_row"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -184,7 +184,7 @@
                         android:ellipsize="end"
                         android:fontFamily="@font/noto_sans_bold"
                         android:maxLines="1"
-                        android:text="@string/preference_force_english_title"
+                        android:text="@string/preference_language_title"
                         android:textColor="@color/pe_text_primary"
                         android:textSize="14sp" />
 
@@ -194,16 +194,19 @@
                         android:layout_marginTop="2dp"
                         android:ellipsize="end"
                         android:maxLines="2"
-                        android:text="@string/st_force_english_short"
+                        android:id="@+id/st_language_value"
+                        android:text="@string/st_language_short"
                         android:textColor="@color/pe_text_secondary"
                         android:textSize="12sp" />
                 </LinearLayout>
 
-                <com.google.android.material.materialswitch.MaterialSwitch
-                    android:id="@+id/st_force_english_switch"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp" />
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_marginStart="8dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_sl_chevron"
+                    android:tint="@color/pe_text_secondary" />
             </LinearLayout>
 
             <LinearLayout

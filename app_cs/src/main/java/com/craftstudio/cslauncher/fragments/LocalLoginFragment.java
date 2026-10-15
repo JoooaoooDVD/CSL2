@@ -322,12 +322,7 @@ public class LocalLoginFragment extends Fragment {
             mPremiumUse.setVisibility(View.VISIBLE);
             mPremiumUse.setChecked(true);
             Motion.popIn(mPremiumIcon, 0L, 0.3f);
-            // Exact casing from Mojang ("notch" -> "Notch")
-            if (!result.name.equals(mName.getText().toString()) && result.name.equalsIgnoreCase(mName.getText().toString())) {
-                mLookedUpName = result.name;
-                mName.setText(result.name);
-                mName.setSelection(result.name.length());
-            }
+            // The name stays exactly as typed (casing included) - only the skin is borrowed
             showPremiumSkin(result);
         } else {
             mPremiumIcon.setImageResource(R.drawable.ic_pe_person);

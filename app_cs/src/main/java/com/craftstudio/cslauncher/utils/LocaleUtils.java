@@ -18,6 +18,7 @@ public class LocaleUtils extends ContextWrapper {
         super(base);
     }
 
+    /** Applies the "Launcher language" setting (or the legacy force-English switch) to the context */
     public static ContextWrapper setLocale(Context context) {
         if (DEFAULT_PREF == null) {
             DEFAULT_PREF = PreferenceManager.getDefaultSharedPreferences(context);
@@ -27,24 +28,36 @@ public class LocaleUtils extends ContextWrapper {
             PREF_FORCE_ENGLISH = DEFAULT_PREF.getBoolean("force_english", false);
         }
 
-        if(PREF_FORCE_ENGLISH){
-            Resources resources = context.getResources();
-            Configuration configuration = resources.getConfiguration();
-
-            configuration.setLocale(Locale.ENGLISH);
-            Locale.setDefault(Locale.ENGLISH);
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
-                LocaleList localeList = new LocaleList(Locale.ENGLISH);
-                LocaleList.setDefault(localeList);
-                configuration.setLocales(localeList);
-            }
-
-            resources.updateConfiguration(configuration, resources.getDisplayMetrics());
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1){
-                context = context.createConfigurationContext(configuration);
-            }
+        Locale locale = LauncherLanguages.localeOf(LauncherLanguages.current(DEFAULT_PREF));
+        if (locale != null) {
+            context = apply(context, locale);
         }
 
         return new LocaleUtils(context);
+    }
+
+    private static Context apply(Context context, Locale locale) {
+        Resources resources = context.getResources();
+        Configuration configuration = resources.getConfiguration();
+
+        configuration.setLocale(locale);
+        Locale.setDefault(locale);
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
+            LocaleList localeList = new LocaleList(locale);
+            LocaleList.setDefault(localeList);
+            configuration.setLocales(localeList);
+        }
+
+        resources.updateConfiguration(configuration, resources.getDisplayMetrics());
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1){
+            context = context.createConfigurationContext(configuration);
+        }
+        return context;
+    }
+
+    /** Saves a new language and restarts the launcher so every screen picks it up */
+    public static void changeLanguage(android.app.Activity activity, String tag) {
+        LauncherLanguages.save(activity, tag);
+        com.craftstudio.cslauncher.utils.storage.StorageRoot.restartLauncher(activity);
     }
 }

@@ -43,6 +43,7 @@ public class CustomSeekBarPreference extends SeekBarPreference {
             mMin = a.getInt(R.styleable.SeekBarPreference_min, 0);
             mIncrement = a.getInt(R.styleable.SeekBarPreference_seekBarIncrement, 0);
         }
+        setLayoutResource(R.layout.item_setting_seekbar);
     }
 
     public CustomSeekBarPreference(Context context, AttributeSet attrs, int defStyleAttr) {
@@ -69,7 +70,9 @@ public class CustomSeekBarPreference extends SeekBarPreference {
     public void onBindViewHolder(@NonNull PreferenceViewHolder view) {
         super.onBindViewHolder(view);
         TextView titleTextView = (TextView) view.findViewById(android.R.id.title);
-        titleTextView.setTextColor(ThemeColors.onSurface(titleTextView.getContext()));
+        titleTextView.setTextColor(androidx.core.content.ContextCompat.getColor(titleTextView.getContext(), R.color.pe_text_primary));
+        View iconView = view.findViewById(android.R.id.icon);
+        if (iconView != null) iconView.setVisibility(getIcon() == null ? View.GONE : View.VISIBLE);
 
         // The preference is not selectable (so the slider keeps working), which makes the
         // framework mark the row as non-clickable. Make it clickable again for the row itself;

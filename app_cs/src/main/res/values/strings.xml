@@ -941,6 +941,13 @@
     <string name="lib_clear_search">Clear search</string>
     <string name="st_subtitle">Customize CS Launcher Plus to match your style</string>
     <string name="st_control_description">Touch controls, layouts and behavior</string>
+    <string name="preference_language_title">Launcher language</string>
+    <string name="preference_language_description">Choose the language of the launcher text</string>
+    <string name="preference_language_system">Follow system</string>
+    <string name="st_language_short">Change the launcher language</string>
+    <string name="language_restart_note">The launcher restarts to apply the new language</string>
+    <string name="language_apply">Apply</string>
+    <string name="settings_screen_back">Settings</string>
     <string name="st_force_english_short">Show original English text. Requires a restart.</string>
     <string name="st_notification_short">Needed for background downloads</string>
     <string name="lib_gallery">Gallery</string>
@@ -1209,6 +1216,17 @@
     <string name="di_join">Join Discord</string>
     <string name="di_youtube">Also on YouTube</string>
     <string name="di_youtube_url" translatable="false">https://youtube.com/@craft-studio-official</string>
+    <string name="yt_eyebrow">YOUTUBE</string>
+    <string name="yt_title">Watch CS Launcher on YouTube</string>
+    <string name="yt_body">Guides, modpack showcases and every new feature explained — straight from the team.</string>
+    <string name="yt_perk_1"><b>Tutorials</b> — setup, mods, shaders and FPS tips step by step</string>
+    <string name="yt_perk_2"><b>New features first</b> — see what\'s coming before it ships</string>
+    <string name="yt_perk_3"><b>Showcases</b> — the best packs and builds from the community</string>
+    <string name="yt_bubble_1">new video is out 🎬</string>
+    <string name="yt_bubble_2">subscribe for more 🔔</string>
+    <string name="yt_hero_caption">Craft Studio Official on YouTube</string>
+    <string name="yt_subscribe">Open YouTube</string>
+    <string name="yt_also_discord">Also on Discord</string>
     <string name="di_later">Maybe later</string>
     <string name="di_invite_url" translatable="false">https://discord.gg/dmteYqZZyY</string>
     <!-- Version picker popup -->

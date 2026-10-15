@@ -154,6 +154,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:letterSpacing="0.3"
+                        android:id="@+id/di_eyebrow"
                         android:text="@string/di_eyebrow"
                         android:textColor="@color/hm_accent"
                         android:textSize="10.5sp"
@@ -165,6 +166,7 @@
                         android:layout_marginTop="3dp"
                         android:fontFamily="@font/noto_sans_bold"
                         android:includeFontPadding="false"
+                        android:id="@+id/di_title"
                         android:text="@string/di_title"
                         android:textColor="@color/hm_text"
                         android:textSize="20sp" />
@@ -186,6 +188,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
                 android:layout_marginEnd="6dp"
+                android:id="@+id/di_body_text"
                 android:text="@string/di_body"
                 android:textColor="@color/hm_text_dim"
                 android:textSize="12.5sp" />
@@ -213,6 +216,7 @@
                         android:background="@drawable/bg_di_perk_icon"
                         android:importantForAccessibility="no"
                         android:padding="7dp"
+                        android:id="@+id/di_perk_1_icon"
                         android:src="@drawable/ic_lib_heart"
                         android:tint="#8A95FF" />
 
@@ -221,6 +225,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
                         android:layout_weight="1"
+                        android:id="@+id/di_perk_1_text"
                         android:text="@string/di_perk_support_line"
                         android:textColor="@color/hm_text"
                         android:textSize="12.5sp" />
@@ -241,6 +246,7 @@
                         android:background="@drawable/bg_di_perk_icon"
                         android:importantForAccessibility="no"
                         android:padding="7dp"
+                        android:id="@+id/di_perk_2_icon"
                         android:src="@drawable/ic_lib_update"
                         android:tint="#8A95FF" />
 
@@ -249,6 +255,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
                         android:layout_weight="1"
+                        android:id="@+id/di_perk_2_text"
                         android:text="@string/di_perk_updates_line"
                         android:textColor="@color/hm_text"
                         android:textSize="12.5sp" />
@@ -269,6 +276,7 @@
                         android:background="@drawable/bg_di_perk_icon"
                         android:importantForAccessibility="no"
                         android:padding="7dp"
+                        android:id="@+id/di_perk_3_icon"
                         android:src="@drawable/ic_lib_cube"
                         android:tint="#8A95FF" />
 
@@ -277,6 +285,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
                         android:layout_weight="1"
+                        android:id="@+id/di_perk_3_text"
                         android:text="@string/di_perk_packs_line"
                         android:textColor="@color/hm_text"
                         android:textSize="12.5sp" />
@@ -296,10 +305,11 @@
                     android:id="@+id/di_later"
                     android:layout_width="wrap_content"
                     android:layout_height="46dp"
-                    android:background="@drawable/bg_pp_round_btn"
+                    android:background="@drawable/bg_di_later"
                     android:gravity="center"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
+                    android:minWidth="112dp"
+                    android:paddingStart="18dp"
+                    android:paddingEnd="18dp"
                     android:text="@string/di_later"
                     android:textColor="@color/hm_text"
                     android:textSize="13sp"
@@ -322,10 +332,12 @@
                         android:layout_width="20dp"
                         android:layout_height="20dp"
                         android:importantForAccessibility="no"
+                        android:id="@+id/di_join_icon"
                         android:src="@drawable/ic_discord_mark"
                         android:tint="#FFFFFF" />
 
                     <TextView
+                        android:id="@+id/di_join_text"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="9dp"
@@ -354,10 +366,12 @@
                     android:layout_width="16dp"
                     android:layout_height="16dp"
                     android:importantForAccessibility="no"
+                    android:id="@+id/di_other_icon"
                     android:src="@drawable/ic_youtube_mark"
                     android:tint="#FF4E45" />
 
                 <TextView
+                    android:id="@+id/di_other_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"

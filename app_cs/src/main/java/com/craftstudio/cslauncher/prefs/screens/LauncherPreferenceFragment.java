@@ -36,7 +36,16 @@ public class LauncherPreferenceFragment extends PreferenceFragmentCompat impleme
         // The list of categories in the left pane of the two-pane settings draws on the host background
         if(!isSettingsListPane()) view.setBackgroundColor(ThemeColors.surface(view.getContext()));
         super.onViewCreated(view, savedInstanceState);
-        AnimationManager.applyListAnimation(getListView());
+        // Card rows: no stock dividers, breathing room around the list, cards may overscroll into the padding
+        androidx.recyclerview.widget.RecyclerView list = getListView();
+        float density = getResources().getDisplayMetrics().density;
+        int side = Math.round(10 * density);
+        list.setClipToPadding(false);
+        list.setPadding(side, Math.round(8 * density), side, Math.round(28 * density));
+        list.setOverScrollMode(View.OVER_SCROLL_NEVER);
+        setDivider(null);
+        setDividerHeight(0);
+        AnimationManager.applyListAnimation(list);
     }
 
     @Override
@@ -46,6 +55,27 @@ public class LauncherPreferenceFragment extends PreferenceFragmentCompat impleme
         // The right pane of the two-pane settings has its own back button
         if(isSettingsListPane()) removeBackButton();
         setupNotificationRequestPreference();
+        setupLanguagePreference();
+    }
+
+    /** The language list is built in code (native names), picking one restarts the launcher */
+    private void setupLanguagePreference() {
+        Preference preference = findPreference(com.craftstudio.cslauncher.utils.LauncherLanguages.PREF_KEY);
+        if (!(preference instanceof androidx.preference.ListPreference)) return;
+        androidx.preference.ListPreference list = (androidx.preference.ListPreference) preference;
+        android.content.Context context = requireContext();
+        list.setEntries(com.craftstudio.cslauncher.utils.LauncherLanguages.labels(context));
+        list.setEntryValues(com.craftstudio.cslauncher.utils.LauncherLanguages.values());
+        String current = com.craftstudio.cslauncher.utils.LauncherLanguages.current(context);
+        list.setValue(current);
+        list.setSummary(com.craftstudio.cslauncher.utils.LauncherLanguages.labelOf(context, current));
+        list.setOnPreferenceChangeListener((p, value) -> {
+            String tag = String.valueOf(value);
+            if (tag.equals(com.craftstudio.cslauncher.utils.LauncherLanguages.current(context))) return false;
+            Activity activity = getActivity();
+            if (activity != null) com.craftstudio.cslauncher.utils.LocaleUtils.changeLanguage(activity, tag);
+            return false;
+        });
     }
 
     /** @return whether this is the list of categories inside the left pane of the two-pane settings */

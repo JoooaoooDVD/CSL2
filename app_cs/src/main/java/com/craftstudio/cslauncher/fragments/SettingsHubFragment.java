@@ -114,19 +114,30 @@ public class SettingsHubFragment extends Fragment {
 
     // ─── General toggles ─────────────────────────────────────────────────────
 
+    /** Language list in the launcher's own popup; picking one restarts the launcher */
+    private void showLanguagePicker(android.content.Context context) {
+        String current = com.craftstudio.cslauncher.utils.LauncherLanguages.current(context);
+        new com.craftstudio.cslauncher.prefs.SettingsPopup(context)
+                .title(getString(R.string.preference_language_title))
+                .subtitle(getString(R.string.language_restart_note))
+                .icon(androidx.core.content.ContextCompat.getDrawable(context, R.drawable.ic_st_translate))
+                .singleChoice(com.craftstudio.cslauncher.utils.LauncherLanguages.labels(context),
+                        com.craftstudio.cslauncher.utils.LauncherLanguages.indexOf(current), index -> {
+                            String tag = com.craftstudio.cslauncher.utils.LauncherLanguages.LANGUAGES[index][0];
+                            if (tag.equals(current)) return;
+                            Activity activity = getActivity();
+                            if (activity != null) com.craftstudio.cslauncher.utils.LocaleUtils.changeLanguage(activity, tag);
+                        })
+                .show();
+    }
+
     private void bindGeneral(View view) {
-        View englishRow = view.findViewById(R.id.st_force_english_row);
-        MaterialSwitch englishSwitch = view.findViewById(R.id.st_force_english_switch);
-        SharedPreferences prefs = LauncherPreferences.DEFAULT_PREF;
-        englishSwitch.setChecked(prefs != null && prefs.getBoolean("force_english", false));
-        englishSwitch.setOnCheckedChangeListener((button, checked) -> {
-            SharedPreferences p = LauncherPreferences.DEFAULT_PREF;
-            if (p == null) return;
-            p.edit().putBoolean("force_english", checked).apply();
-            LauncherPreferences.loadPreferences(button.getContext());
-        });
-        englishRow.setOnClickListener(v -> englishSwitch.toggle());
-        CSAnimationEngine.attachPressFeedback(englishRow);
+        View languageRow = view.findViewById(R.id.st_language_row);
+        TextView languageValue = view.findViewById(R.id.st_language_value);
+        languageValue.setText(com.craftstudio.cslauncher.utils.LauncherLanguages.labelOf(
+                view.getContext(), com.craftstudio.cslauncher.utils.LauncherLanguages.current(view.getContext())));
+        languageRow.setOnClickListener(v -> showLanguagePicker(v.getContext()));
+        CSAnimationEngine.attachPressFeedback(languageRow);
 
         View notificationRow = view.findViewById(R.id.st_notification_row);
         notificationRow.setOnClickListener(v -> {
