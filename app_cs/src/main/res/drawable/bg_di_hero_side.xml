@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Discord invite: left hero panel (card corners on the left side) -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient android:angle="45" android:startColor="#3B45C4" android:centerColor="#5865F2" android:endColor="#7B88FF" />
+    <corners android:topLeftRadius="24dp" android:bottomLeftRadius="24dp" />
+</shape>

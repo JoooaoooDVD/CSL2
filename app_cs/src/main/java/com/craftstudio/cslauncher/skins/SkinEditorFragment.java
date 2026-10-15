@@ -148,6 +148,10 @@ public class SkinEditorFragment extends Fragment {
         mSlimSwitch.setOnCheckedChangeListener((button, checked) -> {
             if (!mIgnoreSlimCallback) onSlimToggled(checked);
         });
+        view.findViewById(R.id.skin_import_player).setOnClickListener(v -> {
+            if (mBusy > 0 || !mLoaded || mAccount == null) return;
+            new com.kdt.mcgui.PlayerImportDialog(requireContext(), mLocal, this::importFromPlayer).show();
+        });
 
         loadData();
     }
@@ -493,6 +497,53 @@ public class SkinEditorFragment extends Fragment {
                     mIgnoreSlimCallback = false;
                 }
                 mAdapter.notifyDataSetChanged();
+            });
+        });
+    }
+
+    // ------------------------------------------------------------------ import from a player name
+
+    /** Stores the looked-up skin / cape in the libraries, then applies them like tapped tiles */
+    private void importFromPlayer(@NonNull PremiumProfileLookup.Result result, boolean skin, boolean cape) {
+        beginBusy();
+        CSLauncherApplication.sExecutorService.execute(() -> {
+            SkinLibrary.Entry addedSkin = null;
+            LocalSkinStore.Cape addedCape = null;
+            Bitmap capeTexture = null;
+            Throwable error = null;
+            try {
+                if (skin) addedSkin = PremiumProfileLookup.storeSkin(result);
+                if (cape && mLocal) {
+                    addedCape = PremiumProfileLookup.storeCape(result);
+                    if (addedCape != null) capeTexture = loadLocalCapeTexture(addedCape);
+                }
+            } catch (Exception e) {
+                error = e;
+            }
+            final SkinLibrary.Entry finalSkin = addedSkin;
+            final LocalSkinStore.Cape finalCape = addedCape;
+            final Bitmap finalTexture = capeTexture;
+            final Throwable finalError = error;
+            runIfAttached(() -> {
+                endBusy();
+                if (finalError != null) { showError(finalError); return; }
+                if (finalSkin != null) {
+                    mSkins.add(finalSkin);
+                    mAdapter.notifyDataSetChanged();
+                    onSkinTileClicked(finalSkin);
+                }
+                if (finalCape != null) {
+                    MinecraftSkinApi.Cape capeEntry = localCapeOf(finalCape);
+                    mCapes.add(capeEntry);
+                    if (finalTexture != null) mCapeTextures.put(capeEntry.id, finalTexture);
+                    // Not via onCapeTileClicked: the skin apply above already holds the busy flag
+                    String previous = mSelectedCapeId;
+                    mSelectedCapeId = capeEntry.id;
+                    mPreview.setCape(mCapeTextures.get(capeEntry.id));
+                    mAdapter.notifyDataSetChanged();
+                    if (mAccount != null) applyLocalCape(mAccount, capeEntry.id, previous);
+                }
+                Toast.makeText(requireContext(), getString(R.string.skin_editor_imported, result.name), Toast.LENGTH_SHORT).show();
             });
         });
     }

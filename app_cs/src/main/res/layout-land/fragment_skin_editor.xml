@@ -27,6 +27,18 @@
             android:layout_height="wrap_content"
             android:padding="@dimen/_8sdp"
             android:text="@string/skin_editor_slim" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/skin_import_player"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/_8sdp"
+            android:layout_marginEnd="@dimen/_8sdp"
+            android:layout_marginBottom="@dimen/_4sdp"
+            android:text="@string/skin_editor_import_player"
+            app:icon="@drawable/ic_lib_download"
+            app:iconGravity="textStart" />
     </LinearLayout>
 
     <!-- Right: skins / capes -->

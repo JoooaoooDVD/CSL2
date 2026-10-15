@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- One-time "join our Discord" invite shown after the first-launch setup -->
+<!-- Community invite. Landscape: hero panel on the left, content on the right (fits a phone in
+     landscape without scrolling). Narrow screens: the code stacks the hero on top. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -14,263 +15,325 @@
 
     <LinearLayout
         android:id="@+id/di_card"
-        android:layout_width="400dp"
+        android:layout_width="600dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="12dp"
         android:background="@drawable/bg_pp_card"
+        android:baselineAligned="false"
         android:clickable="true"
         android:elevation="16dp"
-        android:orientation="vertical">
+        android:orientation="horizontal">
 
         <!-- Hero -->
         <FrameLayout
             android:id="@+id/di_hero"
-            android:layout_width="match_parent"
-            android:layout_height="132dp"
-            android:background="@drawable/bg_di_hero">
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="5"
+            android:background="@drawable/bg_di_hero_side"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:minHeight="220dp">
 
             <View
                 android:id="@+id/di_ring_outer"
-                android:layout_width="150dp"
-                android:layout_height="150dp"
+                android:layout_width="170dp"
+                android:layout_height="170dp"
                 android:layout_gravity="center"
-                android:alpha="0.14"
+                android:alpha="0.10"
                 android:background="@drawable/bg_di_ring" />
 
             <View
                 android:id="@+id/di_ring_inner"
-                android:layout_width="104dp"
-                android:layout_height="104dp"
+                android:layout_width="118dp"
+                android:layout_height="118dp"
                 android:layout_gravity="center"
-                android:alpha="0.22"
+                android:alpha="0.18"
                 android:background="@drawable/bg_di_ring" />
 
-            <ImageView
-                android:id="@+id/di_logo"
-                android:layout_width="72dp"
-                android:layout_height="72dp"
-                android:layout_gravity="center"
-                android:importantForAccessibility="no"
-                android:src="@drawable/ic_discord_mark"
-                android:tint="#FFFFFF" />
+            <FrameLayout
+                android:id="@+id/di_logo_wrap"
+                android:layout_width="84dp"
+                android:layout_height="84dp"
+                android:layout_gravity="center">
 
-            <ImageButton
-                android:id="@+id/di_close"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_gravity="top|end"
-                android:layout_margin="12dp"
-                android:background="@drawable/bg_pp_round_btn"
-                android:contentDescription="@android:string/cancel"
-                android:padding="10dp"
-                android:src="@drawable/ic_pp_close" />
+                <ImageView
+                    android:id="@+id/di_logo"
+                    android:layout_width="84dp"
+                    android:layout_height="84dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_discord_mark"
+                    android:tint="#FFFFFF" />
+
+                <View
+                    android:id="@+id/di_online"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="bottom|end"
+                    android:layout_marginEnd="2dp"
+                    android:layout_marginBottom="6dp"
+                    android:background="@drawable/bg_di_online_dot" />
+            </FrameLayout>
+
+            <!-- Little floating "chat bubbles" -->
+            <TextView
+                android:id="@+id/di_bubble_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|start"
+                android:layout_marginStart="18dp"
+                android:layout_marginTop="22dp"
+                android:background="@drawable/bg_di_hero_chip"
+                android:paddingStart="10dp"
+                android:paddingTop="5dp"
+                android:paddingEnd="10dp"
+                android:paddingBottom="5dp"
+                android:text="@string/di_bubble_1"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp" />
+
+            <TextView
+                android:id="@+id/di_bubble_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|end"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="46dp"
+                android:background="@drawable/bg_di_hero_chip"
+                android:paddingStart="10dp"
+                android:paddingTop="5dp"
+                android:paddingEnd="10dp"
+                android:paddingBottom="5dp"
+                android:text="@string/di_bubble_2"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp" />
+
+            <TextView
+                android:id="@+id/di_hero_caption"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:gravity="center"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="16dp"
+                android:text="@string/di_hero_caption"
+                android:textColor="#E6FFFFFF"
+                android:textSize="12sp"
+                android:textStyle="bold" />
         </FrameLayout>
 
+        <!-- Content -->
         <LinearLayout
             android:id="@+id/di_body"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="7"
             android:orientation="vertical"
             android:paddingStart="22dp"
-            android:paddingTop="18dp"
-            android:paddingEnd="22dp"
-            android:paddingBottom="18dp">
+            android:paddingTop="16dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="14dp">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:letterSpacing="0.3"
-                android:text="@string/di_eyebrow"
-                android:textColor="@color/hm_accent"
-                android:textSize="10.5sp"
-                android:textStyle="bold" />
+                android:gravity="top"
+                android:orientation="horizontal">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:fontFamily="@font/noto_sans_bold"
-                android:includeFontPadding="false"
-                android:text="@string/di_title"
-                android:textColor="@color/hm_text"
-                android:textSize="20sp" />
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:letterSpacing="0.3"
+                        android:text="@string/di_eyebrow"
+                        android:textColor="@color/hm_accent"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:fontFamily="@font/noto_sans_bold"
+                        android:includeFontPadding="false"
+                        android:text="@string/di_title"
+                        android:textColor="@color/hm_text"
+                        android:textSize="20sp" />
+                </LinearLayout>
+
+                <ImageButton
+                    android:id="@+id/di_close"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_pp_round_btn"
+                    android:contentDescription="@android:string/cancel"
+                    android:padding="10dp"
+                    android:src="@drawable/ic_pp_close" />
+            </LinearLayout>
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="6dp"
+                android:layout_marginEnd="6dp"
                 android:text="@string/di_body"
                 android:textColor="@color/hm_text_dim"
-                android:textSize="13sp" />
+                android:textSize="12.5sp" />
 
+            <!-- Perks -->
             <LinearLayout
                 android:id="@+id/di_perks"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
+                android:layout_marginTop="10dp"
                 android:orientation="vertical">
 
                 <LinearLayout
                     android:id="@+id/di_perk_1"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
                     android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="4dp">
 
                     <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:background="@drawable/bg_ss_step_num"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:background="@drawable/bg_di_perk_icon"
                         android:importantForAccessibility="no"
                         android:padding="7dp"
                         android:src="@drawable/ic_lib_heart"
                         android:tint="#8A95FF" />
 
-                    <LinearLayout
+                    <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
                         android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/di_perk_support"
-                            android:textColor="@color/hm_text"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/di_perk_support_sub"
-                            android:textColor="@color/hm_text_dim"
-                            android:textSize="11.5sp" />
-                    </LinearLayout>
+                        android:text="@string/di_perk_support_line"
+                        android:textColor="@color/hm_text"
+                        android:textSize="12.5sp" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/di_perk_2"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
                     android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="4dp">
 
                     <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:background="@drawable/bg_ss_step_num"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:background="@drawable/bg_di_perk_icon"
                         android:importantForAccessibility="no"
                         android:padding="7dp"
                         android:src="@drawable/ic_lib_update"
                         android:tint="#8A95FF" />
 
-                    <LinearLayout
+                    <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
                         android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/di_perk_updates"
-                            android:textColor="@color/hm_text"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/di_perk_updates_sub"
-                            android:textColor="@color/hm_text_dim"
-                            android:textSize="11.5sp" />
-                    </LinearLayout>
+                        android:text="@string/di_perk_updates_line"
+                        android:textColor="@color/hm_text"
+                        android:textSize="12.5sp" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/di_perk_3"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
                     android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="4dp">
 
                     <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:background="@drawable/bg_ss_step_num"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:background="@drawable/bg_di_perk_icon"
                         android:importantForAccessibility="no"
                         android:padding="7dp"
                         android:src="@drawable/ic_lib_cube"
                         android:tint="#8A95FF" />
 
-                    <LinearLayout
+                    <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
                         android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/di_perk_packs"
-                            android:textColor="@color/hm_text"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/di_perk_packs_sub"
-                            android:textColor="@color/hm_text_dim"
-                            android:textSize="11.5sp" />
-                    </LinearLayout>
+                        android:text="@string/di_perk_packs_line"
+                        android:textColor="@color/hm_text"
+                        android:textSize="12.5sp" />
                 </LinearLayout>
             </LinearLayout>
 
+            <!-- Actions -->
             <LinearLayout
-                android:id="@+id/di_join"
+                android:id="@+id/di_actions"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:layout_marginTop="18dp"
-                android:background="@drawable/bg_di_join"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:importantForAccessibility="no"
-                    android:src="@drawable/ic_discord_mark"
-                    android:tint="#FFFFFF" />
-
                 <TextView
+                    android:id="@+id/di_later"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
-                    android:text="@string/di_join"
-                    android:textColor="#FFFFFF"
-                    android:textSize="15sp"
+                    android:layout_height="46dp"
+                    android:background="@drawable/bg_pp_round_btn"
+                    android:gravity="center"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:text="@string/di_later"
+                    android:textColor="@color/hm_text"
+                    android:textSize="13sp"
                     android:textStyle="bold" />
-            </LinearLayout>
 
-            <TextView
-                android:id="@+id/di_later"
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:layout_marginTop="4dp"
-                android:gravity="center"
-                android:text="@string/di_later"
-                android:textColor="@color/hm_text_dim"
-                android:textSize="13sp" />
+                <LinearLayout
+                    android:id="@+id/di_join"
+                    android:layout_width="0dp"
+                    android:layout_height="46dp"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_di_join"
+                    android:clickable="true"
+                    android:elevation="4dp"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_discord_mark"
+                        android:tint="#FFFFFF" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="9dp"
+                        android:text="@string/di_join"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14.5sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 </FrameLayout>

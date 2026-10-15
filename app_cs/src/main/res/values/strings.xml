@@ -1185,19 +1185,20 @@
     <string name="ll_premium_none">No premium player with this name</string>
     <string name="ll_premium_none_sub">Default skin — you can pick one later in the skin editor</string>
     <string name="ll_premium_offline">Couldn\'t check (offline) — default skin for now</string>
+    <string name="ll_premium_offline_sub">Check your connection and retype the name to try again</string>
     <string name="ll_premium_badge">PREMIUM SKIN</string>
     <string name="ll_applying">Setting up the skin…</string>
     <string name="ll_err_fix">Fix the name first — see the rules.</string>
     <!-- Discord invite popup -->
     <string name="di_eyebrow">COMMUNITY</string>
     <string name="di_title">Join the CS Launcher Discord</string>
-    <string name="di_body">Get help fast, catch new releases first and share your packs with other players.</string>
-    <string name="di_perk_support">Support</string>
-    <string name="di_perk_updates">Early updates</string>
-    <string name="di_perk_packs">Pack sharing</string>
-    <string name="di_perk_support_sub">Crashes, mods, performance — real people answer</string>
-    <string name="di_perk_updates_sub">Betas and release notes land there first</string>
-    <string name="di_perk_packs_sub">Show your modpacks, grab ready-made ones</string>
+    <string name="di_body">It\'s where CS Launcher players hang out — and it takes ten seconds to join.</string>
+    <string name="di_perk_support_line"><b>Fast help</b> — crashes, mods, FPS: real people answer</string>
+    <string name="di_perk_updates_line"><b>Early builds</b> — betas and release notes land there first</string>
+    <string name="di_perk_packs_line"><b>Pack sharing</b> — show yours, grab ready-made ones</string>
+    <string name="di_bubble_1">gg, it works! 🎉</string>
+    <string name="di_bubble_2">new build is up 🚀</string>
+    <string name="di_hero_caption">Players and the CS team, one server</string>
     <string name="di_join">Join Discord</string>
     <string name="di_later">Maybe later</string>
     <string name="di_invite_url" translatable="false">https://discord.gg/dmteYqZZyY</string>
@@ -1209,4 +1210,27 @@
     <string name="vp_jump_selected">Jump to selected</string>
     <string name="vp_empty_hint">Nothing matches the search and filters.</string>
     <string name="vp_clear_filters">Clear filters</string>
+    <!-- Import skin/cape from a player name -->
+    <string name="pi_eyebrow">FROM A PLAYER</string>
+    <string name="pi_title">Import skin &amp; cape by name</string>
+    <string name="pi_name_hint">Premium player name</string>
+    <string name="pi_preview_hint">Type a name to see that player\'s skin and cape</string>
+    <string name="pi_status_idle">Works with any Java Edition (premium) player name — e.g. Notch, jeb_, Dream.</string>
+    <string name="pi_status_checking">Looking up %1$s…</string>
+    <string name="pi_status_found">Found %1$s</string>
+    <string name="pi_status_found_cape">Found %1$s — wears a cape</string>
+    <string name="pi_status_none">No premium player named %1$s</string>
+    <string name="pi_status_error">Couldn\'t reach the skin servers — check your connection and try again</string>
+    <string name="pi_status_short">Names are 3–16 characters: letters, numbers, _</string>
+    <string name="pi_opt_skin">Skin</string>
+    <string name="pi_opt_cape">Cape</string>
+    <string name="pi_opt_cape_none">This player wears no cape</string>
+    <string name="pi_opt_cape_ms">Capes can\'t be added to Microsoft accounts</string>
+    <string name="pi_opt_cape_local">Added to your cape library</string>
+    <string name="pi_import">Import</string>
+    <string name="pi_importing">Importing…</string>
+    <string name="pi_model_slim">SLIM</string>
+    <string name="pi_model_classic">CLASSIC</string>
+    <string name="skin_editor_import_player">Import from player</string>
+    <string name="skin_editor_imported">Imported %1$s\'s look</string>
 </resources>

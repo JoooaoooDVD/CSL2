@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Skin editor: import the skin / cape of any premium player by name -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <View
+        android:id="@+id/pi_scrim"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/hm_scrim"
+        android:clickable="true"
+        android:focusable="true" />
+
+    <LinearLayout
+        android:id="@+id/pi_card"
+        android:layout_width="560dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/bg_pp_card"
+        android:clickable="true"
+        android:elevation="16dp"
+        android:orientation="vertical">
+
+        <!-- Header -->
+        <LinearLayout
+            android:id="@+id/pi_header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="20dp"
+            android:paddingTop="16dp"
+            android:paddingEnd="14dp"
+            android:paddingBottom="4dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:letterSpacing="0.3"
+                    android:text="@string/pi_eyebrow"
+                    android:textColor="@color/hm_accent"
+                    android:textSize="10.5sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="1dp"
+                    android:fontFamily="@font/noto_sans_bold"
+                    android:includeFontPadding="false"
+                    android:text="@string/pi_title"
+                    android:textColor="@color/hm_text"
+                    android:textSize="19sp" />
+            </LinearLayout>
+
+            <ImageButton
+                android:id="@+id/pi_close"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_pp_round_btn"
+                android:contentDescription="@android:string/cancel"
+                android:padding="10dp"
+                android:src="@drawable/ic_pp_close" />
+        </LinearLayout>
+
+        <ScrollView
+            android:id="@+id/pi_scroll"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fillViewport="true"
+            android:overScrollMode="never"
+            android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/pi_columns"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:baselineAligned="false"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingTop="8dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="16dp">
+
+            <!-- 3D preview -->
+            <FrameLayout
+                android:id="@+id/pi_preview_wrap"
+                android:layout_width="0dp"
+                android:layout_height="230dp"
+                android:layout_weight="2"
+                android:background="@drawable/bg_sl_link">
+
+                <com.craftstudio.cslauncher.skins.PlayerPreviewView
+                    android:id="@+id/pi_preview"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
+                <LinearLayout
+                    android:id="@+id/pi_preview_empty"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <ImageView
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:alpha="0.45"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_pe_person"
+                        android:tint="@color/hm_text_dim" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:gravity="center"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:text="@string/pi_preview_hint"
+                        android:textColor="@color/hm_text_dim"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/pi_preview_tag"
+                    style="@style/Library.Badge"
+                    android:layout_gravity="top|start"
+                    android:layout_margin="10dp"
+                    android:background="@drawable/bg_lib_badge_green"
+                    android:textColor="@color/lib_badge_green_text"
+                    android:visibility="gone" />
+            </FrameLayout>
+
+            <!-- Form -->
+            <LinearLayout
+                android:id="@+id/pi_form"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:layout_weight="3"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:letterSpacing="0.3"
+                    android:text="@string/ll_name_label"
+                    android:textColor="@color/hm_accent"
+                    android:textSize="10.5sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/bg_sl_link"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="6dp">
+
+                    <ImageView
+                        android:id="@+id/pi_face"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:importantForAccessibility="no"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_pe_person"
+                        android:tint="@color/hm_text_dim" />
+
+                    <EditText
+                        android:id="@+id/pi_name"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:background="@null"
+                        android:hint="@string/pi_name_hint"
+                        android:imeOptions="actionSearch|flagNoExtractUi"
+                        android:importantForAutofill="no"
+                        android:inputType="textPersonName|textNoSuggestions"
+                        android:maxLength="16"
+                        android:maxLines="1"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="8dp"
+                        android:textColor="@color/hm_text"
+                        android:textColorHint="@color/hm_text_dim"
+                        android:textSize="15sp" />
+
+                    <ProgressBar
+                        android:id="@+id/pi_spinner"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_marginEnd="8dp"
+                        android:indeterminateTint="@color/hm_accent"
+                        android:visibility="gone" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/pi_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/pi_status_idle"
+                    android:textColor="@color/hm_text_dim"
+                    android:textSize="12.5sp" />
+
+                <!-- What to import -->
+                <LinearLayout
+                    android:id="@+id/pi_opt_skin"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_sl_link"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="12dp"
+                    android:paddingTop="8dp"
+                    android:paddingEnd="4dp"
+                    android:paddingBottom="8dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/pi_opt_skin"
+                        android:textColor="@color/hm_text"
+                        android:textSize="13.5sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/pi_opt_skin_model"
+                        style="@style/Library.Badge"
+                        android:layout_marginEnd="6dp"
+                        android:background="@drawable/bg_lib_badge_neutral"
+                        android:textColor="@color/hm_text_dim"
+                        android:textStyle="normal"
+                        android:visibility="gone" />
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/pi_use_skin"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/pi_opt_cape"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/bg_sl_link"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="12dp"
+                    android:paddingTop="8dp"
+                    android:paddingEnd="4dp"
+                    android:paddingBottom="8dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/pi_opt_cape"
+                            android:textColor="@color/hm_text"
+                            android:textSize="13.5sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/pi_opt_cape_sub"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/hm_text_dim"
+                            android:textSize="11.5sp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/pi_use_cape"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/pi_import"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="14dp"
+                    android:alpha="0.5"
+                    android:background="@drawable/bg_sl_action_primary"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_lib_download"
+                        android:tint="#FFFFFF" />
+
+                    <TextView
+                        android:id="@+id/pi_import_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/pi_import"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14.5sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+</FrameLayout>

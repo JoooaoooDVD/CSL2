@@ -100,6 +100,7 @@ public class LocalLoginFragment extends Fragment {
         mPreviewWrap = view.findViewById(R.id.ll_preview_wrap);
         mPreview = view.findViewById(R.id.ll_preview);
         mPlayText = view.findViewById(R.id.ll_play_text);
+        mPremiumRow.setOnClickListener(v -> { if (mPremium == null && isValid()) { mLookedUpName = null; startLookup(); } });
         mPremiumUse.setOnCheckedChangeListener((b, checked) -> {
             if (mPremium == null) return;
             showFace(checked ? mPremium.face : null);
@@ -205,10 +206,13 @@ public class LocalLoginFragment extends Fragment {
         if (mPremiumRow.getVisibility() != View.VISIBLE) { mPremiumRow.setVisibility(View.VISIBLE); Motion.riseIn(mPremiumRow, 0L, 8f); }
         final boolean online = isOnline();
         CSLauncherApplication.sExecutorService.execute(() -> {
-            PremiumProfileLookup.Result result = online ? PremiumProfileLookup.lookup(name) : null;
+            final PremiumProfileLookup.Result lookup = online ? PremiumProfileLookup.lookup(name) : null;
+            // "reachable" = we got a real answer (found or not found); otherwise show the offline text
+            final boolean reachable = lookup != null && lookup.status != PremiumProfileLookup.Status.ERROR;
+            final PremiumProfileLookup.Result found = lookup != null && lookup.found() ? lookup : null;
             Tools.runOnUiThread(() -> {
                 if (getView() == null || serial != mLookupSerial) return;
-                onLookupDone(result, online);
+                onLookupDone(found, reachable);
             });
         });
     }
@@ -262,7 +266,7 @@ public class LocalLoginFragment extends Fragment {
             mPremiumIcon.setImageTintList(android.content.res.ColorStateList.valueOf(
                     androidx.core.content.ContextCompat.getColor(requireContext(), R.color.hm_text_dim)));
             mPremiumTitle.setText(online ? R.string.ll_premium_none : R.string.ll_premium_offline);
-            mPremiumSub.setText(R.string.ll_premium_none_sub);
+            mPremiumSub.setText(online ? R.string.ll_premium_none_sub : R.string.ll_premium_offline_sub);
             mPremiumUse.setVisibility(View.GONE);
         }
     }

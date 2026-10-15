@@ -79,12 +79,12 @@ public class DiscordInviteDialog extends CSPopupDialog {
         setContentView(R.layout.dialog_discord_invite);
         View card = findViewById(R.id.di_card);
         setupPopup(findViewById(R.id.di_scrim), card, true);
-        sizeCard(card);
+        layoutCard(card);
 
         View close = findViewById(R.id.di_close);
         View later = findViewById(R.id.di_later);
         View join = findViewById(R.id.di_join);
-        View logo = findViewById(R.id.di_logo);
+        View logo = findViewById(R.id.di_logo_wrap);
         close.setOnClickListener(v -> onDismissRequested());
         later.setOnClickListener(v -> onDismissRequested());
         join.setOnClickListener(v -> {
@@ -97,22 +97,48 @@ public class DiscordInviteDialog extends CSPopupDialog {
         });
         for (View v : new View[]{close, later, join}) CSAnimationEngine.attachPressFeedback(v);
 
-        Motion.popIn(logo, 160L, 0.3f);
-        Motion.popIn(findViewById(R.id.di_ring_inner), 220L, 0.4f);
-        Motion.popIn(findViewById(R.id.di_ring_outer), 280L, 0.4f);
-        Motion.cascadeChildren((ViewGroup) findViewById(R.id.di_body), 220L, 55L, 14f);
+        // Entrance: logo pops, rings bloom, bubbles drop in, content cascades
+        View ringInner = findViewById(R.id.di_ring_inner), ringOuter = findViewById(R.id.di_ring_outer);
+        View bubble1 = findViewById(R.id.di_bubble_1), bubble2 = findViewById(R.id.di_bubble_2);
+        Motion.popIn(logo, 140L, 0.3f);
+        Motion.popIn(ringInner, 200L, 0.4f);
+        Motion.popIn(ringOuter, 260L, 0.4f);
+        Motion.popIn(bubble1, 420L, 0.6f);
+        Motion.popIn(bubble2, 520L, 0.6f);
+        Motion.riseIn(findViewById(R.id.di_hero_caption), 480L, 8f);
+        Motion.cascadeChildren((ViewGroup) findViewById(R.id.di_body), 200L, 55L, 14f);
+        Motion.cascadeChildren((ViewGroup) findViewById(R.id.di_perks), 360L, 70L, 10f);
 
-        // Idle life: the logo floats, the rings breathe
+        // Idle life: logo floats, rings breathe, bubbles bob out of phase
         logo.postDelayed(() -> {
             if (!isShowing()) return;
-            ObjectAnimator floatAnim = ObjectAnimator.ofFloat(logo, View.TRANSLATION_Y, 0f, -5f * dp(), 0f);
-            floatAnim.setDuration(2600L);
-            floatAnim.setRepeatCount(ValueAnimator.INFINITE);
-            floatAnim.setInterpolator(new AccelerateDecelerateInterpolator());
-            floatAnim.start();
-            breathe(findViewById(R.id.di_ring_inner), 1.08f, 2200L);
-            breathe(findViewById(R.id.di_ring_outer), 1.12f, 3100L);
-        }, 700L);
+            floatY(logo, -5f, 2600L, 0L);
+            floatY(bubble1, -4f, 3200L, 400L);
+            floatY(bubble2, 4f, 2900L, 900L);
+            breathe(ringInner, 1.08f, 2200L);
+            breathe(ringOuter, 1.12f, 3100L);
+            pulse(findViewById(R.id.di_online));
+        }, 800L);
+    }
+
+    private void floatY(@NonNull View view, float dpAmount, long duration, long delay) {
+        ObjectAnimator anim = ObjectAnimator.ofFloat(view, View.TRANSLATION_Y, 0f, dpAmount * dp(), 0f);
+        anim.setDuration(duration);
+        anim.setStartDelay(delay);
+        anim.setRepeatCount(ValueAnimator.INFINITE);
+        anim.setInterpolator(new AccelerateDecelerateInterpolator());
+        anim.start();
+    }
+
+    private static void pulse(@NonNull View dot) {
+        ObjectAnimator x = ObjectAnimator.ofFloat(dot, View.SCALE_X, 1f, 1.25f, 1f);
+        ObjectAnimator y = ObjectAnimator.ofFloat(dot, View.SCALE_Y, 1f, 1.25f, 1f);
+        for (ObjectAnimator animator : new ObjectAnimator[]{x, y}) {
+            animator.setDuration(1400L);
+            animator.setRepeatCount(ValueAnimator.INFINITE);
+            animator.setInterpolator(new AccelerateDecelerateInterpolator());
+            animator.start();
+        }
     }
 
     private static void breathe(@NonNull View view, float to, long duration) {
@@ -126,11 +152,56 @@ public class DiscordInviteDialog extends CSPopupDialog {
         }
     }
 
-    private void sizeCard(@NonNull View card) {
+    /**
+     * Wide (landscape, incl. phones): hero left + content right, capped to the screen height.
+     * Narrow (portrait / small): hero on top (shorter), content below, scrollable.
+     */
+    private void layoutCard(@NonNull View card) {
         DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
         float d = metrics.density;
+        float widthDp = metrics.widthPixels / d;
+        float heightDp = metrics.heightPixels / d;
+        boolean sideBySide = widthDp >= 560f;
+        android.widget.LinearLayout root = (android.widget.LinearLayout) card;
         ViewGroup.LayoutParams params = card.getLayoutParams();
-        params.width = Math.min((int) (400 * d), metrics.widthPixels - (int) (40 * d));
+        View hero = findViewById(R.id.di_hero);
+        View body = findViewById(R.id.di_body);
+
+        if (sideBySide) {
+            params.width = Math.min((int) (600 * d), metrics.widthPixels - (int) (32 * d));
+            // Phone landscape (~360-400dp tall): fill the height so nothing is cut, body scrolls if needed
+            if (heightDp < 420f) params.height = metrics.heightPixels - (int) (20 * d);
+        } else {
+            root.setOrientation(android.widget.LinearLayout.VERTICAL);
+            params.width = Math.min((int) (400 * d), metrics.widthPixels - (int) (28 * d));
+            hero.setBackgroundResource(R.drawable.bg_di_hero_top);
+            android.widget.LinearLayout.LayoutParams hp = new android.widget.LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, (int) (150 * d));
+            hero.setLayoutParams(hp);
+            hero.setMinimumHeight(0);
+            // Rings would spill out of a 150dp strip
+            findViewById(R.id.di_ring_outer).setVisibility(View.GONE);
+            findViewById(R.id.di_hero_caption).setVisibility(View.GONE);
+            android.widget.LinearLayout.LayoutParams bp = new android.widget.LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            body.setLayoutParams(bp);
+            body.setPadding((int) (20 * d), (int) (16 * d), (int) (16 * d), (int) (14 * d));
+        }
         card.setLayoutParams(params);
+
+        // Body scrolls when the screen is really short; the rest of the card stays put
+        if (heightDp < 420f) {
+            ViewGroup parent = (ViewGroup) body.getParent();
+            int index = parent.indexOfChild(body);
+            ViewGroup.LayoutParams bodyParams = body.getLayoutParams();
+            parent.removeView(body);
+            android.widget.ScrollView scroll = new android.widget.ScrollView(getContext());
+            scroll.setFillViewport(true);
+            scroll.setVerticalScrollBarEnabled(false);
+            scroll.setOverScrollMode(View.OVER_SCROLL_NEVER);
+            scroll.addView(body, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            parent.addView(scroll, index, bodyParams);
+        }
     }
+
 }
