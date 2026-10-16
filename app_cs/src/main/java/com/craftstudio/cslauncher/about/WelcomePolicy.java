@@ -18,7 +18,7 @@ import com.craftstudio.cslauncher.utils.motion.Motion;
  * launcher UI until the user taps "I agree"; back is swallowed while it is up.
  */
 public final class WelcomePolicy {
-    private static final String PREF_KEY = "welcomePolicyAcceptedV1";
+    private static final String PREF_KEY = "welcomePolicyAcceptedV2";
 
     private WelcomePolicy() {}
 
@@ -42,6 +42,11 @@ public final class WelcomePolicy {
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         root.setAlpha(0f);
         root.animate().alpha(1f).setDuration(Motion.MEDIUM).setInterpolator(Motion.ENTER).start();
+        View card = root.findViewById(R.id.policy_card);
+        card.setScaleX(0.94f);
+        card.setScaleY(0.94f);
+        card.setTranslationY(24f * activity.getResources().getDisplayMetrics().density);
+        card.animate().scaleX(1f).scaleY(1f).translationY(0f).setDuration(Motion.LONG).setInterpolator(Motion.ENTER).start();
 
         PolicyBinder.bind(root, true, () -> {
             LauncherPreferences.DEFAULT_PREF.edit().putBoolean(PREF_KEY, true).apply();

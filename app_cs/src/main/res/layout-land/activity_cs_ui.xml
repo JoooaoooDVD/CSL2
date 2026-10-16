@@ -101,7 +101,7 @@
                     android:contentDescription="@string/home_nav_browser"
                     android:padding="8dp"
                     android:scaleType="fitCenter"
-                    android:src="@drawable/ic_dock_browser"
+                    android:src="@drawable/ic_dock_download"
                     android:tooltipText="@string/home_nav_browser" />
 
                 <ImageButton

@@ -37,7 +37,19 @@ public class ProgressService extends Service implements TaskCountListener {
 
     private NotificationManagerCompat notificationManagerCompat;
     private NotificationCompat.Builder mNotificationBuilder;
-    private final ProgressKeeper.GlobalProgressListener mGlobalListener = (taskCount, percent) -> Tools.MAIN_HANDLER.post(this::refreshNotification);
+    /** Notifications are expensive IPC: rebuild at most every NOTIFY_INTERVAL_MS */
+    private static final long NOTIFY_INTERVAL_MS = 700L;
+    private long mLastNotify;
+    private boolean mNotifyScheduled;
+    private final Runnable mNotifyNow = this::refreshNotification;
+    private final ProgressKeeper.GlobalProgressListener mGlobalListener = (taskCount, percent) -> Tools.MAIN_HANDLER.post(this::scheduleRefresh);
+
+    private void scheduleRefresh() {
+        if (mNotifyScheduled) return;
+        long wait = Math.max(0L, NOTIFY_INTERVAL_MS - (android.os.SystemClock.uptimeMillis() - mLastNotify));
+        mNotifyScheduled = true;
+        Tools.MAIN_HANDLER.postDelayed(mNotifyNow, wait);
+    }
 
     /** Simple wrapper to start the service */
     public static void startService(Context context){
@@ -50,7 +62,7 @@ public class ProgressService extends Service implements TaskCountListener {
         Tools.buildNotificationChannel(getApplicationContext());
         notificationManagerCompat = NotificationManagerCompat.from(getApplicationContext());
         Intent killIntent = new Intent(getApplicationContext(), ProgressService.class);
-        killIntent.putExtra("kill", true);
+        killIntent.putExtra("cancel", true);
         PendingIntent pendingKillIntent = PendingIntent.getService(this, NotificationUtils.PENDINGINTENT_CODE_KILL_PROGRESS_SERVICE
                 , killIntent, Build.VERSION.SDK_INT >=23 ? PendingIntent.FLAG_IMMUTABLE : 0);
         mNotificationBuilder = new NotificationCompat.Builder(this, "channel_id")
@@ -67,9 +79,11 @@ public class ProgressService extends Service implements TaskCountListener {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if(intent != null) {
-            if(intent.getBooleanExtra("kill", false)) {
-                stopSelf(); // otherwise Android tries to restart the service since it "crashed"
-                Process.killProcess(Process.myPid());
+            if(intent.getBooleanExtra("cancel", false) || intent.getBooleanExtra("kill", false)) {
+                // Cancel button of the notification: stop the running downloads gracefully.
+                // The service goes away by itself once the last task reports its end.
+                ProgressKeeper.cancelAll();
+                Tools.MAIN_HANDLER.postDelayed(() -> { if (!ProgressKeeper.hasOngoingTasks()) stopSelf(); }, 1500L);
                 return START_NOT_STICKY;
             }
         }
@@ -94,12 +108,15 @@ public class ProgressService extends Service implements TaskCountListener {
 
     @Override
     public void onDestroy() {
+        Tools.MAIN_HANDLER.removeCallbacks(mNotifyNow);
         ProgressKeeper.removeTaskCountListener(this);
         ProgressKeeper.removeGlobalListener(mGlobalListener);
     }
 
     /** Rebuilds the notification from the current task snapshot. */
     private void refreshNotification() {
+        mNotifyScheduled = false;
+        mLastNotify = android.os.SystemClock.uptimeMillis();
         if (!ProgressKeeper.hasOngoingTasks()) {
             stopSelf();
             return;

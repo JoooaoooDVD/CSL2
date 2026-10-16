@@ -1,7 +1,11 @@
 package com.craftstudio.cslauncher.progresskeeper;
 
+import android.os.Handler;
+import android.os.Looper;
+
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -10,6 +14,53 @@ public class ProgressKeeper {
     private static final HashMap<String, ProgressState> sProgressStates = new HashMap<>();
     private static final List<TaskCountListener> sTaskCountListeners = new ArrayList<>();
     private static final List<GlobalProgressListener> sGlobalListeners = new ArrayList<>();
+
+    /**
+     * Downloads report progress ~30 times a second per task. Pushing every tick to the UI
+     * (home PLAY button, progress dock, notification) used to flood the main thread and made
+     * the launcher stutter while downloading. Plain updates are now coalesced: at most one UI
+     * dispatch per record every {@link #UI_INTERVAL_MS}, always carrying the latest values.
+     * Start / end events are still delivered immediately.
+     */
+    private static final long UI_INTERVAL_MS = 100L;
+    private static final Handler sHandler = new Handler(Looper.getMainLooper());
+    private static final HashSet<String> sPendingRecords = new HashSet<>();
+    private static boolean sFlushScheduled;
+    private static long sLastFlush;
+    private static final Runnable sFlush = ProgressKeeper::flushPending;
+
+    /** Set by {@link #cancelAll()}, cleared once every task has ended */
+    private static volatile boolean sCancelRequested;
+
+    /** Asks every running task to stop as soon as it can (checked by the downloaders) */
+    public static void cancelAll() {
+        if (getTaskCount() == 0) return;
+        sCancelRequested = true;
+    }
+
+    /** @return whether the user asked to cancel the running tasks */
+    public static boolean isCancelRequested() {
+        return sCancelRequested;
+    }
+
+    /** Throws when the user cancelled - call this inside download loops */
+    public static void throwIfCancelled() throws CancelledException {
+        if (sCancelRequested) throw new CancelledException();
+    }
+
+    /** Raised by download loops once the user tapped cancel */
+    public static class CancelledException extends java.io.IOException {
+        public CancelledException() { super("Download cancelled by the user"); }
+    }
+
+    /** @return true when this throwable (or one of its causes) is a user cancellation */
+    public static boolean isCancellation(Throwable throwable) {
+        while (throwable != null) {
+            if (throwable instanceof CancelledException || throwable instanceof InterruptedException) return true;
+            throwable = throwable.getCause();
+        }
+        return false;
+    }
 
     /**
      * Notified about every progress change regardless of the record, plus once
@@ -66,25 +117,76 @@ public class ProgressKeeper {
         if(shouldCallEnded) {
             shouldCallStarted = false;
             sProgressStates.remove(progressRecord);
+            sPendingRecords.remove(progressRecord);
         }else if(shouldCallStarted){
             sProgressStates.put(progressRecord, (progressState = new ProgressState()));
         }
-        if(shouldCallEnded || shouldCallStarted) updateTaskCount(sProgressStates.size());
+        if(shouldCallEnded || shouldCallStarted) {
+            if (sProgressStates.isEmpty()) sCancelRequested = false;
+            updateTaskCount(sProgressStates.size());
+        }
         if(progressState != null) {
             progressState.progress = progress;
             progressState.resid = resid;
             progressState.varArg = va;
         }
 
-        List<ProgressListener> progressListeners = sProgressListeners.get(progressRecord);
-        if(progressListeners != null)
-            for(ProgressListener listener : progressListeners) {
+        if (shouldCallStarted || shouldCallEnded) {
+            // Lifecycle events go out right away
+            List<ProgressListener> progressListeners = sProgressListeners.get(progressRecord);
+            if(progressListeners != null)
+                for(ProgressListener listener : new ArrayList<>(progressListeners)) {
                     if(shouldCallStarted) listener.onProgressStarted();
-                    else if(shouldCallEnded) listener.onProgressEnded();
-                    else listener.onProgressUpdated(progress, resid, va);
+                    else listener.onProgressEnded();
+                }
+            notifyGlobalListenersLocked();
+            return;
+        }
+        // Plain updates are coalesced (see UI_INTERVAL_MS)
+        sPendingRecords.add(progressRecord);
+        scheduleFlushLocked();
+    }
+
+    private static void scheduleFlushLocked() {
+        if (sFlushScheduled) return;
+        sFlushScheduled = true;
+        long wait = Math.max(0L, UI_INTERVAL_MS - (android.os.SystemClock.uptimeMillis() - sLastFlush));
+        sHandler.postDelayed(sFlush, wait);
+    }
+
+    /** Main thread: delivers the latest state of every record that changed since the last flush */
+    private static void flushPending() {
+        ArrayList<Runnable> calls = new ArrayList<>();
+        boolean notifyGlobal;
+        int count;
+        int percent;
+        ArrayList<GlobalProgressListener> globals;
+        synchronized (ProgressKeeper.class) {
+            globals = new ArrayList<>(sGlobalListeners);
+            sFlushScheduled = false;
+            sLastFlush = android.os.SystemClock.uptimeMillis();
+            notifyGlobal = !sPendingRecords.isEmpty();
+            for (String record : sPendingRecords) {
+                final ProgressState state = sProgressStates.get(record);
+                final List<ProgressListener> listeners = sProgressListeners.get(record);
+                if (state == null || listeners == null || listeners.isEmpty()) continue;
+                final int progress = state.progress;
+                final int resid = state.resid;
+                final Object[] args = state.varArg;
+                for (ProgressListener listener : new ArrayList<>(listeners)) {
+                    calls.add(() -> listener.onProgressUpdated(progress, resid, args));
+                }
             }
-        // Screen-level observers (home PLAY download state) see every change
-        notifyGlobalListenersLocked();
+            sPendingRecords.clear();
+            count = sProgressStates.size();
+            percent = aggregateProgressLocked();
+        }
+        for (Runnable call : calls) call.run();
+        if (notifyGlobal) {
+            for (GlobalProgressListener listener : globals) {
+                listener.onGlobalProgress(count, percent);
+            }
+        }
     }
 
     private static void updateTaskCount(int count) {

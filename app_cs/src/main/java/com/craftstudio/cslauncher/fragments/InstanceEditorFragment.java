@@ -476,16 +476,12 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
     }
 
     private void showRendererDialog() {
-        String[] items = mRenderDisplayNames.toArray(new String[0]);
-        new MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.pedit_renderer)
-                .setSingleChoiceItems(items, mRendererIndex, (dialog, which) -> {
-                    mRendererIndex = which;
-                    if (mRendererValue != null) ProfileEditorMotion.valueChanged(mRendererValue, rendererLabel());
-                    dialog.dismiss();
-                })
-                .setNegativeButton(android.R.string.cancel, null)
-                .show();
+        java.util.List<String> names = new java.util.ArrayList<>(mRenderDisplayNames);
+        String defaultLabel = names.remove(names.size() - 1);
+        new com.kdt.mcgui.RendererPickerDialog(requireContext(), mRenderNames, names, mRendererIndex, defaultLabel, which -> {
+            mRendererIndex = which;
+            if (mRendererValue != null) ProfileEditorMotion.valueChanged(mRendererValue, rendererLabel());
+        }).show();
     }
 
     private void showJvmDialog() {

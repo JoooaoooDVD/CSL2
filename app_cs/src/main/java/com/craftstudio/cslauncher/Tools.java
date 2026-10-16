@@ -380,6 +380,11 @@ public final class Tools {
             ContextExecutor.execute((ContextExecutorTask) e);
             return;
         }
+        // The user cancelled a download: that is not an error, just say so briefly
+        if (!exitIfOk && com.craftstudio.cslauncher.progresskeeper.ProgressKeeper.isCancellation(e)) {
+            runOnUiThread(() -> android.widget.Toast.makeText(ctx, R.string.download_cancelled, android.widget.Toast.LENGTH_SHORT).show());
+            return;
+        }
 
         Runnable runnable = () -> {
             final String errMsg = showMore ? printToString(e) : rolledMessage != null ? rolledMessage : e.getMessage();

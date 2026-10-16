@@ -342,7 +342,7 @@
                     android:layout_width="19dp"
                     android:layout_height="19dp"
                     android:contentDescription="@null"
-                    android:src="@drawable/ic_home_cube_edit" />
+                    android:src="@drawable/ic_home_pencil_edit" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -597,7 +597,7 @@
                         android:layout_height="match_parent"
                         android:contentDescription="@null"
                         android:padding="@dimen/hm_tile_padding"
-                        android:src="@drawable/ic_home_cube_glow" />
+                        android:src="@drawable/ic_home_download_glow" />
                 </FrameLayout>
 
                 <LinearLayout

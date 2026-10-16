@@ -319,11 +319,14 @@ public class CreateInstanceDialog extends CSPopupDialog {
         mRendererDisplay.add(context.getString(R.string.ci_renderer_default));
         mRendererIndex = mRendererDisplay.size() - 1;
         mRendererValue.setText(mRendererDisplay.get(mRendererIndex));
-        findViewById(R.id.ci_renderer_field).setOnClickListener(v ->
-                showDropdown(findViewById(R.id.ci_renderer_field), mRendererDisplay, mRendererIndex, index -> {
-                    mRendererIndex = index;
-                    Motion.swapText(mRendererValue, mRendererDisplay.get(index));
-                }));
+        findViewById(R.id.ci_renderer_field).setOnClickListener(v -> {
+            List<String> names = new ArrayList<>(mRendererDisplay);
+            String defaultLabel = names.remove(names.size() - 1);
+            new RendererPickerDialog(context, mRendererIds, names, mRendererIndex, defaultLabel, index -> {
+                mRendererIndex = index;
+                Motion.swapText(mRendererValue, mRendererDisplay.get(index));
+            }).show();
+        });
 
         // Shared game folder
         ((TextView) findViewById(R.id.ci_shared_desc)).setText(R.string.ci_shared_desc);

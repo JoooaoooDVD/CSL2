@@ -67,6 +67,9 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
     private View mDlBg, mDlFill, mDlSweep, mDlBadge, mDlRing, mDlIcon, mPlayMore;
     private android.animation.AnimatorSet mDlLoop;
     private android.animation.ValueAnimator mDlFillAnimator;
+    /** Percent currently printed in the subtitle (rolls towards mAggregateProgress) */
+    private android.animation.ValueAnimator mPctAnimator;
+    private int mShownPercent = -1;
     private static final int PLAY_TITLE_DARK = 0xFF0E1525, PLAY_SUB_DARK = 0xFF1B2740;
     private static final int PLAY_TITLE_LIGHT = 0xFFF4F7FF, PLAY_SUB_LIGHT = 0xFF8DB8FF;
     private boolean mDownloading;
@@ -338,14 +341,30 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
             mPlayArc.setDownloading(true);
             enterDownloadSkin();
         } else {
+            if (mPctAnimator != null) mPctAnimator.cancel();
+            mShownPercent = -1;
             mPlayArc.setDownloading(false);
             mPlayArc.setProgress(-1);
-            if (mPlayIcon != null) mPlayIcon.setVisibility(View.VISIBLE);
+            if (mPlayIcon != null) {
+                mPlayIcon.setVisibility(View.VISIBLE);
+                Motion.popIn(mPlayIcon, 120L, 0.5f);
+            }
             setPlayDividerVisible(root, true);
             CSAnimationEngine.animateValueRefresh(mPlayTitle, getString(R.string.home_play));
             // Restore the version/loader subtitle
             refreshVersionInfo();
             exitDownloadSkin();
+            // "Done" settle: a light bounce of the PLAY face and one glint sweep
+            View container = root.findViewById(R.id.home_play_container);
+            if (container != null && Motion.content(container)) {
+                container.animate().cancel();
+                container.animate().scaleX(1.025f).scaleY(1.025f).setDuration(140)
+                        .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                        .withEndAction(() -> container.animate().scaleX(1f).scaleY(1f).setDuration(260)
+                                .setInterpolator(new android.view.animation.OvershootInterpolator(2f)).start())
+                        .start();
+            }
+            HomeMotion.glint(root.findViewById(R.id.home_play_glint), container, 260L);
         }
     }
 
@@ -468,10 +487,27 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
 
     private void updateDownloadSubtitle() {
         if (mPlaySubtitle == null || !mDownloading) return;
-        String text = mAggregateProgress >= 0
-                ? mAggregateProgress + "%"
-                : getString(R.string.home_downloading_wait);
-        CSAnimationEngine.animateValueRefresh(mPlaySubtitle, text);
+        if (mAggregateProgress < 0) {
+            if (mPctAnimator != null) mPctAnimator.cancel();
+            mShownPercent = -1;
+            CSAnimationEngine.animateValueRefresh(mPlaySubtitle, getString(R.string.home_downloading_wait));
+        } else if (mShownPercent < 0) {
+            // First real number: one pulse, then the counter only rolls smoothly
+            if (mPctAnimator != null) mPctAnimator.cancel();
+            mShownPercent = mAggregateProgress;
+            CSAnimationEngine.animateValueRefresh(mPlaySubtitle, mAggregateProgress + "%");
+        } else if (mAggregateProgress != mShownPercent) {
+            // Roll the number instead of flashing the text on every tick
+            if (mPctAnimator != null) mPctAnimator.cancel();
+            mPctAnimator = android.animation.ValueAnimator.ofInt(mShownPercent, mAggregateProgress);
+            mPctAnimator.setDuration(Math.min(600L, 120L + 25L * Math.abs(mAggregateProgress - mShownPercent)));
+            mPctAnimator.setInterpolator(new android.view.animation.DecelerateInterpolator());
+            mPctAnimator.addUpdateListener(a -> {
+                mShownPercent = (int) a.getAnimatedValue();
+                if (mPlaySubtitle != null) mPlaySubtitle.setText(mShownPercent + "%");
+            });
+            mPctAnimator.start();
+        }
         if (mPlayArc != null) mPlayArc.setProgress(mAggregateProgress);
         updateDownloadFill();
     }
@@ -571,6 +607,7 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         super.onDestroyView();
         stopDownloadLoop();
         if (mDlFillAnimator != null) mDlFillAnimator.cancel();
+        if (mPctAnimator != null) mPctAnimator.cancel();
         mLoadId++;
         if (mVideo != null) mVideo.release();
         setImageAnimation(false);

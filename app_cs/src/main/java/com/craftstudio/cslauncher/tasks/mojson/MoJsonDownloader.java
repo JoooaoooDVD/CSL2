@@ -100,8 +100,9 @@ public class MoJsonDownloader extends Downloader {
             } catch(RuntimeException e) {
                 throw e; // log fatal errors to Google Play
             } catch (InterruptedException ignored) {
+                // Cancelled from the notification / progress dock
             } catch (Exception e) {
-                listener.onDownloadFailed(e);
+                if (!com.craftstudio.cslauncher.progresskeeper.ProgressKeeper.isCancellation(e)) listener.onDownloadFailed(e);
             }
             ProgressLayout.clearProgress(ProgressLayout.DOWNLOAD_GAME);
         });

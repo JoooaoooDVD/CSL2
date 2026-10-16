@@ -69,6 +69,11 @@ public class Downloader {
         }
         double totalMegabytes = totalSize / ONE_MEGABYTE;
         while(mDownloadedFileCounter.get() < totalCount) {
+            if (com.craftstudio.cslauncher.progresskeeper.ProgressKeeper.isCancelRequested()) {
+                mDownloadService.shutdownNow();
+                mVerifyService.shutdownNow();
+                throw new InterruptedException("Download cancelled by the user");
+            }
             IOException exception = mThreadException.get();
             if(exception != null) throw exception;
             if(sizeCounter) reportSizeProgress(totalMegabytes);
@@ -96,6 +101,10 @@ public class Downloader {
             for(TaskMetadata element : reducedList) executorService.submit(new CompleteMetadataTask(element, this));
             executorService.shutdown();
             while (!executorService.awaitTermination(33, TimeUnit.MILLISECONDS)) {
+                if (com.craftstudio.cslauncher.progresskeeper.ProgressKeeper.isCancelRequested()) {
+                    executorService.shutdownNow();
+                    throw new InterruptedException("Download cancelled by the user");
+                }
                 IOException exception = mThreadException.get();
                 if(exception != null) throw exception;
                 reportCountProgress(R.string.newerdl_inserting_metadata_count, reducedList.size());
@@ -151,6 +160,7 @@ public class Downloader {
         byte[] buffer = getBuffer();
         int readLen;
         while((readLen = inputStream.read(buffer)) != -1) {
+            com.craftstudio.cslauncher.progresskeeper.ProgressKeeper.throwIfCancelled();
             outputStream.write(buffer, 0, readLen);
             if(listener != null) listener.onBytesCopied(readLen);
             mInternetUsageCounter.getAndAdd(readLen);

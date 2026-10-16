@@ -36,7 +36,12 @@ public class DownloadUtils {
                         + ": " + conn.getResponseMessage());
             }
             is = conn.getInputStream();
-            IOUtils.copy(is, os);
+            byte[] buffer = new byte[65536];
+            int read;
+            while ((read = is.read(buffer)) != -1) {
+                com.craftstudio.cslauncher.progresskeeper.ProgressKeeper.throwIfCancelled();
+                os.write(buffer, 0, read);
+            }
         } catch (IOException e) {
             throw new IOException("Unable to download from " + url, e);
         } finally {
@@ -78,6 +83,7 @@ public class DownloadUtils {
             if (buffer == null) buffer = new byte[65535];
 
             while ((current = readStr.read(buffer)) != -1) {
+                com.craftstudio.cslauncher.progresskeeper.ProgressKeeper.throwIfCancelled();
                 overall += current;
                 fos.write(buffer, 0, current);
                 monitor.updateProgress(overall, length);

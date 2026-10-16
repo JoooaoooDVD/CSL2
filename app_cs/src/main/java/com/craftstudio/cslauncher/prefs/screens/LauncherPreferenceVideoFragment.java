@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import androidx.annotation.NonNull;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.SwitchPreferenceCompat;
@@ -82,6 +83,29 @@ public class LauncherPreferenceVideoFragment extends LauncherPreferenceFragment 
         rendererListPreference.setEntryValues(list.rendererIds.toArray(new String[0]));
 
         computeVisibility();
+    }
+
+    @Override
+    public void onDisplayPreferenceDialog(@NonNull Preference preference) {
+        if ("renderer".equals(preference.getKey()) && preference instanceof ListPreference && getContext() != null) {
+            ListPreference pref = (ListPreference) preference;
+            CharSequence[] entries = pref.getEntries();
+            CharSequence[] values = pref.getEntryValues();
+            java.util.List<String> ids = new java.util.ArrayList<>();
+            java.util.List<String> names = new java.util.ArrayList<>();
+            for (int i = 0; i < values.length; i++) {
+                ids.add(values[i].toString());
+                names.add(i < entries.length ? entries[i].toString() : values[i].toString());
+            }
+            int selected = ids.indexOf(pref.getValue());
+            new com.kdt.mcgui.RendererPickerDialog(requireContext(), ids, names, selected, null, index -> {
+                if (index < 0 || index >= ids.size()) return;
+                String value = ids.get(index);
+                if (pref.callChangeListener(value)) pref.setValue(value);
+            }).show();
+            return;
+        }
+        super.onDisplayPreferenceDialog(preference);
     }
 
     @Override
