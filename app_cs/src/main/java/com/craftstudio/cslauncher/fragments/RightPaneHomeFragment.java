@@ -70,6 +70,8 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
     /** Percent currently printed in the subtitle (rolls towards mAggregateProgress) */
     private android.animation.ValueAnimator mPctAnimator;
     private int mShownPercent = -1;
+    /** True while the running tasks are a game launch that is only verifying files (no real download) */
+    private boolean mLaunchMode;
     private static final int PLAY_TITLE_DARK = 0xFF0E1525, PLAY_SUB_DARK = 0xFF1B2740;
     private static final int PLAY_TITLE_LIGHT = 0xFFF4F7FF, PLAY_SUB_LIGHT = 0xFF8DB8FF;
     private boolean mDownloading;
@@ -119,6 +121,7 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         // PLAY: hands the request to the existing launch pipeline of LauncherActivity,
         // which already refuses to double-launch while a task is running
         view.findViewById(R.id.play_button).setOnClickListener(v -> {
+            igniteTap();
             ExtraCore.setValue(ExtraConstants.LAUNCH_GAME, true);
         });
         mPlayIcon = view.findViewById(R.id.home_play_icon);
@@ -320,10 +323,20 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         if (root == null) return;
         mAggregateProgress = aggregatePercent;
         boolean downloading = taskCount > 0;
+        boolean launch = downloading && ProgressKeeper.isLaunching() && !ProgressKeeper.isRealDownload();
         if (downloading != mDownloading) {
             mDownloading = downloading;
+            mLaunchMode = launch;
             applyPlayDownloadState();
         } else if (downloading) {
+            if (launch != mLaunchMode) {
+                // Verification turned into a real download (or the other way round): swap the words + badge
+                mLaunchMode = launch;
+                mShownPercent = -1;
+                if (mPctAnimator != null) mPctAnimator.cancel();
+                CSAnimationEngine.animateValueRefresh(mPlayTitle, getString(mLaunchMode ? R.string.home_launching : R.string.home_downloading));
+                applyBadgeIcon();
+            }
             updateDownloadSubtitle();
         }
     }
@@ -335,7 +348,7 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         if (mDownloading) {
             if (mPlayIcon != null) mPlayIcon.setVisibility(View.GONE);
             setPlayDividerVisible(root, false);
-            CSAnimationEngine.animateValueRefresh(mPlayTitle, getString(R.string.home_downloading));
+            CSAnimationEngine.animateValueRefresh(mPlayTitle, getString(mLaunchMode ? R.string.home_launching : R.string.home_downloading));
             updateDownloadSubtitle();
             mPlayArc.setProgress(mAggregateProgress);
             mPlayArc.setDownloading(true);
@@ -389,8 +402,12 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
                 .setInterpolator(new android.view.animation.OvershootInterpolator(2.2f)).start();
 
         stopDownloadLoop();
-        android.animation.ObjectAnimator bob = android.animation.ObjectAnimator.ofFloat(mDlIcon, View.TRANSLATION_Y, -3f, 4f);
-        bob.setDuration(640);
+        applyBadgeIcon();
+        // Download: the arrow bobs down into the tray. Launch: the rocket shivers with thrust
+        android.animation.ObjectAnimator bob = mLaunchMode
+                ? android.animation.ObjectAnimator.ofFloat(mDlIcon, View.TRANSLATION_Y, 1.5f, -3.5f)
+                : android.animation.ObjectAnimator.ofFloat(mDlIcon, View.TRANSLATION_Y, -3f, 4f);
+        bob.setDuration(mLaunchMode ? 260 : 640);
         bob.setRepeatCount(android.animation.ValueAnimator.INFINITE);
         bob.setRepeatMode(android.animation.ValueAnimator.REVERSE);
         bob.setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator());
@@ -445,12 +462,57 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         animateTextColor(mPlaySubtitle, PLAY_SUB_DARK);
     }
 
+    /** Rocket while launching, download arrow while fetching files */
+    private void applyBadgeIcon() {
+        if (!(mDlIcon instanceof ImageView)) return;
+        ImageView icon = (ImageView) mDlIcon;
+        int res = mLaunchMode ? R.drawable.ic_home_rocket : R.drawable.ic_lib_download;
+        Object tag = icon.getTag();
+        if (tag instanceof Integer && (Integer) tag == res) return;
+        icon.setTag(res);
+        icon.setImageResource(res);
+        icon.setRotation(0f);
+        if (mDownloading && Motion.content(icon)) {
+            icon.setScaleX(0.5f);
+            icon.setScaleY(0.5f);
+            icon.animate().scaleX(1f).scaleY(1f).setDuration(320)
+                    .setInterpolator(new android.view.animation.OvershootInterpolator(2.5f)).start();
+        }
+    }
+
+    /** Instant feedback on PLAY: the icon lifts like ignition, the face dips, then both settle */
+    private void igniteTap() {
+        View root = getView();
+        if (root == null || mDownloading || !Motion.buttons(root)) return;
+        View container = root.findViewById(R.id.home_play_container);
+        float d = getResources().getDisplayMetrics().density;
+        if (mPlayIcon != null) {
+            mPlayIcon.animate().cancel();
+            mPlayIcon.animate().translationY(-7f * d).scaleX(1.18f).scaleY(1.18f).setDuration(130)
+                    .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                    .withEndAction(() -> mPlayIcon.animate().translationY(0f).scaleX(1f).scaleY(1f).setDuration(380)
+                            .setInterpolator(new android.view.animation.OvershootInterpolator(2.2f)).start())
+                    .start();
+        }
+        if (container != null) {
+            container.animate().cancel();
+            container.animate().scaleX(0.975f).scaleY(0.975f).setDuration(110)
+                    .withEndAction(() -> container.animate().scaleX(1f).scaleY(1f).setDuration(320)
+                            .setInterpolator(new android.view.animation.OvershootInterpolator(2f)).start())
+                    .start();
+        }
+        HomeMotion.glint(root.findViewById(R.id.home_play_glint), container, 60L);
+    }
+
     private void stopDownloadLoop() {
         if (mDlLoop != null) {
             mDlLoop.cancel();
             mDlLoop = null;
         }
-        if (mDlIcon != null) mDlIcon.setTranslationY(0f);
+        if (mDlIcon != null) {
+            mDlIcon.setTranslationY(0f);
+            mDlIcon.setRotation(0f);
+        }
         if (mDlRing != null) {
             mDlRing.setScaleX(1f);
             mDlRing.setScaleY(1f);
@@ -462,6 +524,7 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
     private void updateDownloadFill() {
         if (mDlFill == null || !mDownloading) return;
         float target = mAggregateProgress >= 0 ? Math.max(0.03f, mAggregateProgress / 100f) : 0.08f;
+        if (mLaunchMode) target = Math.max(0.12f, target);
         if (mDlFillAnimator != null) mDlFillAnimator.cancel();
         mDlFillAnimator = android.animation.ValueAnimator.ofFloat(mDlFill.getScaleX(), target);
         mDlFillAnimator.setDuration(380);
@@ -487,6 +550,17 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
 
     private void updateDownloadSubtitle() {
         if (mPlaySubtitle == null || !mDownloading) return;
+        if (mLaunchMode) {
+            // Launch without a download: no percent, just what is happening
+            if (mPctAnimator != null) mPctAnimator.cancel();
+            mShownPercent = -1;
+            String text = getString(mAggregateProgress > 0 && mAggregateProgress < 100
+                    ? R.string.home_launching_check : R.string.home_launching_sub);
+            CSAnimationEngine.animateValueRefresh(mPlaySubtitle, text);
+            if (mPlayArc != null) mPlayArc.setProgress(mAggregateProgress);
+            updateDownloadFill();
+            return;
+        }
         if (mAggregateProgress < 0) {
             if (mPctAnimator != null) mPctAnimator.cancel();
             mShownPercent = -1;

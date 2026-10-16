@@ -164,6 +164,7 @@ public class LauncherActivity extends BaseActivity {
         }
         String normalizedVersionId = MoJsonExtras.normalizeVersionId(selectedInstance.versionId);
         JVersionList.Version mcVersion = MoJsonExtras.getListedVersion(normalizedVersionId);
+        com.craftstudio.cslauncher.progresskeeper.ProgressKeeper.markLaunching();
         new MoJsonDownloader().start(
                 this.getAssets(),
                 mcVersion,

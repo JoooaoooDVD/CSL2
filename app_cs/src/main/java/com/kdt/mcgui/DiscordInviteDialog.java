@@ -32,6 +32,8 @@ public class DiscordInviteDialog extends CSPopupDialog {
     private static final String PREF_JOINED = "discordInviteJoined";
     private static final String PREF_YT_DONE = "youtubeInviteOpened";
     private static final String PREF_LEGACY_SHOWN = "discordInviteShownV1";
+    /** The YouTube popup follows the very first Discord popup once, right after it closes */
+    private static final String PREF_YT_INTRO = "youtubeIntroShown";
     /** Discord: launches 1, 7, 15, 23 ... YouTube: launches 3, 11, 19 ... (never the same launch) */
     private static final int SECOND_SHOW = 7, PERIOD = 8, YT_FIRST = 3;
     private static final long MIN_GAP = 24L * 60 * 60 * 1000;
@@ -87,7 +89,29 @@ public class DiscordInviteDialog extends CSPopupDialog {
         Kind kind = dueKind(context);
         if (kind == null) return;
         prefs(context).edit().putLong(PREF_LAST_SHOWN, System.currentTimeMillis()).putBoolean(PREF_LEGACY_SHOWN, true).apply();
-        new DiscordInviteDialog(context, kind).show();
+        DiscordInviteDialog dialog = new DiscordInviteDialog(context, kind);
+        if (kind == Kind.DISCORD && !prefs(context).getBoolean(PREF_YT_INTRO, false)) {
+            // First community popup: introduce the YouTube channel right after Discord
+            dialog.setOnDismissListener(d -> {
+                SharedPreferences p = prefs(context);
+                if (p.getBoolean(PREF_YT_INTRO, false) || p.getBoolean(PREF_YT_DONE, false)) return;
+                p.edit().putBoolean(PREF_YT_INTRO, true).apply();
+                if (context instanceof android.app.Activity) {
+                    android.app.Activity activity = (android.app.Activity) context;
+                    if (activity.isFinishing() || activity.isDestroyed()) return;
+                }
+                new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                    if (context instanceof android.app.Activity) {
+                        android.app.Activity activity = (android.app.Activity) context;
+                        if (activity.isFinishing() || activity.isDestroyed()) return;
+                    }
+                    new DiscordInviteDialog(context, Kind.YOUTUBE).show();
+                }, 650L);
+            });
+        } else if (kind == Kind.YOUTUBE) {
+            prefs(context).edit().putBoolean(PREF_YT_INTRO, true).apply();
+        }
+        dialog.show();
     }
 
     public DiscordInviteDialog(@NonNull Context context) {

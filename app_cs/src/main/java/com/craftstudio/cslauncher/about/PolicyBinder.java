@@ -18,16 +18,43 @@ import com.craftstudio.cslauncher.utils.motion.Motion;
 public final class PolicyBinder {
     private PolicyBinder() {}
 
-    private static final int[][] SECTIONS = {
+    private static final int[][] PRIVACY = {
             {R.string.policy_s1_title, R.string.policy_s1_body},
             {R.string.policy_s2_title, R.string.policy_s2_body},
             {R.string.policy_s3_title, R.string.policy_s3_body},
             {R.string.policy_s4_title, R.string.policy_s4_body},
             {R.string.policy_s5_title, R.string.policy_s5_body},
-            {R.string.policy_s6_title, R.string.policy_s6_body},
-            {R.string.policy_s7_title, R.string.policy_s7_body},
             {R.string.policy_s8_title, R.string.policy_s8_body},
     };
+    private static final int[][] TERMS = {
+            {R.string.policy_t1_title, R.string.policy_t1_body},
+            {R.string.policy_t2_title, R.string.policy_t2_body},
+            {R.string.policy_s6_title, R.string.policy_s6_body},
+            {R.string.policy_t3_title, R.string.policy_t3_body},
+            {R.string.policy_t4_title, R.string.policy_t4_body},
+            {R.string.policy_t5_title, R.string.policy_t5_body},
+    };
+
+    /** Group eyebrow followed by its numbered section cards */
+    private static void addGroup(LayoutInflater inflater, ViewGroup sections, int titleRes, int[][] items, int firstNumber) {
+        android.content.Context context = sections.getContext();
+        float density = context.getResources().getDisplayMetrics().density;
+        TextView header = new TextView(context);
+        header.setText(titleRes);
+        header.setTextColor(0xFF8F99A8);
+        header.setTextSize(10.5f);
+        header.setTypeface(header.getTypeface(), android.graphics.Typeface.BOLD);
+        header.setLetterSpacing(0.3f);
+        header.setPadding((int) (6 * density), (int) (6 * density), 0, (int) (8 * density));
+        sections.addView(header, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        for (int i = 0; i < items.length; i++) {
+            View row = inflater.inflate(R.layout.item_policy_section, sections, false);
+            ((TextView) row.findViewById(R.id.ps_num)).setText(String.valueOf(firstNumber + i));
+            ((TextView) row.findViewById(R.id.ps_title)).setText(items[i][0]);
+            ((TextView) row.findViewById(R.id.ps_body)).setText(items[i][1]);
+            sections.addView(row);
+        }
+    }
 
     /**
      * @param welcome true on first launch: "Welcome" title + agree button; false: read-only with a close button
@@ -46,13 +73,8 @@ public final class PolicyBinder {
         }
         LayoutInflater inflater = LayoutInflater.from(root.getContext());
         sections.removeAllViews();
-        for (int i = 0; i < SECTIONS.length; i++) {
-            View row = inflater.inflate(R.layout.item_policy_section, sections, false);
-            ((TextView) row.findViewById(R.id.ps_num)).setText(String.valueOf(i + 1));
-            ((TextView) row.findViewById(R.id.ps_title)).setText(SECTIONS[i][0]);
-            ((TextView) row.findViewById(R.id.ps_body)).setText(SECTIONS[i][1]);
-            sections.addView(row);
-        }
+        addGroup(inflater, sections, R.string.policy_group_terms, TERMS, 1);
+        addGroup(inflater, sections, R.string.policy_group_privacy, PRIVACY, TERMS.length + 1);
 
         TextView title = root.findViewById(R.id.policy_title);
         TextView eyebrow = root.findViewById(R.id.policy_eyebrow);
@@ -107,7 +129,7 @@ public final class PolicyBinder {
         Motion.riseIn(root.findViewById(R.id.policy_header), 40L, 14f);
         Motion.popIn(root.findViewById(R.id.policy_logo), 120L, 0.6f);
         Motion.riseIn(root.findViewById(R.id.policy_ai_notice), 150L, 16f);
-        Motion.cascadeChildren(sections, 220L, 50L, 18f);
+        Motion.cascadeChildren(sections, 220L, 40L, 18f);
         if (welcome) {
             // popIn would force alpha back to 1; the dimmed button only scales in
             accept.setScaleX(0.85f);

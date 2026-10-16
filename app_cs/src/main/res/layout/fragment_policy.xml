@@ -86,13 +86,6 @@
                 android:visibility="gone" />
         </LinearLayout>
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginStart="18dp"
-            android:layout_marginEnd="18dp"
-            android:background="#1F2530" />
-
         <!-- Sections -->
         <androidx.core.widget.NestedScrollView
             android:id="@+id/policy_scroll"
@@ -172,13 +165,6 @@
                     android:orientation="vertical" />
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginStart="18dp"
-            android:layout_marginEnd="18dp"
-            android:background="#1F2530" />
 
         <!-- Footer: consent row + agree button -->
         <LinearLayout

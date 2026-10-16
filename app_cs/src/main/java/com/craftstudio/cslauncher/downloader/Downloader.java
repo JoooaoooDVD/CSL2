@@ -141,6 +141,7 @@ public class Downloader {
     }
 
     protected void submitFileForDownload(TaskMetadata taskMetadata) {
+        com.craftstudio.cslauncher.progresskeeper.ProgressKeeper.markRealDownload();
         mDownloadService.submit(new DownloadFileTask(taskMetadata, this));
     }
 

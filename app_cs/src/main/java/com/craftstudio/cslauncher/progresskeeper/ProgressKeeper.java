@@ -32,6 +32,29 @@ public class ProgressKeeper {
     /** Set by {@link #cancelAll()}, cleared once every task has ended */
     private static volatile boolean sCancelRequested;
 
+    /**
+     * Launch bookkeeping for the home PLAY button: the game pipeline always runs through the
+     * downloader (to verify files), so without this every tap would look like a download.
+     * {@link #sLaunching} is set when PLAY starts the pipeline, {@link #sRealDownload} only once
+     * an actual file is fetched from the network. Both reset when every task has ended.
+     */
+    private static volatile boolean sLaunching;
+    private static volatile boolean sRealDownload;
+
+    /** PLAY was tapped: the next tasks are part of a game launch */
+    public static void markLaunching() {
+        sLaunching = true;
+        sRealDownload = false;
+    }
+
+    /** A downloader is really fetching files (not just verifying them) */
+    public static void markRealDownload() {
+        sRealDownload = true;
+    }
+
+    public static boolean isLaunching() { return sLaunching; }
+    public static boolean isRealDownload() { return sRealDownload; }
+
     /** Asks every running task to stop as soon as it can (checked by the downloaders) */
     public static void cancelAll() {
         if (getTaskCount() == 0) return;
@@ -122,7 +145,11 @@ public class ProgressKeeper {
             sProgressStates.put(progressRecord, (progressState = new ProgressState()));
         }
         if(shouldCallEnded || shouldCallStarted) {
-            if (sProgressStates.isEmpty()) sCancelRequested = false;
+            if (sProgressStates.isEmpty()) {
+                sCancelRequested = false;
+                sLaunching = false;
+                sRealDownload = false;
+            }
             updateTaskCount(sProgressStates.size());
         }
         if(progressState != null) {
