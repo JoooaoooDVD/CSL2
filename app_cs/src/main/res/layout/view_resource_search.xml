@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Search field with leading icon, clear button and a tiny inline spinner while a query runs -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/rb_field_height"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:background="@drawable/bg_rb_field"
+    android:paddingStart="12dp"
+    android:paddingEnd="6dp">
+
+    <ImageView
+        android:layout_width="17dp"
+        android:layout_height="17dp"
+        android:src="@drawable/ic_lib_search"
+        android:alpha="0.55"
+        android:importantForAccessibility="no" />
+
+    <EditText
+        android:id="@+id/rb_search"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_marginStart="9dp"
+        android:background="@null"
+        android:hint="@string/rb_search_hint"
+        android:textColorHint="@color/rb_text_faint"
+        android:textColor="@color/rb_text"
+        android:textSize="13.5sp"
+        android:textCursorDrawable="@null"
+        android:inputType="text|textNoSuggestions"
+        android:imeOptions="actionSearch|flagNoExtractUi|flagNoFullscreen"
+        android:maxLines="1"
+        android:singleLine="true"
+        android:importantForAutofill="no" />
+
+    <ProgressBar
+        android:id="@+id/rb_search_spinner"
+        style="?android:attr/progressBarStyleSmall"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:layout_marginEnd="6dp"
+        android:indeterminateTint="@color/rb_text_dim"
+        android:visibility="gone" />
+
+    <ImageButton
+        android:id="@+id/rb_search_clear"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:background="@drawable/bg_rb_round_btn"
+        android:src="@drawable/ic_gm_close"
+        android:scaleType="centerInside"
+        android:padding="8dp"
+        android:visibility="gone"
+        android:contentDescription="@string/rb_clear_search" />
+</LinearLayout>

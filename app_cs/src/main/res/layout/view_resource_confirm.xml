@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Inline confirm sheet (replace existing file?). Lives inside the popup so no extra window is opened over the game. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rb_confirm_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/rb_scrim"
+    android:clickable="true"
+    android:focusable="true"
+    android:visibility="gone">
+
+    <LinearLayout
+        android:id="@+id/rb_confirm_card"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:minWidth="260dp"
+        android:maxWidth="360dp"
+        android:orientation="vertical"
+        android:background="@drawable/bg_rb_sheet"
+        android:padding="18dp">
+
+        <TextView
+            android:id="@+id/rb_confirm_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/rb_replace_title"
+            android:textColor="@color/rb_text"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:includeFontPadding="false" />
+
+        <TextView
+            android:id="@+id/rb_confirm_message"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textColor="@color/rb_text_dim"
+            android:textSize="12.5sp"
+            android:lineSpacingExtra="2dp"
+            android:includeFontPadding="false" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal"
+            android:gravity="end">
+            <TextView
+                android:id="@+id/rb_confirm_negative"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/rb_button_height"
+                android:minWidth="@dimen/rb_button_min_width"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:gravity="center"
+                android:background="@drawable/bg_rb_button"
+                android:textColor="@color/rb_button_text"
+                android:textSize="@dimen/rb_text_button"
+                android:textStyle="bold"
+                android:text="@string/rb_keep" />
+            <TextView
+                android:id="@+id/rb_confirm_positive"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/rb_button_height"
+                android:layout_marginStart="8dp"
+                android:minWidth="@dimen/rb_button_min_width"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:gravity="center"
+                android:background="@drawable/bg_rb_button"
+                android:textColor="@color/rb_button_text"
+                android:textSize="@dimen/rb_text_button"
+                android:textStyle="bold"
+                android:text="@string/rb_replace" />
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pagination footer: spinner while the next page loads, or a "Load more" button -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="4dp"
+    android:paddingBottom="10dp">
+    <ProgressBar
+        android:id="@+id/rb_footer_spinner"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_gravity="center"
+        android:indeterminateTint="@color/rb_text_dim"
+        android:visibility="gone" />
+    <TextView
+        android:id="@+id/rb_footer_more"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/rb_button_height"
+        android:layout_gravity="center"
+        android:minWidth="140dp"
+        android:paddingStart="18dp"
+        android:paddingEnd="18dp"
+        android:gravity="center"
+        android:background="@drawable/bg_rb_button"
+        android:textColor="@color/rb_button_text"
+        android:textSize="@dimen/rb_text_button"
+        android:textStyle="bold"
+        android:text="@string/rb_load_more"
+        android:visibility="gone" />
+</FrameLayout>

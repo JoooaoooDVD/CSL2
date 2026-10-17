@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="rb_sheet_radius">24dp</dimen>
+    <dimen name="rb_sheet_max_width">640dp</dimen>
+    <dimen name="rb_sheet_margin">14dp</dimen>
+    <dimen name="rb_sheet_pad_h">18dp</dimen>
+    <dimen name="rb_sheet_pad_v">12dp</dimen>
+    <dimen name="rb_card_radius">16dp</dimen>
+    <dimen name="rb_card_pad">12dp</dimen>
+    <dimen name="rb_card_gap">8dp</dimen>
+    <dimen name="rb_icon_size">52dp</dimen>
+    <dimen name="rb_icon_radius">12dp</dimen>
+    <dimen name="rb_header_tile">36dp</dimen>
+    <dimen name="rb_round_btn">34dp</dimen>
+    <dimen name="rb_field_height">42dp</dimen>
+    <dimen name="rb_tab_height">34dp</dimen>
+    <dimen name="rb_button_height">34dp</dimen>
+    <dimen name="rb_button_min_width">96dp</dimen>
+    <dimen name="rb_progress_height">4dp</dimen>
+    <dimen name="rb_chip_pad_h">8dp</dimen>
+    <dimen name="rb_chip_pad_v">3dp</dimen>
+    <dimen name="rb_text_title">18sp</dimen>
+    <dimen name="rb_text_subtitle">12sp</dimen>
+    <dimen name="rb_text_name">14.5sp</dimen>
+    <dimen name="rb_text_body">12sp</dimen>
+    <dimen name="rb_text_meta">11sp</dimen>
+    <dimen name="rb_text_chip">10.5sp</dimen>
+    <dimen name="rb_text_button">12.5sp</dimen>
+</resources>

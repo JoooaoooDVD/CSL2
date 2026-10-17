@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One Modrinth resource (resource pack / shader) card -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/rb_card_gap"
+    android:orientation="vertical"
+    android:background="@drawable/bg_rb_card"
+    android:padding="@dimen/rb_card_pad">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <FrameLayout
+            android:layout_width="@dimen/rb_icon_size"
+            android:layout_height="@dimen/rb_icon_size"
+            android:background="@drawable/bg_rb_tile">
+            <ImageView
+                android:id="@+id/rb_card_icon_placeholder"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_rb_placeholder"
+                android:importantForAccessibility="no" />
+            <com.craftstudio.cslauncher.game.resources.RoundedImageView
+                android:id="@+id/rb_card_icon"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:importantForAccessibility="no" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="11dp"
+            android:layout_marginEnd="10dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/rb_card_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/rb_text"
+                android:textSize="@dimen/rb_text_name"
+                android:textStyle="bold"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:ellipsize="end" />
+
+            <TextView
+                android:id="@+id/rb_card_meta"
+                style="@style/RbMeta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp" />
+
+            <TextView
+                android:id="@+id/rb_card_description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:textColor="@color/rb_text_dim"
+                android:textSize="@dimen/rb_text_body"
+                android:lineSpacingExtra="1.5dp"
+                android:includeFontPadding="false"
+                android:maxLines="2"
+                android:ellipsize="end" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="7dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:id="@+id/rb_card_compat"
+                    style="@style/RbChip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_rb_chip" />
+                <TextView
+                    android:id="@+id/rb_card_type"
+                    style="@style/RbChip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/bg_rb_chip"
+                    android:textColor="@color/rb_text_dim" />
+                <TextView
+                    android:id="@+id/rb_card_versions"
+                    style="@style/RbMeta"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:textColor="@color/rb_text_faint" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/rb_card_note"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:textColor="@color/rb_warn"
+                android:textSize="@dimen/rb_text_meta"
+                android:includeFontPadding="false"
+                android:maxLines="2"
+                android:ellipsize="end"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/rb_card_install"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/rb_button_height"
+            android:minWidth="@dimen/rb_button_min_width"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:gravity="center"
+            android:background="@drawable/bg_rb_button"
+            android:textColor="@color/rb_button_text"
+            android:textSize="@dimen/rb_text_button"
+            android:textStyle="bold"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:text="@string/rb_install" />
+    </LinearLayout>
+
+    <include layout="@layout/view_resource_progress" />
+</LinearLayout>

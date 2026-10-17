@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Category segmented control: Resource Packs | Shaders -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/rb_tab_height"
+    android:orientation="horizontal"
+    android:background="@drawable/bg_rb_tab_strip"
+    android:padding="3dp">
+    <TextView
+        android:id="@+id/rb_tab_resourcepacks"
+        style="@style/RbTab"
+        android:text="@string/rb_tab_resource_packs" />
+    <TextView
+        android:id="@+id/rb_tab_shaders"
+        style="@style/RbTab"
+        android:layout_marginStart="3dp"
+        android:text="@string/rb_tab_shaders" />
+</LinearLayout>

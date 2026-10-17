@@ -32,6 +32,7 @@ public class GameMenuAdapter extends ArrayAdapter<String> {
             R.drawable.ic_gm_keyboard,  // Send custom keycode
             R.drawable.ic_gm_sliders,   // Quick settings
             R.drawable.ic_gm_gamepad,   // Custom controls
+            R.drawable.ic_gm_package,   // Browse resources
     };
 
     /** Icons for R.array.menu_customcontrol, in order */

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="RbChip">
+        <item name="android:textSize">@dimen/rb_text_chip</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:paddingLeft">@dimen/rb_chip_pad_h</item>
+        <item name="android:paddingRight">@dimen/rb_chip_pad_h</item>
+        <item name="android:paddingTop">@dimen/rb_chip_pad_v</item>
+        <item name="android:paddingBottom">@dimen/rb_chip_pad_v</item>
+        <item name="android:letterSpacing">0.02</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+    <style name="RbMeta">
+        <item name="android:textSize">@dimen/rb_text_meta</item>
+        <item name="android:textColor">@color/rb_text_dim</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+    <style name="RbTab">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textSize">@dimen/rb_text_button</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:background">@drawable/bg_rb_tab</item>
+        <item name="android:textColor">@color/rb_tab_text</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:maxLines">1</item>
+    </style>
+    <style name="RbProfileLabel">
+        <item name="android:textSize">10sp</item>
+        <item name="android:textColor">@color/rb_text_faint</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:maxLines">1</item>
+    </style>
+    <style name="RbProfileValue">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/rb_text</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:layout_marginTop">2dp</item>
+    </style>
+</resources>

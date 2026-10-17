@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Browse Resources popup header: icon tile, title/subtitle, round close button -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical">
+
+    <FrameLayout
+        android:layout_width="@dimen/rb_header_tile"
+        android:layout_height="@dimen/rb_header_tile"
+        android:background="@drawable/bg_rb_tile">
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_gm_package"
+            android:importantForAccessibility="no" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="10dp"
+        android:orientation="vertical">
+        <TextView
+            android:id="@+id/rb_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/rb_title"
+            android:textColor="@color/rb_text"
+            android:textSize="@dimen/rb_text_title"
+            android:textStyle="bold"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:ellipsize="end" />
+        <TextView
+            android:id="@+id/rb_subtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="@string/rb_subtitle"
+            android:textColor="@color/rb_text_dim"
+            android:textSize="@dimen/rb_text_subtitle"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:ellipsize="end" />
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/rb_close"
+        android:layout_width="@dimen/rb_round_btn"
+        android:layout_height="@dimen/rb_round_btn"
+        android:background="@drawable/bg_rb_round_btn"
+        android:src="@drawable/ic_gm_close"
+        android:scaleType="centerInside"
+        android:padding="8dp"
+        android:contentDescription="@string/rb_close" />
+</LinearLayout>

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- In-game "Browse Resources" popup. Added on top of the game activity's content view;
+     the root scrim swallows every touch so nothing leaks to the game underneath. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rb_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/rb_scrim"
+    android:clickable="true"
+    android:focusable="true"
+    android:focusableInTouchMode="true">
+
+    <LinearLayout
+        android:id="@+id/rb_sheet"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:layout_margin="@dimen/rb_sheet_margin"
+        android:orientation="vertical"
+        android:background="@drawable/bg_rb_sheet"
+        android:clickable="true"
+        android:focusable="true"
+        android:paddingStart="@dimen/rb_sheet_pad_h"
+        android:paddingEnd="@dimen/rb_sheet_pad_h"
+        android:paddingTop="@dimen/rb_sheet_pad_v"
+        android:paddingBottom="@dimen/rb_sheet_pad_v">
+
+        <include layout="@layout/view_resource_header" />
+
+        <include
+            layout="@layout/view_resource_profile"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            <include
+                layout="@layout/view_resource_search"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/rb_field_height"
+                android:layout_weight="1" />
+            <include
+                layout="@layout/view_resource_tabs"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/rb_tab_height"
+                android:layout_weight="0.75"
+                android:layout_marginStart="8dp" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="8dp">
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rb_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingTop="2dp"
+                android:overScrollMode="never"
+                android:scrollbars="none" />
+            <include layout="@layout/view_resource_state" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <include layout="@layout/view_resource_confirm" />
+</FrameLayout>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- In-game "Browse Resources" popup palette: matches the charcoal game menu (bg_gm_*) -->
+<resources>
+    <color name="rb_scrim">#B8000000</color>
+    <color name="rb_sheet">#FF101013</color>
+    <color name="rb_sheet_stroke">#FF34343B</color>
+    <color name="rb_card">#FF1B1B20</color>
+    <color name="rb_card_stroke">#FF2C2C33</color>
+    <color name="rb_card_pressed">#FF232329</color>
+    <color name="rb_tile">#FF2A2A30</color>
+    <color name="rb_tile_stroke">#FF43434B</color>
+    <color name="rb_field">#FF17171B</color>
+    <color name="rb_field_stroke">#FF34343B</color>
+    <color name="rb_field_focus">#FF5A5A64</color>
+    <color name="rb_text">#FFF2F5FA</color>
+    <color name="rb_text_dim">#FF9AA0AB</color>
+    <color name="rb_text_faint">#FF6B7079</color>
+    <color name="rb_accent">#FFF2F5FA</color>
+    <color name="rb_accent_text">#FF0E0E11</color>
+    <color name="rb_tab_on">#FFF2F5FA</color>
+    <color name="rb_tab_off">#00000000</color>
+    <color name="rb_track">#FF2A2A30</color>
+    <color name="rb_progress">#FFF2F5FA</color>
+    <color name="rb_ok">#FF5FD38D</color>
+    <color name="rb_ok_bg">#1F5FD38D</color>
+    <color name="rb_warn">#FFF2C14E</color>
+    <color name="rb_warn_bg">#1FF2C14E</color>
+    <color name="rb_bad">#FFF07A7A</color>
+    <color name="rb_bad_bg">#1FF07A7A</color>
+    <color name="rb_info">#FF8FB7F5</color>
+    <color name="rb_info_bg">#1F8FB7F5</color>
+    <color name="rb_neutral">#FF9AA0AB</color>
+    <color name="rb_neutral_bg">#1F9AA0AB</color>
+</resources>

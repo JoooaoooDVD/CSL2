@@ -1,5 +1,7 @@
 package com.craftstudio.cslauncher.game;
 
+import com.craftstudio.cslauncher.game.resources.ResourceBrowserPopup;
+
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import static com.craftstudio.cslauncher.Tools.dialogForceClose;
@@ -117,6 +119,8 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
     private GameService.LocalBinder mServiceBinder;
 
     private QuickSettingSideDialog mQuickSettingSideDialog;
+    private ResourceBrowserPopup mResourceBrowser;
+    private String mLaunchVersionId;
 
     public static int mForcedPanningHeight = 0;
     public static int mImeHeight = 0;
@@ -255,6 +259,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
             setIntent(activityIntent);
 
             setTitle("CS Launcher Plus (" + version + ")");
+            mLaunchVersionId = version;
 
             // Menu
             gameActionArrayAdapter = new GameMenuAdapter(this,
@@ -270,6 +275,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
                      case 2: dialogSendCustomKey(); break;
                      case 3: openQuickSettings(); break;
                      case 4: openCustomControls(); break;
+                     case 5: openResourceBrowser(); break;
                 }
                 drawerLayout.closeDrawers();
             };
@@ -527,8 +533,26 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         if(toastString != 0) Toast.makeText(ctx, toastString, Toast.LENGTH_SHORT).show();
     }
 
+    /** In-game "Browse Resources" popup (Modrinth resource packs / shaders for the running profile). */
+    private void openResourceBrowser() {
+        if (instance == null) {
+            Toast.makeText(this, R.string.rb_state_profile_title, Toast.LENGTH_LONG).show();
+            return;
+        }
+        if (mResourceBrowser != null && mResourceBrowser.isShowing()) return;
+        mResourceBrowser = ResourceBrowserPopup.show(this, instance, mLaunchVersionId);
+    }
+
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
+        if (mResourceBrowser != null && mResourceBrowser.isShowing()) {
+            // Keys go to the popup (search field), never to the game. Back closes it.
+            if (event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
+                if (event.getAction() == KeyEvent.ACTION_UP) mResourceBrowser.dismiss();
+                return true;
+            }
+            return super.dispatchKeyEvent(event);
+        }
         if(isInEditor) {
             if(event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
                 if(event.getAction() == KeyEvent.ACTION_DOWN) mControlLayout.askToExit(this);

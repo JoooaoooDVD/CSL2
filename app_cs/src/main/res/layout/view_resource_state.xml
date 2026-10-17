@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shared loading / empty / error panel shown in place of the list -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rb_state_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="16dp"
+    android:visibility="gone">
+
+    <ProgressBar
+        android:id="@+id/rb_state_spinner"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:indeterminateTint="@color/rb_text_dim"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/rb_state_icon"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:src="@drawable/ic_rb_search_off"
+        android:visibility="gone"
+        android:importantForAccessibility="no" />
+
+    <TextView
+        android:id="@+id/rb_state_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="center"
+        android:textColor="@color/rb_text"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:includeFontPadding="false" />
+
+    <TextView
+        android:id="@+id/rb_state_message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:gravity="center"
+        android:maxWidth="320dp"
+        android:textColor="@color/rb_text_dim"
+        android:textSize="12sp"
+        android:includeFontPadding="false" />
+
+    <TextView
+        android:id="@+id/rb_state_action"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/rb_button_height"
+        android:layout_marginTop="12dp"
+        android:minWidth="@dimen/rb_button_min_width"
+        android:paddingStart="18dp"
+        android:paddingEnd="18dp"
+        android:gravity="center"
+        android:background="@drawable/bg_rb_button"
+        android:textColor="@color/rb_button_text"
+        android:textSize="@dimen/rb_text_button"
+        android:textStyle="bold"
+        android:text="@string/rb_retry"
+        android:visibility="gone" />
+</LinearLayout>
