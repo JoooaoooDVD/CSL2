@@ -164,6 +164,23 @@
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Keeps a user-started virtual LAN tunnel alive so friends can play a Minecraft LAN world together across networks while the game runs; the user ends it from the launcher or the notification."/>
         </service>
+        <!-- The real Android VPN of Virtual LAN: a TUN device that owns the virtual IP and routes
+             ONLY 10.144.144.0/24 for this app; packets are bridged to the tunnel engine. Same
+             process as the session so its lifetime is the session's. -->
+        <service android:name=".multiplayer.VirtualLanVpnService" android:process=":game"
+            android:permission="android.permission.BIND_VPN_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.net.VpnService"/>
+            </intent-filter>
+        </service>
+        <!-- Shows Android's VPN consent dialog, then starts / refuses the session via the service -->
+        <activity android:name=".multiplayer.VpnConsentActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:launchMode="singleTop"
+            android:exported="false"/>
     </application>
     <queries>
         <package android:name="git.mojo.ffmpeg"/>

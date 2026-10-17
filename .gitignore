@@ -16,3 +16,5 @@ app_cs/.cxx/
 app_cs/src/main/jniLibs/*/libeasytier_core.so
 app_cs/src/main/jniLibs/*/libeasytier_cli.so
 app_cs/src/main/jniLibs/*/.easytier-*
+app_cs/src/main/jniLibs/*/libhev-socks5-tunnel.so
+app_cs/src/main/jniLibs/*/.hev-tag

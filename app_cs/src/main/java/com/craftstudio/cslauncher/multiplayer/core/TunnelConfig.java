@@ -18,6 +18,8 @@ import java.util.List;
 public final class TunnelConfig {
     public static final String HOST_VIP = "10.144.144.1";
     public static final String HOST_NAME_PREFIX = "cslp-host-";
+    /** The virtual subnet routed into the VPN TUN device (and nothing else) */
+    public static final String SUBNET_CIDR = "10.144.144.0/24";
     public static final String GUEST_NAME_PREFIX = "cslp-guest-";
 
     public static final class PortForward {
@@ -40,6 +42,8 @@ public final class TunnelConfig {
     public boolean multiThread = true;
     /** Diagnostics / restrictive networks: never try direct paths, go through relay nodes only */
     public boolean disableP2p;
+    /** >0: expose the engine's SOCKS5 portal on 127.0.0.1:port (the TUN bridge dials into the virtual network through it) */
+    public int socks5Port;
 
     @NonNull
     public String toToml() {
@@ -57,6 +61,7 @@ public final class TunnelConfig {
         sb.append("tcp_whitelist = ").append(array(tcp)).append('\n');
         sb.append("udp_whitelist = ").append(array(udp)).append('\n');
         if (!stunServers.isEmpty()) sb.append("stun_servers = ").append(array(stunServers)).append('\n');
+        if (socks5Port > 0) sb.append("socks5_proxy = ").append(quote("socks5://127.0.0.1:" + socks5Port)).append('\n');
         sb.append("\n[network_identity]\n");
         sb.append("network_name = ").append(quote(networkName)).append('\n');
         sb.append("network_secret = ").append(quote(networkSecret)).append('\n');

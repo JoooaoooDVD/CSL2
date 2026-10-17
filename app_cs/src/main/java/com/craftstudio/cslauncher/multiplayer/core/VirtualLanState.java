@@ -48,6 +48,12 @@ public final class VirtualLanState {
         RELAY_LOST,
         HOST_NOT_FOUND,
         HOST_UNREACHABLE,
+        /** The user declined the Android VPN consent dialog */
+        VPN_DENIED,
+        /** Android revoked our VPN (another VPN app took over or the user switched it off) */
+        VPN_REVOKED,
+        /** The TUN device or its bridge could not be started */
+        VPN_FAILED,
         HOST_LOST,
         HOST_ENDED,
         KICKED,
@@ -118,6 +124,13 @@ public final class VirtualLanState {
     public final int localGamePort;
     /** Guest: the Minecraft server answered a status ping THROUGH the tunnel (127.0.0.1:localGamePort) */
     public final boolean gameReachable;
+    /** Where Minecraft should connect: the host's virtual IP through the VPN, or the loopback forward */
+    public final String gameHost;
+    public final int gamePort;
+    /** The platform TUN device (VpnService) is established and bridged */
+    public final boolean vpnUp;
+    /** Engine SOCKS5 portal port on 127.0.0.1 (diagnostics) */
+    public final int socks5Port;
     /** Guest: RTT of that in-tunnel status ping, -1 when unknown */
     public final double gameLatencyMs;
 
@@ -135,6 +148,7 @@ public final class VirtualLanState {
         worldOpen = b.worldOpen; worldName = b.worldName; motd = b.motd; versionName = b.versionName; lanPort = b.lanPort;
         proxyPort = b.proxyPort; directoryPort = b.directoryPort; playersOnline = b.playersOnline; playersMax = b.playersMax; inGame = b.inGame;
         hostName = b.hostName; hostLatencyMs = b.hostLatencyMs; localGamePort = b.localGamePort; gameReachable = b.gameReachable; gameLatencyMs = b.gameLatencyMs;
+        gameHost = b.gameHost; gamePort = b.gamePort; vpnUp = b.vpnUp; socks5Port = b.socks5Port;
         members = Collections.unmodifiableList(new ArrayList<>(b.members));
         events = Collections.unmodifiableList(new ArrayList<>(b.events));
         stages = Collections.unmodifiableList(new ArrayList<>(b.stages));
@@ -170,6 +184,10 @@ public final class VirtualLanState {
         int localGamePort;
         boolean gameReachable;
         double gameLatencyMs = -1;
+        String gameHost = "";
+        int gamePort;
+        boolean vpnUp;
+        int socks5Port;
         List<Member> members = new ArrayList<>();
         List<Event> events = new ArrayList<>();
         List<String> stages = new ArrayList<>();
@@ -183,7 +201,7 @@ public final class VirtualLanState {
             natType = s.natType; tunnelProto = s.tunnelProto; engineVersion = s.engineVersion; relayNames = new ArrayList<>(s.relayNames);
             worldOpen = s.worldOpen; worldName = s.worldName; motd = s.motd; versionName = s.versionName; lanPort = s.lanPort;
             proxyPort = s.proxyPort; directoryPort = s.directoryPort; playersOnline = s.playersOnline; playersMax = s.playersMax; inGame = s.inGame;
-            hostName = s.hostName; hostLatencyMs = s.hostLatencyMs; localGamePort = s.localGamePort; gameReachable = s.gameReachable; gameLatencyMs = s.gameLatencyMs;
+            hostName = s.hostName; hostLatencyMs = s.hostLatencyMs; localGamePort = s.localGamePort; gameReachable = s.gameReachable; gameLatencyMs = s.gameLatencyMs; gameHost = s.gameHost; gamePort = s.gamePort; vpnUp = s.vpnUp; socks5Port = s.socks5Port;
             members = new ArrayList<>(s.members); events = new ArrayList<>(s.events); stages = new ArrayList<>(s.stages);
         }
 
@@ -208,6 +226,8 @@ public final class VirtualLanState {
         public Builder hostName(String v) { hostName = v == null ? "" : v; return this; }
         public Builder hostLatency(double v) { hostLatencyMs = v; return this; }
         public Builder game(boolean reachable, double latency) { gameReachable = reachable; gameLatencyMs = latency; return this; }
+        public Builder gameAddress(String host, int port) { gameHost = host == null ? "" : host; gamePort = port; return this; }
+        public Builder vpn(boolean up, int socks5) { vpnUp = up; socks5Port = socks5; return this; }
         public Builder members(List<Member> v) { members = new ArrayList<>(v); return this; }
         public Builder events(List<Event> v) { events = new ArrayList<>(v); return this; }
         public Builder stages(List<String> v) { stages = new ArrayList<>(v); return this; }

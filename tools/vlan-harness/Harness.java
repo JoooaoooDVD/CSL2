@@ -42,6 +42,15 @@ public class Harness {
         static void writeVar(OutputStream o,int v) throws IOException { while((v&~0x7f)!=0){ o.write((v&0x7f)|0x80); v>>>=7;} o.write(v); }
     }
 
+    /** Stands in for the Android VpnService: comes up 1.5 s after bringUp, can be revoked */
+    static class FakeVpn implements VpnController {
+        volatile long upAt; volatile boolean revoked; volatile String vip="";
+        public void bringUp(String localVip, int socks5Port){ vip=localVip; upAt=System.currentTimeMillis()+1500; System.out.println("[fakevpn] bringUp "+localVip+" socks5="+socks5Port); }
+        public void takeDown(){ System.out.println("[fakevpn] takeDown"); upAt=0; }
+        public boolean isUp(){ return upAt>0 && System.currentTimeMillis()>=upAt && !revoked; }
+        public boolean isRevoked(){ return revoked; }
+        public String error(){ return revoked?"VPN revoked by the system":""; }
+    }
     static VirtualLanSession.Listener listener(String tag){ return new VirtualLanSession.Listener(){
         VirtualLanState.Phase last; int lastMembers=-1; boolean lastOpen;
         public void onStateChanged(VirtualLanState s){ if(s.phase!=last||s.members.size()!=lastMembers||s.worldOpen!=lastOpen){ last=s.phase; lastMembers=s.members.size(); lastOpen=s.worldOpen;
@@ -54,10 +63,10 @@ public class Harness {
         VirtualLanSession.Params hp=new VirtualLanSession.Params(); hp.role=VirtualLanState.Role.HOST; hp.code=code; hp.playerName="Raj"; hp.allowRemoteNodeList=false;
         VirtualLanSession host=new VirtualLanSession(new Env("host"), new File("/tmp/harness/cache"), hp, listener("HOST")); host.start();
         Thread.sleep(500);
-        VirtualLanSession.Params gp=new VirtualLanSession.Params(); gp.role=VirtualLanState.Role.GUEST; gp.code=code; gp.playerName="Priya"; gp.allowRemoteNodeList=false; gp.guestGamePort=25575; gp.relayOnly=Arrays.asList(a).contains("relay");
+        VirtualLanSession.Params gp=new VirtualLanSession.Params(); gp.role=VirtualLanState.Role.GUEST; gp.code=code; gp.playerName="Priya"; gp.allowRemoteNodeList=false; gp.guestGamePort=25575; gp.relayOnly=Arrays.asList(a).contains("relay"); gp.alwaysSocks5=true; final FakeVpn fakeVpn=Arrays.asList(a).contains("vpn")||Arrays.asList(a).contains("revoke")?new FakeVpn():null; gp.vpn=fakeVpn;
         VirtualLanSession guest=new VirtualLanSession(new Env("guest"), new File("/tmp/harness/cache"), gp, listener("GUEST")); guest.start();
         long deadline=System.currentTimeMillis()+120000;
-        while(System.currentTimeMillis()<deadline && !guest.state().gameReachable && !guest.isFinished()) Thread.sleep(500);
+        while(System.currentTimeMillis()<deadline && !(guest.state().gameReachable || (fakeVpn!=null && guest.state().phase.isConnected())) && !guest.isFinished()) Thread.sleep(500);
         VirtualLanState gs=guest.state();
         for(String l: guest.engineLog()) System.out.println("  elog| "+l);
         System.out.println("GUEST connected? "+gs.phase+" gameReachable="+gs.gameReachable+" localGame="+gs.localGamePort+" world="+gs.worldOpen+" "+gs.worldName);
@@ -65,6 +74,12 @@ public class Harness {
             Thread.sleep(3000);
             MinecraftPinger.Status st=MinecraftPinger.ping("127.0.0.1", gs.localGamePort, 5000);
             System.out.println("PING THROUGH TUNNEL -> "+st);
+            // The Android VpnService path: TUN -> hev-socks5-tunnel -> engine SOCKS5 -> host vIP. Here we skip
+            // the TUN and dial the same SOCKS5 portal directly, which is exactly what the bridge does.
+            if(fakeVpn!=null && Arrays.asList(a).contains("revoke")){ System.out.println("-- revoking VPN"); fakeVpn.revoked=true; long d3=System.currentTimeMillis()+15000; while(System.currentTimeMillis()<d3 && !guest.isFinished()) Thread.sleep(300); System.out.println("after revoke: "+guest.state().phase+" "+guest.state().reason+" "+guest.state().detail); host.end(VirtualLanState.Reason.LEFT); Thread.sleep(2000); return; }
+            java.net.Proxy socks=new java.net.Proxy(java.net.Proxy.Type.SOCKS, new java.net.InetSocketAddress("127.0.0.1", gs.socks5Port));
+            MinecraftPinger.Status viaSocks=MinecraftPinger.ping(gs.hostVip, gs.proxyPort, 8000, socks);
+            System.out.println("PING VIA SOCKS5 "+gs.socks5Port+" -> "+gs.hostVip+":"+gs.proxyPort+" -> "+viaSocks);
             Thread.sleep(3000);
             System.out.println("host members: "+host.state().members.size()+" guest sees members "+guest.state().members.size()+" events="+host.state().events.size());
             for(VirtualLanState.Member m: host.state().members) System.out.println("  member "+m.name+" "+m.vip+" lat="+m.latencyMs+" direct="+m.direct);

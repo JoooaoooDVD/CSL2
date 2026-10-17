@@ -50,7 +50,57 @@ public final class VirtualLanSession {
         public long maxDurationMs = 12L * 60 * 60 * 1000;
         /** Force the relay path (used by the harness to prove relays carry traffic; exposed as an advanced option) */
         public boolean relayOnly;
+        /** Platform TUN device (Android VpnService); null = loopback-forward only (desktop harness) */
+        @Nullable public VpnController vpn;
+        /** Harness: open the SOCKS5 portal even without a VPN so the TUN-bridge path can be verified */
+        public boolean alwaysSocks5;
     }
+
+    private static final long VPN_TIMEOUT_MS = 30_000;
+    private int mSocks5Port;
+    private String mVpnVip = "";
+    private long mVpnRequestedAt;
+    private boolean mVpnWasUp;
+
+    /**
+     * Keeps the platform VPN in sync with our virtual IP. Returns true when the TUN device is up
+     * (or when this platform has none). Fails the session on denial / revoke / timeout.
+     */
+    private boolean vpnReady(String localVip) {
+        VpnController vpn = mParams.vpn;
+        if (vpn == null) return true;
+        if (localVip == null || localVip.isEmpty()) return false;
+        long now = System.currentTimeMillis();
+        if (vpn.isRevoked()) {
+            fail(Reason.VPN_REVOKED, vpn.error());
+            return false;
+        }
+        if (!localVip.equals(mVpnVip)) {
+            mVpnVip = localVip;
+            mVpnRequestedAt = now;
+            mVpnWasUp = false;
+            stage("VPN: establishing TUN device for " + localVip + " (bridge -> SOCKS5 127.0.0.1:" + mSocks5Port + ")");
+            vpn.bringUp(localVip, mSocks5Port);
+            return false;
+        }
+        if (vpn.isUp()) {
+            if (!mVpnWasUp) { mVpnWasUp = true; stage("VPN up: " + localVip + "/24, route " + TunnelConfig.SUBNET_CIDR + " only"); }
+            return true;
+        }
+        String err = vpn.error();
+        if (!err.isEmpty() && now - mVpnRequestedAt > 2000) {
+            fail(err.toLowerCase(Locale.ROOT).contains("denied") || err.toLowerCase(Locale.ROOT).contains("consent") ? Reason.VPN_DENIED : Reason.VPN_FAILED, err);
+            return false;
+        }
+        if (now - mVpnRequestedAt > VPN_TIMEOUT_MS) {
+            fail(Reason.VPN_FAILED, "TUN device did not come up in " + (VPN_TIMEOUT_MS / 1000) + " s");
+            return false;
+        }
+        if (mVpnWasUp) { mVpnWasUp = false; stage("VPN: TUN device went down, waiting for it to return"); }
+        return false;
+    }
+
+    private boolean vpnUp() { return mParams.vpn == null ? false : mParams.vpn.isUp(); }
 
     private static final long TICK_MS = 2500;
     private static final long RELAY_TIMEOUT_MS = 30_000;
@@ -238,6 +288,7 @@ public final class VirtualLanSession {
         try { if (mDetector != null) mDetector.stop(); } catch (Exception ignored) {}
         try { if (mDirectory != null) mDirectory.stop(); } catch (Exception ignored) {}
         try { if (mProxy != null) mProxy.stop(); } catch (Exception ignored) {}
+        try { if (mParams.vpn != null) mParams.vpn.takeDown(); } catch (Exception ignored) {}
         try { mTunnel.stop(); } catch (Exception ignored) {}
         mFinished = true;
         VirtualLanState s = mState;
@@ -322,6 +373,10 @@ public final class VirtualLanSession {
         c.networkName = mParams.code.networkName;
         c.networkSecret = mParams.code.networkSecret;
         c.disableP2p = mParams.relayOnly;
+        if (mParams.vpn != null || mParams.alwaysSocks5) {
+            if (mSocks5Port <= 0) mSocks5Port = PortUtils.ephemeral("127.0.0.1");
+            c.socks5Port = mSocks5Port;
+        }
         c.peers.addAll(relayUris);
         c.stunServers.addAll(RelayNodes.resolveStun());
         c.listeners.add("tcp://0.0.0.0:0");
@@ -364,6 +419,7 @@ public final class VirtualLanSession {
 
     private TunnelConfig mHostConfig;
     private boolean mRelayStageLogged;
+    private boolean mHostRelayLogged;
 
     private void startHost() {
         setPhase(Phase.STARTING);
@@ -432,9 +488,15 @@ public final class VirtualLanSession {
         Phase phase = mState.phase;
         long now = System.currentTimeMillis();
         if (relays > 0) {
+            if (!mHostRelayLogged) { mHostRelayLogged = true; stage("relay network joined (" + relays + " node" + (relays == 1 ? "" : "s") + ", vip " + mTunnel.queryLocalIp(peers) + ")"); }
+            boolean vpnOk = vpnReady(TunnelConfig.HOST_VIP);
+            if (mEndRequested) return;
+            if (!vpnOk && !phase.isConnected()) {
+                publishHost(phase, peers, relays, bestRelay);
+                return;
+            }
             if (phase == Phase.DISCOVERING || phase == Phase.RECONNECTING) {
                 if (phase == Phase.RECONNECTING) addEvent(Event.Type.RECOVERED, "");
-                stage("relay network joined (" + relays + " node" + (relays == 1 ? "" : "s") + ", vip " + mTunnel.queryLocalIp(peers) + ")");
                 phase = Phase.CONNECTED_DIRECT; // host is online on the relay network
                 mPhaseStarted = now;
             }
@@ -494,7 +556,7 @@ public final class VirtualLanSession {
         }
         SessionDirectoryServer.WorldInfo w = mWorld;
         publish(mState.buildUpon().phase(phase)
-                .relay(relays, bestRelay, mRelayNames).nat(nat).localVip(TunnelConfig.HOST_VIP)
+                .relay(relays, bestRelay, mRelayNames).nat(nat).localVip(TunnelConfig.HOST_VIP).vpn(vpnUp(), mSocks5Port)
                 .world(w.open, w.worldName, w.motd, w.versionName, w.lanPort, w.online, w.max)
                 .inGame(mInGame).members(members));
         mWorldDirty = false;
@@ -564,6 +626,12 @@ public final class VirtualLanSession {
                 publish(b);
                 return;
             }
+            if (!vpnReady(localVip)) {
+                if (mEndRequested) return;
+                mPhaseStarted = now; // the VPN has its own timeout; don't let it eat the establish budget
+                publish(b.vpn(false, mSocks5Port));
+                return;
+            }
             try {
                 SessionDirectoryClient.Snapshot snap = mClient.join(mMemberId, mParams.playerName, localVip);
                 stage("directory join OK through tunnel (" + (host != null && host.isRelayed() ? "relay" : "direct") + ")");
@@ -591,6 +659,8 @@ public final class VirtualLanSession {
         }
 
         if (phase.isConnected() || phase == Phase.RECONNECTING) {
+            vpnReady(localVip);
+            if (mEndRequested) return;
             try {
                 SessionDirectoryClient.Snapshot snap = mClient.heartbeat(mMemberId, mMemberToken, localVip);
                 mHeartbeatFailures = 0;
@@ -674,14 +744,17 @@ public final class VirtualLanSession {
                 if (!id.equals(mMemberId)) addEvent(Event.Type.PLAYER_LEFT, name != null ? name : "");
             }
         }
-        verifyGamePath(snap.worldOpen);
+        boolean viaVpn = vpnUp();
+        String gameHost = viaVpn ? mHostVip : "127.0.0.1";
+        int gamePort = viaVpn ? mHostProxyPort : mLocalGamePort;
+        verifyGamePath(snap.worldOpen, gameHost, gamePort);
         boolean reachable = snap.worldOpen && mGameReachable;
         b.phase(phase).hostName(snap.hostName).hostVip(mHostVip).expiresAt(snap.expiresAt)
                 .world(snap.worldOpen, snap.worldName, snap.motd, snap.versionName, snap.lanPort, snap.online, snap.max)
                 .ports(mHostProxyPort, mHostDirectoryPort, mLocalGamePort).inGame(snap.inGame)
                 .hostLatency(reachable && mGameLatencyMs >= 0 ? mGameLatencyMs : (host != null ? host.latencyMs : -1))
                 .tunnelProto(host != null ? host.tunnelProto : "")
-                .game(reachable, reachable ? mGameLatencyMs : -1)
+                .game(reachable, reachable ? mGameLatencyMs : -1).gameAddress(gameHost, gamePort).vpn(viaVpn, mSocks5Port)
                 .members(members);
     }
 
@@ -690,7 +763,19 @@ public final class VirtualLanSession {
      * server through the forwarded port (guest -> tunnel -> host proxy -> game). Runs off the
      * worker thread so heartbeats never wait on it. Join World unlocks only when this succeeds.
      */
-    private void verifyGamePath(boolean worldOpen) {
+    private String mGameTarget = "";
+
+    private void verifyGamePath(boolean worldOpen, String gameHost, int gamePort) {
+        String target = gameHost + ":" + gamePort;
+        if (!target.equals(mGameTarget)) {
+            // path changed (VPN came up / went down): re-verify from scratch
+            mGameTarget = target;
+            mGameReachable = false;
+            mGameLatencyMs = -1;
+            mGamePingFailures = 0;
+            mGameStageLogged = false;
+            mGamePingAt = 0;
+        }
         if (!worldOpen) {
             if (mGameReachable) stage("game path idle: host world closed");
             mGameReachable = false;
@@ -701,19 +786,21 @@ public final class VirtualLanSession {
         }
         long now = System.currentTimeMillis();
         long interval = mGameReachable ? GAME_PING_INTERVAL_MS : GAME_PING_FAST_MS;
-        if (mGamePingRunning || now - mGamePingAt < interval || mLocalGamePort <= 0) return;
+        if (mGamePingRunning || now - mGamePingAt < interval || gamePort <= 0) return;
         mGamePingRunning = true;
         mGamePingAt = now;
-        final int port = mLocalGamePort;
+        final int port = gamePort;
+        final String hostAddr = gameHost;
         Thread t = new Thread(() -> {
             try {
-                MinecraftPinger.Status st = MinecraftPinger.ping("127.0.0.1", port, 4000);
+                MinecraftPinger.Status st = MinecraftPinger.ping(hostAddr, port, 4000);
+                if (st == null) throw new IOException("no Minecraft status reply");
                 mGameLatencyMs = st.latencyMs;
                 mGameReachable = true;
                 mGamePingFailures = 0;
                 if (!mGameStageLogged) {
                     mGameStageLogged = true;
-                    mCommands.offer(() -> { stage("game server reachable through tunnel: " + st.motd + " " + st.versionName + " (" + st.latencyMs + " ms)"); republish(); });
+                    mCommands.offer(() -> { stage("game server reachable via " + hostAddr + ":" + port + (hostAddr.startsWith("127.") ? " (loopback forward)" : " (VPN)") + ": " + st.motd + " " + st.versionName + " (" + st.latencyMs + " ms)"); republish(); });
                 } else {
                     mCommands.offer(this::republish);
                 }
@@ -723,7 +810,7 @@ public final class VirtualLanSession {
                 if (failures >= 2) { mGameReachable = false; mGameLatencyMs = -1; }
                 if (was && failures >= 2 || failures == 2) {
                     mGameStageLogged = false;
-                    mCommands.offer(() -> { stage("game server not answering through tunnel (127.0.0.1:" + port + "): " + describe(e)); republish(); });
+                    mCommands.offer(() -> { stage("game server not answering via " + hostAddr + ":" + port + ": " + describe(e)); republish(); });
                 }
             } finally {
                 mGamePingRunning = false;

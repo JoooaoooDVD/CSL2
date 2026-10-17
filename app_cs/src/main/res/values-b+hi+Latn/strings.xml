@@ -953,7 +953,7 @@ Host: Minecraft start karo, pause menu se world ko LAN par open karo, phir yahan
 
 Guest: code daalo, “Connected” ka wait karo, phir Join World dabao. Host ki world Minecraft ki Multiplayer list mein [Virtual LAN] naam se dikhegi.
 
-Sabko host wala hi Minecraft version (aur wahi mods) use karna hoga.\n\nVPN permission nahi lagti: tunnel app-level aur encrypted hai, sirf Minecraft connection le jaata hai aur baaki apps ko touch nahi karta, isliye Android VPN key icon nahi dikhata. Sirf code wale dost host tak pahunch sakte hain, aur sirf game port expose hota hai.</string>
+Sabko host wala hi Minecraft version (aur wahi mods) use karna hoga.\n\nVPN permission: Android ek baar Virtual LAN VPN allow karne ko poochta hai. Ye sirf is app ke liye private 10.144.144.x game network route karta hai — aapka internet, DNS aur baaki apps waise ke waise rehte hain — aur session khatam hote hi band ho jaata hai. Sirf code wale dost host tak pahunch sakte hain, aur sirf game port expose hota hai.</string>
     <string name="vlan_trouble_title">Problem aa rahi hai?</string>
     <string name="vlan_trouble_body">• Connecting par atka hai: relay nodes tumhare network se reach nahi ho rahe. Internet check karo, mobile data try karo, ya Advanced mein apna relay node add karo.
 • Host nahi mila: code dobara check karo aur dekho host ka session abhi bhi live hai.
@@ -1068,4 +1068,12 @@ Virtual LAN Multiplayer → Session Join karo kholo aur yeh code daalo:
 • Dekho koi aur VPN ya tunnel app local ports block to nahi kar raha
 • Baar baar ho to Diagnostics copy karke Discord par share karo</string>
     <string name="vlan_notif_hosting">%1$s host ho raha hai · %2$d player(s)</string>
+    <string name="vlan_phase_vpn_permission">VPN permission maang rahe hain</string>
+    <string name="vlan_detail_vpn_permission">Android aapse Virtual LAN VPN allow karne ko keh raha hai. Ye sirf doston tak Minecraft connection le jaata hai — aur kuch nahi.</string>
+    <string name="vlan_reason_vpn_denied">VPN permission nahi mili. Doston se Minecraft jodne ke liye Virtual LAN ko iski zaroorat hai.</string>
+    <string name="vlan_reason_vpn_revoked">Android ne Virtual LAN VPN band kar diya (koi doosra VPN app chalu hua, ya settings me disable hua).</string>
+    <string name="vlan_reason_vpn_failed">Virtual LAN VPN start nahi ho paaya.</string>
+    <string name="vlan_tips_vpn">• Retry dabao aur Android ke VPN dialog me OK chuno\n• Khelte waqt doosre VPN apps band rakho (Android ek waqt me ek hi VPN chalata hai)\n• Kuch work/school profiles VPN block karte hain: personal profile try karo</string>
+    <string name="vlan_notif_vpn_on">VPN on</string>
+    <string name="vlan_notif_vpn_off">VPN start ho raha hai</string>
 </resources>

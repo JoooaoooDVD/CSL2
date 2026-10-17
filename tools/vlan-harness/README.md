@@ -29,6 +29,9 @@ javac -cp /tmp/jc:/tmp/lib/json.jar -d /tmp/harness tools/vlan-harness/Harness.j
 java -Dengine.dir=/tmp/jnitest/x86_64 -cp /tmp/harness:/tmp/jc:/tmp/lib/json.jar Harness
 java -Dengine.dir=/tmp/jnitest/x86_64 -cp /tmp/harness:/tmp/jc:/tmp/lib/json.jar Harness kick
 java -Dengine.dir=/tmp/jnitest/x86_64 -cp /tmp/harness:/tmp/jc:/tmp/lib/json.jar Harness relay
+# "vpn" plugs in a fake VpnController (session must wait for the TUN); "revoke" revokes it mid-session
+java -Dengine.dir=/tmp/jnitest/x86_64 -cp /tmp/harness:/tmp/jc:/tmp/lib/json.jar Harness vpn
+java -Dengine.dir=/tmp/jnitest/x86_64 -cp /tmp/harness:/tmp/jc:/tmp/lib/json.jar Harness revoke
 ```
 
 Expected: guest reaches `CONNECTED_*`, `PING THROUGH TUNNEL -> Status{...}` succeeds, world

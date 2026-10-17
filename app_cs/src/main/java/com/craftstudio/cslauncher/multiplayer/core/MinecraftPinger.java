@@ -74,15 +74,24 @@ public final class MinecraftPinger {
      */
     @Nullable
     public static Status ping(@NonNull String host, int port, int timeout) {
-        Status status = pingModern(host, port, timeout);
+        return ping(host, port, timeout, null);
+    }
+
+    /** Same, optionally through a SOCKS proxy (the harness verifies the VPN bridge path this way) */
+    @Nullable
+    public static Status ping(@NonNull String host, int port, int timeout, @Nullable java.net.Proxy proxy) {
+        Status status = pingModern(host, port, timeout, proxy);
         if (status != null) return status;
         return pingLegacy(host, port, timeout);
     }
 
     @Nullable
-    static Status pingModern(String host, int port, int timeout) {
+    static Status pingModern(String host, int port, int timeout) { return pingModern(host, port, timeout, null); }
+
+    @Nullable
+    static Status pingModern(String host, int port, int timeout, @Nullable java.net.Proxy proxy) {
         long start = System.nanoTime();
-        try (Socket socket = new Socket()) {
+        try (Socket socket = proxy == null ? new Socket() : new Socket(proxy)) {
             socket.setSoTimeout(timeout);
             socket.setTcpNoDelay(true);
             socket.connect(new InetSocketAddress(host, port), timeout);

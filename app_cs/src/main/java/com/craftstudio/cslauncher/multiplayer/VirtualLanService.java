@@ -48,6 +48,10 @@ import java.util.List;
 public final class VirtualLanService extends Service {
     private static final String TAG = AndroidTunnelEnvironment.TAG;
     public static final String ACTION_END = "com.craftstudio.cslauncher.multiplayer.END";
+    /** From VpnConsentActivity after consent: start the session described by the extras */
+    public static final String ACTION_START = "com.craftstudio.cslauncher.multiplayer.START";
+    /** From VpnConsentActivity: the user declined the VPN dialog */
+    public static final String ACTION_VPN_DENIED = "com.craftstudio.cslauncher.multiplayer.VPN_DENIED";
 
     // client -> service
     public static final int MSG_REGISTER = 1;
@@ -119,6 +123,37 @@ public final class VirtualLanService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null && ACTION_END.equals(intent.getAction())) {
             endSession(VirtualLanState.Reason.LEFT);
+            return START_NOT_STICKY;
+        }
+        if (intent != null && ACTION_START.equals(intent.getAction())) {
+            startForegroundCompat();
+            boolean host = "host".equals(intent.getStringExtra(VpnConsentActivity.EXTRA_ROLE));
+            Bundle args = new Bundle();
+            args.putString(KEY_PLAYER, intent.getStringExtra(VpnConsentActivity.EXTRA_PLAYER));
+            ArrayList<String> relays = intent.getStringArrayListExtra(VpnConsentActivity.EXTRA_RELAYS);
+            args.putStringArrayList(KEY_RELAYS, relays != null ? relays : new ArrayList<String>());
+            if (host) {
+                startSession(VirtualLanState.Role.HOST, SessionCode.generate(), args);
+            } else {
+                SessionCode code = SessionCode.extract(intent.getStringExtra(VpnConsentActivity.EXTRA_CODE));
+                if (code != null) startSession(VirtualLanState.Role.GUEST, code, args);
+            }
+            return START_NOT_STICKY;
+        }
+        if (intent != null && ACTION_VPN_DENIED.equals(intent.getAction())) {
+            if (mSession == null) {
+                boolean host = "host".equals(intent.getStringExtra(VpnConsentActivity.EXTRA_ROLE));
+                String code = intent.getStringExtra(VpnConsentActivity.EXTRA_CODE);
+                String why = intent.getStringExtra("why");
+                mState = new VirtualLanState.Builder()
+                        .role(host ? VirtualLanState.Role.HOST : VirtualLanState.Role.GUEST)
+                        .sessionCode(code == null ? "" : code)
+                        .phase(VirtualLanState.Phase.FAILED)
+                        .reason(VirtualLanState.Reason.VPN_DENIED, why == null ? "" : why)
+                        .build();
+                broadcast();
+                stopForegroundCompat();
+            }
             return START_NOT_STICKY;
         }
         // Started ahead of a create/join request: promote right away (Android requires
@@ -266,6 +301,7 @@ public final class VirtualLanService extends Service {
         params.playerName = player == null || player.trim().isEmpty() ? "Player" : player.trim();
         ArrayList<String> relays = args != null ? args.getStringArrayList(KEY_RELAYS) : null;
         if (relays != null) params.userRelayUris = relays;
+        params.vpn = new AndroidVpnController(this);
 
         AndroidTunnelEnvironment env = new AndroidTunnelEnvironment(this, role == VirtualLanState.Role.HOST ? "host" : "guest");
         final VirtualLanSession[] ref = new VirtualLanSession[1];
@@ -371,6 +407,14 @@ public final class VirtualLanService extends Service {
 
     /** Short human status used by the notification; the full mapping lives in the UI layer */
     static String notificationText(Context c, VirtualLanState s) {
+        String base = notificationBase(c, s);
+        if (s.phase.isConnected() || s.phase == VirtualLanState.Phase.RECONNECTING) {
+            return base + " \u00b7 " + c.getString(s.vpnUp ? R.string.vlan_notif_vpn_on : R.string.vlan_notif_vpn_off);
+        }
+        return base;
+    }
+
+    private static String notificationBase(Context c, VirtualLanState s) {
         switch (s.phase) {
             case STARTING: return c.getString(R.string.vlan_phase_starting);
             case DISCOVERING: return c.getString(R.string.vlan_phase_discovering);

@@ -318,9 +318,43 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
         if (mClient.state().isActive()) { showScreen(Screen.SESSION, true); return; }
         persistInputs();
         mPendingCreate = true;
-        mClient.createSession(mRepo.playerName(), mRepo.customRelays());
+        mAwaitingConsent = false;
+        if (needsVpnConsent()) {
+            mAwaitingConsent = true;
+            launchConsent("host", null);
+        } else {
+            mClient.createSession(mRepo.playerName(), mRepo.customRelays());
+        }
         showScreen(Screen.SESSION, true);
     }
+
+    /** True when Android still has to show its VPN consent dialog for this app */
+    private boolean needsVpnConsent() {
+        try {
+            return android.net.VpnService.prepare(mContext) != null;
+        } catch (Throwable t) {
+            return false; // no VPN support: the service reports VPN_FAILED with the real reason
+        }
+    }
+
+    private void launchConsent(String role, @Nullable String code) {
+        Intent i = new Intent(mContext, com.craftstudio.cslauncher.multiplayer.VpnConsentActivity.class)
+                .putExtra(com.craftstudio.cslauncher.multiplayer.VpnConsentActivity.EXTRA_ROLE, role)
+                .putExtra(com.craftstudio.cslauncher.multiplayer.VpnConsentActivity.EXTRA_CODE, code)
+                .putExtra(com.craftstudio.cslauncher.multiplayer.VpnConsentActivity.EXTRA_PLAYER, mRepo.playerName())
+                .putStringArrayListExtra(com.craftstudio.cslauncher.multiplayer.VpnConsentActivity.EXTRA_RELAYS, new java.util.ArrayList<>(mRepo.customRelays()));
+        if (!(mContext instanceof android.app.Activity)) i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        try {
+            mContext.startActivity(i);
+        } catch (Throwable t) {
+            mAwaitingConsent = false;
+            // fall back to a direct start; the session will fail with VPN_FAILED and say why
+            if ("host".equals(role)) mClient.createSession(mRepo.playerName(), mRepo.customRelays());
+            else if (code != null) mClient.joinSession(code, mRepo.playerName(), mRepo.customRelays());
+        }
+    }
+
+    private boolean mAwaitingConsent;
 
     private void onJoinClicked() {
         if (!mSupported) { shakeUnsupported(); return; }
@@ -338,7 +372,13 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
         if (mClient.state().isActive()) { showScreen(Screen.SESSION, true); return; }
         persistInputs();
         mPendingJoinCode = code;
-        mClient.joinSession(code, mRepo.playerName(), mRepo.customRelays());
+        mAwaitingConsent = false;
+        if (needsVpnConsent()) {
+            mAwaitingConsent = true;
+            launchConsent("guest", code);
+        } else {
+            mClient.joinSession(code, mRepo.playerName(), mRepo.customRelays());
+        }
         showScreen(Screen.SESSION, true);
     }
 
@@ -350,7 +390,7 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
     private void onJoinWorld() {
         VirtualLanState s = mLast;
         if (!s.phase.isConnected() || s.localGamePort <= 0) return;
-        String address = "127.0.0.1:" + s.localGamePort;
+        String address = gameAddress(s);
         Instance instance = Instances.loadSelectedInstance();
         if (instance == null) {
             Toast.makeText(mContext, R.string.no_instance, Toast.LENGTH_SHORT).show();
@@ -422,11 +462,13 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
         if (state.isActive()) {
             mPendingCreate = false;
             mPendingJoinCode = null;
+            mAwaitingConsent = false;
             if (mScreen != Screen.SESSION) showScreen(Screen.SESSION, true);
             renderSession(state, previous);
         } else if (state.phase == VirtualLanState.Phase.FAILED || state.phase == VirtualLanState.Phase.ENDED) {
             mPendingCreate = false;
             mPendingJoinCode = null;
+            mAwaitingConsent = false;
             if (state.isGuest() && state.reason != VirtualLanState.Reason.NONE) {
                 Instance instance = Instances.loadSelectedInstance();
                 if (instance != null) {
@@ -611,7 +653,7 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
             boolean playable = ready && s.worldOpen && s.gameReachable;
             mJoinWorld.setEnabled(playable);
             mJoinWorld.setAlpha(playable ? 1f : 0.55f);
-            String address = ready ? "127.0.0.1:" + s.localGamePort : "–";
+            String address = ready ? gameAddress(s) : "\u2013";
             mCopyAddress.setText(address);
             mCopyAddress.setEnabled(ready);
             if (!ready) mGuestNote.setText(R.string.vlan_guest_note_waiting);
@@ -792,7 +834,7 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
             case RECONNECTING: return mContext.getString(R.string.vlan_phase_reconnecting);
             case FAILED: return mContext.getString(R.string.vlan_phase_failed);
             case ENDED: return mContext.getString(R.string.vlan_result_ended);
-            default: return mContext.getString(R.string.vlan_phase_connecting);
+            default: return mContext.getString(mAwaitingConsent ? R.string.vlan_phase_vpn_permission : R.string.vlan_phase_connecting);
         }
     }
 
@@ -809,8 +851,14 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
                 }
                 return mContext.getString(s.worldOpen ? R.string.vlan_detail_guest_ready : R.string.vlan_detail_guest_no_world);
             case RECONNECTING: return mContext.getString(R.string.vlan_detail_reconnecting);
-            default: return s.detail;
+            default: return mAwaitingConsent ? mContext.getString(R.string.vlan_detail_vpn_permission) : s.detail;
         }
+    }
+
+    /** Through the VPN the host's virtual IP is used; without it the loopback forward */
+    private static String gameAddress(VirtualLanState s) {
+        if (!s.gameHost.isEmpty() && s.gamePort > 0) return s.gameHost + ":" + s.gamePort;
+        return "127.0.0.1:" + s.localGamePort;
     }
 
     /** Busy phases show the latest engine stage underneath so a stall is explainable without the log */
@@ -832,6 +880,9 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
             case RELAY_LOST: return mContext.getString(R.string.vlan_reason_relay_lost);
             case HOST_NOT_FOUND: return mContext.getString(R.string.vlan_reason_host_not_found);
             case HOST_UNREACHABLE: return mContext.getString(R.string.vlan_reason_host_unreachable) + (s.detail.isEmpty() ? "" : "\n" + s.detail);
+            case VPN_DENIED: return mContext.getString(R.string.vlan_reason_vpn_denied);
+            case VPN_REVOKED: return mContext.getString(R.string.vlan_reason_vpn_revoked);
+            case VPN_FAILED: return mContext.getString(R.string.vlan_reason_vpn_failed) + (s.detail.isEmpty() ? "" : "\n" + s.detail);
             case HOST_LOST: return mContext.getString(R.string.vlan_reason_host_lost);
             case HOST_ENDED: return mContext.getString(R.string.vlan_reason_host_ended);
             case KICKED: return mContext.getString(R.string.vlan_reason_kicked);
@@ -859,6 +910,10 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
             case ENGINE_CRASHED:
             case PORT_BUSY:
                 return mContext.getString(R.string.vlan_tips_engine);
+            case VPN_DENIED:
+            case VPN_REVOKED:
+            case VPN_FAILED:
+                return mContext.getString(R.string.vlan_tips_vpn);
             default:
                 return "";
         }
@@ -889,6 +944,7 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
         b.append("players=").append(s.playersOnline).append('/').append(s.playersMax).append(" inGame=").append(s.inGame).append('\n');
         b.append("host=").append(s.hostName).append(" hostLatency=").append(s.hostLatencyMs).append(" localGamePort=").append(s.localGamePort)
                 .append(" gameReachable=").append(s.gameReachable).append(" gameLatency=").append(s.gameLatencyMs).append('\n');
+        b.append("vpn=").append(s.vpnUp).append(" gameAddress=").append(gameAddress(s)).append(" socks5=").append(s.socks5Port).append('\n');
         for (VirtualLanState.Member m : s.members) {
             b.append("member ").append(m.name).append(' ').append(m.vip).append(" lat=").append(m.latencyMs).append(" direct=").append(m.direct).append('\n');
         }

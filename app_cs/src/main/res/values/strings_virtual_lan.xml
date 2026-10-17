@@ -41,7 +41,7 @@
 
     <!-- help -->
     <string name="vlan_help_title">How it works</string>
-    <string name="vlan_help_body">Virtual LAN puts you and your friends on one private virtual network, even on different Wi-Fi or mobile data, with no port forwarding.\n\nHost: start Minecraft, open your world to LAN from the pause menu, then create a session here and share the code.\n\nGuest: enter the code, wait for “Connected”, then tap Join World. The host\'s world appears in Minecraft\'s Multiplayer list as [Virtual LAN].\n\nEveryone must use the same Minecraft version (and the same mods) as the host.\n\nNo VPN permission: the tunnel is app-level and encrypted, carries only the Minecraft connection and never touches your other apps, so Android shows no VPN key icon. Only your friends with the code can reach the host, and only the game port is exposed.</string>
+    <string name="vlan_help_body">Virtual LAN puts you and your friends on one private virtual network, even on different Wi-Fi or mobile data, with no port forwarding.\n\nHost: start Minecraft, open your world to LAN from the pause menu, then create a session here and share the code.\n\nGuest: enter the code, wait for “Connected”, then tap Join World. The host\'s world appears in Minecraft\'s Multiplayer list as [Virtual LAN].\n\nEveryone must use the same Minecraft version (and the same mods) as the host.\n\nVPN permission: Android asks once to allow the Virtual LAN VPN. It routes only the private 10.144.144.x game network for this app - your internet, DNS and other apps are untouched - and it switches off when the session ends. Only friends with the code can reach the host, and only the game port is exposed.</string>
     <string name="vlan_trouble_title">Troubleshooting</string>
     <string name="vlan_trouble_body">• Stuck at Connecting: the relay nodes may be unreachable on your network. Check the internet connection, try mobile data, or add a relay node under Advanced.\n• Host not found: double-check the code and make sure the host\'s session is still live.\n• Connected but no world: the host must open the world to LAN; it is detected within a few seconds.\n• High latency: a relay path is in use (shown as “Relay”). A direct path is tried continuously and used when possible.\n• A battery saver may stop the tunnel in the background; keep the game or launcher open.</string>
     <string name="vlan_help_in_session">Help is on the home screen; end the session or go back to read it.</string>
@@ -169,4 +169,12 @@
 
     <!-- notification -->
     <string name="vlan_notif_hosting">Hosting %1$s · %2$d player(s)</string>
+    <string name="vlan_phase_vpn_permission">Requesting VPN permission</string>
+    <string name="vlan_detail_vpn_permission">Android is asking you to allow the Virtual LAN VPN. It only carries the Minecraft connection to your friends - nothing else.</string>
+    <string name="vlan_reason_vpn_denied">VPN permission was not granted. Virtual LAN needs it to connect Minecraft to your friends.</string>
+    <string name="vlan_reason_vpn_revoked">Android switched the Virtual LAN VPN off (another VPN app started, or it was disabled in settings).</string>
+    <string name="vlan_reason_vpn_failed">The Virtual LAN VPN could not be started.</string>
+    <string name="vlan_tips_vpn">• Tap Retry and choose OK in the Android VPN dialog\n• Turn off other VPN apps while you play (Android allows one VPN at a time)\n• Some work/school profiles block VPNs: try a personal profile</string>
+    <string name="vlan_notif_vpn_on">VPN on</string>
+    <string name="vlan_notif_vpn_off">VPN starting</string>
 </resources>

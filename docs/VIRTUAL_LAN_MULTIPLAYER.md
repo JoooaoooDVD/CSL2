@@ -114,32 +114,46 @@ app_cs/src/main/java/com/craftstudio/cslauncher/multiplayer/
     └── MultiplayerMotion          animations, all gated by the launcher/system animation setting
 ```
 
-### 3.1 Architecture decision: app-level tunnel (EasyTier `--no-tun`), not `VpnService`
+### 3.1 Architecture: real Android VPN (VpnService TUN) + EasyTier engine
 
-Users sometimes expect a VPN permission prompt and the key icon. We deliberately do **not** use
-Android `VpnService`, and this is a verified technical decision, not an omission:
+Since this revision the feature is a **genuine Android VPN**, on request of the project owner
+(the consent dialog and the key icon are wanted). Data path:
 
-| | `VpnService` + TUN | app-level tunnel (`--no-tun`, used) |
-|---|---|---|
-| What Minecraft needs | a TCP connection to the host's game port | same |
-| How the guest reaches it | OS routes `10.144.144.1` into a TUN fd | EasyTier listens on `127.0.0.1:<port>` and forwards through the tunnel (port-forward) |
-| Inbound on the host | packets to the TUN interface | EasyTier's smoltcp stack hands the stream to `127.0.0.1:<proxy>` (verified in `gateway/tcp_proxy.rs`: local-virtual-IP destinations are connected to loopback) |
-| Android consent | VPN prompt, key icon, "one VPN at a time": a user's real VPN (or a second launcher) is disconnected | nothing system-wide is changed, user's own VPN keeps working |
-| Scope exposed | the whole virtual subnet, all host ports unless filtered | exactly two host ports (proxy + directory), whitelisted in the engine |
-| Encryption / auth | same engine, same AES-GCM + network secret | same |
-| Failure surface | TUN routing, DNS leaks, battery, "VPN revoked" by other apps, FGS `specialUse`/`connectedDevice` rules on Android 14+ | none of that; proven by Zalith/Terracotta's `PingHostFail` history on the TUN route |
+```
+Minecraft (guest)  --TCP to 10.144.144.1:<proxy>-->  TUN device (VirtualLanVpnService)
+   --> hev-socks5-tunnel (in-process, MIT)  --SOCKS5-->  easytier-core portal 127.0.0.1:<port>
+   --> encrypted tunnel (direct P2P or relay)  -->  host easytier-core (smoltcp, no root)
+   --> 127.0.0.1:<proxy>  LanPortProxy  -->  127.0.0.1:<LAN port>  Minecraft "Open to LAN"
+```
 
-The complete flow — create session → share code → join → tunnel → **Join World** (servers.dat
-entry `[Virtual LAN]` → `127.0.0.1:<local port>`) → play — needs nothing a TUN would add. The
-status *Connected* already means "a real TCP request went through the tunnel to the host" (the
-directory join), and from this change **Join World unlocks only after the guest's own Minecraft
-status ping succeeds through the tunnel** (`gameReachable`, `game server reachable through
-tunnel: <world> <version> (<rtt> ms)` stage line); the shown host latency is that real RTT.
+Why this shape and not EasyTier's own TUN: the shipped `easytier-core` binaries (static Linux
+builds) can only create a TUN as root; the fd-based TUN (`run_for_mobile`, `tun_fd`) exists only
+in the in-process library build used by EasyTier's Tauri app and is not exposed by the CLI.
+Instead the engine's SOCKS5 portal (`socks5_proxy`) is the documented way into the virtual
+network without root, and hev-socks5-tunnel is the standard Android TUN→SOCKS5 bridge
+(`TProxyStartService(config, tunFd)`), built by `scripts/build_hev_tunnel.sh` in CI for all
+three ABIs. Both roles bring the VPN up (the host as soon as its engine is running, the guest
+once DHCP assigned its virtual IP) and **Connected is only published after the TUN is up**.
 
-If a future requirement genuinely needs a subnet (e.g. mods opening extra UDP ports), the engine
-supports TUN and `VpnService` can be added behind the same `TunnelManager`; nothing in the UI or
-session layer assumes loopback except the guest's local game address.
+What the VPN does and does not do:
 
+* `addAddress(<vip>/24)`, `addRoute(10.144.144.0/24)` **only** — no default route, no DNS, so the
+  phone's internet is untouched. `addAllowedApplication(<this app>)`: other apps never enter it.
+* MTU 1380 (EasyTier's virtual MTU), `setBlocking(false)`, config intent opens the launcher.
+* Consent: `VpnConsentActivity` (translucent) calls `VpnService.prepare()`; the official dialog
+  is shown once per install/grant; the result is delivered to `VirtualLanService` as an Intent
+  (`ACTION_START` / `ACTION_VPN_DENIED`) so the launcher UI and the in-game popup — different
+  processes — both see it. Denial → `FAILED / VPN_DENIED` with Retry; no nagging loops.
+* `onRevoke()` (another VPN app started, user toggled it off) → session ends with
+  `VPN_REVOKED`; guests of a revoked host get `HOST_ENDED`.
+* vIP change (DHCP re-assignment) → TUN is re-established with the new address; the game path
+  is re-verified (`game server reachable via 10.144.144.1:25565 (VPN)` stage line).
+* Teardown closes the bridge, closes the TUN fd and stops the service; the loopback
+  port-forward `127.0.0.1:<port>` is kept as a *direct-connect fallback* and shown in the UI
+  when the VPN is not up.
+
+The engine side (no-TUN inbound, port whitelists, relay list, directory, LAN detection) is
+unchanged; `VpnController` is the only new seam between the pure-Java session and Android.
 ### Why the service lives in the `:game` process
 
 The tunnel must never outlive the game and must never be orphaned. `GameActivity`/`GameService`
@@ -345,6 +359,16 @@ the ping succeeds; two consecutive failures lock it again. Harness: `gameReachab
 through a public community node, world close/reopen mirrored, host end → `HOST_ENDED`. So the
 relay fallback is proven to forward our private network's data, not just to list peers.
 
+### 7.1b VPN revision — what was verified where
+
+| Check | Where | Result |
+|---|---|---|
+| Engine SOCKS5 portal reaches the host's virtual IP (the exact path the TUN bridge uses) | sandbox, two engines through a public relay | `curl --socks5 127.0.0.1:18080 http://10.144.144.1:8088/` → 200; harness `PING VIA SOCKS5 → 10.144.144.1:25565 → Status{Raj - Survival World 1.20.1 1/8}` |
+| Session waits for the TUN before Connected, re-verifies game path, fails with `VPN_REVOKED` on revoke and tears down | harness `vpn` / `revoke` modes with a fake `VpnController` | `VPN: establishing TUN … → VPN up … → directory join OK → CONNECTED_DIRECT`; revoke → `FAILED VPN_REVOKED`, `takeDown` called, engines 0 |
+| `VirtualLanVpnService`, `VpnConsentActivity`, controller compile against android.jar | sandbox javac | 0 errors |
+| hev-socks5-tunnel builds for arm64-v8a / armeabi-v7a / x86_64 and is packaged | GitHub CI | see build log of the commit |
+| Consent dialog, key icon, real TUN forwarding, gameplay | **real devices only** | ⬜ not run here |
+
 ### 7.2 On-device test procedure (A / B / C)
 
 Install the CI `app-debug` APK on two phones. On the host: launch a world → *Open to LAN* →
@@ -354,6 +378,7 @@ Multiplayer* → *Join* → code → wait for *Connected directly / through rela
 
 | Test | Networks | Pass criteria |
 |---|---|---|
+| E | VPN consent | first Create/Join shows Android's VPN dialog; *Cancel* → "VPN permission was not granted" + Retry; *OK* → key icon appears, status continues; toggling the VPN off in Android settings mid-session → "Android switched the Virtual LAN VPN off" and the session ends cleanly |
 | A | both on the same Wi-Fi | stage trail reaches `directory join OK`; status *Connected directly* (expected) or *through relay* (allowed: some routers isolate clients); world joins and chunks load |
 | B | host Wi-Fi, guest mobile data | same; *through relay* is normal on CGNAT; latency shown is the real engine RTT |
 | C | host mobile data, guest Wi-Fi | same; also confirms the host's LAN port is found from the game log when cellular blocks multicast |
