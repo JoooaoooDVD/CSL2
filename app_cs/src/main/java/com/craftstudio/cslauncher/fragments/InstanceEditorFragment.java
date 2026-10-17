@@ -82,6 +82,10 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
     @Nullable private String mControlFromSelector;
     @Nullable private String mJvmArgs;
     private boolean mSharedData;
+    private com.craftstudio.cslauncher.game.branding.BrandingMode mAppearance =
+            com.craftstudio.cslauncher.game.branding.BrandingMode.VANILLA;
+    private com.craftstudio.cslauncher.game.branding.BrandingMode mSavedAppearance = mAppearance;
+    private boolean mAppearancePackEnabled;
     private final List<Runtime> mRuntimes = new ArrayList<>();
     private int mRuntimeIndex;
     private List<String> mRenderNames = new ArrayList<>();
@@ -101,7 +105,7 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
     private EditText mName;
     private View mNameField;
     private ImageView mInstanceIcon, mBackgroundPreview;
-    private TextView mVersionValue, mRuntimeValue, mControlValue, mJvmValue, mRendererValue, mSharedValue;
+    private TextView mVersionValue, mRuntimeValue, mControlValue, mJvmValue, mRendererValue, mSharedValue, mAppearanceValue;
     private MaterialSwitch mSharedSwitch;
     private ViewGroup mIconChoices;
 
@@ -247,7 +251,7 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
         mName = null;
         mNameField = null;
         mInstanceIcon = mBackgroundPreview = null;
-        mVersionValue = mRuntimeValue = mControlValue = mJvmValue = mRendererValue = mSharedValue = null;
+        mVersionValue = mRuntimeValue = mControlValue = mJvmValue = mRendererValue = mSharedValue = mAppearanceValue = null;
         mSharedSwitch = null;
         mIconChoices = null;
     }
@@ -268,6 +272,19 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
         mControlLayout = instance.controlLayout;
         mJvmArgs = instance.jvmArgs;
         mSharedData = instance.sharedData;
+        mAppearance = com.craftstudio.cslauncher.game.branding.BrandingManager.modeOf(instance);
+        mSavedAppearance = mAppearance;
+        mAppearancePackEnabled = false;
+        // Cheap options.txt peek for the row status; off the UI thread
+        final Instance peeked = instance;
+        CSLauncherApplication.sExecutorService.execute(() -> {
+            boolean enabled = com.craftstudio.cslauncher.game.branding.BrandingManager.isPackEnabled(peeked);
+            Tools.runOnUiThread(() -> {
+                if (mInstance != peeked) return;
+                mAppearancePackEnabled = enabled;
+                if (mAppearanceValue != null) mAppearanceValue.setText(appearanceLabel());
+            });
+        });
 
         mRuntimes.clear();
         try {
@@ -299,6 +316,7 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
         mJvmValue = view.findViewById(R.id.pe_jvm_value);
         mRendererValue = view.findViewById(R.id.pe_renderer_value);
         mSharedValue = view.findViewById(R.id.pe_shared_value);
+        mAppearanceValue = view.findViewById(R.id.pe_appearance_value);
         mSharedSwitch = view.findViewById(R.id.vprof_editor_shared_switch);
         mIconChoices = view.findViewById(R.id.vprof_editor_icon_choices);
         // Rounded clipping of the artwork previews
@@ -324,6 +342,11 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
         View rowJvm = view.findViewById(R.id.pe_row_jvm);
         View rowRenderer = view.findViewById(R.id.pe_row_renderer);
         View rowShared = view.findViewById(R.id.pe_row_shared);
+        View rowAppearance = view.findViewById(R.id.pe_row_appearance);
+        if (rowAppearance != null) {
+            rowAppearance.setOnClickListener(v -> showAppearanceDialog());
+            CSAnimationEngine.attachPressFeedback(rowAppearance);
+        }
         View rowFiles = view.findViewById(R.id.pe_row_files);
         if (rowFiles != null) {
             rowFiles.setOnClickListener(v -> openFileManager());
@@ -420,6 +443,7 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
         mRendererValue.setText(rendererLabel());
         mSharedSwitch.setChecked(mSharedData);
         mSharedValue.setText(mSharedData ? R.string.instance_shared_data_on : R.string.instance_shared_data_off);
+        if (mAppearanceValue != null) mAppearanceValue.setText(appearanceLabel());
 
         if (mPendingIcon != null) {
             mInstanceIcon.setImageBitmap(mPendingIcon);
@@ -482,6 +506,54 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
             mRendererIndex = which;
             if (mRendererValue != null) ProfileEditorMotion.valueChanged(mRendererValue, rendererLabel());
         }).show();
+    }
+
+    private void showAppearanceDialog() {
+        new com.kdt.mcgui.AppearancePickerDialog(requireContext(), mAppearance, mode -> {
+            if (mode == mAppearance) return;
+            mAppearance = mode;
+            if (mAppearanceValue != null) ProfileEditorMotion.valueChanged(mAppearanceValue, appearanceLabel());
+        }).show();
+    }
+
+    private String appearanceLabel() {
+        if (mAppearance == com.craftstudio.cslauncher.game.branding.BrandingMode.VANILLA) {
+            return getString(R.string.branding_status_vanilla);
+        }
+        boolean active = mAppearancePackEnabled && mSavedAppearance == mAppearance;
+        return getString(active ? R.string.branding_status_custom_enabled : R.string.branding_status_custom_pending);
+    }
+
+    /**
+     * After Save: apply the appearance to the profile folder right away (worker thread) so the
+     * user gets immediate feedback instead of waiting for the next launch. The launch pipeline
+     * runs the same idempotent step again, so a failure here is informational only.
+     */
+    private void applyAppearanceAfterSave(@NonNull Instance instance, boolean modeChanged) {
+        com.craftstudio.cslauncher.game.branding.BrandingMode mode =
+                com.craftstudio.cslauncher.game.branding.BrandingManager.modeOf(instance);
+        boolean worthRunning = modeChanged || mode == com.craftstudio.cslauncher.game.branding.BrandingMode.CUSTOM;
+        if (!worthRunning) return;
+        final Context app = requireContext().getApplicationContext();
+        final String versionId = instance.versionId;
+        CSLauncherApplication.sExecutorService.execute(() -> {
+            String resolved = versionId;
+            try {
+                if (versionId != null && (Instance.VERSION_LATEST_RELEASE.equals(versionId)
+                        || Instance.VERSION_LATEST_SNAPSHOT.equals(versionId))) {
+                    resolved = null; // not downloaded/resolved here: the launch pipeline handles it
+                }
+            } catch (Exception ignored) {
+            }
+            com.craftstudio.cslauncher.game.branding.BrandingManager.Outcome outcome =
+                    com.craftstudio.cslauncher.game.branding.BrandingManager.apply(app, instance, resolved);
+            // JAR_MISSING is the expected "first launch will do it" case: no toast noise for that
+            if (outcome.applied && mode == com.craftstudio.cslauncher.game.branding.BrandingMode.CUSTOM
+                    || outcome.reason != null && outcome.reason != com.craftstudio.cslauncher.game.branding.BrandingException.Reason.JAR_MISSING) {
+                final String msg = outcome.message(app);
+                Tools.runOnUiThread(() -> Toast.makeText(app, msg, Toast.LENGTH_LONG).show());
+            }
+        });
     }
 
     private void showJvmDialog() {
@@ -723,6 +795,8 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
         mInstance.controlLayout = mControlLayout == null || mControlLayout.isEmpty() ? null : mControlLayout;
         mInstance.jvmArgs = mJvmArgs == null || mJvmArgs.trim().isEmpty() ? null : mJvmArgs.trim();
         mInstance.sharedData = mSharedData;
+        boolean appearanceChanged = mAppearance != com.craftstudio.cslauncher.game.branding.BrandingManager.modeOf(mInstance);
+        mInstance.appearance = mAppearance == com.craftstudio.cslauncher.game.branding.BrandingMode.VANILLA ? null : mAppearance.key;
 
         Runtime runtime = mRuntimeIndex >= 0 && mRuntimeIndex < mRuntimes.size() ? mRuntimes.get(mRuntimeIndex) : null;
         mInstance.selectedRuntime = runtime == null || runtime.name.equals("<Default>") || runtime.versionString == null
@@ -756,6 +830,8 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
             mInstance.write();
 
             if (iconChanged) InstanceIconProvider.dropIcon(mInstance);
+            mSavedAppearance = mAppearance;
+            applyAppearanceAfterSave(mInstance, appearanceChanged);
             return true;
         } catch (Exception e) {
             Tools.showErrorRemote(e);

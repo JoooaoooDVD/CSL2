@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Minecraft Appearance / CS Dynamic Branding (profile editor row, picker dialog, status + errors) -->
+<resources>
+    <string name="branding_row_title">Minecraft Appearance</string>
+    <string name="branding_eyebrow">PROFILE LOOK</string>
+    <string name="branding_picker_subtitle">Choose how Minecraft looks for this profile. The game itself is untouched: the custom look is a small resource pack the launcher builds for the exact game version and enables before each launch.</string>
+    <string name="branding_picker_footer">Switching back to Vanilla removes the launcher pack from the active list and restores your previous settings. Your own packs, worlds and mods are never touched.</string>
+
+    <string name="branding_option_vanilla">Vanilla Experience</string>
+    <string name="branding_option_vanilla_desc">Original Minecraft main menu and loading screen, exactly as Mojang ships them.</string>
+    <string name="branding_option_custom">CS Custom Experience</string>
+    <string name="branding_option_custom_desc">Dark obsidian menu with platinum accents: Craft Studio title, night panorama, restyled buttons, custom splashes and a dark loading screen.</string>
+    <string name="branding_option_custom_versions">Minecraft 1.21 and newer (built for the profile\'s version at launch)</string>
+    <string name="branding_badge_vanilla">MOJANG</string>
+    <string name="branding_badge_custom">CS</string>
+    <string name="branding_tag_recommended">Default</string>
+    <string name="branding_tag_pack">Resource pack</string>
+
+    <string name="branding_status_vanilla">Vanilla look</string>
+    <string name="branding_status_custom_pending">CS custom look \u2022 applied at next launch</string>
+    <string name="branding_status_custom_active">CS custom look active for %1$s</string>
+    <string name="branding_status_custom_enabled">CS custom look \u2022 pack enabled</string>
+
+    <string name="branding_error_generic">The custom look could not be applied. Vanilla look is used for this launch.</string>
+    <string name="branding_error_unsupported">CS Custom Experience needs Minecraft 1.21 or newer. %1$s keeps the vanilla look.</string>
+    <string name="branding_error_jar_missing">Game files are not downloaded yet. The custom look will be prepared on the first launch of this version.</string>
+    <string name="branding_error_metadata">Could not read the version information of %1$s. Re-download the version or switch to Vanilla.</string>
+    <string name="branding_error_assets">Launcher branding files are missing. Reinstall CS Launcher Plus.</string>
+    <string name="branding_error_write">Could not write to this profile\'s folder. Check free storage and try again.</string>
+    <string name="branding_error_verify">The pack was written but could not be verified. Vanilla look is used for this launch.</string>
+    <string name="branding_applied_toast">Minecraft Appearance updated: %1$s</string>
+</resources>

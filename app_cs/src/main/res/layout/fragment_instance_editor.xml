@@ -685,6 +685,36 @@
                             style="@style/PE.RowChevron" />
                     </LinearLayout>
 
+
+                    <LinearLayout
+                        android:id="@+id/pe_row_appearance"
+                        style="@style/PE.Row"
+                        android:layout_marginTop="10dp">
+
+                        <ImageView
+                            style="@style/PE.RowIcon"
+                            android:src="@drawable/ic_px_palette" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="14dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/PE.RowLabel"
+                                android:text="@string/branding_row_title" />
+
+                            <TextView
+                                android:id="@+id/pe_appearance_value"
+                                style="@style/PE.RowValue"
+                                android:text="@string/branding_status_vanilla" />
+                        </LinearLayout>
+
+                        <ImageView
+                            style="@style/PE.RowChevron" />
+                    </LinearLayout>
                     <LinearLayout
                         android:id="@+id/pe_row_shared"
                         style="@style/PE.Row"

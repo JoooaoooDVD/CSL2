@@ -1,0 +1,19 @@
+{
+ "menu.loadingLevel": "Craft Studio · Loading world",
+ "menu.generatingLevel": "Craft Studio · Generating world",
+ "menu.preparingSpawn": "Craft Studio · Preparing spawn area: %s%%",
+ "menu.generatingTerrain": "Craft Studio · Building terrain",
+ "menu.loadingForcedChunks": "Craft Studio · Loading forced chunks for %s",
+ "menu.savingLevel": "Craft Studio · Saving world",
+ "menu.savingChunks": "Craft Studio · Saving chunks",
+ "menu.working": "Craft Studio · Working…",
+ "menu.respawning": "Craft Studio · Respawning",
+ "multiplayer.downloadingTerrain": "Craft Studio · Loading terrain…",
+ "connect.connecting": "Craft Studio · Connecting to the server…",
+ "connect.joining": "Craft Studio · Joining world…",
+ "connect.authorizing": "Craft Studio · Logging in…",
+ "connect.encrypting": "Craft Studio · Encrypting…",
+ "connect.negotiating": "Craft Studio · Negotiating…",
+ "resourcepack.downloading": "Craft Studio · Downloading resource pack",
+ "resourcePack.title": "Resource Packs · CS Launcher Plus"
+}

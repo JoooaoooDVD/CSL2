@@ -1067,10 +1067,34 @@ T = {
 "vlan_tips_engine": "• Launcher restart karke dobara try karo\n• Dekho koi aur VPN ya tunnel app local ports block to nahi kar raha\n• Baar baar ho to Diagnostics copy karke Discord par share karo",
 "vlan_notif_hosting": "%1$s host ho raha hai · %2$d player(s)",
 
+# ---- Minecraft Appearance / CS Dynamic Branding
+"branding_row_title": "Minecraft ka Look",
+"branding_eyebrow": "PROFILE LOOK",
+"branding_picker_subtitle": "Is profile ke liye Minecraft kaisa dikhega, chuno. Game ko kuch nahi chhua jaata: custom look ek chhota resource pack hai jo launcher exact game version ke liye banata hai aur har launch se pehle on karta hai.",
+"branding_picker_footer": "Vanilla par wapas aane se launcher ka pack active list se hat jaata hai aur tumhari pichhli settings wapas aa jaati hain. Tumhare apne packs, worlds aur mods ko kabhi nahi chheda jaata.",
+"branding_option_vanilla": "Vanilla Experience",
+"branding_option_vanilla_desc": "Minecraft ka original main menu aur loading screen, bilkul waise jaise Mojang deta hai.",
+"branding_option_custom": "CS Custom Experience",
+"branding_option_custom_desc": "Platinum accents wala dark obsidian menu: Craft Studio title, raat ka panorama, naye style ke buttons, custom splashes aur dark loading screen.",
+"branding_option_custom_versions": "Minecraft 1.21 aur usse naya (launch par profile ke version ke liye banta hai)",
+"branding_tag_recommended": "Default",
+"branding_tag_pack": "Resource pack",
+"branding_status_vanilla": "Vanilla look",
+"branding_status_custom_pending": "CS custom look \u2022 agle launch par lagega",
+"branding_status_custom_active": "%1$s ke liye CS custom look active hai",
+"branding_status_custom_enabled": "CS custom look \u2022 pack on hai",
+"branding_error_generic": "Custom look lag nahi paaya. Is launch mein vanilla look use hoga.",
+"branding_error_unsupported": "CS Custom Experience ke liye Minecraft 1.21 ya naya chahiye. %1$s vanilla look par rahega.",
+"branding_error_jar_missing": "Game files abhi download nahi hui. Is version ke pehle launch par custom look taiyaar hoga.",
+"branding_error_metadata": "%1$s ki version information padh nahi paaye. Version dobara download karo ya Vanilla chuno.",
+"branding_error_assets": "Launcher ki branding files missing hain. CS Launcher Plus dobara install karo.",
+"branding_error_write": "Is profile ke folder mein likh nahi paaye. Free storage check karke dobara try karo.",
+"branding_error_verify": "Pack likha gaya par verify nahi ho paaya. Is launch mein vanilla look use hoga.",
+"branding_applied_toast": "Minecraft ka Look update hua: %1$s",
 }
 
 TEMPLATE_SRC = ["strings.xml", "strings_resource_browser.xml", "strings_virtual_lan.xml", "strings_cs14.xml", "strings_cs15.xml", "strings_manager.xml",
-                "strings_create_instance.xml", "strings_profile_picker.xml"]
+                "strings_create_instance.xml", "strings_profile_picker.xml", "strings_branding.xml"]
 
 def main(res_dir):
     src = {}

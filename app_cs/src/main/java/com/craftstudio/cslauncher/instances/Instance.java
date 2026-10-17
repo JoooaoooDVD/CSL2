@@ -35,6 +35,17 @@ public class Instance extends DisplayInstance {
     public boolean sharedData;
     /** Per-instance memory in MB, 0 = use the global allocation */
     public int ramAllocation;
+    /**
+     * "Minecraft Appearance" of this profile: {@code "vanilla"} (default, also for unknown values)
+     * or {@code "custom"} for the CS Dynamic Branding pack. See game/branding/BrandingManager.
+     */
+    public String appearance;
+    /**
+     * JSON record of the options the custom experience changed (currently the dark loading
+     * screen flag) so switching back to Vanilla restores exactly what was there. Null when
+     * the custom experience was never activated.
+     */
+    public String appearanceRestore;
     /** Public URL of the modpack icon (Modrinth / CurseForge), used by the Discord presence */
     public String iconUrl;
 
@@ -45,6 +56,15 @@ public class Instance extends DisplayInstance {
     protected void sanitize() {
         super.sanitize();
         sanitizeArgs();
+        sanitizeAppearance();
+    }
+
+    /** Unknown/corrupted appearance values fall back to vanilla; a dangling restore record is kept (harmless). */
+    private void sanitizeAppearance() {
+        if (appearance != null) {
+            String normalized = com.craftstudio.cslauncher.game.branding.BrandingMode.fromKey(appearance).key;
+            appearance = normalized.equals(com.craftstudio.cslauncher.game.branding.BrandingMode.VANILLA.key) ? null : normalized;
+        }
     }
 
     private void sanitizeArgs() {

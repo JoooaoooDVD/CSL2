@@ -145,6 +145,23 @@ public class GameRunner {
         }
     }
 
+    private static void applyBrandingBeforeLaunch(AppCompatActivity activity, Instance instance, String versionId) {
+        long started = System.currentTimeMillis();
+        com.craftstudio.cslauncher.game.branding.BrandingManager.Outcome outcome =
+                com.craftstudio.cslauncher.game.branding.BrandingManager.apply(activity, instance, versionId);
+        Log.i("CSBranding", "apply took " + (System.currentTimeMillis() - started) + " ms (mode=" + outcome.mode
+                + ", applied=" + outcome.applied + (outcome.packReused ? ", pack reused" : "") + ")");
+        try {
+            MCOptionUtils.load(); // refresh the in-memory copy after the file edit
+        } catch (Exception e) {
+            Log.w("CSBranding", "options reload failed", e);
+        }
+        if (outcome.needsAttention()) {
+            final String message = outcome.message(activity);
+            Tools.runOnUiThread(() -> Toast.makeText(activity, message, Toast.LENGTH_LONG).show());
+        }
+    }
+
     public static void launchGame(final AppCompatActivity activity, Account account,
                                   Instance instance, String versionId, File[] classpath, GameRenderer gameRenderer) throws Throwable {
         // Per-instance memory (set in the Create Instance popup) wins over the global setting.
@@ -240,6 +257,10 @@ public class GameRunner {
 
         // Pre-process specific files
         disableSplash(gamedir);
+        // Minecraft Appearance (CS Dynamic Branding): generate/reuse the pack and set options.txt
+        // for this profile, or restore the vanilla selection. Runs here (worker thread, after the
+        // other options fixes) so the cached options are reloaded once below. Never blocks launch.
+        applyBrandingBeforeLaunch(activity, instance, versionId);
         // Local accounts with a launcher skin/cape: local Yggdrasil server (before the args: it sets the UUID)
         com.craftstudio.cslauncher.authenticator.yggdrasil.LocalSkinBridge.prepare(account);
         List<String> launchArgs = getMoJsonClientArgs(account, versionInfo, gamedir);
