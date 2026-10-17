@@ -633,8 +633,9 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
     }
 
     /**
-     * Fills the launcher-side pre-game screen (version + profile line, sweeping platinum bar,
-     * gentle logo entrance). Pure launcher UI, independent of the Minecraft appearance mode.
+     * Fills the small launch status pill (version + profile, sweeping platinum line). It floats
+     * at the bottom and never blocks touches, so the controls underneath stay visible and
+     * editable while the game window starts. The crash hint only appears after 25 s.
      */
     private void brandLaunchScreen(@Nullable String version) {
         if (mLoadingScreen == null) return;
@@ -649,32 +650,40 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         final View bar = mLoadingScreen.findViewById(R.id.ls_bar);
         if (track != null && bar != null) {
             final float density = getResources().getDisplayMetrics().density;
-            final float trackWidth = 220f * density, barWidth = 84f * density;
-            android.animation.ValueAnimator sweep = android.animation.ValueAnimator.ofFloat(-barWidth, trackWidth);
-            sweep.setDuration(1400L);
+            final float barWidth = 56f * density;
+            final android.animation.ValueAnimator sweep = android.animation.ValueAnimator.ofFloat(0f, 1f);
+            sweep.setDuration(1300L);
             sweep.setRepeatCount(android.animation.ValueAnimator.INFINITE);
             sweep.setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator());
-            sweep.addUpdateListener(a -> bar.setTranslationX((Float) a.getAnimatedValue()));
+            sweep.addUpdateListener(a -> {
+                float f = (Float) a.getAnimatedValue();
+                bar.setTranslationX(-barWidth + f * (track.getWidth() + barWidth));
+            });
             track.setClipToOutline(true);
             track.setOutlineProvider(new android.view.ViewOutlineProvider() {
                 @Override
                 public void getOutline(View v, android.graphics.Outline outline) {
-                    outline.setRoundRect(0, 0, v.getWidth(), v.getHeight(), 2f * density);
+                    outline.setRoundRect(0, 0, v.getWidth(), v.getHeight(), density);
                 }
             });
             sweep.start();
             mLaunchBarAnimator = sweep;
         }
-        View tile = mLoadingScreen.findViewById(R.id.ls_logo_tile);
-        View glow = mLoadingScreen.findViewById(R.id.ls_logo_glow);
-        if (tile != null) {
-            tile.setScaleX(0.86f); tile.setScaleY(0.86f); tile.setAlpha(0f);
-            tile.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(420L)
-                    .setInterpolator(new android.view.animation.OvershootInterpolator(1.4f)).start();
+        View pill = mLoadingScreen.findViewById(R.id.ls_pill);
+        if (pill != null) {
+            pill.setAlpha(0f);
+            pill.setTranslationY(18f * getResources().getDisplayMetrics().density);
+            pill.animate().alpha(1f).translationY(0f).setDuration(360L)
+                    .setInterpolator(new android.view.animation.DecelerateInterpolator(1.8f)).start();
         }
-        if (glow != null) {
-            glow.setAlpha(0.55f);
-            glow.animate().alpha(1f).setDuration(1200L).start();
+        final View warning = mLoadingScreen.findViewById(R.id.main_loading_screen_warning);
+        if (warning != null) {
+            warning.postDelayed(() -> {
+                if (mLoadingScreen == null || warning.getVisibility() == View.VISIBLE) return;
+                warning.setAlpha(0f);
+                warning.setVisibility(View.VISIBLE);
+                warning.animate().alpha(1f).setDuration(260L).start();
+            }, 25000L);
         }
     }
 

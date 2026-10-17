@@ -20,7 +20,7 @@ Per-profile switch between the stock Minecraft look and a Craft Studio look, imp
 | options.txt editing | `game/branding/GameOptionsFile` — line-preserving, JSON-list aware, atomic save. |
 | Bundled assets | `app_cs/src/main/assets/cs_branding/` (≈1.5 MB): title, edition line, 6 panorama faces (512²), 3 button sprites, menu/list tiles, separators, `pack.png`, `splashes.txt`, `lang_overrides.json`. All derived from the launcher's own `cs_logo.png` + `minecraft_ten.ttf`. |
 | Launch hook | `GameRunner.launchGame` → `applyBrandingBeforeLaunch` (worker thread, after the other options fixes, then `MCOptionUtils.load()` refreshes the cache). Failures toast an actionable message and the game still launches with the vanilla look. A second guard, `BrandingManager.reassertBeforeExec`, runs right before the JVM starts: if any later options write dropped the entry it is put back, and the final `resourcePacks` line is written to the launcher log as `[CSBranding] …`. |
-| Launch screen | `layout/view_launch_screen.xml` (included by `activity_basemain.xml` as `main_loading_screen`) — the launcher's own pre-game screen (CS logo, "Launching Minecraft <version> • <profile>", sweeping platinum line, crash hint). Launcher UI, shown in every appearance mode, hidden by the existing `GameActivity.hideLoadingScreen()` as soon as the game window appears. |
+| Launch status pill | `layout/view_launch_screen.xml` (included by `activity_basemain.xml` as `main_loading_screen`) — a small floating pill at the bottom (CS mark, "Launching Minecraft <version> • <profile>", sweeping platinum line; crash hint only after 25 s). No scrim, no touch interception: the controls stay visible and editable while the game starts. Hidden by the existing `GameActivity.hideLoadingScreen()` as soon as the game window appears. |
 | Harness | `tools/branding-harness/` — runs the generator against real client jars. |
 
 ## 2. Version awareness (1.21 → 26.3 and beyond)
@@ -91,10 +91,9 @@ the jar's metadata is the fallback (e.g. the 1.21.1 title `blur` flag).
 **Loading screen.** The first Mojang overlay cannot be re-skinned by a pack (it is read from the
 built-in vanilla pack before packs load). Inside the game only `darkMojangStudiosBackgroundColor`
 can change it, which is what the *Dark loading screen* part does. The earlier launcher-drawn
-"loading curtain" over the game surface was removed on request; what remains on the launcher side
-is the pre-game **launch screen** (`view_launch_screen.xml`): an opaque CS-branded screen shown
-from the moment `GameActivity` starts until the game window exists, independent of the appearance
-mode.
+"loading curtain" over the game surface was removed on request, and the old full-screen "Waiting
+for a game window…" overlay is now a small non-blocking **launch status pill**
+(`view_launch_screen.xml`) so the controls can be seen and customised from the first frame.
 
 Honest limitations (resource packs simply cannot do these; a client mod would be needed, which was
 explicitly left out of scope):
@@ -144,5 +143,6 @@ work when the game is not being launched.
 6. Scoping: pick *Home screen only* → Save → launch: title/panorama are CS, buttons and option
    screens are stock, loading screen red/vanilla; `options.txt` still lists the pack. Then pick only
    *Dark loading screen*: pack entry disappears from `options.txt`, the flag is `true`.
-7. Every launch: the launcher's pre-game screen shows the CS logo and "Launching Minecraft
-   <version> • <profile>" with a moving platinum line until the game window appears.
+7. Every launch: a small pill at the bottom shows "Launching Minecraft <version> • <profile>" with a
+   moving platinum line; the controls behind it stay touchable/editable; it fades when the game
+   window appears.

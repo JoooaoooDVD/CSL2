@@ -373,10 +373,7 @@
     <string name="loading_screen_title">Game engine start ho raha hai…</string>
     <string name="loading_screen_launching">Minecraft %1$s launch ho raha hai</string>
     <string name="loading_screen_launching_profile">Minecraft %1$s launch ho raha hai \u2022 %2$s</string>
-    <string name="launch_screen_eyebrow">CRAFT STUDIO</string>
-    <string name="launch_screen_title">CS LAUNCHER PLUS</string>
-    <string name="launch_screen_footer">Yeh official Minecraft product nahi hai. Mojang ya Microsoft se approved ya juda hua nahi hai.</string>
-    <string name="loading_screen_warning">Bahut der se yahin atke ho? Game shayad crash ho gaya \u2014 in-game menu se log kholo.</string>
+    <string name="loading_screen_warning">Der lag rahi hai? Game shayad crash ho gaya \u2014 menu mein log dekho.</string>
     <string name="preference_metadata_clear">Metadata cache saaf karo</string>
     <string name="preference_metadata_clear_complete">Ho gaya. Apply karne ke liye launcher restart karo</string>
     <string name="preference_button_transparency">Buttons ki transparency</string>

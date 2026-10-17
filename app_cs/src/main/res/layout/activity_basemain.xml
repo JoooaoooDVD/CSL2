@@ -74,9 +74,8 @@
 			android:id="@+id/main_loading_screen"
 			android:layout_width="match_parent"
 			android:layout_height="match_parent"
-			android:background="@drawable/bg_ls_backdrop"
-			android:clickable="true"
-			android:focusable="true"
+			android:clickable="false"
+			android:focusable="false"
 			android:visibility="visible">
 
 			<include layout="@layout/view_launch_screen" />
