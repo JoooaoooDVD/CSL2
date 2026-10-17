@@ -45,6 +45,8 @@ public final class VirtualLanStateBundler {
         b.putString("hostName", s.hostName);
         b.putDouble("hostLatency", s.hostLatencyMs);
         b.putInt("localGamePort", s.localGamePort);
+        b.putBoolean("gameReachable", s.gameReachable);
+        b.putDouble("gameLatency", s.gameLatencyMs);
         ArrayList<Bundle> members = new ArrayList<>();
         for (VirtualLanState.Member m : s.members) {
             Bundle mb = new Bundle();
@@ -106,6 +108,7 @@ public final class VirtualLanStateBundler {
             VirtualLanState.Event.Type type = enumOf(VirtualLanState.Event.Type.class, eb.getString("type"), null);
             if (type != null) events.add(new VirtualLanState.Event(eb.getLong("seq"), type, eb.getString("arg", "")));
         }
+        sb.game(b.getBoolean("gameReachable", false), b.getDouble("gameLatency", -1));
         sb.events(events);
         ArrayList<String> stages = b.getStringArrayList("stages");
         if (stages != null) sb.stages(stages);

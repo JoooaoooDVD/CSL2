@@ -116,6 +116,10 @@ public final class VirtualLanState {
     public final String hostName;
     public final double hostLatencyMs;
     public final int localGamePort;
+    /** Guest: the Minecraft server answered a status ping THROUGH the tunnel (127.0.0.1:localGamePort) */
+    public final boolean gameReachable;
+    /** Guest: RTT of that in-tunnel status ping, -1 when unknown */
+    public final double gameLatencyMs;
 
     public final List<Member> members;
     public final List<Event> events;
@@ -130,7 +134,7 @@ public final class VirtualLanState {
         relayNames = Collections.unmodifiableList(new ArrayList<>(b.relayNames));
         worldOpen = b.worldOpen; worldName = b.worldName; motd = b.motd; versionName = b.versionName; lanPort = b.lanPort;
         proxyPort = b.proxyPort; directoryPort = b.directoryPort; playersOnline = b.playersOnline; playersMax = b.playersMax; inGame = b.inGame;
-        hostName = b.hostName; hostLatencyMs = b.hostLatencyMs; localGamePort = b.localGamePort;
+        hostName = b.hostName; hostLatencyMs = b.hostLatencyMs; localGamePort = b.localGamePort; gameReachable = b.gameReachable; gameLatencyMs = b.gameLatencyMs;
         members = Collections.unmodifiableList(new ArrayList<>(b.members));
         events = Collections.unmodifiableList(new ArrayList<>(b.events));
         stages = Collections.unmodifiableList(new ArrayList<>(b.stages));
@@ -164,6 +168,8 @@ public final class VirtualLanState {
         String hostName = "";
         double hostLatencyMs = -1;
         int localGamePort;
+        boolean gameReachable;
+        double gameLatencyMs = -1;
         List<Member> members = new ArrayList<>();
         List<Event> events = new ArrayList<>();
         List<String> stages = new ArrayList<>();
@@ -177,7 +183,7 @@ public final class VirtualLanState {
             natType = s.natType; tunnelProto = s.tunnelProto; engineVersion = s.engineVersion; relayNames = new ArrayList<>(s.relayNames);
             worldOpen = s.worldOpen; worldName = s.worldName; motd = s.motd; versionName = s.versionName; lanPort = s.lanPort;
             proxyPort = s.proxyPort; directoryPort = s.directoryPort; playersOnline = s.playersOnline; playersMax = s.playersMax; inGame = s.inGame;
-            hostName = s.hostName; hostLatencyMs = s.hostLatencyMs; localGamePort = s.localGamePort;
+            hostName = s.hostName; hostLatencyMs = s.hostLatencyMs; localGamePort = s.localGamePort; gameReachable = s.gameReachable; gameLatencyMs = s.gameLatencyMs;
             members = new ArrayList<>(s.members); events = new ArrayList<>(s.events); stages = new ArrayList<>(s.stages);
         }
 
@@ -201,6 +207,7 @@ public final class VirtualLanState {
         public Builder inGame(int v) { inGame = v; return this; }
         public Builder hostName(String v) { hostName = v == null ? "" : v; return this; }
         public Builder hostLatency(double v) { hostLatencyMs = v; return this; }
+        public Builder game(boolean reachable, double latency) { gameReachable = reachable; gameLatencyMs = latency; return this; }
         public Builder members(List<Member> v) { members = new ArrayList<>(v); return this; }
         public Builder events(List<Event> v) { events = new ArrayList<>(v); return this; }
         public Builder stages(List<String> v) { stages = new ArrayList<>(v); return this; }

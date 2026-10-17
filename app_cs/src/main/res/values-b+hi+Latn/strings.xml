@@ -953,7 +953,7 @@ Host: Minecraft start karo, pause menu se world ko LAN par open karo, phir yahan
 
 Guest: code daalo, “Connected” ka wait karo, phir Join World dabao. Host ki world Minecraft ki Multiplayer list mein [Virtual LAN] naam se dikhegi.
 
-Sabko host wala hi Minecraft version (aur wahi mods) use karna hoga.</string>
+Sabko host wala hi Minecraft version (aur wahi mods) use karna hoga.\n\nVPN permission nahi lagti: tunnel app-level aur encrypted hai, sirf Minecraft connection le jaata hai aur baaki apps ko touch nahi karta, isliye Android VPN key icon nahi dikhata. Sirf code wale dost host tak pahunch sakte hain, aur sirf game port expose hota hai.</string>
     <string name="vlan_trouble_title">Problem aa rahi hai?</string>
     <string name="vlan_trouble_body">• Connecting par atka hai: relay nodes tumhare network se reach nahi ho rahe. Internet check karo, mobile data try karo, ya Advanced mein apna relay node add karo.
 • Host nahi mila: code dobara check karo aur dekho host ka session abhi bhi live hai.
@@ -1013,6 +1013,7 @@ Virtual LAN Multiplayer → Session Join karo kholo aur yeh code daalo:
     <string name="vlan_host_unknown">Host</string>
     <string name="vlan_host_named">Host: %1$s</string>
     <string name="vlan_guest_note_waiting">Tunnel ka wait hai. Host reachable hote hi Join World unlock hoga.</string>
+    <string name="vlan_guest_note_verifying">World open hai. Check ho raha hai ki game server tunnel ke through jawab de raha hai…</string>
     <string name="vlan_guest_note_world_closed">Connected. Host ko abhi world LAN par open karni hai.</string>
     <string name="vlan_guest_note_ready">Join World host ko tumhari Multiplayer list mein add karke game launch karta hai. Direct connect fallback: right wala address use karo.</string>
     <string name="vlan_guest_note_ready_ingame">Join World host ko tumhari Multiplayer list mein add karta hai. Multiplayer kholo aur [Virtual LAN] entry dabao, ya right wale address par direct connect karo.</string>

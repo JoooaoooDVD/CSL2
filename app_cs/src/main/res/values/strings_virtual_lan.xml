@@ -41,7 +41,7 @@
 
     <!-- help -->
     <string name="vlan_help_title">How it works</string>
-    <string name="vlan_help_body">Virtual LAN puts you and your friends on one private virtual network, even on different Wi-Fi or mobile data, with no port forwarding.\n\nHost: start Minecraft, open your world to LAN from the pause menu, then create a session here and share the code.\n\nGuest: enter the code, wait for “Connected”, then tap Join World. The host\'s world appears in Minecraft\'s Multiplayer list as [Virtual LAN].\n\nEveryone must use the same Minecraft version (and the same mods) as the host.</string>
+    <string name="vlan_help_body">Virtual LAN puts you and your friends on one private virtual network, even on different Wi-Fi or mobile data, with no port forwarding.\n\nHost: start Minecraft, open your world to LAN from the pause menu, then create a session here and share the code.\n\nGuest: enter the code, wait for “Connected”, then tap Join World. The host\'s world appears in Minecraft\'s Multiplayer list as [Virtual LAN].\n\nEveryone must use the same Minecraft version (and the same mods) as the host.\n\nNo VPN permission: the tunnel is app-level and encrypted, carries only the Minecraft connection and never touches your other apps, so Android shows no VPN key icon. Only your friends with the code can reach the host, and only the game port is exposed.</string>
     <string name="vlan_trouble_title">Troubleshooting</string>
     <string name="vlan_trouble_body">• Stuck at Connecting: the relay nodes may be unreachable on your network. Check the internet connection, try mobile data, or add a relay node under Advanced.\n• Host not found: double-check the code and make sure the host\'s session is still live.\n• Connected but no world: the host must open the world to LAN; it is detected within a few seconds.\n• High latency: a relay path is in use (shown as “Relay”). A direct path is tried continuously and used when possible.\n• A battery saver may stop the tunnel in the background; keep the game or launcher open.</string>
     <string name="vlan_help_in_session">Help is on the home screen; end the session or go back to read it.</string>
@@ -107,6 +107,7 @@
     <string name="vlan_host_unknown">Host</string>
     <string name="vlan_host_named">Host: %1$s</string>
     <string name="vlan_guest_note_waiting">Waiting for the tunnel. Join World unlocks once the host is reachable.</string>
+    <string name="vlan_guest_note_verifying">World is open. Checking that the game server answers through the tunnel…</string>
     <string name="vlan_guest_note_world_closed">Connected. The host still needs to open the world to LAN.</string>
     <string name="vlan_guest_note_ready">Join World adds the host to your Multiplayer list and launches the game. Direct connect fallback: use the address on the right.</string>
     <string name="vlan_guest_note_ready_ingame">Join World adds the host to your Multiplayer list. Open Multiplayer and tap the [Virtual LAN] entry, or direct connect to the address on the right.</string>

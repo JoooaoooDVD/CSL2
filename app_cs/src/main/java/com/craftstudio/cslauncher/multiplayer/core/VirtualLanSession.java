@@ -94,6 +94,15 @@ public final class VirtualLanSession {
     private int mHostProxyPort, mHostDirectoryPort;
     private boolean mForwardsAdded;
     private boolean mJoined;
+    // guest: verification of the real game path (status ping through the tunnel)
+    private static final long GAME_PING_INTERVAL_MS = 8000;
+    private static final long GAME_PING_FAST_MS = 1500;
+    private volatile boolean mGamePingRunning;
+    private volatile boolean mGameReachable;
+    private volatile double mGameLatencyMs = -1;
+    private volatile long mGamePingAt;
+    private volatile int mGamePingFailures;
+    private boolean mGameStageLogged;
     private int mHeartbeatFailures;
     private long mLastHeartbeatOk;
     private boolean mLastWorldOpen;
@@ -665,10 +674,69 @@ public final class VirtualLanSession {
                 if (!id.equals(mMemberId)) addEvent(Event.Type.PLAYER_LEFT, name != null ? name : "");
             }
         }
+        verifyGamePath(snap.worldOpen);
+        boolean reachable = snap.worldOpen && mGameReachable;
         b.phase(phase).hostName(snap.hostName).hostVip(mHostVip).expiresAt(snap.expiresAt)
                 .world(snap.worldOpen, snap.worldName, snap.motd, snap.versionName, snap.lanPort, snap.online, snap.max)
                 .ports(mHostProxyPort, mHostDirectoryPort, mLocalGamePort).inGame(snap.inGame)
-                .hostLatency(host != null ? host.latencyMs : -1).tunnelProto(host != null ? host.tunnelProto : "")
+                .hostLatency(reachable && mGameLatencyMs >= 0 ? mGameLatencyMs : (host != null ? host.latencyMs : -1))
+                .tunnelProto(host != null ? host.tunnelProto : "")
+                .game(reachable, reachable ? mGameLatencyMs : -1)
                 .members(members);
+    }
+
+    /**
+     * The directory says the world is open; prove it from THIS device by pinging the Minecraft
+     * server through the forwarded port (guest -> tunnel -> host proxy -> game). Runs off the
+     * worker thread so heartbeats never wait on it. Join World unlocks only when this succeeds.
+     */
+    private void verifyGamePath(boolean worldOpen) {
+        if (!worldOpen) {
+            if (mGameReachable) stage("game path idle: host world closed");
+            mGameReachable = false;
+            mGameLatencyMs = -1;
+            mGamePingFailures = 0;
+            mGameStageLogged = false;
+            return;
+        }
+        long now = System.currentTimeMillis();
+        long interval = mGameReachable ? GAME_PING_INTERVAL_MS : GAME_PING_FAST_MS;
+        if (mGamePingRunning || now - mGamePingAt < interval || mLocalGamePort <= 0) return;
+        mGamePingRunning = true;
+        mGamePingAt = now;
+        final int port = mLocalGamePort;
+        Thread t = new Thread(() -> {
+            try {
+                MinecraftPinger.Status st = MinecraftPinger.ping("127.0.0.1", port, 4000);
+                mGameLatencyMs = st.latencyMs;
+                mGameReachable = true;
+                mGamePingFailures = 0;
+                if (!mGameStageLogged) {
+                    mGameStageLogged = true;
+                    mCommands.offer(() -> { stage("game server reachable through tunnel: " + st.motd + " " + st.versionName + " (" + st.latencyMs + " ms)"); republish(); });
+                } else {
+                    mCommands.offer(this::republish);
+                }
+            } catch (Exception e) {
+                int failures = ++mGamePingFailures;
+                boolean was = mGameReachable;
+                if (failures >= 2) { mGameReachable = false; mGameLatencyMs = -1; }
+                if (was && failures >= 2 || failures == 2) {
+                    mGameStageLogged = false;
+                    mCommands.offer(() -> { stage("game server not answering through tunnel (127.0.0.1:" + port + "): " + describe(e)); republish(); });
+                }
+            } finally {
+                mGamePingRunning = false;
+            }
+        }, "vlan-game-ping");
+        t.setDaemon(true);
+        t.start();
+    }
+
+    private void republish() {
+        if (mEndRequested || mState.role != Role.GUEST || !mState.phase.isConnected()) return;
+        boolean reachable = mState.worldOpen && mGameReachable;
+        publish(mState.buildUpon().game(reachable, reachable ? mGameLatencyMs : -1)
+                .hostLatency(reachable && mGameLatencyMs >= 0 ? mGameLatencyMs : mState.hostLatencyMs));
     }
 }

@@ -608,13 +608,15 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
             mGuestHost.setText(s.hostName.isEmpty() ? mContext.getString(R.string.vlan_host_unknown)
                     : mContext.getString(R.string.vlan_host_named, s.hostName));
             boolean ready = s.phase.isConnected() && s.localGamePort > 0;
-            mJoinWorld.setEnabled(ready && s.worldOpen);
-            mJoinWorld.setAlpha(ready && s.worldOpen ? 1f : 0.55f);
+            boolean playable = ready && s.worldOpen && s.gameReachable;
+            mJoinWorld.setEnabled(playable);
+            mJoinWorld.setAlpha(playable ? 1f : 0.55f);
             String address = ready ? "127.0.0.1:" + s.localGamePort : "–";
             mCopyAddress.setText(address);
             mCopyAddress.setEnabled(ready);
             if (!ready) mGuestNote.setText(R.string.vlan_guest_note_waiting);
             else if (!s.worldOpen) mGuestNote.setText(R.string.vlan_guest_note_world_closed);
+            else if (!s.gameReachable) mGuestNote.setText(R.string.vlan_guest_note_verifying);
             else mGuestNote.setText(mHost.inGame() ? R.string.vlan_guest_note_ready_ingame : R.string.vlan_guest_note_ready);
         }
 
@@ -885,7 +887,8 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
         b.append("world=").append(s.worldOpen).append(' ').append(s.worldName).append(" v=").append(s.versionName)
                 .append(" lanPort=").append(s.lanPort).append(" proxy=").append(s.proxyPort).append(" dir=").append(s.directoryPort).append('\n');
         b.append("players=").append(s.playersOnline).append('/').append(s.playersMax).append(" inGame=").append(s.inGame).append('\n');
-        b.append("host=").append(s.hostName).append(" hostLatency=").append(s.hostLatencyMs).append(" localGamePort=").append(s.localGamePort).append('\n');
+        b.append("host=").append(s.hostName).append(" hostLatency=").append(s.hostLatencyMs).append(" localGamePort=").append(s.localGamePort)
+                .append(" gameReachable=").append(s.gameReachable).append(" gameLatency=").append(s.gameLatencyMs).append('\n');
         for (VirtualLanState.Member m : s.members) {
             b.append("member ").append(m.name).append(' ').append(m.vip).append(" lat=").append(m.latencyMs).append(" direct=").append(m.direct).append('\n');
         }

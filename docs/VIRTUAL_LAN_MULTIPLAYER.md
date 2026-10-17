@@ -114,6 +114,32 @@ app_cs/src/main/java/com/craftstudio/cslauncher/multiplayer/
     └── MultiplayerMotion          animations, all gated by the launcher/system animation setting
 ```
 
+### 3.1 Architecture decision: app-level tunnel (EasyTier `--no-tun`), not `VpnService`
+
+Users sometimes expect a VPN permission prompt and the key icon. We deliberately do **not** use
+Android `VpnService`, and this is a verified technical decision, not an omission:
+
+| | `VpnService` + TUN | app-level tunnel (`--no-tun`, used) |
+|---|---|---|
+| What Minecraft needs | a TCP connection to the host's game port | same |
+| How the guest reaches it | OS routes `10.144.144.1` into a TUN fd | EasyTier listens on `127.0.0.1:<port>` and forwards through the tunnel (port-forward) |
+| Inbound on the host | packets to the TUN interface | EasyTier's smoltcp stack hands the stream to `127.0.0.1:<proxy>` (verified in `gateway/tcp_proxy.rs`: local-virtual-IP destinations are connected to loopback) |
+| Android consent | VPN prompt, key icon, "one VPN at a time": a user's real VPN (or a second launcher) is disconnected | nothing system-wide is changed, user's own VPN keeps working |
+| Scope exposed | the whole virtual subnet, all host ports unless filtered | exactly two host ports (proxy + directory), whitelisted in the engine |
+| Encryption / auth | same engine, same AES-GCM + network secret | same |
+| Failure surface | TUN routing, DNS leaks, battery, "VPN revoked" by other apps, FGS `specialUse`/`connectedDevice` rules on Android 14+ | none of that; proven by Zalith/Terracotta's `PingHostFail` history on the TUN route |
+
+The complete flow — create session → share code → join → tunnel → **Join World** (servers.dat
+entry `[Virtual LAN]` → `127.0.0.1:<local port>`) → play — needs nothing a TUN would add. The
+status *Connected* already means "a real TCP request went through the tunnel to the host" (the
+directory join), and from this change **Join World unlocks only after the guest's own Minecraft
+status ping succeeds through the tunnel** (`gameReachable`, `game server reachable through
+tunnel: <world> <version> (<rtt> ms)` stage line); the shown host latency is that real RTT.
+
+If a future requirement genuinely needs a subnet (e.g. mods opening extra UDP ports), the engine
+supports TUN and `VpnService` can be added behind the same `TunnelManager`; nothing in the UI or
+session layer assumes loopback except the guest's local game address.
+
 ### Why the service lives in the `:game` process
 
 The tunnel must never outlive the game and must never be orphaned. `GameActivity`/`GameService`
@@ -306,6 +332,12 @@ Failure lines are stage specific: `port-forward add failed: cli port-forward exi
 `directory rejected join: HTTP 401 …`, `engine died (exit 137), restart 1/3`,
 `heartbeat lost x3 (SocketTimeoutException …), reconnecting`. The failure card shows the
 specific detail under the generic reason.
+
+**Game path verification (same change):** the guest now pings the Minecraft server itself
+through `127.0.0.1:<local port>` (every 1.5 s until it answers, then every 8 s). Join World is
+disabled and the card says *"Checking that the game server answers through the tunnel…"* until
+the ping succeeds; two consecutive failures lock it again. Harness: `gameReachable=true` with
+`Raj - Survival World 1.20.1 (557 ms)` relay-only / `(4 ms)` direct, and *idle* on world close.
 
 **Relay path really carries traffic:** the harness gained a `relay` mode
 (`disable_p2p = true` on the guest, `Params.relayOnly`). Run 2026-10-17: guest
