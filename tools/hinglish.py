@@ -1091,6 +1091,15 @@ T = {
 "branding_error_write": "Is profile ke folder mein likh nahi paaye. Free storage check karke dobara try karo.",
 "branding_error_verify": "Pack likha gaya par verify nahi ho paaya. Is launch mein vanilla look use hoga.",
 "branding_applied_toast": "Minecraft ka Look update hua: %1$s",
+"bc_status_start": "Minecraft start ho raha hai…",
+"bc_status_java": "Java runtime start ho raha hai…",
+"bc_status_graphics": "Graphics taiyaar ho rahe hain…",
+"bc_status_resources": "Resources aur CS look load ho rahe hain…",
+"bc_status_textures": "Textures jod rahe hain…",
+"bc_status_sound": "Sound engine start ho raha hai…",
+"bc_status_almost": "Bas ho hi gaya…",
+"bc_status_mods": "Mods load ho rahe hain…",
+"bc_hint_tap": "Game dikhane ke liye tap karo",
 }
 
 TEMPLATE_SRC = ["strings.xml", "strings_resource_browser.xml", "strings_virtual_lan.xml", "strings_cs14.xml", "strings_cs15.xml", "strings_manager.xml",

@@ -41,6 +41,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.ViewCompat;
@@ -107,6 +108,28 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
     private ControlLayout mControlLayout;
     private HotbarView mHotbarView;
     private View mLoadingScreen;
+    /** Branded loading screen drawn over the game surface (custom appearance only). */
+    @Nullable private com.craftstudio.cslauncher.game.branding.BrandingLoadingCurtain mBrandingCurtain;
+
+    /**
+     * CS Custom Experience: cover the game surface with the launcher's own loading screen until
+     * the title screen is reached, since the game's first (Mojang) overlay cannot be re-skinned.
+     * Inserted right above the plain loading screen so the log view and drawer stay on top.
+     */
+    private void showBrandingCurtainIfNeeded(@Nullable String version) {
+        if (instance == null || mLoadingScreen == null) return;
+        if (com.craftstudio.cslauncher.game.branding.BrandingManager.modeOf(instance)
+                != com.craftstudio.cslauncher.game.branding.BrandingMode.CUSTOM) return;
+        try {
+            ViewGroup parent = (ViewGroup) mLoadingScreen.getParent();
+            if (parent == null) return;
+            int index = parent.indexOfChild(mLoadingScreen) + 1;
+            mBrandingCurtain = com.craftstudio.cslauncher.game.branding.BrandingLoadingCurtain.show(
+                    this, parent, index, instance.name, version);
+        } catch (Exception e) {
+            Log.w("CSBranding", "loading curtain not shown", e);
+        }
+    }
     private GameRenderer mGameRenderer;
 
     Instance instance;
@@ -269,6 +292,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
 
             setTitle("CS Launcher Plus (" + version + ")");
             mLaunchVersionId = version;
+            showBrandingCurtainIfNeeded(version);
 
             // Menu
             gameActionArrayAdapter = new GameMenuAdapter(this,
@@ -396,6 +420,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (mBrandingCurtain != null) mBrandingCurtain.dismiss("activity destroyed");
         sRunning = false;
         ContextExecutor.clearActivity();
     }

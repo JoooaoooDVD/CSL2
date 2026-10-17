@@ -72,6 +72,18 @@ public final class BrandingPackGenerator {
             new Mapping("button.png", GUI + "sprites/widget/button.png", true),
             new Mapping("button_highlighted.png", GUI + "sprites/widget/button_highlighted.png", true),
             new Mapping("button_disabled.png", GUI + "sprites/widget/button_disabled.png", true),
+            // Other widgets so option screens match the launcher (sliders, fields, scrollbars, checkboxes)
+            new Mapping("slider.png", GUI + "sprites/widget/slider.png", true),
+            new Mapping("slider_handle.png", GUI + "sprites/widget/slider_handle.png", true),
+            new Mapping("slider_handle_highlighted.png", GUI + "sprites/widget/slider_handle_highlighted.png", true),
+            new Mapping("text_field.png", GUI + "sprites/widget/text_field.png", true),
+            new Mapping("text_field_highlighted.png", GUI + "sprites/widget/text_field_highlighted.png", true),
+            new Mapping("scroller.png", GUI + "sprites/widget/scroller.png", true),
+            new Mapping("scroller_background.png", GUI + "sprites/widget/scroller_background.png", true),
+            new Mapping("checkbox.png", GUI + "sprites/widget/checkbox.png", false),
+            new Mapping("checkbox_highlighted.png", GUI + "sprites/widget/checkbox_highlighted.png", false),
+            new Mapping("checkbox_selected.png", GUI + "sprites/widget/checkbox_selected.png", false),
+            new Mapping("checkbox_selected_highlighted.png", GUI + "sprites/widget/checkbox_selected_highlighted.png", false),
             // Dark backgrounds for option/list screens outside a world (1.20.5+ layout)
             new Mapping("menu_background.png", GUI + "menu_background.png", false),
             new Mapping("menu_list_background.png", GUI + "menu_list_background.png", false),
@@ -193,7 +205,7 @@ public final class BrandingPackGenerator {
                     if (facts.has(metaPath)) {
                         copyZipEntry(zip, metaPath, new File(tmp, metaPath));
                         written.add(metaPath);
-                    } else if (m.packPath.contains("/sprites/widget/")) {
+                    } else if (m.packPath.contains("/sprites/widget/button")) {
                         // Button sprites must be nine-sliced; fall back to the known vanilla metadata
                         writeText(new File(tmp, metaPath), DEFAULT_NINE_SLICE);
                         written.add(metaPath);
@@ -281,12 +293,12 @@ public final class BrandingPackGenerator {
         JsonObject pack = new JsonObject();
         pack.addProperty("pack_format", facts.resourceMajor);
         if (facts.majorMinorForm) {
-            // 1.21.9+ reads min_format/max_format; pack_format stays for the legacy reader path
-            JsonArray fmt = new JsonArray();
-            fmt.add(facts.resourceMajor);
-            fmt.add(facts.resourceMinor);
-            pack.add("min_format", fmt);
-            pack.add("max_format", fmt);
+            // 1.21.9+ reads min_format/max_format. Plain ints are deliberate: the game expands an
+            // int to [major, 0] for min and [major, MAX] for max (PackFormat BOTTOM/TOP codecs),
+            // so every minor revision of this major (97.0, 97.1, ...) stays "compatible" and the
+            // pack is never dropped from options.txt as "no longer compatible".
+            pack.addProperty("min_format", facts.resourceMajor);
+            pack.addProperty("max_format", facts.resourceMajor);
         }
         JsonObject description = new JsonObject();
         description.addProperty("text", "CS Dynamic Branding");

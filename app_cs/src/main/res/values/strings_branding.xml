@@ -29,4 +29,18 @@
     <string name="branding_error_write">Could not write to this profile\'s folder. Check free storage and try again.</string>
     <string name="branding_error_verify">The pack was written but could not be verified. Vanilla look is used for this launch.</string>
     <string name="branding_applied_toast">Minecraft Appearance updated: %1$s</string>
+
+    <!-- CS loading curtain (custom appearance only) -->
+    <string name="bc_title">CRAFT STUDIO</string>
+    <string name="bc_subtitle">CS LAUNCHER PLUS</string>
+    <string name="bc_status_start">Starting Minecraft…</string>
+    <string name="bc_status_java">Starting the Java runtime…</string>
+    <string name="bc_status_graphics">Preparing graphics…</string>
+    <string name="bc_status_resources">Loading resources and the CS look…</string>
+    <string name="bc_status_textures">Stitching textures…</string>
+    <string name="bc_status_sound">Starting the sound engine…</string>
+    <string name="bc_status_almost">Almost there…</string>
+    <string name="bc_status_mods">Loading mods…</string>
+    <string name="bc_footer">%1$s  •  Minecraft %2$s</string>
+    <string name="bc_hint_tap">Tap to show the game</string>
 </resources>

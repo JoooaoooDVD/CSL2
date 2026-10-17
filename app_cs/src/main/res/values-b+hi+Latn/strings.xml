@@ -1103,4 +1103,13 @@ Virtual LAN Multiplayer → Session Join karo kholo aur yeh code daalo:
     <string name="branding_error_write">Is profile ke folder mein likh nahi paaye. Free storage check karke dobara try karo.</string>
     <string name="branding_error_verify">Pack likha gaya par verify nahi ho paaya. Is launch mein vanilla look use hoga.</string>
     <string name="branding_applied_toast">Minecraft ka Look update hua: %1$s</string>
+    <string name="bc_status_start">Minecraft start ho raha hai…</string>
+    <string name="bc_status_java">Java runtime start ho raha hai…</string>
+    <string name="bc_status_graphics">Graphics taiyaar ho rahe hain…</string>
+    <string name="bc_status_resources">Resources aur CS look load ho rahe hain…</string>
+    <string name="bc_status_textures">Textures jod rahe hain…</string>
+    <string name="bc_status_sound">Sound engine start ho raha hai…</string>
+    <string name="bc_status_almost">Bas ho hi gaya…</string>
+    <string name="bc_status_mods">Mods load ho rahe hain…</string>
+    <string name="bc_hint_tap">Game dikhane ke liye tap karo</string>
 </resources>

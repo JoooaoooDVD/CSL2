@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.craftstudio.cslauncher.Architecture;
 import com.craftstudio.cslauncher.JVersionList;
+import com.craftstudio.cslauncher.Logger;
 import com.craftstudio.cslauncher.Tools;
 import com.craftstudio.cslauncher.authenticator.accounts.Account;
 import com.craftstudio.cslauncher.game.renderer.def.Renderers;
@@ -334,6 +335,17 @@ public class GameRunner {
         activity.runOnUiThread(() -> Toast.makeText(activity, activity.getString(R.string.autoram_info_msg,LauncherPreferences.PREF_RAM_ALLOCATION), Toast.LENGTH_SHORT).show());
 
         Log.i("GameRunner", "Running with "+ launchArgs.toString());
+
+        // Last guard for the custom appearance: nothing after this point touches options.txt
+        // before Minecraft reads it, so what we log here is exactly what the game will see.
+        String brandingState = com.craftstudio.cslauncher.game.branding.BrandingManager.reassertBeforeExec(instance);
+        Log.i("CSBranding", brandingState);
+        try {
+            MCOptionUtils.load();
+            Logger.appendToLog("[CSBranding] " + brandingState);
+        } catch (Throwable ignored) {
+            // Logger native may be unavailable in exotic setups; the Log line above is enough
+        }
 
         String mainClass = versionInfo.mainClass;
 

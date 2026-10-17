@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- CS loading curtain: shown over the game surface (custom appearance only) until the title screen is reached -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/bc_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_bc_backdrop"
+    android:clickable="true"
+    android:focusable="true">
+
+    <LinearLayout
+        android:id="@+id/bc_center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <FrameLayout
+            android:layout_width="168dp"
+            android:layout_height="168dp">
+
+            <View
+                android:id="@+id/bc_glow"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_bc_logo_glow" />
+
+            <ImageView
+                android:id="@+id/bc_logo"
+                android:layout_width="112dp"
+                android:layout_height="112dp"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/bc_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="-6dp"
+            android:fontFamily="@font/minecraft_ten"
+            android:includeFontPadding="false"
+            android:letterSpacing="0.06"
+            android:text="@string/bc_title"
+            android:textColor="#F2F5FA"
+            android:textSize="26sp" />
+
+        <TextView
+            android:id="@+id/bc_subtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:letterSpacing="0.3"
+            android:text="@string/bc_subtitle"
+            android:textColor="#C6C6CE"
+            android:textSize="10.5sp"
+            android:textStyle="bold" />
+
+        <FrameLayout
+            android:id="@+id/bc_track"
+            android:layout_width="220dp"
+            android:layout_height="3dp"
+            android:layout_marginTop="26dp"
+            android:background="@drawable/bg_bc_track">
+
+            <View
+                android:id="@+id/bc_bar"
+                android:layout_width="90dp"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_bc_bar" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/bc_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/bc_status_start"
+            android:textColor="#9C9CA4"
+            android:textSize="12.5sp" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/bc_footer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="18dp"
+        android:textColor="#5E5E66"
+        android:textSize="11sp" />
+
+    <TextView
+        android:id="@+id/bc_hint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="18dp"
+        android:layout_marginBottom="18dp"
+        android:alpha="0"
+        android:text="@string/bc_hint_tap"
+        android:textColor="#5E5E66"
+        android:textSize="10.5sp" />
+</FrameLayout>

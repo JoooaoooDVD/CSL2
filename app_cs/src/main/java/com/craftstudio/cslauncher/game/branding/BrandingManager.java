@@ -307,6 +307,44 @@ public final class BrandingManager {
         return null;
     }
 
+    /**
+     * Last-moment guard, called right before the JVM is started: if the profile is on the custom
+     * experience and the pack folder is valid but some later options write dropped our entry
+     * (anything that saves the cached options after {@link #apply}), put it back. Cheap: one
+     * small file read; a write only happens when something is actually missing.
+     *
+     * @return a one-line description of the final options state for the launcher log
+     */
+    @WorkerThread
+    @NonNull
+    public static String reassertBeforeExec(@NonNull Instance instance) {
+        try {
+            File gameDir = instance.getGameDirectory();
+            File optionsFile = new File(gameDir, "options.txt");
+            if (modeOf(instance) != BrandingMode.CUSTOM) {
+                return "vanilla mode, resourcePacks=" + rawPacks(optionsFile);
+            }
+            File packDir = new File(new File(gameDir, "resourcepacks"), BrandingPack.DIR_NAME);
+            if (!BrandingPackGenerator.isOwned(packDir) || !new File(packDir, "pack.mcmeta").isFile()) {
+                return "custom mode but no valid pack at " + packDir + " (not re-asserted)";
+            }
+            boolean rewritten = activateInOptions(instance, gameDir);
+            return (rewritten ? "re-asserted pack entry, " : "pack entry present, ") + "resourcePacks=" + rawPacks(optionsFile);
+        } catch (Exception e) {
+            Log.w(TAG, "reassert failed", e);
+            return "reassert failed: " + e;
+        }
+    }
+
+    private static String rawPacks(File optionsFile) {
+        try {
+            String raw = new GameOptionsFile(optionsFile).getRaw(BrandingPack.OPT_RESOURCE_PACKS);
+            return raw == null ? "<absent>" : raw;
+        } catch (IOException e) {
+            return "<unreadable>";
+        }
+    }
+
     /** Quick, cheap state for the editor row: is the pack currently enabled in options.txt? */
     @WorkerThread
     public static boolean isPackEnabled(@NonNull Instance instance) {
