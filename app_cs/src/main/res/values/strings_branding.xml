@@ -30,17 +30,30 @@
     <string name="branding_error_verify">The pack was written but could not be verified. Vanilla look is used for this launch.</string>
     <string name="branding_applied_toast">Minecraft Appearance updated: %1$s</string>
 
-    <!-- CS loading curtain (custom appearance only) -->
-    <string name="bc_title">CRAFT STUDIO</string>
-    <string name="bc_subtitle">CS LAUNCHER PLUS</string>
-    <string name="bc_status_start">Starting Minecraft…</string>
-    <string name="bc_status_java">Starting the Java runtime…</string>
-    <string name="bc_status_graphics">Preparing graphics…</string>
-    <string name="bc_status_resources">Loading resources and the CS look…</string>
-    <string name="bc_status_textures">Stitching textures…</string>
-    <string name="bc_status_sound">Starting the sound engine…</string>
-    <string name="bc_status_almost">Almost there…</string>
-    <string name="bc_status_mods">Loading mods…</string>
-    <string name="bc_footer">%1$s  •  Minecraft %2$s</string>
-    <string name="bc_hint_tap">Tap to show the game</string>
+
+    <!-- Appearance picker: scoping of the custom look -->
+    <string name="branding_apply">Apply</string>
+    <string name="branding_scope_eyebrow">WHAT CHANGES</string>
+    <string name="branding_scope_title">Choose the parts of the custom look</string>
+    <string name="branding_scope_hint">Everything else stays exactly as Mojang ships it. Pick at least one part.</string>
+    <string name="branding_scope_count">%1$d of %2$d</string>
+    <string name="branding_preset_all">Everything</string>
+    <string name="branding_preset_menu">Home screen only</string>
+    <string name="branding_preset_custom">Custom</string>
+    <string name="branding_part_menu">Main menu</string>
+    <string name="branding_part_menu_desc">Craft Studio title, night panorama and splash lines on the home screen</string>
+    <string name="branding_part_widgets">Buttons &amp; controls</string>
+    <string name="branding_part_widgets_desc">Launcher-style pill buttons, sliders, text fields, scrollbars and checkboxes everywhere</string>
+    <string name="branding_part_screens">Menu backgrounds</string>
+    <string name="branding_part_screens_desc">Dark backdrop and separators of the options, world and server lists</string>
+    <string name="branding_part_texts">Loading texts</string>
+    <string name="branding_part_texts_desc">Craft Studio wording on the loading and connecting screens (English)</string>
+    <string name="branding_part_dark">Dark loading screen</string>
+    <string name="branding_part_dark_desc">Black Mojang Studios loading screen instead of the red one (game option)</string>
+    <string name="branding_summary_vanilla">Original Minecraft look, launcher pack disabled</string>
+    <string name="branding_summary_all">Full CS Custom Experience</string>
+    <string name="branding_summary_parts">CS look: %1$s</string>
+    <string name="branding_status_custom_parts">CS custom look \u2022 %1$s</string>
+    <string name="branding_mode_preview_vanilla">Preview of the vanilla look</string>
+    <string name="branding_mode_preview_custom">Preview of the CS custom look</string>
 </resources>

@@ -19,6 +19,7 @@ import com.google.gson.JsonParser;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.EnumSet;
 import java.util.List;
 
 /**
@@ -119,7 +120,7 @@ public final class BrandingManager {
     @WorkerThread
     private static Outcome restoreVanilla(Instance instance, File gameDir, @Nullable String versionId) {
         try {
-            boolean changed = deactivateInOptions(instance, gameDir);
+            boolean changed = writeOptions(instance, gameDir, false, false);
             if (instance.appearanceRestore != null) {
                 instance.appearanceRestore = null;
                 instance.write();
@@ -132,9 +133,18 @@ public final class BrandingManager {
         }
     }
 
+    /** The parts the profile selected for the custom experience (everything by default). */
+    @NonNull
+    public static EnumSet<BrandingPart> partsOf(@Nullable Instance instance) {
+        return BrandingPart.parse(instance == null ? null : instance.appearanceParts);
+    }
+
     @WorkerThread
     private static Outcome activateCustom(Context context, Instance instance, File gameDir, @Nullable String versionId) {
         String displayVersion = versionId;
+        EnumSet<BrandingPart> parts = partsOf(instance);
+        boolean wantPack = BrandingPart.needsPack(parts);
+        boolean wantDark = parts.contains(BrandingPart.DARK_LOADING);
         try {
             if (versionId == null || versionId.isEmpty()
                     || Instance.VERSION_LATEST_RELEASE.equals(versionId) || Instance.VERSION_LATEST_SNAPSHOT.equals(versionId)) {
@@ -147,29 +157,39 @@ public final class BrandingManager {
             displayVersion = facts.versionId;
             if (!facts.isSupported()) {
                 // Never leave a pack built for another version enabled on an unsupported one
-                deactivateInOptions(instance, gameDir);
+                writeOptions(instance, gameDir, false, false);
                 throw new BrandingException(BrandingException.Reason.UNSUPPORTED_VERSION,
                         facts.versionId + " has resource format " + facts.packFormatLabel());
             }
 
-            BrandingPackGenerator generator = new BrandingPackGenerator(new ApkAssets(context.getAssets()));
-            BrandingPackGenerator.Result result = generator.generate(jar, facts, new File(gameDir, "resourcepacks"));
+            BrandingPackGenerator.Result result = null;
+            if (wantPack) {
+                BrandingPackGenerator generator = new BrandingPackGenerator(new ApkAssets(context.getAssets()));
+                result = generator.generate(jar, facts, new File(gameDir, "resourcepacks"), parts);
+            }
 
-            boolean optionsChanged = activateInOptions(instance, gameDir);
+            boolean optionsChanged = writeOptions(instance, gameDir, wantPack, wantDark);
 
-            // Verify end state: pack folder valid + entry enabled + dark loading screen set
+            // Verify end state: pack folder valid + entry enabled (when wanted) + dark flag as selected
             GameOptionsFile check = new GameOptionsFile(new File(gameDir, "options.txt"));
-            if (!check.getList(BrandingPack.OPT_RESOURCE_PACKS).contains(BrandingPack.PACK_ENTRY)
-                    || BrandingPackGenerator.reusableFiles(result.packDir, result.stamp) == null) {
-                throw new BrandingException(BrandingException.Reason.VERIFY_FAILED, "post-activation check failed");
+            boolean packEnabled = check.getList(BrandingPack.OPT_RESOURCE_PACKS).contains(BrandingPack.PACK_ENTRY);
+            if (wantPack && (!packEnabled || BrandingPackGenerator.reusableFiles(result.packDir, result.stamp) == null)) {
+                throw new BrandingException(BrandingException.Reason.VERIFY_FAILED, "post-activation check failed (pack)");
+            }
+            if (!wantPack && packEnabled) {
+                throw new BrandingException(BrandingException.Reason.VERIFY_FAILED, "post-activation check failed (pack still enabled)");
+            }
+            if (wantDark && !"true".equals(check.getRaw(BrandingPack.OPT_DARK_LOADING))) {
+                throw new BrandingException(BrandingException.Reason.VERIFY_FAILED, "post-activation check failed (dark flag)");
             }
             Log.i(TAG, "Custom experience for '" + instance.name + "': " + facts.versionId
                     + " pack_format=" + facts.packFormatLabel()
-                    + (result.reused ? " (pack reused)" : " (pack generated: " + result.written.size() + " files, "
+                    + " parts=" + BrandingPart.serialize(parts)
+                    + (result == null ? " (no pack needed)" : result.reused ? " (pack reused)" : " (pack generated: " + result.written.size() + " files, "
                     + result.skipped.size() + " skipped, " + result.langOverrides + " lang keys)")
                     + (optionsChanged ? ", options updated" : ", options already set")
-                    + " -> " + result.packDir);
-            return new Outcome(BrandingMode.CUSTOM, true, null, null, result.reused, facts.packFormatLabel(), facts.versionId);
+                    + (result == null ? "" : " -> " + result.packDir));
+            return new Outcome(BrandingMode.CUSTOM, true, null, null, result != null && result.reused, facts.packFormatLabel(), facts.versionId);
         } catch (BrandingException e) {
             Log.w(TAG, "Custom experience not applied for '" + instance.name + "': " + e.reason + " - " + e.getMessage());
             return new Outcome(BrandingMode.CUSTOM, false, e.reason, e.getMessage(), false, null, displayVersion);
@@ -184,70 +204,33 @@ public final class BrandingManager {
     }
 
     /**
-     * Adds the pack to the END of {@code resourcePacks} (highest priority), removes it from the
-     * incompatible list and turns on the dark loading screen; remembers the previous value of
-     * that option once so Vanilla can restore it.
+     * Brings options.txt to the wanted state and nothing more:
+     * <ul>
+     *   <li>{@code wantPack}: our entry is at the END of {@code resourcePacks} (highest priority)
+     *       and not in the incompatible list; otherwise it is removed from both lists. Other
+     *       packs, their order and every other line are untouched.</li>
+     *   <li>{@code wantDark}: {@code darkMojangStudiosBackgroundColor=true}, remembering the
+     *       previous value once in the profile; otherwise that previous value is restored.</li>
+     * </ul>
      * @return true when options.txt was rewritten
      */
-    private static boolean activateInOptions(Instance instance, File gameDir) throws IOException {
-        GameOptionsFile options = new GameOptionsFile(new File(gameDir, "options.txt"));
-        boolean dirty = false;
-
-        List<String> packs = options.getList(BrandingPack.OPT_RESOURCE_PACKS);
-        if (packs.isEmpty() && !options.has(BrandingPack.OPT_RESOURCE_PACKS)) packs.add("vanilla");
-        int pos = packs.indexOf(BrandingPack.PACK_ENTRY);
-        if (pos != packs.size() - 1) {
-            while (packs.remove(BrandingPack.PACK_ENTRY)) { /* drop every stale occurrence */ }
-            packs.add(BrandingPack.PACK_ENTRY);
-            options.setList(BrandingPack.OPT_RESOURCE_PACKS, packs);
-            dirty = true;
-        }
-
-        if (options.has(BrandingPack.OPT_INCOMPATIBLE_PACKS)) {
-            List<String> incompatible = options.getList(BrandingPack.OPT_INCOMPATIBLE_PACKS);
-            if (incompatible.remove(BrandingPack.PACK_ENTRY)) {
-                options.setList(BrandingPack.OPT_INCOMPATIBLE_PACKS, incompatible);
-                dirty = true;
-            }
-        }
-
-        String dark = options.getRaw(BrandingPack.OPT_DARK_LOADING);
-        if (!"true".equals(dark)) {
-            if (instance.appearanceRestore == null) {
-                JsonObject record = new JsonObject();
-                record.addProperty("darkPresent", dark != null);
-                if (dark != null) record.addProperty("dark", dark);
-                instance.appearanceRestore = record.toString();
-                instance.write();
-            }
-            options.setRaw(BrandingPack.OPT_DARK_LOADING, "true");
-            dirty = true;
-        } else if (instance.appearanceRestore == null) {
-            // User already had the dark screen on: remember that so Vanilla keeps it
-            JsonObject record = new JsonObject();
-            record.addProperty("darkPresent", true);
-            record.addProperty("dark", "true");
-            instance.appearanceRestore = record.toString();
-            instance.write();
-        }
-
-        if (dirty) options.save();
-        return dirty;
-    }
-
-    /**
-     * Removes the pack from both pack lists and restores the dark-loading option from the
-     * profile's restore record. Other packs, their order and every other line are untouched.
-     * @return true when options.txt was rewritten
-     */
-    private static boolean deactivateInOptions(Instance instance, File gameDir) throws IOException {
+    private static boolean writeOptions(Instance instance, File gameDir, boolean wantPack, boolean wantDark) throws IOException {
         File file = new File(gameDir, "options.txt");
-        if (!file.isFile()) return false;
+        if (!file.isFile() && !wantPack && !wantDark) return false;
         GameOptionsFile options = new GameOptionsFile(file);
         boolean dirty = false;
 
-        if (options.has(BrandingPack.OPT_RESOURCE_PACKS)) {
-            List<String> packs = options.getList(BrandingPack.OPT_RESOURCE_PACKS);
+        List<String> packs = options.getList(BrandingPack.OPT_RESOURCE_PACKS);
+        if (wantPack) {
+            if (packs.isEmpty() && !options.has(BrandingPack.OPT_RESOURCE_PACKS)) packs.add("vanilla");
+            int pos = packs.indexOf(BrandingPack.PACK_ENTRY);
+            if (pos != packs.size() - 1) {
+                while (packs.remove(BrandingPack.PACK_ENTRY)) { /* drop every stale occurrence */ }
+                packs.add(BrandingPack.PACK_ENTRY);
+                options.setList(BrandingPack.OPT_RESOURCE_PACKS, packs);
+                dirty = true;
+            }
+        } else if (options.has(BrandingPack.OPT_RESOURCE_PACKS)) {
             boolean removed = false;
             while (packs.remove(BrandingPack.PACK_ENTRY)) removed = true;
             if (removed) {
@@ -262,7 +245,22 @@ public final class BrandingManager {
                 dirty = true;
             }
         }
-        if (instance.appearanceRestore != null) {
+
+        String dark = options.getRaw(BrandingPack.OPT_DARK_LOADING);
+        if (wantDark) {
+            if (instance.appearanceRestore == null) {
+                // Remember what was there exactly once so Vanilla / deselecting can restore it
+                JsonObject record = new JsonObject();
+                record.addProperty("darkPresent", dark != null);
+                if (dark != null) record.addProperty("dark", dark);
+                instance.appearanceRestore = record.toString();
+                instance.write();
+            }
+            if (!"true".equals(dark)) {
+                options.setRaw(BrandingPack.OPT_DARK_LOADING, "true");
+                dirty = true;
+            }
+        } else if (instance.appearanceRestore != null) {
             boolean present = false;
             String previous = null;
             try {
@@ -272,10 +270,9 @@ public final class BrandingManager {
             } catch (Exception e) {
                 Log.w(TAG, "Corrupted restore record for '" + instance.name + "', falling back to the game default");
             }
-            String current = options.getRaw(BrandingPack.OPT_DARK_LOADING);
             if (present && previous != null) {
-                if (!previous.equals(current)) { options.setRaw(BrandingPack.OPT_DARK_LOADING, previous); dirty = true; }
-            } else if (current != null) {
+                if (!previous.equals(dark)) { options.setRaw(BrandingPack.OPT_DARK_LOADING, previous); dirty = true; }
+            } else if (dark != null) {
                 options.remove(BrandingPack.OPT_DARK_LOADING);
                 dirty = true;
             }
@@ -324,11 +321,15 @@ public final class BrandingManager {
             if (modeOf(instance) != BrandingMode.CUSTOM) {
                 return "vanilla mode, resourcePacks=" + rawPacks(optionsFile);
             }
+            EnumSet<BrandingPart> parts = partsOf(instance);
+            if (!BrandingPart.needsPack(parts)) {
+                return "custom mode without pack parts (" + BrandingPart.serialize(parts) + "), resourcePacks=" + rawPacks(optionsFile);
+            }
             File packDir = new File(new File(gameDir, "resourcepacks"), BrandingPack.DIR_NAME);
             if (!BrandingPackGenerator.isOwned(packDir) || !new File(packDir, "pack.mcmeta").isFile()) {
                 return "custom mode but no valid pack at " + packDir + " (not re-asserted)";
             }
-            boolean rewritten = activateInOptions(instance, gameDir);
+            boolean rewritten = writeOptions(instance, gameDir, true, parts.contains(BrandingPart.DARK_LOADING));
             return (rewritten ? "re-asserted pack entry, " : "pack entry present, ") + "resourcePacks=" + rawPacks(optionsFile);
         } catch (Exception e) {
             Log.w(TAG, "reassert failed", e);

@@ -15,7 +15,7 @@ public final class BrandingPack {
     public static final String OLD_DIR_NAME = "." + DIR_NAME + ".old";
 
     /** Bump when the generator logic or the bundled branding assets change; forces a one-time rebuild. */
-    public static final int GENERATOR_REVISION = 2;
+    public static final int GENERATOR_REVISION = 3;
 
     /** First resource pack format that this generator supports (Minecraft 1.21 / 1.21.1 = 34). */
     public static final int MIN_SUPPORTED_RESOURCE_FORMAT = 34;

@@ -10,6 +10,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -47,48 +48,50 @@ public final class BrandingPackGenerator {
     private static final class Mapping {
         final String asset;       // name in the branding asset folder
         final String packPath;    // path inside the pack (== jar path it overrides)
-        final boolean copyMcmeta; // also copy the jar's <packPath>.mcmeta when present
+        final boolean copyMcmeta; // also provide <packPath>.mcmeta (bundled one first, else the jar's)
+        final BrandingPart part;  // which user-selectable part this file belongs to
 
-        Mapping(String asset, String packPath, boolean copyMcmeta) {
+        Mapping(String asset, String packPath, boolean copyMcmeta, BrandingPart part) {
             this.asset = asset;
             this.packPath = packPath;
             this.copyMcmeta = copyMcmeta;
+            this.part = part;
         }
     }
 
     private static final String GUI = "assets/minecraft/textures/gui/";
     private static final Mapping[] MAPPINGS = {
             // Main menu title + edition line (1024x256 / 512x64, same canvas as vanilla since 1.20)
-            new Mapping("minecraft.png", GUI + "title/minecraft.png", true),
-            new Mapping("edition.png", GUI + "title/edition.png", true),
+            new Mapping("minecraft.png", GUI + "title/minecraft.png", true, BrandingPart.MENU),
+            new Mapping("edition.png", GUI + "title/edition.png", true, BrandingPart.MENU),
             // Panorama cube (face order and orientation match the vanilla cube map)
-            new Mapping("panorama_0.png", GUI + "title/background/panorama_0.png", false),
-            new Mapping("panorama_1.png", GUI + "title/background/panorama_1.png", false),
-            new Mapping("panorama_2.png", GUI + "title/background/panorama_2.png", false),
-            new Mapping("panorama_3.png", GUI + "title/background/panorama_3.png", false),
-            new Mapping("panorama_4.png", GUI + "title/background/panorama_4.png", false),
-            new Mapping("panorama_5.png", GUI + "title/background/panorama_5.png", false),
+            new Mapping("panorama_0.png", GUI + "title/background/panorama_0.png", false, BrandingPart.MENU),
+            new Mapping("panorama_1.png", GUI + "title/background/panorama_1.png", false, BrandingPart.MENU),
+            new Mapping("panorama_2.png", GUI + "title/background/panorama_2.png", false, BrandingPart.MENU),
+            new Mapping("panorama_3.png", GUI + "title/background/panorama_3.png", false, BrandingPart.MENU),
+            new Mapping("panorama_4.png", GUI + "title/background/panorama_4.png", false, BrandingPart.MENU),
+            new Mapping("panorama_5.png", GUI + "title/background/panorama_5.png", false, BrandingPart.MENU),
             // Buttons: nine-slice sprites, the jar's .mcmeta is copied so slicing stays correct
-            new Mapping("button.png", GUI + "sprites/widget/button.png", true),
-            new Mapping("button_highlighted.png", GUI + "sprites/widget/button_highlighted.png", true),
-            new Mapping("button_disabled.png", GUI + "sprites/widget/button_disabled.png", true),
+            new Mapping("button.png", GUI + "sprites/widget/button.png", true, BrandingPart.WIDGETS),
+            new Mapping("button_highlighted.png", GUI + "sprites/widget/button_highlighted.png", true, BrandingPart.WIDGETS),
+            new Mapping("button_disabled.png", GUI + "sprites/widget/button_disabled.png", true, BrandingPart.WIDGETS),
             // Other widgets so option screens match the launcher (sliders, fields, scrollbars, checkboxes)
-            new Mapping("slider.png", GUI + "sprites/widget/slider.png", true),
-            new Mapping("slider_handle.png", GUI + "sprites/widget/slider_handle.png", true),
-            new Mapping("slider_handle_highlighted.png", GUI + "sprites/widget/slider_handle_highlighted.png", true),
-            new Mapping("text_field.png", GUI + "sprites/widget/text_field.png", true),
-            new Mapping("text_field_highlighted.png", GUI + "sprites/widget/text_field_highlighted.png", true),
-            new Mapping("scroller.png", GUI + "sprites/widget/scroller.png", true),
-            new Mapping("scroller_background.png", GUI + "sprites/widget/scroller_background.png", true),
-            new Mapping("checkbox.png", GUI + "sprites/widget/checkbox.png", false),
-            new Mapping("checkbox_highlighted.png", GUI + "sprites/widget/checkbox_highlighted.png", false),
-            new Mapping("checkbox_selected.png", GUI + "sprites/widget/checkbox_selected.png", false),
-            new Mapping("checkbox_selected_highlighted.png", GUI + "sprites/widget/checkbox_selected_highlighted.png", false),
+            new Mapping("slider.png", GUI + "sprites/widget/slider.png", true, BrandingPart.WIDGETS),
+            new Mapping("slider_handle.png", GUI + "sprites/widget/slider_handle.png", true, BrandingPart.WIDGETS),
+            new Mapping("slider_handle_highlighted.png", GUI + "sprites/widget/slider_handle_highlighted.png", true, BrandingPart.WIDGETS),
+            new Mapping("text_field.png", GUI + "sprites/widget/text_field.png", true, BrandingPart.WIDGETS),
+            new Mapping("text_field_highlighted.png", GUI + "sprites/widget/text_field_highlighted.png", true, BrandingPart.WIDGETS),
+            new Mapping("scroller.png", GUI + "sprites/widget/scroller.png", true, BrandingPart.WIDGETS),
+            new Mapping("scroller_background.png", GUI + "sprites/widget/scroller_background.png", true, BrandingPart.WIDGETS),
+            new Mapping("checkbox.png", GUI + "sprites/widget/checkbox.png", false, BrandingPart.WIDGETS),
+            new Mapping("checkbox_highlighted.png", GUI + "sprites/widget/checkbox_highlighted.png", false, BrandingPart.WIDGETS),
+            new Mapping("checkbox_selected.png", GUI + "sprites/widget/checkbox_selected.png", false, BrandingPart.WIDGETS),
+            new Mapping("checkbox_selected_highlighted.png", GUI + "sprites/widget/checkbox_selected_highlighted.png", false, BrandingPart.WIDGETS),
             // Dark backgrounds for option/list screens outside a world (1.20.5+ layout)
-            new Mapping("menu_background.png", GUI + "menu_background.png", false),
-            new Mapping("menu_list_background.png", GUI + "menu_list_background.png", false),
-            new Mapping("header_separator.png", GUI + "header_separator.png", false),
-            new Mapping("footer_separator.png", GUI + "footer_separator.png", false),
+            new Mapping("menu_background.png", GUI + "menu_background.png", false, BrandingPart.SCREENS),
+            new Mapping("menu_list_background.png", GUI + "menu_list_background.png", false, BrandingPart.SCREENS),
+            new Mapping("header_separator.png", GUI + "header_separator.png", false, BrandingPart.SCREENS),
+            new Mapping("footer_separator.png", GUI + "footer_separator.png", false, BrandingPart.SCREENS),
     };
     private static final String SPLASHES = "assets/minecraft/texts/splashes.txt";
     private static final String EN_US = "assets/minecraft/lang/en_us.json";
@@ -135,8 +138,9 @@ public final class BrandingPackGenerator {
     }
 
     /** Stamp identifying one exact pack output; stored in the marker and compared for reuse. */
-    public static String stampFor(ClientJarFacts facts) {
-        return "r" + BrandingPack.GENERATOR_REVISION + ":" + facts.versionId + ":" + facts.packFormatLabel();
+    public static String stampFor(ClientJarFacts facts, EnumSet<BrandingPart> parts) {
+        return "r" + BrandingPack.GENERATOR_REVISION + ":" + facts.versionId + ":" + facts.packFormatLabel()
+                + ":" + BrandingPart.stampToken(parts);
     }
 
     /**
@@ -146,6 +150,14 @@ public final class BrandingPackGenerator {
      * @param resourcepacksDir the profile's {@code resourcepacks} folder (created when missing)
      */
     public Result generate(File jar, ClientJarFacts facts, File resourcepacksDir) throws BrandingException {
+        return generate(jar, facts, resourcepacksDir, BrandingPart.all());
+    }
+
+    /**
+     * @param parts which parts to include; files of unselected parts are not written at all
+     *              (the pack is rebuilt when the selection changes: the stamp carries it)
+     */
+    public Result generate(File jar, ClientJarFacts facts, File resourcepacksDir, EnumSet<BrandingPart> parts) throws BrandingException {
         if (!facts.isSupported()) {
             throw new BrandingException(BrandingException.Reason.UNSUPPORTED_VERSION,
                     facts.versionId + " uses resource pack format " + facts.packFormatLabel()
@@ -162,7 +174,7 @@ public final class BrandingPackGenerator {
         }
 
         File packDir = new File(resourcepacksDir, BrandingPack.DIR_NAME);
-        String stamp = stampFor(facts);
+        String stamp = stampFor(facts, parts);
         List<String> reusable = reusableFiles(packDir, stamp);
         if (reusable != null) {
             return new Result(packDir, true, stamp, reusable, new ArrayList<String>(), -1);
@@ -194,6 +206,7 @@ public final class BrandingPackGenerator {
             written.add("pack.png");
             // 3. textures that exist in this jar
             for (Mapping m : MAPPINGS) {
+                if (!parts.contains(m.part)) continue;
                 if (!facts.has(m.packPath)) {
                     skipped.add(m.packPath);
                     continue;
@@ -202,25 +215,31 @@ public final class BrandingPackGenerator {
                 written.add(m.packPath);
                 if (m.copyMcmeta) {
                     String metaPath = m.packPath + ".mcmeta";
-                    if (facts.has(metaPath)) {
+                    // Bundled metadata wins (our pill widgets use larger nine-slice borders than
+                    // vanilla), then the jar's own (e.g. the 1.21.1 title "blur" flag), then the
+                    // known vanilla button slicing as a last resort.
+                    if (copyAssetIfPresent(m.asset + ".mcmeta", new File(tmp, metaPath))) {
+                        written.add(metaPath);
+                    } else if (facts.has(metaPath)) {
                         copyZipEntry(zip, metaPath, new File(tmp, metaPath));
                         written.add(metaPath);
                     } else if (m.packPath.contains("/sprites/widget/button")) {
-                        // Button sprites must be nine-sliced; fall back to the known vanilla metadata
                         writeText(new File(tmp, metaPath), DEFAULT_NINE_SLICE);
                         written.add(metaPath);
                     }
                 }
             }
             // 4. splashes (the game picks one line at random on the title screen)
-            if (facts.has(SPLASHES)) {
-                copyAsset("splashes.txt", new File(tmp, SPLASHES));
-                written.add(SPLASHES);
-            } else {
-                skipped.add(SPLASHES);
+            if (parts.contains(BrandingPart.MENU)) {
+                if (facts.has(SPLASHES)) {
+                    copyAsset("splashes.txt", new File(tmp, SPLASHES));
+                    written.add(SPLASHES);
+                } else {
+                    skipped.add(SPLASHES);
+                }
             }
             // 5. lang overrides: only keys that exist in this version's en_us.json
-            langCount = writeLangOverrides(facts, new File(tmp, EN_US));
+            langCount = parts.contains(BrandingPart.TEXTS) ? writeLangOverrides(facts, new File(tmp, EN_US)) : 0;
             if (langCount > 0) written.add(EN_US);
             // 6. ownership marker (last: a folder without it is treated as foreign/incomplete)
             writeText(new File(tmp, BrandingPack.MARKER_FILE), marker(stamp, facts, written));
@@ -351,6 +370,23 @@ public final class BrandingPackGenerator {
         if (in == null) throw new BrandingException(BrandingException.Reason.ASSET_MISSING, "bundled asset missing: " + asset);
         try {
             writeStream(in, target);
+        } finally {
+            in.close();
+        }
+    }
+
+    /** @return true when the bundled asset existed and was copied */
+    private boolean copyAssetIfPresent(String asset, File target) throws IOException {
+        InputStream in;
+        try {
+            in = mAssets.open(asset);
+        } catch (IOException e) {
+            return false;
+        }
+        if (in == null) return false;
+        try {
+            writeStream(in, target);
+            return true;
         } finally {
             in.close();
         }

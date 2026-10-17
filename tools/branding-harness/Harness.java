@@ -57,6 +57,30 @@ public class Harness {
             if (!again.reused) failures++;
             // marker must be present and listed files must exist
             for (String f : r.written) if (!new File(r.packDir, f).isFile()) { System.out.println("  MISSING " + f); failures++; }
+            // widget sprites must carry OUR nine-slice metadata (pill borders), not the vanilla copy
+            String btnMeta = BrandingPackGenerator.readTextForTest(new File(r.packDir, "assets/minecraft/textures/gui/sprites/widget/button.png.mcmeta"));
+            if (!btnMeta.contains("\"left\":10")) { System.out.println("  BUTTON MCMETA NOT OURS: " + btnMeta); failures++; }
+
+            // scoped generation: "home screen only" must rebuild (different stamp) and contain only menu files
+            EnumSet<BrandingPart> menuOnly = BrandingPart.menuOnly();
+            BrandingPackGenerator.Result scoped = gen.generate(jar, facts, packs, menuOnly);
+            boolean scopedOk = !scoped.reused && scoped.stamp.endsWith(":10000");
+            for (String f : scoped.written) {
+                if (f.contains("/sprites/widget/") || f.contains("menu_background") || f.endsWith("en_us.json")) { System.out.println("  SCOPED PACK LEAKED " + f); scopedOk = false; }
+            }
+            if (!new File(scoped.packDir, "assets/minecraft/textures/gui/title/minecraft.png").isFile()) scopedOk = false;
+            if (new File(scoped.packDir, "assets/minecraft/textures/gui/sprites/widget/button.png").isFile()) scopedOk = false;
+            System.out.println("  scoped (menu only): files=" + scoped.written.size() + " stamp=" + scoped.stamp + " ok=" + scopedOk);
+            if (!scopedOk) failures++;
+            // switching back to everything regenerates again and is then reusable
+            BrandingPackGenerator.Result back = gen.generate(jar, facts, packs, BrandingPart.all());
+            if (back.reused || !gen.generate(jar, facts, packs, BrandingPart.all()).reused) { System.out.println("  SWITCH BACK FAILED"); failures++; }
+            // dark-loading-only selection needs no pack at all
+            if (BrandingPart.needsPack(EnumSet.of(BrandingPart.DARK_LOADING))) { System.out.println("  needsPack(dark only) wrong"); failures++; }
+            if (!"menu".equals(BrandingPart.serialize(menuOnly)) || BrandingPart.serialize(BrandingPart.all()) != null
+                    || !BrandingPart.parse("bogus, ,").equals(BrandingPart.all()) || !BrandingPart.parse("widgets,menu").equals(EnumSet.of(BrandingPart.MENU, BrandingPart.WIDGETS))) {
+                System.out.println("  BrandingPart (de)serialization wrong"); failures++;
+            }
 
             // options.txt round trip
             File opts = new File(gameDir, "options.txt");

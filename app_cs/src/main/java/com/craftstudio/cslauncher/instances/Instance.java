@@ -41,6 +41,11 @@ public class Instance extends DisplayInstance {
      */
     public String appearance;
     /**
+     * Comma list of the custom-experience parts the user enabled ("menu,widgets,screens,texts,dark_loading"),
+     * null = everything. See game/branding/BrandingPart.
+     */
+    public String appearanceParts;
+    /**
      * JSON record of the options the custom experience changed (currently the dark loading
      * screen flag) so switching back to Vanilla restores exactly what was there. Null when
      * the custom experience was never activated.
@@ -64,6 +69,11 @@ public class Instance extends DisplayInstance {
         if (appearance != null) {
             String normalized = com.craftstudio.cslauncher.game.branding.BrandingMode.fromKey(appearance).key;
             appearance = normalized.equals(com.craftstudio.cslauncher.game.branding.BrandingMode.VANILLA.key) ? null : normalized;
+        }
+        if (appearanceParts != null) {
+            // Unknown tokens are dropped, an empty/garbage list means "everything" (stored as null)
+            appearanceParts = com.craftstudio.cslauncher.game.branding.BrandingPart.serialize(
+                    com.craftstudio.cslauncher.game.branding.BrandingPart.parse(appearanceParts));
         }
     }
 

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Appearance picker: one mode card (preview image + badge + title + description + check) -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_weight="1"
+    android:background="@drawable/bg_ap_mode_card"
+    android:clickable="true"
+    android:focusable="true"
+    android:orientation="vertical"
+    android:padding="8dp">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/am_preview"
+            android:layout_width="match_parent"
+            android:layout_height="96dp"
+            android:importantForAccessibility="no"
+            android:scaleType="centerCrop" />
+
+        <TextView
+            android:id="@+id/am_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|start"
+            android:layout_margin="8dp"
+            android:background="@drawable/bg_lib_badge_neutral"
+            android:letterSpacing="0.2"
+            android:paddingStart="8dp"
+            android:paddingTop="3dp"
+            android:paddingEnd="8dp"
+            android:paddingBottom="3dp"
+            android:textColor="@color/hm_text"
+            android:textSize="9.5sp"
+            android:textStyle="bold" />
+
+        <FrameLayout
+            android:id="@+id/am_check"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="top|end"
+            android:layout_margin="8dp"
+            android:background="@drawable/bg_ap_check"
+            android:padding="4dp">
+
+            <ImageView
+                android:id="@+id/am_check_icon"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_ap_check" />
+        </FrameLayout>
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/am_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="6dp"
+        android:fontFamily="@font/noto_sans_bold"
+        android:includeFontPadding="false"
+        android:textColor="@color/hm_text"
+        android:textSize="14.5sp" />
+
+    <TextView
+        android:id="@+id/am_desc"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="6dp"
+        android:layout_marginBottom="6dp"
+        android:lineSpacingExtra="1dp"
+        android:textColor="@color/hm_text_dim"
+        android:textSize="11.5sp" />
+</LinearLayout>

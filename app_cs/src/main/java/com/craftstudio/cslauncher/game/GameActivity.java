@@ -108,28 +108,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
     private ControlLayout mControlLayout;
     private HotbarView mHotbarView;
     private View mLoadingScreen;
-    /** Branded loading screen drawn over the game surface (custom appearance only). */
-    @Nullable private com.craftstudio.cslauncher.game.branding.BrandingLoadingCurtain mBrandingCurtain;
-
-    /**
-     * CS Custom Experience: cover the game surface with the launcher's own loading screen until
-     * the title screen is reached, since the game's first (Mojang) overlay cannot be re-skinned.
-     * Inserted right above the plain loading screen so the log view and drawer stay on top.
-     */
-    private void showBrandingCurtainIfNeeded(@Nullable String version) {
-        if (instance == null || mLoadingScreen == null) return;
-        if (com.craftstudio.cslauncher.game.branding.BrandingManager.modeOf(instance)
-                != com.craftstudio.cslauncher.game.branding.BrandingMode.CUSTOM) return;
-        try {
-            ViewGroup parent = (ViewGroup) mLoadingScreen.getParent();
-            if (parent == null) return;
-            int index = parent.indexOfChild(mLoadingScreen) + 1;
-            mBrandingCurtain = com.craftstudio.cslauncher.game.branding.BrandingLoadingCurtain.show(
-                    this, parent, index, instance.name, version);
-        } catch (Exception e) {
-            Log.w("CSBranding", "loading curtain not shown", e);
-        }
-    }
+    @Nullable private android.animation.ValueAnimator mLaunchBarAnimator;
     private GameRenderer mGameRenderer;
 
     Instance instance;
@@ -292,7 +271,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
 
             setTitle("CS Launcher Plus (" + version + ")");
             mLaunchVersionId = version;
-            showBrandingCurtainIfNeeded(version);
+            brandLaunchScreen(version);
 
             // Menu
             gameActionArrayAdapter = new GameMenuAdapter(this,
@@ -420,7 +399,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (mBrandingCurtain != null) mBrandingCurtain.dismiss("activity destroyed");
+        if (mLaunchBarAnimator != null) { mLaunchBarAnimator.cancel(); mLaunchBarAnimator = null; }
         sRunning = false;
         ContextExecutor.clearActivity();
     }
@@ -636,15 +615,67 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
 
     public void hideLoadingScreen(){
         if(mLoadingScreen == null) return;
-        ((TextView) mLoadingScreen.findViewById(R.id.main_loading_screen_text)).setText(getString(R.string.loading_screen_booted, PLATFORM.backendName()));
-        mLoadingScreen.animate()
+        final View screen = mLoadingScreen;
+        mLoadingScreen = null;
+        ((TextView) screen.findViewById(R.id.main_loading_screen_text)).setText(getString(R.string.loading_screen_booted, PLATFORM.backendName()));
+        if (mLaunchBarAnimator != null) {
+            mLaunchBarAnimator.cancel();
+            mLaunchBarAnimator = null;
+        }
+        screen.animate()
                 .alpha(0f)
                 .setDuration(300)
                 .withEndAction(() -> {
-                    ((ViewGroup) mLoadingScreen.getParent()).removeView(mLoadingScreen);
-                    mLoadingScreen = null;
+                    ViewGroup parent = (ViewGroup) screen.getParent();
+                    if (parent != null) parent.removeView(screen);
                 })
                 .start();
+    }
+
+    /**
+     * Fills the launcher-side pre-game screen (version + profile line, sweeping platinum bar,
+     * gentle logo entrance). Pure launcher UI, independent of the Minecraft appearance mode.
+     */
+    private void brandLaunchScreen(@Nullable String version) {
+        if (mLoadingScreen == null) return;
+        TextView status = mLoadingScreen.findViewById(R.id.main_loading_screen_text);
+        if (status != null && version != null && !version.isEmpty()) {
+            String profile = instance != null && instance.name != null ? instance.name.trim() : "";
+            status.setText(profile.isEmpty()
+                    ? getString(R.string.loading_screen_launching, version)
+                    : getString(R.string.loading_screen_launching_profile, version, profile));
+        }
+        final View track = mLoadingScreen.findViewById(R.id.ls_track);
+        final View bar = mLoadingScreen.findViewById(R.id.ls_bar);
+        if (track != null && bar != null) {
+            final float density = getResources().getDisplayMetrics().density;
+            final float trackWidth = 220f * density, barWidth = 84f * density;
+            android.animation.ValueAnimator sweep = android.animation.ValueAnimator.ofFloat(-barWidth, trackWidth);
+            sweep.setDuration(1400L);
+            sweep.setRepeatCount(android.animation.ValueAnimator.INFINITE);
+            sweep.setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator());
+            sweep.addUpdateListener(a -> bar.setTranslationX((Float) a.getAnimatedValue()));
+            track.setClipToOutline(true);
+            track.setOutlineProvider(new android.view.ViewOutlineProvider() {
+                @Override
+                public void getOutline(View v, android.graphics.Outline outline) {
+                    outline.setRoundRect(0, 0, v.getWidth(), v.getHeight(), 2f * density);
+                }
+            });
+            sweep.start();
+            mLaunchBarAnimator = sweep;
+        }
+        View tile = mLoadingScreen.findViewById(R.id.ls_logo_tile);
+        View glow = mLoadingScreen.findViewById(R.id.ls_logo_glow);
+        if (tile != null) {
+            tile.setScaleX(0.86f); tile.setScaleY(0.86f); tile.setAlpha(0f);
+            tile.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(420L)
+                    .setInterpolator(new android.view.animation.OvershootInterpolator(1.4f)).start();
+        }
+        if (glow != null) {
+            glow.setAlpha(0.55f);
+            glow.animate().alpha(1f).setDuration(1200L).start();
+        }
     }
 
     @Override

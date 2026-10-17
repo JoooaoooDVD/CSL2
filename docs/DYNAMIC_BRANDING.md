@@ -12,14 +12,15 @@ Per-profile switch between the stock Minecraft look and a Craft Studio look, imp
 
 | Piece | Path |
 |---|---|
-| Profile setting | `Instance.appearance` (`null`/`"vanilla"` or `"custom"`) and `Instance.appearanceRestore` (JSON restore record) in the profile's `instance.json` — same framework as renderer/JVM args; unknown values sanitize to vanilla. |
-| Editor UI | Profile editor row **Minecraft Appearance** (`pe_row_appearance`, phone + w600dp layouts) → `AppearancePickerDialog` (two cards, same style as the renderer picker). |
+| Profile setting | `Instance.appearance` (`null`/`"vanilla"` or `"custom"`), `Instance.appearanceParts` (comma list of the selected parts, `null` = everything) and `Instance.appearanceRestore` (JSON restore record) in the profile's `instance.json` — same framework as renderer/JVM args; unknown values sanitize to vanilla / everything. |
+| Scope model | `game/branding/BrandingPart` — `MENU` (title, panorama, splashes), `WIDGETS` (buttons, sliders, text fields, scrollbars, checkboxes), `SCREENS` (menu backgrounds + separators), `TEXTS` (en_us loading/connecting texts), `DARK_LOADING` (the options flag). Every generator mapping is tagged with one part; the pack stamp carries the selection, so changing it rebuilds the pack. |
+| Editor UI | Profile editor row **Minecraft Appearance** (`pe_row_appearance`, phone + w600dp layouts) → `AppearancePickerDialog`: two preview cards (Vanilla / CS Custom) and, for Custom, a "What changes" section with presets *Everything* / *Home screen only* / *Custom* plus one toggle row per part (at least one must stay on). Nothing is saved until **Apply** + the editor's Save. |
 | Orchestration | `game/branding/BrandingManager` (Android): resolve game dir (shared vs isolated via `Instance.getGameDirectory()`), locate jar, generate, activate, verify, restore. |
 | Generator | `game/branding/BrandingPackGenerator` + `ClientJarFacts` (pure Java, desktop-testable). |
 | options.txt editing | `game/branding/GameOptionsFile` — line-preserving, JSON-list aware, atomic save. |
 | Bundled assets | `app_cs/src/main/assets/cs_branding/` (≈1.5 MB): title, edition line, 6 panorama faces (512²), 3 button sprites, menu/list tiles, separators, `pack.png`, `splashes.txt`, `lang_overrides.json`. All derived from the launcher's own `cs_logo.png` + `minecraft_ten.ttf`. |
 | Launch hook | `GameRunner.launchGame` → `applyBrandingBeforeLaunch` (worker thread, after the other options fixes, then `MCOptionUtils.load()` refreshes the cache). Failures toast an actionable message and the game still launches with the vanilla look. A second guard, `BrandingManager.reassertBeforeExec`, runs right before the JVM starts: if any later options write dropped the entry it is put back, and the final `resourcePacks` line is written to the launcher log as `[CSBranding] …`. |
-| Loading curtain | `game/branding/BrandingLoadingCurtain` + `layout/view_branding_curtain.xml` — launcher-drawn loading screen over the game surface (custom mode only), see §4. |
+| Launch screen | `layout/view_launch_screen.xml` (included by `activity_basemain.xml` as `main_loading_screen`) — the launcher's own pre-game screen (CS logo, "Launching Minecraft <version> • <profile>", sweeping platinum line, crash hint). Launcher UI, shown in every appearance mode, hidden by the existing `GameActivity.hideLoadingScreen()` as soon as the game window appears. |
 | Harness | `tools/branding-harness/` — runs the generator against real client jars. |
 
 ## 2. Version awareness (1.21 → 26.3 and beyond)
@@ -72,26 +73,35 @@ backgrounds and separators, splash lines, several loading/connecting texts (Engl
 UI languages keep Mojang's text), pack icon. Singleplayer / Multiplayer / Realms / Options / Quit
 are untouched and keep working.
 
+**Scoping.** The user decides what the custom look replaces. *Everything* gives the full
+experience; *Home screen only* writes just the title/panorama/splash files (the pack then contains
+13 files on 1.21.1, 11 on newer versions) and leaves buttons, option screens, texts and the loading
+flag vanilla. Any mix is allowed; a selection with only *Dark loading screen* needs no pack at all —
+the launcher then removes its pack entry and only sets the option. Deselecting the dark flag
+restores the user's previous value from the restore record, exactly like switching to Vanilla.
+
+**Widgets.** The widget sprites use the launcher's pill language: `hm_field` fill, 1 px
+`hm_inner_stroke` stroke, radius 9 on the 20 px buttons/slider, radius 6 on text fields and
+checkboxes, radius 3 on slider handles, with the hover state in the pressed-card tone + platinum
+stroke and a soft glow. Because these corners are larger than vanilla's, the generator ships its
+**own** `.mcmeta` nine-slice metadata (`border` 10/9/10/10 for buttons and the slider, 7 for text
+fields, 3/3/3/4 for handles, 2 for the scroller) instead of copying the jar's; bundled metadata wins,
+the jar's metadata is the fallback (e.g. the 1.21.1 title `blur` flag).
+
 **Loading screen.** The first Mojang overlay cannot be re-skinned by a pack (it is read from the
-built-in vanilla pack before packs load). In custom mode the launcher therefore draws its own
-**CS loading curtain** over the game surface: CS logo with a breathing glow, "CRAFT STUDIO" in the
-launcher font, a sweeping platinum progress line, live status derived from the game's own log
-("Starting the Java runtime…" → "Preparing graphics…" → "Loading resources and the CS look…" →
-"Stitching textures…" → "Starting the sound engine…" → "Almost there…"), profile + version in the
-footer. It fades out 1.6 s after `Sound engine started` (the end of the first resource reload, right
-before the title screen), with fallbacks: 12 s of log silence after textures were created, a 180 s
-hard cap, a tap anywhere (hint appears after 20 s), or the activity closing. The log view and the
-in-game drawer stay above the curtain. Vanilla mode never shows it. The game itself is untouched;
-`darkMojangStudiosBackgroundColor:true` is still set so whatever peeks through is black, not red.
+built-in vanilla pack before packs load). Inside the game only `darkMojangStudiosBackgroundColor`
+can change it, which is what the *Dark loading screen* part does. The earlier launcher-drawn
+"loading curtain" over the game surface was removed on request; what remains on the launcher side
+is the pre-game **launch screen** (`view_launch_screen.xml`): an opaque CS-branded screen shown
+from the moment `GameActivity` starts until the game window exists, independent of the appearance
+mode.
 
 Honest limitations (resource packs simply cannot do these; a client mod would be needed, which was
 explicitly left out of scope):
 
 * **The very first Mojang Studios loading screen** is drawn from the built-in vanilla pack before
   any resource pack loads; inside the game only `darkMojangStudiosBackgroundColor` can change it.
-  The launcher curtain covers it visually (see above) but it still exists underneath — the curtain
-  is timing-based on log milestones, so on an unusual setup (OpenAL failing to start, a mod that
-  silences the log) it falls back to the idle/tap/hard-cap rules instead of a precise hand-off.
+  No launcher overlay is drawn over it any more.
 * Menu **layout** (button positions, extra buttons, removing the Realms button) stays vanilla.
 * The "Copyright Mojang AB" footer text stays (it is a hard-coded string).
 * Button text colour and font remain vanilla.
@@ -112,6 +122,8 @@ work when the game is not being launched.
 | A | Vanilla experience: no pack entry, previous options intact | ✅ harness (options restore byte-exact) · device pending |
 | B | Custom experience: pack generated, enabled, verified | ✅ harness (1.21.1, 1.21.11, 26.3) · device pending (visual) |
 | C | Loading screen dark option set/restored | ✅ harness · device pending |
+| C2 | Scoping: "Home screen only" rebuilds with 11–13 files and no widget/screen/lang entries; switching back to Everything regenerates; dark-only needs no pack; (de)serialization | ✅ harness |
+| C3 | Widget sprites ship the launcher-pill nine-slice metadata (not vanilla's) | ✅ harness |
 | D | Profile isolation (isolated vs shared dir) | code path via `Instance.getGameDirectory()` · device pending |
 | E | Switching back and forth | ✅ harness round trip · device pending |
 | F | Repeated launches reuse the pack | ✅ harness (second run reused) |
@@ -120,11 +132,17 @@ work when the game is not being launched.
 
 ### Device test steps
 
-1. Profile editor → **Minecraft Appearance** → *CS Custom Experience* → Save. Toast reports either
-   "active for <version>" or "prepared on first launch" (version not downloaded yet).
+1. Profile editor → **Minecraft Appearance** → *CS Custom Experience* → (optionally pick the parts)
+   → Apply → Save. Toast reports either "active for <version>" or "prepared on first launch"
+   (version not downloaded yet). The editor row shows the selected parts.
 2. Launch: logcat tag `CSBranding` shows `Custom experience … pack generated/reused … options updated`.
 3. In game: Options → Resource Packs shows "CS Dynamic Branding" selected (top of the list); title
    screen shows the Craft Studio logo + night panorama; buttons dark; loading screen black.
 4. Switch to *Vanilla Experience* → Save → launch: stock menu; `options.txt` no longer lists
    `file/CS-Dynamic-Branding`; `darkMojangStudiosBackgroundColor` back to its earlier value/absent.
 5. Try a 1.20.x profile with Custom: toast "needs Minecraft 1.21 or newer", game launches vanilla.
+6. Scoping: pick *Home screen only* → Save → launch: title/panorama are CS, buttons and option
+   screens are stock, loading screen red/vanilla; `options.txt` still lists the pack. Then pick only
+   *Dark loading screen*: pack entry disappears from `options.txt`, the flag is `true`.
+7. Every launch: the launcher's pre-game screen shows the CS logo and "Launching Minecraft
+   <version> • <profile>" with a moving platinum line until the game window appears.

@@ -86,6 +86,8 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
             com.craftstudio.cslauncher.game.branding.BrandingMode.VANILLA;
     private com.craftstudio.cslauncher.game.branding.BrandingMode mSavedAppearance = mAppearance;
     private boolean mAppearancePackEnabled;
+    private java.util.EnumSet<com.craftstudio.cslauncher.game.branding.BrandingPart> mAppearanceParts = com.craftstudio.cslauncher.game.branding.BrandingPart.all();
+    private String mSavedAppearanceParts;
     private final List<Runtime> mRuntimes = new ArrayList<>();
     private int mRuntimeIndex;
     private List<String> mRenderNames = new ArrayList<>();
@@ -274,6 +276,8 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
         mSharedData = instance.sharedData;
         mAppearance = com.craftstudio.cslauncher.game.branding.BrandingManager.modeOf(instance);
         mSavedAppearance = mAppearance;
+        mAppearanceParts = com.craftstudio.cslauncher.game.branding.BrandingManager.partsOf(instance);
+        mSavedAppearanceParts = com.craftstudio.cslauncher.game.branding.BrandingPart.serialize(mAppearanceParts);
         mAppearancePackEnabled = false;
         // Cheap options.txt peek for the row status; off the UI thread
         final Instance peeked = instance;
@@ -509,9 +513,10 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
     }
 
     private void showAppearanceDialog() {
-        new com.kdt.mcgui.AppearancePickerDialog(requireContext(), mAppearance, mode -> {
-            if (mode == mAppearance) return;
+        new com.kdt.mcgui.AppearancePickerDialog(requireContext(), mAppearance, mAppearanceParts, (mode, parts) -> {
+            if (mode == mAppearance && parts.equals(mAppearanceParts)) return;
             mAppearance = mode;
+            mAppearanceParts = parts;
             if (mAppearanceValue != null) ProfileEditorMotion.valueChanged(mAppearanceValue, appearanceLabel());
         }).show();
     }
@@ -520,8 +525,13 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
         if (mAppearance == com.craftstudio.cslauncher.game.branding.BrandingMode.VANILLA) {
             return getString(R.string.branding_status_vanilla);
         }
-        boolean active = mAppearancePackEnabled && mSavedAppearance == mAppearance;
-        return getString(active ? R.string.branding_status_custom_enabled : R.string.branding_status_custom_pending);
+        boolean unchanged = mSavedAppearance == mAppearance
+                && java.util.Objects.equals(mSavedAppearanceParts, com.craftstudio.cslauncher.game.branding.BrandingPart.serialize(mAppearanceParts));
+        boolean full = mAppearanceParts.containsAll(com.craftstudio.cslauncher.game.branding.BrandingPart.all());
+        if (!unchanged) return getString(R.string.branding_status_custom_pending);
+        if (full) return getString(mAppearancePackEnabled ? R.string.branding_status_custom_enabled : R.string.branding_status_custom_pending);
+        return getString(R.string.branding_status_custom_parts,
+                com.kdt.mcgui.AppearancePickerDialog.partNames(requireContext(), mAppearanceParts));
     }
 
     /**
@@ -795,8 +805,11 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
         mInstance.controlLayout = mControlLayout == null || mControlLayout.isEmpty() ? null : mControlLayout;
         mInstance.jvmArgs = mJvmArgs == null || mJvmArgs.trim().isEmpty() ? null : mJvmArgs.trim();
         mInstance.sharedData = mSharedData;
-        boolean appearanceChanged = mAppearance != com.craftstudio.cslauncher.game.branding.BrandingManager.modeOf(mInstance);
+        String newParts = com.craftstudio.cslauncher.game.branding.BrandingPart.serialize(mAppearanceParts);
+        boolean appearanceChanged = mAppearance != com.craftstudio.cslauncher.game.branding.BrandingManager.modeOf(mInstance)
+                || !java.util.Objects.equals(newParts, mInstance.appearanceParts);
         mInstance.appearance = mAppearance == com.craftstudio.cslauncher.game.branding.BrandingMode.VANILLA ? null : mAppearance.key;
+        mInstance.appearanceParts = newParts;
 
         Runtime runtime = mRuntimeIndex >= 0 && mRuntimeIndex < mRuntimes.size() ? mRuntimes.get(mRuntimeIndex) : null;
         mInstance.selectedRuntime = runtime == null || runtime.name.equals("<Default>") || runtime.versionString == null
@@ -831,6 +844,7 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
 
             if (iconChanged) InstanceIconProvider.dropIcon(mInstance);
             mSavedAppearance = mAppearance;
+            mSavedAppearanceParts = newParts;
             applyAppearanceAfterSave(mInstance, appearanceChanged);
             return true;
         } catch (Exception e) {

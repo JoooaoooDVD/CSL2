@@ -645,9 +645,14 @@
     <string name="preference_show_memory_warning_title">Show memory warning dialog</string>
     <string name="preference_show_memory_warning_summary">If enabled, displays the warning dialog that is shown during game launch if the amount of free memory is less than allocated to the game</string>
     <string name="option_do_not_show_again">Don\'t show again</string>
-    <string name="loading_screen_title">Waiting for a game window to appear…</string>
+    <string name="loading_screen_title">Starting the game engine…</string>
+    <string name="loading_screen_launching">Launching Minecraft %1$s</string>
+    <string name="loading_screen_launching_profile">Launching Minecraft %1$s \u2022 %2$s</string>
+    <string name="launch_screen_eyebrow">CRAFT STUDIO</string>
+    <string name="launch_screen_title">CS LAUNCHER PLUS</string>
+    <string name="launch_screen_footer">Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.</string>
     <string name="loading_screen_booted">Ready - running on %1$s!</string>
-    <string name="loading_screen_warning">If you are stuck here, the game might have crashed</string>
+    <string name="loading_screen_warning">Stuck here for long? The game may have crashed \u2014 open the log from the in-game menu.</string>
     <string name="preference_metadata_clear">Clear metadata cache</string>
     <string name="preference_metadata_clear_summary">Removes all strings metadata cache and forces a rebuild. Use this if the launcher can\'t see new game or modloader versions</string>
     <string name="preference_metadata_clear_fail">Failed to remove cache files</string>
