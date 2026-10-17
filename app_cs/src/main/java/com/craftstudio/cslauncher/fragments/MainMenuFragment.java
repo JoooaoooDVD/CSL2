@@ -343,6 +343,9 @@ public class MainMenuFragment extends Fragment {
             // Touch controls customization: its own activity, the dock keeps the current tab
             startActivity(new android.content.Intent(requireContext(), com.craftstudio.cslauncher.CustomControlsActivity.class));
             return true;
+        } else if (navId == R.id.nav_multiplayer) {
+            openPane(com.craftstudio.cslauncher.multiplayer.ui.VirtualLanFragment.class,
+                    com.craftstudio.cslauncher.multiplayer.ui.VirtualLanFragment.TAG, null);
         } else if (navId == R.id.nav_logs) {
             openPane(LogsFragment.class, LogsFragment.TAG, null);
         } else {
@@ -373,6 +376,7 @@ public class MainMenuFragment extends Fragment {
         }
         String top = manager.getBackStackEntryAt(count - 1).getName();
         if (LogsFragment.TAG.equals(top)) setActiveNav(R.id.nav_logs);
+        else if (com.craftstudio.cslauncher.multiplayer.ui.VirtualLanFragment.TAG.equals(top)) setActiveNav(R.id.nav_multiplayer);
         else if (top != null && (top.startsWith(ModsSearchFragment.TAG) || ModInstallFragment.TAG.equals(top)))
             setActiveNav(R.id.mod_store_button);
         else if (top != null && top.startsWith(ManageModsFragment.TAG))

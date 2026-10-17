@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Big Create / Join action cards on the home screen -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android" android:exitFadeDuration="140">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/vl_card_raised" />
+            <corners android:radius="@dimen/vl_card_radius" />
+            <stroke android:width="1dp" android:color="@color/vl_field_focus" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/vl_card" />
+            <corners android:radius="@dimen/vl_card_radius" />
+            <stroke android:width="1dp" android:color="@color/vl_tile_stroke" />
+        </shape>
+    </item>
+</selector>

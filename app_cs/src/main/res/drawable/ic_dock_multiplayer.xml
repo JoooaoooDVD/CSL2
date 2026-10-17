@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Virtual LAN Multiplayer: three nodes on a network -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="22dp" android:height="22dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path android:strokeColor="?attr/colorOnSurface" android:strokeWidth="1.8" android:fillColor="#00000000" android:strokeLineCap="round" android:strokeLineJoin="round"
+        android:pathData="M9,3H15V8H9ZM2,16H8V21H2ZM16,16H22V21H16ZM12,8V12M5,16V12H19V12V16" />
+</vector>

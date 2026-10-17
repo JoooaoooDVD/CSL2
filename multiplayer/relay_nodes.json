@@ -1,0 +1,13 @@
+{
+  "_comment": "Virtual LAN Multiplayer relay/bootstrap nodes. Fetched by the launcher (RelayNodes.REMOTE_LIST_URL) at most every 6 h and merged with the built-in list, so nodes can be rotated without an app update. Only public EasyTier node URIs belong here - never secrets. Keep the list short: the launcher probes these and connects to the best MAX_NODES of them.",
+  "updated": "2026-10-17",
+  "nodes": [
+    { "uri": "tcp://225284.xyz:11010",          "name": "Haibo (Shanghai Telecom)",  "region": "CN", "relay": true },
+    { "uri": "udp://us01.225284.xyz:11010",     "name": "Haibo (United States)",     "region": "US", "relay": true },
+    { "uri": "tcp://183.230.36.171:11010",      "name": "Murphy (Chongqing Mobile)", "region": "CN", "relay": true },
+    { "uri": "tcp://easytier.weiai.org.cn:11010","name": "Weiai (Xiamen Telecom)",   "region": "CN", "relay": true },
+    { "uri": "tcp://161.33.207.13:51010",       "name": "Community (Japan)",         "region": "JP", "relay": true },
+    { "uri": "tcp://et.sumnight.top:11010",     "name": "Sumnight (Shanghai BGP)",   "region": "CN", "relay": false },
+    { "uri": "udp://et.basd1.de:11010",         "name": "Basd1 (Zaozhuang BGP)",     "region": "CN", "relay": true }
+  ]
+}

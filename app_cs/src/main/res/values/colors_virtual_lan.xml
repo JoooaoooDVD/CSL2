@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Virtual LAN Multiplayer palette: obsidian / charcoal surfaces, platinum accents -->
+<resources>
+    <color name="vl_scrim">#C2000000</color>
+    <color name="vl_sheet">#FF0E0E11</color>
+    <color name="vl_sheet_stroke">#FF2E2E35</color>
+    <color name="vl_card">#FF17171B</color>
+    <color name="vl_card_stroke">#FF27272E</color>
+    <color name="vl_card_raised">#FF1E1E24</color>
+    <color name="vl_tile">#FF26262D</color>
+    <color name="vl_tile_stroke">#FF3B3B44</color>
+    <color name="vl_field">#FF121216</color>
+    <color name="vl_field_stroke">#FF30303A</color>
+    <color name="vl_field_focus">#FF8E93A0</color>
+    <color name="vl_text">#FFF3F5F9</color>
+    <color name="vl_text_dim">#FF9CA3AF</color>
+    <color name="vl_text_faint">#FF676D78</color>
+    <color name="vl_platinum">#FFE6E8EE</color>
+    <color name="vl_platinum_text">#FF0E0E11</color>
+    <color name="vl_platinum_pressed">#FFC9CDD6</color>
+    <color name="vl_divider">#FF24242B</color>
+    <color name="vl_ok">#FF5FD38D</color>
+    <color name="vl_ok_bg">#1F5FD38D</color>
+    <color name="vl_warn">#FFF2C14E</color>
+    <color name="vl_warn_bg">#1FF2C14E</color>
+    <color name="vl_bad">#FFF07A7A</color>
+    <color name="vl_bad_bg">#1FF07A7A</color>
+    <color name="vl_info">#FF8FB7F5</color>
+    <color name="vl_info_bg">#1F8FB7F5</color>
+    <color name="vl_neutral">#FF9CA3AF</color>
+    <color name="vl_neutral_bg">#1F9CA3AF</color>
+    <color name="vl_code">#FFFFFFFF</color>
+</resources>

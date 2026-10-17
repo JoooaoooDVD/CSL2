@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One connected player on the host screen -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="6dp"
+    android:background="@drawable/bg_vl_row"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="10dp"
+    android:paddingTop="8dp"
+    android:paddingEnd="6dp"
+    android:paddingBottom="8dp">
+
+    <ImageView
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:background="@drawable/bg_vl_round_btn"
+        android:contentDescription="@null"
+        android:padding="6dp"
+        android:src="@drawable/ic_vl_player" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/vl_member_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-medium"
+            android:singleLine="true"
+            android:textColor="@color/vl_text"
+            android:textSize="13.5sp"
+            tools:text="Priya" />
+
+        <TextView
+            android:id="@+id/vl_member_sub"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:textColor="@color/vl_text_dim"
+            android:textSize="11.5sp"
+            tools:text="10.144.144.2 · direct · 38 ms" />
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/vl_member_kick"
+        android:layout_width="@dimen/vl_round_btn"
+        android:layout_height="@dimen/vl_round_btn"
+        android:background="@drawable/bg_vl_round_btn"
+        android:contentDescription="@string/vlan_kick"
+        android:padding="8dp"
+        android:src="@drawable/ic_vl_kick"
+        android:tint="@color/vl_bad" />
+</LinearLayout>

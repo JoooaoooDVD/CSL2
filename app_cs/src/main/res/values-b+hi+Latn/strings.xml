@@ -913,4 +913,158 @@
     <string name="rb_replace_message">%1$s is profile mein pehle se hai. Download ki hui copy se replace karein?</string>
     <string name="rb_keep">Purani rakho</string>
     <string name="rb_toast_installed">%1$s install ho gaya. In-game options menu se enable karo.</string>
+    <string name="vlan_menu_entry">Virtual LAN Multiplayer</string>
+    <string name="vlan_nav">Multiplayer</string>
+    <string name="vlan_eyebrow">Multiplayer</string>
+    <string name="vlan_title">Virtual LAN</string>
+    <string name="vlan_help">Madad</string>
+    <string name="vlan_close">Band karo</string>
+    <string name="vlan_back">Peeche</string>
+    <string name="vlan_create_session">Session Banao</string>
+    <string name="vlan_create_hint">Apni LAN world doston ke liye kahin se bhi host karo</string>
+    <string name="vlan_join_session">Session Join karo</string>
+    <string name="vlan_join_hint">Dost ka code daalo</string>
+    <string name="vlan_enter_code">Host se mila session code</string>
+    <string name="vlan_join">Join</string>
+    <string name="vlan_code_invalid">Yeh valid session code nahi hai. Isme 12 letters/digits hote hain, jaise 7K3M-QW9P-XY2Z.</string>
+    <string name="vlan_recent">Recent sessions</string>
+    <string name="vlan_recent_empty">Jo sessions tum host ya join karoge, woh yahan dikhenge.</string>
+    <string name="vlan_recent_hosted">Host kiya</string>
+    <string name="vlan_recent_joined">Join kiya</string>
+    <string name="vlan_recent_joined_from">Join kiya · %1$s</string>
+    <string name="vlan_clear">Saaf karo</string>
+    <string name="vlan_forget">Hatao</string>
+    <string name="vlan_rejoin">Dobara Join</string>
+    <string name="vlan_copy">Copy</string>
+    <string name="vlan_display_name">Session mein tumhara naam</string>
+    <string name="vlan_display_name_hint">Doosre players ko dikhega</string>
+    <string name="vlan_advanced">Advanced</string>
+    <string name="vlan_relays_label">Custom relay nodes (optional, ek line mein ek)</string>
+    <string name="vlan_relays_note">Relay nodes strict NAT ke peeche tunnel milane mein madad karte hain. Launcher mein public community nodes pehle se hain; sabse reliable connection ke liye apna node add karo (Madad dekho).</string>
+    <string name="vlan_unsupported">Is device ka processor type tunnel engine support nahi karta (ARM 32/64 ya x86_64 chahiye).</string>
+    <string name="vlan_time_now">abhi</string>
+    <string name="vlan_time_minutes">%1$d min pehle</string>
+    <string name="vlan_time_hours">%1$d ghante pehle</string>
+    <string name="vlan_time_days">%1$d din pehle</string>
+    <string name="vlan_help_title">Yeh kaise kaam karta hai</string>
+    <string name="vlan_help_body">Virtual LAN tumhe aur tumhare doston ko ek private virtual network par le aata hai, alag Wi-Fi ya mobile data par bhi, bina port forwarding ke.
+
+Host: Minecraft start karo, pause menu se world ko LAN par open karo, phir yahan session banao aur code share karo.
+
+Guest: code daalo, “Connected” ka wait karo, phir Join World dabao. Host ki world Minecraft ki Multiplayer list mein [Virtual LAN] naam se dikhegi.
+
+Sabko host wala hi Minecraft version (aur wahi mods) use karna hoga.</string>
+    <string name="vlan_trouble_title">Problem aa rahi hai?</string>
+    <string name="vlan_trouble_body">• Connecting par atka hai: relay nodes tumhare network se reach nahi ho rahe. Internet check karo, mobile data try karo, ya Advanced mein apna relay node add karo.
+• Host nahi mila: code dobara check karo aur dekho host ka session abhi bhi live hai.
+• Connected hai par world nahi: host ko world LAN par open karni hogi; kuch seconds mein detect ho jaati hai.
+• Latency zyada hai: relay path use ho raha hai (“Relay” dikhega). Direct path lagataar try hota hai aur milte hi use hota hai.
+• Battery saver background mein tunnel rok sakta hai; game ya launcher khula rakho.</string>
+    <string name="vlan_help_in_session">Madad home screen par hai; session khatam karo ya peeche jao.</string>
+    <string name="vlan_session_code">Session code</string>
+    <string name="vlan_copy_code">Code copy karo</string>
+    <string name="vlan_share_invite">Invitation share karo</string>
+    <string name="vlan_invite_text">%1$s ne tumhe CS Launcher Plus par Minecraft LAN world mein invite kiya hai.
+Virtual LAN Multiplayer → Session Join karo kholo aur yeh code daalo:
+%2$s</string>
+    <string name="vlan_copied_code">Session code copy ho gaya</string>
+    <string name="vlan_copied_address">Address copy ho gaya</string>
+    <string name="vlan_copied_diagnostics">Diagnostics clipboard mein copy ho gaye</string>
+    <string name="vlan_end_session">Session Khatam karo</string>
+    <string name="vlan_disconnect">Disconnect</string>
+    <string name="vlan_connection">Connection</string>
+    <string name="vlan_activity">Activity</string>
+    <string name="vlan_phase_idle">Idle</string>
+    <string name="vlan_phase_starting">Shuru ho raha hai</string>
+    <string name="vlan_phase_connecting">Connect ho raha hai</string>
+    <string name="vlan_phase_discovering">Peers dhoond rahe hain</string>
+    <string name="vlan_phase_establishing">Tunnel ban raha hai</string>
+    <string name="vlan_phase_connected_direct">Direct connected</string>
+    <string name="vlan_phase_connected_relay">Relay se connected</string>
+    <string name="vlan_phase_live">Session live hai</string>
+    <string name="vlan_phase_live_relay">Session live hai (relay)</string>
+    <string name="vlan_phase_reconnecting">Dobara connect ho raha hai</string>
+    <string name="vlan_phase_failed">Connection fail ho gaya</string>
+    <string name="vlan_detail_starting">Tunnel engine start ho raha hai…</string>
+    <string name="vlan_detail_host_discovering">Relay network se jud rahe hain taaki dost tumhe dhoond sakein…</string>
+    <string name="vlan_detail_guest_discovering">Virtual network par host ko dhoond rahe hain…</string>
+    <string name="vlan_detail_establishing">Host tak secure raasta khul raha hai…</string>
+    <string name="vlan_detail_host_live_empty">Code share karo. Players connect hote hi yahan dikhenge.</string>
+    <string name="vlan_detail_host_live">%1$d player(s) tumhare session se jude hain.</string>
+    <string name="vlan_detail_guest_ready">Host ki world reachable hai. Join World dabao.</string>
+    <string name="vlan_detail_guest_no_world">Tunnel ready hai. Host ke world LAN par open karne ka wait hai.</string>
+    <string name="vlan_detail_reconnecting">Host tak raasta toot gaya; dobara bana rahe hain…</string>
+    <string name="vlan_world_none">Abhi koi LAN world nahi</string>
+    <string name="vlan_world_unnamed">LAN world</string>
+    <string name="vlan_world_lan_port">LAN port %1$d</string>
+    <string name="vlan_world_sub_host_closed">“Open to LAN” ka wait hai</string>
+    <string name="vlan_world_sub_guest_closed">Host ne abhi world open nahi ki</string>
+    <string name="vlan_world_note_host_open">Tumhari world virtual network par share ho rahi hai. Naye port par dobara khologe to guests apne aap update ho jaayenge.</string>
+    <string name="vlan_world_note_host_closed">Minecraft mein: pause menu → Open to LAN. Port apne aap detect hota hai, koi setting nahi chahiye.</string>
+    <string name="vlan_world_note_guest_open">Minecraft ki Multiplayer screen se join karo; entry host ke port ke saath sync rehti hai.</string>
+    <string name="vlan_world_note_guest_closed">Host world kholega to yahan turant pata chal jaayega.</string>
+    <string name="vlan_stat_players">Players</string>
+    <string name="vlan_stat_lan_port">LAN port</string>
+    <string name="vlan_stat_virtual_ip">Virtual IP</string>
+    <string name="vlan_stat_host_ip">Host IP</string>
+    <string name="vlan_stat_latency">Latency</string>
+    <string name="vlan_stat_relay_latency">Relay ping</string>
+    <string name="vlan_stat_relays">Relays</string>
+    <string name="vlan_host_unknown">Host</string>
+    <string name="vlan_host_named">Host: %1$s</string>
+    <string name="vlan_guest_note_waiting">Tunnel ka wait hai. Host reachable hote hi Join World unlock hoga.</string>
+    <string name="vlan_guest_note_world_closed">Connected. Host ko abhi world LAN par open karni hai.</string>
+    <string name="vlan_guest_note_ready">Join World host ko tumhari Multiplayer list mein add karke game launch karta hai. Direct connect fallback: right wala address use karo.</string>
+    <string name="vlan_guest_note_ready_ingame">Join World host ko tumhari Multiplayer list mein add karta hai. Multiplayer kholo aur [Virtual LAN] entry dabao, ya right wale address par direct connect karo.</string>
+    <string name="vlan_join_world">World Join karo</string>
+    <string name="vlan_join_world_ingame_toast">Multiplayer mein add ho gaya. Multiplayer → [Virtual LAN] entry kholo.</string>
+    <string name="vlan_join_world_launch_toast">Multiplayer mein add ho gaya. Minecraft launch ho raha hai…</string>
+    <string name="vlan_servers_dat_failed">Server list update nahi ho payi. Dikhaye gaye address se Direct Connect karo.</string>
+    <string name="vlan_conn_relay_names">Relay: %1$s</string>
+    <string name="vlan_conn_in_game">%1$d game mein</string>
+    <string name="vlan_conn_note_pending">Tunnel ready hote hi connection details dikhenge.</string>
+    <string name="vlan_players_count">Players · %1$d</string>
+    <string name="vlan_members_empty">Abhi tak koi join nahi hua.</string>
+    <string name="vlan_member_connecting">connect ho raha hai…</string>
+    <string name="vlan_kick">Player hatao</string>
+    <string name="vlan_event_joined">%1$s aaya</string>
+    <string name="vlan_event_left">%1$s chala gaya</string>
+    <string name="vlan_event_world_opened">World port %1$s par khuli</string>
+    <string name="vlan_event_world_closed">World band ho gayi</string>
+    <string name="vlan_event_path_direct">Direct path ban gaya</string>
+    <string name="vlan_event_path_relay">Relay path use ho raha hai</string>
+    <string name="vlan_event_reconnecting">Connection toota, dobara connect ho raha hai</string>
+    <string name="vlan_event_recovered">Connection wapas aa gaya</string>
+    <string name="vlan_result_ended">Session khatam</string>
+    <string name="vlan_result_failed">Connection fail ho gaya</string>
+    <string name="vlan_try_again">Dobara try karo</string>
+    <string name="vlan_back_home">Peeche</string>
+    <string name="vlan_reason_engine_failed">Tunnel engine start nahi ho paya.</string>
+    <string name="vlan_reason_engine_crashed">Tunnel engine achanak band ho gaya aur restart nahi ho paya.</string>
+    <string name="vlan_reason_no_network">Internet connection nahi hai.</string>
+    <string name="vlan_reason_no_relay">Koi bhi relay node reach nahi hua, isliye peers ek doosre ko dhoond nahi sakte.</string>
+    <string name="vlan_reason_relay_lost">Relay network se connection toot gaya aur wapas nahi aaya.</string>
+    <string name="vlan_reason_host_not_found">Is code ka koi host nahi mila. Code check karo aur dekho host ka session abhi bhi chal raha hai.</string>
+    <string name="vlan_reason_host_unreachable">Host mila par uske tak raasta nahi ban paya.</string>
+    <string name="vlan_reason_host_lost">Host ne jawab dena band kar diya.</string>
+    <string name="vlan_reason_host_ended">Host ne session khatam kar diya.</string>
+    <string name="vlan_reason_kicked">Host ne tumhe session se hata diya.</string>
+    <string name="vlan_reason_expired">Session apni maximum duration tak pahunch gaya.</string>
+    <string name="vlan_reason_left_host">Tumne session khatam kiya.</string>
+    <string name="vlan_reason_left_guest">Tum disconnect ho gaye.</string>
+    <string name="vlan_reason_game_closed">Game band ho gaya, isliye session khatam ho gaya.</string>
+    <string name="vlan_reason_port_busy">Ek zaroori local port koi aur app use kar raha hai.</string>
+    <string name="vlan_reason_internal">Session ke andar kuch galat ho gaya.</string>
+    <string name="vlan_tips_network">• Internet connection check karo
+• Kuch networks (school, office, kuch ISP) peer-to-peer traffic block karte hain: mobile data try karo
+• Pakka raaste ke liye Advanced mein apna relay node add karo</string>
+    <string name="vlan_tips_host_not_found">• Code mein 12 letters/digits hote hain; 0 aur O, 1 aur I use nahi hote
+• Join karte waqt host ka session live hona chahiye
+• Dono ke paas working relay nodes hone chahiye (Madad dekho)</string>
+    <string name="vlan_tips_host_lost">• Shayad host ne game band kiya ya connection gaya
+• Host se apni session screen check karne ko bolo, phir usi code se dobara join karo</string>
+    <string name="vlan_tips_engine">• Launcher restart karke dobara try karo
+• Dekho koi aur VPN ya tunnel app local ports block to nahi kar raha
+• Baar baar ho to Diagnostics copy karke Discord par share karo</string>
+    <string name="vlan_notif_hosting">%1$s host ho raha hai · %2$d player(s)</string>
 </resources>

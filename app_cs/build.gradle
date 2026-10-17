@@ -169,6 +169,8 @@ android {
     packagingOptions {
         jniLibs {
             useLegacyPackaging = true
+            // Virtual LAN tunnel engine: prebuilt static executables, must not be stripped
+            keepDebugSymbols += ['**/libeasytier_core.so', '**/libeasytier_cli.so']
         }
         pickFirst '**/libbytehook.so'
     }

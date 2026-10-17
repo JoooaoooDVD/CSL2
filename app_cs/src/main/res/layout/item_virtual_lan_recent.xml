@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One recent session row on the home screen -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="6dp"
+    android:background="@drawable/bg_vl_row"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="12dp"
+    android:paddingTop="8dp"
+    android:paddingEnd="6dp"
+    android:paddingBottom="8dp">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/vl_recent_code"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:letterSpacing="0.1"
+            android:textColor="@color/vl_text"
+            android:textSize="13.5sp"
+            tools:text="7K3M-QW9P-XY2Z" />
+
+        <TextView
+            android:id="@+id/vl_recent_sub"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:textColor="@color/vl_text_dim"
+            android:textSize="11.5sp"
+            tools:text="Joined · Raj · Survival World" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/vl_recent_action"
+        android:layout_width="wrap_content"
+        android:layout_height="32dp"
+        android:background="@drawable/bg_vl_btn_ghost"
+        android:gravity="center"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:textColor="@color/vl_text"
+        android:textSize="12.5sp"
+        tools:text="Rejoin" />
+
+    <ImageView
+        android:id="@+id/vl_recent_delete"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginStart="4dp"
+        android:contentDescription="@string/vlan_forget"
+        android:padding="7dp"
+        android:src="@drawable/ic_vl_trash"
+        android:tint="@color/vl_text_faint" />
+</LinearLayout>

@@ -116,6 +116,17 @@
                     android:tooltipText="@string/home_nav_manager" />
 
                 <ImageButton
+                    android:id="@+id/nav_multiplayer"
+                    android:layout_width="@dimen/top_dock_item_width"
+                    android:layout_height="@dimen/top_dock_item_height"
+                    android:background="@drawable/bg_top_dock_item"
+                    android:contentDescription="@string/vlan_nav"
+                    android:padding="8dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_dock_multiplayer"
+                    android:tooltipText="@string/vlan_nav" />
+
+                <ImageButton
                     android:id="@+id/nav_controls"
                     android:layout_width="@dimen/top_dock_item_width"
                     android:layout_height="@dimen/top_dock_item_height"

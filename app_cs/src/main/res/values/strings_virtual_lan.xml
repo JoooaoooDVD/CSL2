@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Virtual LAN Multiplayer -->
+<resources>
+    <string name="vlan_menu_entry">Virtual LAN Multiplayer</string>
+    <string name="vlan_nav">Multiplayer</string>
+    <string name="vlan_eyebrow">Multiplayer</string>
+    <string name="vlan_title">Virtual LAN</string>
+    <string name="vlan_help">Help</string>
+    <string name="vlan_close">Close</string>
+    <string name="vlan_back">Back</string>
+
+    <!-- home -->
+    <string name="vlan_create_session">Create Session</string>
+    <string name="vlan_create_hint">Host your LAN world for friends anywhere</string>
+    <string name="vlan_join_session">Join Session</string>
+    <string name="vlan_join_hint">Enter a friend\'s code</string>
+    <string name="vlan_enter_code">Session code from the host</string>
+    <string name="vlan_code_hint">XXXX-XXXX-XXXX</string>
+    <string name="vlan_join">Join</string>
+    <string name="vlan_code_invalid">That is not a valid session code. It has 12 letters/digits, like 7K3M-QW9P-XY2Z.</string>
+    <string name="vlan_recent">Recent sessions</string>
+    <string name="vlan_recent_empty">Sessions you host or join will show up here.</string>
+    <string name="vlan_recent_hosted">Hosted</string>
+    <string name="vlan_recent_joined">Joined</string>
+    <string name="vlan_recent_joined_from">Joined · %1$s</string>
+    <string name="vlan_clear">Clear</string>
+    <string name="vlan_forget">Forget</string>
+    <string name="vlan_rejoin">Rejoin</string>
+    <string name="vlan_copy">Copy</string>
+    <string name="vlan_display_name">Your name in the session</string>
+    <string name="vlan_display_name_hint">Shown to other players</string>
+    <string name="vlan_advanced">Advanced</string>
+    <string name="vlan_relays_label">Custom relay nodes (optional, one per line)</string>
+    <string name="vlan_relays_hint">tcp://my-vps.example.com:11010</string>
+    <string name="vlan_relays_note">Relay nodes help the tunnel meet behind strict NAT. The launcher ships with public community nodes; add your own for the most reliable connection (see Help).</string>
+    <string name="vlan_unsupported">This device\'s processor type is not supported by the tunnel engine (needs ARM 32/64 or x86_64).</string>
+    <string name="vlan_time_now">just now</string>
+    <string name="vlan_time_minutes">%1$d min ago</string>
+    <string name="vlan_time_hours">%1$d h ago</string>
+    <string name="vlan_time_days">%1$d d ago</string>
+
+    <!-- help -->
+    <string name="vlan_help_title">How it works</string>
+    <string name="vlan_help_body">Virtual LAN puts you and your friends on one private virtual network, even on different Wi-Fi or mobile data, with no port forwarding.\n\nHost: start Minecraft, open your world to LAN from the pause menu, then create a session here and share the code.\n\nGuest: enter the code, wait for “Connected”, then tap Join World. The host\'s world appears in Minecraft\'s Multiplayer list as [Virtual LAN].\n\nEveryone must use the same Minecraft version (and the same mods) as the host.</string>
+    <string name="vlan_trouble_title">Troubleshooting</string>
+    <string name="vlan_trouble_body">• Stuck at Connecting: the relay nodes may be unreachable on your network. Check the internet connection, try mobile data, or add a relay node under Advanced.\n• Host not found: double-check the code and make sure the host\'s session is still live.\n• Connected but no world: the host must open the world to LAN; it is detected within a few seconds.\n• High latency: a relay path is in use (shown as “Relay”). A direct path is tried continuously and used when possible.\n• A battery saver may stop the tunnel in the background; keep the game or launcher open.</string>
+    <string name="vlan_help_in_session">Help is on the home screen; end the session or go back to read it.</string>
+
+    <!-- session -->
+    <string name="vlan_role_host">HOST</string>
+    <string name="vlan_role_guest">GUEST</string>
+    <string name="vlan_session_code">Session code</string>
+    <string name="vlan_copy_code">Copy code</string>
+    <string name="vlan_share_invite">Share invitation</string>
+    <string name="vlan_invite_text">%1$s invited you to a Minecraft LAN world on CS Launcher Plus.\nOpen Virtual LAN Multiplayer → Join Session and enter this code:\n%2$s</string>
+    <string name="vlan_copied_code">Session code copied</string>
+    <string name="vlan_copied_address">Address copied</string>
+    <string name="vlan_copied_diagnostics">Diagnostics copied to clipboard</string>
+    <string name="vlan_end_session">End Session</string>
+    <string name="vlan_disconnect">Disconnect</string>
+    <string name="vlan_diagnostics">Diagnostics</string>
+    <string name="vlan_connection">Connection</string>
+    <string name="vlan_activity">Activity</string>
+
+    <string name="vlan_phase_idle">Idle</string>
+    <string name="vlan_phase_starting">Starting</string>
+    <string name="vlan_phase_connecting">Connecting</string>
+    <string name="vlan_phase_discovering">Discovering peers</string>
+    <string name="vlan_phase_establishing">Establishing tunnel</string>
+    <string name="vlan_phase_connected_direct">Connected directly</string>
+    <string name="vlan_phase_connected_relay">Connected through relay</string>
+    <string name="vlan_phase_live">Session live</string>
+    <string name="vlan_phase_live_relay">Session live (relay)</string>
+    <string name="vlan_phase_reconnecting">Reconnecting</string>
+    <string name="vlan_phase_failed">Connection failed</string>
+
+    <string name="vlan_detail_starting">Starting the tunnel engine…</string>
+    <string name="vlan_detail_host_discovering">Reaching the relay network so friends can find you…</string>
+    <string name="vlan_detail_guest_discovering">Looking for the host on the virtual network…</string>
+    <string name="vlan_detail_establishing">Opening a secure path to the host…</string>
+    <string name="vlan_detail_host_live_empty">Share the code. Players appear here as they connect.</string>
+    <string name="vlan_detail_host_live">%1$d player(s) connected to your session.</string>
+    <string name="vlan_detail_guest_ready">The host\'s world is reachable. Tap Join World.</string>
+    <string name="vlan_detail_guest_no_world">Tunnel is up. Waiting for the host to open a world to LAN.</string>
+    <string name="vlan_detail_reconnecting">The path to the host was lost; re-establishing…</string>
+
+    <string name="vlan_world_none">No LAN world yet</string>
+    <string name="vlan_world_unnamed">LAN world</string>
+    <string name="vlan_world_open">OPEN</string>
+    <string name="vlan_world_closed">CLOSED</string>
+    <string name="vlan_world_lan_port">LAN port %1$d</string>
+    <string name="vlan_world_sub_host_closed">Waiting for “Open to LAN”</string>
+    <string name="vlan_world_sub_guest_closed">The host has not opened a world</string>
+    <string name="vlan_world_note_host_open">Your world is shared on the virtual network. If you reopen it on a new port, guests are updated automatically.</string>
+    <string name="vlan_world_note_host_closed">In Minecraft: pause menu → Open to LAN. The port is detected automatically, no settings needed.</string>
+    <string name="vlan_world_note_guest_open">Join from Minecraft\'s Multiplayer screen; the entry is kept in sync with the host\'s port.</string>
+    <string name="vlan_world_note_guest_closed">You will be notified here as soon as the host opens a world.</string>
+    <string name="vlan_stat_players">Players</string>
+    <string name="vlan_stat_lan_port">LAN port</string>
+    <string name="vlan_stat_virtual_ip">Virtual IP</string>
+    <string name="vlan_stat_host_ip">Host IP</string>
+    <string name="vlan_stat_latency">Latency</string>
+    <string name="vlan_stat_relay_latency">Relay ping</string>
+    <string name="vlan_stat_relays">Relays</string>
+    <string name="vlan_stat_nat">NAT</string>
+
+    <string name="vlan_host_unknown">Host</string>
+    <string name="vlan_host_named">Host: %1$s</string>
+    <string name="vlan_guest_note_waiting">Waiting for the tunnel. Join World unlocks once the host is reachable.</string>
+    <string name="vlan_guest_note_world_closed">Connected. The host still needs to open the world to LAN.</string>
+    <string name="vlan_guest_note_ready">Join World adds the host to your Multiplayer list and launches the game. Direct connect fallback: use the address on the right.</string>
+    <string name="vlan_guest_note_ready_ingame">Join World adds the host to your Multiplayer list. Open Multiplayer and tap the [Virtual LAN] entry, or direct connect to the address on the right.</string>
+    <string name="vlan_join_world">Join World</string>
+    <string name="vlan_join_world_ingame_toast">Added to Multiplayer. Open Multiplayer → [Virtual LAN] entry.</string>
+    <string name="vlan_join_world_launch_toast">Added to Multiplayer. Launching Minecraft…</string>
+    <string name="vlan_servers_dat_failed">Could not update the server list. Use Direct Connect with the shown address.</string>
+
+    <string name="vlan_path_direct">DIRECT</string>
+    <string name="vlan_path_relay">RELAY</string>
+    <string name="vlan_path_reconnecting">RECONNECTING</string>
+    <string name="vlan_path_pending">PENDING</string>
+    <string name="vlan_conn_relay_names">Relay: %1$s</string>
+    <string name="vlan_conn_engine">engine %1$s</string>
+    <string name="vlan_conn_in_game">%1$d in game</string>
+    <string name="vlan_conn_note_pending">Connection details appear once the tunnel is up.</string>
+
+    <string name="vlan_players_count">Players · %1$d</string>
+    <string name="vlan_members_empty">Nobody has joined yet.</string>
+    <string name="vlan_member_direct">direct</string>
+    <string name="vlan_member_relay">relay</string>
+    <string name="vlan_member_connecting">connecting…</string>
+    <string name="vlan_kick">Remove player</string>
+
+    <string name="vlan_event_joined">%1$s joined</string>
+    <string name="vlan_event_left">%1$s left</string>
+    <string name="vlan_event_world_opened">World opened on port %1$s</string>
+    <string name="vlan_event_world_closed">World closed</string>
+    <string name="vlan_event_path_direct">Direct path established</string>
+    <string name="vlan_event_path_relay">Using relay path</string>
+    <string name="vlan_event_reconnecting">Connection lost, reconnecting</string>
+    <string name="vlan_event_recovered">Connection recovered</string>
+
+    <!-- result -->
+    <string name="vlan_result_ended">Session ended</string>
+    <string name="vlan_result_failed">Connection failed</string>
+    <string name="vlan_try_again">Try again</string>
+    <string name="vlan_back_home">Back</string>
+    <string name="vlan_reason_engine_failed">The tunnel engine could not start.</string>
+    <string name="vlan_reason_engine_crashed">The tunnel engine stopped unexpectedly and could not be restarted.</string>
+    <string name="vlan_reason_no_network">No internet connection.</string>
+    <string name="vlan_reason_no_relay">None of the relay nodes could be reached, so peers cannot find each other.</string>
+    <string name="vlan_reason_relay_lost">The connection to the relay network was lost and did not come back.</string>
+    <string name="vlan_reason_host_not_found">No host with this code was found. Check the code and that the host\'s session is still running.</string>
+    <string name="vlan_reason_host_unreachable">The host was found but a path to it could not be established.</string>
+    <string name="vlan_reason_host_lost">The host stopped responding.</string>
+    <string name="vlan_reason_host_ended">The host ended the session.</string>
+    <string name="vlan_reason_kicked">The host removed you from the session.</string>
+    <string name="vlan_reason_expired">The session reached its maximum duration.</string>
+    <string name="vlan_reason_left_host">You ended the session.</string>
+    <string name="vlan_reason_left_guest">You disconnected.</string>
+    <string name="vlan_reason_game_closed">The game was closed, so the session ended.</string>
+    <string name="vlan_reason_port_busy">A required local port is in use by another app.</string>
+    <string name="vlan_reason_internal">Something went wrong inside the session.</string>
+    <string name="vlan_tips_network">• Check your internet connection\n• Some networks (schools, offices, some ISPs) block peer-to-peer traffic: try mobile data\n• Add your own relay node under Advanced for a guaranteed path</string>
+    <string name="vlan_tips_host_not_found">• Codes have 12 letters/digits; 0 and O, 1 and I are not used\n• The host must keep the session live while you join\n• Both of you need working relay nodes (see Help)</string>
+    <string name="vlan_tips_host_lost">• The host may have closed the game or lost connection\n• Ask the host to check their session screen, then rejoin with the same code</string>
+    <string name="vlan_tips_engine">• Restart the launcher and try again\n• Make sure no other VPN or tunnel app is blocking local ports\n• Copy Diagnostics and share it on Discord if it keeps happening</string>
+
+    <!-- notification -->
+    <string name="vlan_notif_hosting">Hosting %1$s · %2$d player(s)</string>
+</resources>

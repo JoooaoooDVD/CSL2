@@ -22,6 +22,9 @@
         android:maxSdkVersion="28" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Virtual LAN host: receive Minecraft's own LAN announcement multicast on Wi-Fi -->
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
@@ -152,6 +155,14 @@
             android:foregroundServiceType="specialUse">
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="This application is intended to run a 3rd-party piece of software which cannot be managed using the activity's saved instance state. This service is used for background persistence of this piece of software."/>
+        </service>
+        <!-- Virtual LAN Multiplayer: owns the peer-to-peer tunnel for a session. Runs in the game
+             process so the tunnel's lifetime is tied to the game's and no orphan tunnel can remain. -->
+        <service android:name=".multiplayer.VirtualLanService" android:process=":game"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Keeps a user-started virtual LAN tunnel alive so friends can play a Minecraft LAN world together across networks while the game runs; the user ends it from the launcher or the notification."/>
         </service>
     </application>
     <queries>

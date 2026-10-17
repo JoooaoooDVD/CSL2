@@ -1,0 +1,1122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Virtual LAN Multiplayer panel. Shared by the launcher screen (VirtualLanFragment) and the
+     in-game popup (VirtualLanPopup); VirtualLanPanel drives it. Three screens live in vl_screens:
+     home (create / join / recent), session (live status) and result (ended / failed). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/vl_panel"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <!-- ───────── header ───────── -->
+    <LinearLayout
+        android:id="@+id/vl_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/vl_back"
+            android:layout_width="@dimen/vl_round_btn"
+            android:layout_height="@dimen/vl_round_btn"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/bg_vl_round_btn"
+            android:contentDescription="@string/vlan_back"
+            android:padding="8dp"
+            android:src="@drawable/ic_vl_back"
+            android:visibility="gone" />
+
+        <ImageView
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="@drawable/bg_vl_tile"
+            android:contentDescription="@null"
+            android:padding="8dp"
+            android:src="@drawable/ic_vl_lan" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/vl_eyebrow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.3"
+                android:text="@string/vlan_eyebrow"
+                android:textAllCaps="true"
+                android:textColor="@color/vl_text_dim"
+                android:textSize="10.5sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/vl_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:text="@string/vlan_title"
+                android:textColor="@color/vl_text"
+                android:textSize="19sp" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/vl_help"
+            android:layout_width="@dimen/vl_round_btn"
+            android:layout_height="@dimen/vl_round_btn"
+            android:background="@drawable/bg_vl_round_btn"
+            android:contentDescription="@string/vlan_help"
+            android:padding="8dp"
+            android:src="@drawable/ic_vl_help" />
+
+        <ImageView
+            android:id="@+id/vl_close"
+            android:layout_width="@dimen/vl_round_btn"
+            android:layout_height="@dimen/vl_round_btn"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_vl_round_btn"
+            android:contentDescription="@string/vlan_close"
+            android:padding="9dp"
+            android:src="@drawable/ic_vl_close"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <ScrollView
+        android:id="@+id/vl_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="10dp"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        android:scrollbars="none">
+
+        <FrameLayout
+            android:id="@+id/vl_screens"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- ═══════════ HOME ═══════════ -->
+            <LinearLayout
+                android:id="@+id/vl_home"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- device without the engine (x86 32-bit) -->
+                <LinearLayout
+                    android:id="@+id/vl_unsupported"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/vl_gap"
+                    android:background="@drawable/bg_vl_card"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="@dimen/vl_card_pad"
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_vl_alert"
+                        android:tint="@color/vl_warn" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:text="@string/vlan_unsupported"
+                        android:textColor="@color/vl_text_dim"
+                        android:textSize="12.5sp" />
+                </LinearLayout>
+
+                <!-- Create / Join action cards -->
+                <LinearLayout
+                    android:id="@+id/vl_actions"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:id="@+id/vl_action_create"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginEnd="5dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_vl_action"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:orientation="vertical"
+                        android:padding="@dimen/vl_card_pad">
+
+                        <ImageView
+                            android:layout_width="@dimen/vl_action_icon"
+                            android:layout_height="@dimen/vl_action_icon"
+                            android:background="@drawable/bg_vl_btn_primary"
+                            android:contentDescription="@null"
+                            android:padding="11dp"
+                            android:src="@drawable/ic_vl_plus"
+                            android:tint="@color/vl_platinum_text" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="@string/vlan_create_session"
+                            android:textColor="@color/vl_text"
+                            android:textSize="15sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="3dp"
+                            android:text="@string/vlan_create_hint"
+                            android:textColor="@color/vl_text_dim"
+                            android:textSize="11.5sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/vl_action_join"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginStart="5dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_vl_action"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:orientation="vertical"
+                        android:padding="@dimen/vl_card_pad">
+
+                        <ImageView
+                            android:layout_width="@dimen/vl_action_icon"
+                            android:layout_height="@dimen/vl_action_icon"
+                            android:background="@drawable/bg_vl_tile"
+                            android:contentDescription="@null"
+                            android:padding="11dp"
+                            android:src="@drawable/ic_vl_link" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="@string/vlan_join_session"
+                            android:textColor="@color/vl_text"
+                            android:textSize="15sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="3dp"
+                            android:text="@string/vlan_join_hint"
+                            android:textColor="@color/vl_text_dim"
+                            android:textSize="11.5sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Join box (expands under the cards) -->
+                <LinearLayout
+                    android:id="@+id/vl_join_box"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/vl_gap"
+                    android:background="@drawable/bg_vl_card_raised"
+                    android:orientation="vertical"
+                    android:padding="@dimen/vl_card_pad"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/vlan_enter_code"
+                        android:textColor="@color/vl_text_dim"
+                        android:textSize="12sp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <EditText
+                            android:id="@+id/vl_code_input"
+                            android:layout_width="0dp"
+                            android:layout_height="@dimen/vl_field_height"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_vl_field"
+                            android:digits="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjklmnpqrstuvwxyz23456789-"
+                            android:fontFamily="monospace"
+                            android:hint="@string/vlan_code_hint"
+                            android:imeOptions="actionGo"
+                            android:importantForAutofill="no"
+                            android:inputType="textVisiblePassword|textCapCharacters|textNoSuggestions"
+                            android:letterSpacing="0.12"
+                            android:maxLength="14"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:singleLine="true"
+                            android:textColor="@color/vl_code"
+                            android:textColorHint="@color/vl_text_faint"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:id="@+id/vl_join_go"
+                            android:layout_width="wrap_content"
+                            android:layout_height="@dimen/vl_field_height"
+                            android:layout_marginStart="8dp"
+                            android:background="@drawable/bg_vl_btn_primary"
+                            android:fontFamily="sans-serif-medium"
+                            android:gravity="center"
+                            android:minWidth="84dp"
+                            android:paddingStart="16dp"
+                            android:paddingEnd="16dp"
+                            android:text="@string/vlan_join"
+                            android:textColor="@color/vl_platinum_text"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/vl_code_error"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="@string/vlan_code_invalid"
+                        android:textColor="@color/vl_bad"
+                        android:textSize="11.5sp"
+                        android:visibility="gone" />
+                </LinearLayout>
+
+                <!-- Recent sessions -->
+                <LinearLayout
+                    android:id="@+id/vl_recent_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/vl_gap"
+                    android:background="@drawable/bg_vl_card"
+                    android:orientation="vertical"
+                    android:padding="@dimen/vl_card_pad">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_vl_history"
+                            android:tint="@color/vl_text_dim" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:layout_weight="1"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="@string/vlan_recent"
+                            android:textColor="@color/vl_text"
+                            android:textSize="13.5sp" />
+
+                        <TextView
+                            android:id="@+id/vl_recent_clear"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:padding="4dp"
+                            android:text="@string/vlan_clear"
+                            android:textColor="@color/vl_text_dim"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/vl_recent_list"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="vertical" />
+
+                    <TextView
+                        android:id="@+id/vl_recent_empty"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="@string/vlan_recent_empty"
+                        android:textColor="@color/vl_text_faint"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <!-- Settings: name + relays -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/vl_gap"
+                    android:background="@drawable/bg_vl_card"
+                    android:orientation="vertical"
+                    android:padding="@dimen/vl_card_pad">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_vl_player"
+                            android:tint="@color/vl_text_dim" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:layout_weight="1"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="@string/vlan_display_name"
+                            android:textColor="@color/vl_text"
+                            android:textSize="13.5sp" />
+
+                        <TextView
+                            android:id="@+id/vl_advanced_toggle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:padding="4dp"
+                            android:text="@string/vlan_advanced"
+                            android:textColor="@color/vl_text_dim"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <EditText
+                        android:id="@+id/vl_name_input"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/vl_field_height"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_vl_field"
+                        android:hint="@string/vlan_display_name_hint"
+                        android:imeOptions="actionDone"
+                        android:importantForAutofill="no"
+                        android:inputType="textPersonName|textNoSuggestions"
+                        android:maxLength="24"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp"
+                        android:singleLine="true"
+                        android:textColor="@color/vl_text"
+                        android:textColorHint="@color/vl_text_faint"
+                        android:textSize="14sp" />
+
+                    <LinearLayout
+                        android:id="@+id/vl_advanced_box"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="vertical"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/vlan_relays_label"
+                            android:textColor="@color/vl_text_dim"
+                            android:textSize="12sp" />
+
+                        <EditText
+                            android:id="@+id/vl_relay_input"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:background="@drawable/bg_vl_field"
+                            android:fontFamily="monospace"
+                            android:gravity="top"
+                            android:hint="@string/vlan_relays_hint"
+                            android:importantForAutofill="no"
+                            android:inputType="textMultiLine|textNoSuggestions|textUri"
+                            android:minLines="2"
+                            android:maxLines="4"
+                            android:padding="12dp"
+                            android:textColor="@color/vl_text"
+                            android:textColorHint="@color/vl_text_faint"
+                            android:textSize="12.5sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:text="@string/vlan_relays_note"
+                            android:textColor="@color/vl_text_faint"
+                            android:textSize="11.5sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Help / troubleshooting -->
+                <LinearLayout
+                    android:id="@+id/vl_help_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/vl_gap"
+                    android:background="@drawable/bg_vl_card"
+                    android:orientation="vertical"
+                    android:padding="@dimen/vl_card_pad"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif-medium"
+                        android:text="@string/vlan_help_title"
+                        android:textColor="@color/vl_text"
+                        android:textSize="13.5sp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:lineSpacingExtra="3dp"
+                        android:text="@string/vlan_help_body"
+                        android:textColor="@color/vl_text_dim"
+                        android:textSize="12.5sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:fontFamily="sans-serif-medium"
+                        android:text="@string/vlan_trouble_title"
+                        android:textColor="@color/vl_text"
+                        android:textSize="13.5sp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:lineSpacingExtra="3dp"
+                        android:text="@string/vlan_trouble_body"
+                        android:textColor="@color/vl_text_dim"
+                        android:textSize="12.5sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ═══════════ SESSION ═══════════ -->
+            <LinearLayout
+                android:id="@+id/vl_session"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <!-- status hero -->
+                <LinearLayout
+                    android:id="@+id/vl_hero"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_vl_card_raised"
+                    android:orientation="vertical"
+                    android:padding="@dimen/vl_card_pad">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <View
+                            android:id="@+id/vl_status_dot"
+                            android:layout_width="@dimen/vl_dot"
+                            android:layout_height="@dimen/vl_dot"
+                            android:background="@drawable/bg_vl_dot" />
+
+                        <TextView
+                            android:id="@+id/vl_status_title"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:layout_weight="1"
+                            android:fontFamily="sans-serif-medium"
+                            android:textColor="@color/vl_text"
+                            android:textSize="16sp"
+                            tools:text="Connecting" />
+
+                        <TextView
+                            android:id="@+id/vl_role_pill"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_vl_pill"
+                            android:paddingStart="9dp"
+                            android:paddingTop="3dp"
+                            android:paddingEnd="9dp"
+                            android:paddingBottom="3dp"
+                            android:textColor="@color/vl_text_dim"
+                            android:textSize="10.5sp"
+                            android:textStyle="bold"
+                            tools:text="HOST" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/vl_status_detail"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:textColor="@color/vl_text_dim"
+                        android:textSize="12.5sp"
+                        tools:text="Looking for the host on the virtual network" />
+
+                    <!-- thin indeterminate bar while transitioning -->
+                    <FrameLayout
+                        android:id="@+id/vl_progress_track"
+                        android:layout_width="match_parent"
+                        android:layout_height="3dp"
+                        android:layout_marginTop="12dp"
+                        android:background="@color/vl_divider">
+
+                        <View
+                            android:id="@+id/vl_progress_bar"
+                            android:layout_width="72dp"
+                            android:layout_height="match_parent"
+                            android:background="@drawable/bg_vl_progress" />
+                    </FrameLayout>
+
+                    <!-- session code -->
+                    <LinearLayout
+                        android:id="@+id/vl_code_row"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_vl_code"
+                            android:orientation="vertical"
+                            android:paddingStart="14dp"
+                            android:paddingTop="8dp"
+                            android:paddingEnd="14dp"
+                            android:paddingBottom="8dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:letterSpacing="0.25"
+                                android:text="@string/vlan_session_code"
+                                android:textAllCaps="true"
+                                android:textColor="@color/vl_text_faint"
+                                android:textSize="9.5sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/vl_code_text"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="monospace"
+                                android:letterSpacing="0.14"
+                                android:textColor="@color/vl_code"
+                                android:textSize="18sp"
+                                tools:text="7K3M-QW9P-XY2Z" />
+                        </LinearLayout>
+
+                        <ImageView
+                            android:id="@+id/vl_copy"
+                            android:layout_width="@dimen/vl_button_height"
+                            android:layout_height="@dimen/vl_button_height"
+                            android:layout_marginStart="8dp"
+                            android:background="@drawable/bg_vl_round_btn"
+                            android:contentDescription="@string/vlan_copy_code"
+                            android:padding="11dp"
+                            android:src="@drawable/ic_vl_copy" />
+
+                        <ImageView
+                            android:id="@+id/vl_share"
+                            android:layout_width="@dimen/vl_button_height"
+                            android:layout_height="@dimen/vl_button_height"
+                            android:layout_marginStart="6dp"
+                            android:background="@drawable/bg_vl_round_btn"
+                            android:contentDescription="@string/vlan_share_invite"
+                            android:padding="11dp"
+                            android:src="@drawable/ic_vl_share" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- world -->
+                <LinearLayout
+                    android:id="@+id/vl_world_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/vl_gap"
+                    android:background="@drawable/bg_vl_card"
+                    android:orientation="vertical"
+                    android:padding="@dimen/vl_card_pad">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="34dp"
+                            android:layout_height="34dp"
+                            android:background="@drawable/bg_vl_tile"
+                            android:contentDescription="@null"
+                            android:padding="7dp"
+                            android:src="@drawable/ic_vl_world" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/vl_world_name"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:ellipsize="end"
+                                android:fontFamily="sans-serif-medium"
+                                android:singleLine="true"
+                                android:textColor="@color/vl_text"
+                                android:textSize="14sp"
+                                tools:text="Survival World" />
+
+                            <TextView
+                                android:id="@+id/vl_world_sub"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:ellipsize="end"
+                                android:singleLine="true"
+                                android:textColor="@color/vl_text_dim"
+                                android:textSize="11.5sp"
+                                tools:text="1.20.1 · LAN port 51234" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/vl_world_pill"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_vl_pill"
+                            android:paddingStart="9dp"
+                            android:paddingTop="3dp"
+                            android:paddingEnd="9dp"
+                            android:paddingBottom="3dp"
+                            android:textColor="@color/vl_text_dim"
+                            android:textSize="10.5sp"
+                            android:textStyle="bold"
+                            tools:text="OPEN" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/vl_world_note"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:textColor="@color/vl_text_dim"
+                        android:textSize="12sp"
+                        tools:text="Open your world to LAN from the pause menu; it is detected automatically." />
+
+                    <!-- stats row -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:baselineAligned="false"
+                        android:orientation="horizontal">
+
+                        <include
+                            android:id="@+id/vl_stat_players"
+                            layout="@layout/view_virtual_lan_stat"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1" />
+
+                        <include
+                            android:id="@+id/vl_stat_port"
+                            layout="@layout/view_virtual_lan_stat"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:layout_weight="1" />
+
+                        <include
+                            android:id="@+id/vl_stat_vip"
+                            layout="@layout/view_virtual_lan_stat"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:layout_weight="1" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- guest: join world -->
+                <LinearLayout
+                    android:id="@+id/vl_guest_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/vl_gap"
+                    android:background="@drawable/bg_vl_card"
+                    android:orientation="vertical"
+                    android:padding="@dimen/vl_card_pad"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/vl_guest_host"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif-medium"
+                        android:textColor="@color/vl_text"
+                        android:textSize="13.5sp"
+                        tools:text="Host: Raj" />
+
+                    <TextView
+                        android:id="@+id/vl_guest_note"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:lineSpacingExtra="2dp"
+                        android:textColor="@color/vl_text_dim"
+                        android:textSize="12sp"
+                        tools:text="Open Minecraft → Multiplayer. The host world is listed as [Virtual LAN]." />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/vl_join_world"
+                            android:layout_width="0dp"
+                            android:layout_height="@dimen/vl_button_height"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_vl_btn_primary"
+                            android:drawablePadding="8dp"
+                            android:fontFamily="sans-serif-medium"
+                            android:gravity="center"
+                            android:text="@string/vlan_join_world"
+                            android:textColor="@color/vl_platinum_text"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/vl_copy_address"
+                            android:layout_width="wrap_content"
+                            android:layout_height="@dimen/vl_button_height"
+                            android:layout_marginStart="8dp"
+                            android:background="@drawable/bg_vl_btn_ghost"
+                            android:fontFamily="monospace"
+                            android:gravity="center"
+                            android:paddingStart="12dp"
+                            android:paddingEnd="12dp"
+                            android:textColor="@color/vl_text"
+                            android:textSize="12.5sp"
+                            tools:text="127.0.0.1:25565" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- connection -->
+                <LinearLayout
+                    android:id="@+id/vl_conn_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/vl_gap"
+                    android:background="@drawable/bg_vl_card"
+                    android:orientation="vertical"
+                    android:padding="@dimen/vl_card_pad">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_vl_signal"
+                            android:tint="@color/vl_text_dim" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:layout_weight="1"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="@string/vlan_connection"
+                            android:textColor="@color/vl_text"
+                            android:textSize="13.5sp" />
+
+                        <TextView
+                            android:id="@+id/vl_conn_pill"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_vl_pill"
+                            android:paddingStart="9dp"
+                            android:paddingTop="3dp"
+                            android:paddingEnd="9dp"
+                            android:paddingBottom="3dp"
+                            android:textColor="@color/vl_text_dim"
+                            android:textSize="10.5sp"
+                            android:textStyle="bold"
+                            tools:text="DIRECT" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:baselineAligned="false"
+                        android:orientation="horizontal">
+
+                        <include
+                            android:id="@+id/vl_stat_latency"
+                            layout="@layout/view_virtual_lan_stat"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1" />
+
+                        <include
+                            android:id="@+id/vl_stat_relays"
+                            layout="@layout/view_virtual_lan_stat"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:layout_weight="1" />
+
+                        <include
+                            android:id="@+id/vl_stat_nat"
+                            layout="@layout/view_virtual_lan_stat"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:layout_weight="1" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/vl_conn_note"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:textColor="@color/vl_text_faint"
+                        android:textSize="11.5sp"
+                        tools:text="Relay: Haibo (Shanghai) · tcp · engine 2.6.4" />
+                </LinearLayout>
+
+                <!-- host: members -->
+                <LinearLayout
+                    android:id="@+id/vl_members_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/vl_gap"
+                    android:background="@drawable/bg_vl_card"
+                    android:orientation="vertical"
+                    android:padding="@dimen/vl_card_pad"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_vl_player"
+                            android:tint="@color/vl_text_dim" />
+
+                        <TextView
+                            android:id="@+id/vl_members_title"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:layout_weight="1"
+                            android:fontFamily="sans-serif-medium"
+                            android:textColor="@color/vl_text"
+                            android:textSize="13.5sp"
+                            tools:text="Players · 2" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/vl_members"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="vertical" />
+
+                    <TextView
+                        android:id="@+id/vl_members_empty"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="@string/vlan_members_empty"
+                        android:textColor="@color/vl_text_faint"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <!-- events -->
+                <LinearLayout
+                    android:id="@+id/vl_events_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/vl_gap"
+                    android:background="@drawable/bg_vl_card"
+                    android:orientation="vertical"
+                    android:padding="@dimen/vl_card_pad">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif-medium"
+                        android:text="@string/vlan_activity"
+                        android:textColor="@color/vl_text"
+                        android:textSize="13.5sp" />
+
+                    <LinearLayout
+                        android:id="@+id/vl_events"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:orientation="vertical" />
+                </LinearLayout>
+
+                <!-- actions -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/vl_gap"
+                    android:layout_marginBottom="4dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/vl_end"
+                        android:layout_width="0dp"
+                        android:layout_height="@dimen/vl_button_height"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_vl_btn_danger"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:textColor="@color/vl_bad"
+                        android:textSize="14sp"
+                        tools:text="End Session" />
+
+                    <TextView
+                        android:id="@+id/vl_diagnostics"
+                        android:layout_width="wrap_content"
+                        android:layout_height="@dimen/vl_button_height"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_vl_btn_ghost"
+                        android:gravity="center"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp"
+                        android:text="@string/vlan_diagnostics"
+                        android:textColor="@color/vl_text_dim"
+                        android:textSize="13sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ═══════════ RESULT ═══════════ -->
+            <LinearLayout
+                android:id="@+id/vl_result"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:paddingTop="18dp"
+                android:paddingBottom="8dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/vl_result_icon"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:background="@drawable/bg_vl_round_btn"
+                    android:contentDescription="@null"
+                    android:padding="16dp"
+                    android:src="@drawable/ic_vl_check" />
+
+                <TextView
+                    android:id="@+id/vl_result_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:textColor="@color/vl_text"
+                    android:textSize="17sp"
+                    tools:text="Session ended" />
+
+                <TextView
+                    android:id="@+id/vl_result_message"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center"
+                    android:lineSpacingExtra="2dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:textColor="@color/vl_text_dim"
+                    android:textSize="13sp"
+                    tools:text="The host ended the session." />
+
+                <TextView
+                    android:id="@+id/vl_result_tips"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/bg_vl_card"
+                    android:lineSpacingExtra="3dp"
+                    android:padding="@dimen/vl_card_pad"
+                    android:textColor="@color/vl_text_dim"
+                    android:textSize="12.5sp"
+                    android:visibility="gone"
+                    tools:text="• Check the code\n• Try again" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/vl_result_retry"
+                        android:layout_width="0dp"
+                        android:layout_height="@dimen/vl_button_height"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_vl_btn_primary"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:text="@string/vlan_try_again"
+                        android:textColor="@color/vl_platinum_text"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/vl_result_back"
+                        android:layout_width="0dp"
+                        android:layout_height="@dimen/vl_button_height"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_vl_btn_ghost"
+                        android:gravity="center"
+                        android:text="@string/vlan_back_home"
+                        android:textColor="@color/vl_text"
+                        android:textSize="14sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </FrameLayout>
+    </ScrollView>
+</LinearLayout>

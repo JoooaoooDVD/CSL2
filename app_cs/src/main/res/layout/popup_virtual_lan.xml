@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- In-game Virtual LAN popup. Sits over the game activity's content view; the scrim swallows touches. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/vlp_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/vl_scrim"
+    android:clickable="true"
+    android:focusable="true"
+    android:focusableInTouchMode="true">
+
+    <FrameLayout
+        android:id="@+id/vlp_sheet"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:layout_margin="@dimen/vl_sheet_margin"
+        android:background="@drawable/bg_vl_sheet"
+        android:clickable="true"
+        android:focusable="true"
+        android:paddingStart="@dimen/vl_pad"
+        android:paddingTop="12dp"
+        android:paddingEnd="@dimen/vl_pad"
+        android:paddingBottom="12dp">
+
+        <include layout="@layout/view_virtual_lan" />
+    </FrameLayout>
+</FrameLayout>

@@ -58,6 +58,9 @@ jobs:
       - name: Create out directory
         run: mkdir out
 
+      - name: Fetch Virtual LAN tunnel engine (EasyTier)
+        run: bash scripts/fetch_easytier.sh
+
       - name: Build Debug .apk
         run: |
           gradle :app_cs:assembleFullDebug

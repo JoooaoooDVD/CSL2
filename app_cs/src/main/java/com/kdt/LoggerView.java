@@ -283,10 +283,10 @@ public class LoggerView extends ConstraintLayout {
             mHistoryLoading = true;
             // Listen first, then read the file only up to its current size: the lines logged
             // while the history loads come through the listener and are added after it.
-            Logger.setLogListener(mLogListener);
+            com.craftstudio.cslauncher.multiplayer.LogTap.setUiListener(mLogListener);
             loadHistory(mGeneration);
         } else {
-            Logger.setLogListener(null);
+            com.craftstudio.cslauncher.multiplayer.LogTap.setUiListener(null);
             mHistoryLoading = false;
             synchronized (mPendingLock) {
                 mPending.setLength(0);
@@ -654,7 +654,7 @@ public class LoggerView extends ConstraintLayout {
         if (mLivePulse != null) mLivePulse.cancel();
         if (mLive) {
             mLive = false;
-            Logger.setLogListener(null);
+            com.craftstudio.cslauncher.multiplayer.LogTap.setUiListener(null);
         }
         mHandler.removeCallbacks(mFlushRunnable);
     }

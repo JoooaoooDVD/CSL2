@@ -11,3 +11,8 @@ app_cs/.cxx/
 /curseforge_key.txt
 /app_cs/libs/ltw-release.aar
 *.jks
+
+# Virtual LAN tunnel engine binaries (downloaded by scripts/fetch_easytier.sh)
+app_cs/src/main/jniLibs/*/libeasytier_core.so
+app_cs/src/main/jniLibs/*/libeasytier_cli.so
+app_cs/src/main/jniLibs/*/.easytier-*

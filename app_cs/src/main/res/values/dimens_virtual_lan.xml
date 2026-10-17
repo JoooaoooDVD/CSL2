@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="vl_sheet_radius">24dp</dimen>
+    <dimen name="vl_sheet_margin">14dp</dimen>
+    <dimen name="vl_pad">16dp</dimen>
+    <dimen name="vl_card_radius">18dp</dimen>
+    <dimen name="vl_card_pad">14dp</dimen>
+    <dimen name="vl_gap">10dp</dimen>
+    <dimen name="vl_round_btn">34dp</dimen>
+    <dimen name="vl_field_height">46dp</dimen>
+    <dimen name="vl_button_height">44dp</dimen>
+    <dimen name="vl_dot">10dp</dimen>
+    <dimen name="vl_action_icon">44dp</dimen>
+    <dimen name="vl_content_max_width">720dp</dimen>
+</resources>

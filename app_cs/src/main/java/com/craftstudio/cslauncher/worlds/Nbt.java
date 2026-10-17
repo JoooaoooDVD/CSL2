@@ -64,7 +64,7 @@ public final class Nbt {
         public final String name;
         public final Tag compound;
 
-        Root(String name, Tag compound) {
+        public Root(String name, Tag compound) {
             this.name = name;
             this.compound = compound;
         }
@@ -163,6 +163,32 @@ public final class Nbt {
             file.delete();
             if (!temp.renameTo(file)) throw new IOException("Could not replace " + file.getName());
         }
+    }
+
+    /** Writes the root compound uncompressed, the way the game stores servers.dat */
+    public static void writeUncompressed(@NonNull Root root, @NonNull File file) throws IOException {
+        File temp = new File(file.getParentFile(), file.getName() + ".tmp");
+        try (OutputStream raw = new BufferedOutputStream(new FileOutputStream(temp))) {
+            DataOutputStream out = new DataOutputStream(raw);
+            out.writeByte(TAG_COMPOUND);
+            out.writeUTF(root.name == null ? "" : root.name);
+            writePayload(out, root.compound);
+            out.flush();
+        }
+        if (!temp.renameTo(file)) {
+            //noinspection ResultOfMethodCallIgnored
+            file.delete();
+            if (!temp.renameTo(file)) throw new IOException("Could not replace " + file.getName());
+        }
+    }
+
+    /** Creates a tag; convenience for builders of small structures */
+    public static Tag newCompound() { return new Tag(TAG_COMPOUND, new java.util.LinkedHashMap<String, Tag>()); }
+
+    public static Tag newList(int elementType) {
+        Tag t = new Tag(TAG_LIST, new java.util.ArrayList<Tag>());
+        t.mListType = elementType;
+        return t;
     }
 
     private static void writePayload(DataOutputStream out, Tag tag) throws IOException {

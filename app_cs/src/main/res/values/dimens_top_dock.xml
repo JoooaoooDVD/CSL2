@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Top bar navigation dock (narrow landscape phones) -->
 <resources>
-    <dimen name="top_dock_item_width">40dp</dimen>
+    <dimen name="top_dock_item_width">38dp</dimen>
     <dimen name="top_dock_item_height">36dp</dimen>
     <dimen name="top_account_min_width">140dp</dimen>
 </resources>

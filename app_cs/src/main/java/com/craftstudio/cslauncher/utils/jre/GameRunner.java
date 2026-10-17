@@ -330,6 +330,8 @@ public class GameRunner {
             }
         }
 
+        // Let an active Virtual LAN session say goodbye before the process dies
+        com.craftstudio.cslauncher.multiplayer.VirtualLanService.shutdownForProcessExit(2500);
         Tools.restartLauncherActivity(activity);
         Tools.fullyExit();
     }

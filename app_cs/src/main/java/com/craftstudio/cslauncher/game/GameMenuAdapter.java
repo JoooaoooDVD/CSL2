@@ -33,6 +33,7 @@ public class GameMenuAdapter extends ArrayAdapter<String> {
             R.drawable.ic_gm_sliders,   // Quick settings
             R.drawable.ic_gm_gamepad,   // Custom controls
             R.drawable.ic_gm_package,   // Browse resources
+            R.drawable.ic_gm_lan,       // Virtual LAN multiplayer
     };
 
     /** Icons for R.array.menu_customcontrol, in order */

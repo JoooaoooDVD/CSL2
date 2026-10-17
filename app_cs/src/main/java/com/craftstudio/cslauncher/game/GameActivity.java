@@ -120,14 +120,23 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
 
     private QuickSettingSideDialog mQuickSettingSideDialog;
     private ResourceBrowserPopup mResourceBrowser;
+    private com.craftstudio.cslauncher.multiplayer.ui.VirtualLanPopup mVirtualLan;
     private String mLaunchVersionId;
 
     public static int mForcedPanningHeight = 0;
     public static int mImeHeight = 0;
 
+    private static volatile boolean sRunning;
+
+    /** Whether the game activity exists in this process (used by the Virtual LAN service) */
+    public static boolean isRunning() { return sRunning; }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        sRunning = true;
+        // Route the native game log through the tap so the Virtual LAN host can see "Started serving on"
+        com.craftstudio.cslauncher.multiplayer.LogTap.install();
         instance = Instances.loadSelectedInstance();
         account = Accounts.getCurrent();
         if(instance == null) {
@@ -276,6 +285,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
                      case 3: openQuickSettings(); break;
                      case 4: openCustomControls(); break;
                      case 5: openResourceBrowser(); break;
+                     case 6: openVirtualLan(); break;
                 }
                 drawerLayout.closeDrawers();
             };
@@ -386,6 +396,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        sRunning = false;
         ContextExecutor.clearActivity();
     }
 
@@ -543,8 +554,22 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         mResourceBrowser = ResourceBrowserPopup.show(this, instance, mLaunchVersionId);
     }
 
+    /** In-game "Virtual LAN Multiplayer" popup: create / join a cross-network LAN session. */
+    private void openVirtualLan() {
+        if (mVirtualLan != null && mVirtualLan.isShowing()) return;
+        mVirtualLan = com.craftstudio.cslauncher.multiplayer.ui.VirtualLanPopup.show(this, () -> mVirtualLan = null);
+    }
+
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
+        if (mVirtualLan != null && mVirtualLan.isShowing()) {
+            // Keys go to the popup (code field), never to the game. Back is handled by the popup.
+            if (event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
+                if (event.getAction() == KeyEvent.ACTION_UP) mVirtualLan.onBackPressed();
+                return true;
+            }
+            return super.dispatchKeyEvent(event);
+        }
         if (mResourceBrowser != null && mResourceBrowser.isShowing()) {
             // Keys go to the popup (search field), never to the game. Back closes it.
             if (event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
