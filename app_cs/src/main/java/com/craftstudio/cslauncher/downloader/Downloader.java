@@ -38,12 +38,16 @@ public class Downloader {
     private final SpeedCalculator mSpeedCalculator = new SpeedCalculator();
     private ExecutorService mDownloadService;
     private ExecutorService mVerifyService;
+    /** Cancel generation this run started in; see ProgressKeeper.cancelGeneration() */
+    private volatile long mCancelGeneration;
 
     public Downloader(String mProgressKey) {
         this.mProgressKey = mProgressKey;
+        mCancelGeneration = com.craftstudio.cslauncher.progresskeeper.ProgressKeeper.cancelGeneration();
     }
 
     protected void runDownloads(ArrayList<? extends TaskMetadata> downloads) throws IOException, InterruptedException {
+        mCancelGeneration = com.craftstudio.cslauncher.progresskeeper.ProgressKeeper.cancelGeneration();
         insertMetadata(downloads);
         performDownloads(downloads);
     }
@@ -69,7 +73,7 @@ public class Downloader {
         }
         double totalMegabytes = totalSize / ONE_MEGABYTE;
         while(mDownloadedFileCounter.get() < totalCount) {
-            if (com.craftstudio.cslauncher.progresskeeper.ProgressKeeper.isCancelRequested()) {
+            if (com.craftstudio.cslauncher.progresskeeper.ProgressKeeper.isCancelledSince(mCancelGeneration)) {
                 mDownloadService.shutdownNow();
                 mVerifyService.shutdownNow();
                 throw new InterruptedException("Download cancelled by the user");
@@ -101,7 +105,7 @@ public class Downloader {
             for(TaskMetadata element : reducedList) executorService.submit(new CompleteMetadataTask(element, this));
             executorService.shutdown();
             while (!executorService.awaitTermination(33, TimeUnit.MILLISECONDS)) {
-                if (com.craftstudio.cslauncher.progresskeeper.ProgressKeeper.isCancelRequested()) {
+                if (com.craftstudio.cslauncher.progresskeeper.ProgressKeeper.isCancelledSince(mCancelGeneration)) {
                     executorService.shutdownNow();
                     throw new InterruptedException("Download cancelled by the user");
                 }
@@ -161,7 +165,7 @@ public class Downloader {
         byte[] buffer = getBuffer();
         int readLen;
         while((readLen = inputStream.read(buffer)) != -1) {
-            com.craftstudio.cslauncher.progresskeeper.ProgressKeeper.throwIfCancelled();
+            com.craftstudio.cslauncher.progresskeeper.ProgressKeeper.throwIfCancelledSince(mCancelGeneration);
             outputStream.write(buffer, 0, readLen);
             if(listener != null) listener.onBytesCopied(readLen);
             mInternetUsageCounter.getAndAdd(readLen);

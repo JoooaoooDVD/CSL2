@@ -38,6 +38,12 @@ public class DeleteButton extends Button implements ActionButtonInterface {
     public void onClick() {
         if(mCurrentlySelectedButton == null) return;
 
+        // Grab the layout before the view is detached: afterwards getParent() is null and the
+        // pre-draw listeners registered on the removed view would never fire again, leaving the
+        // resize handle / action row / side panel on screen for a control that no longer exists.
+        com.craftstudio.cslauncher.input.ControlLayout layout = mCurrentlySelectedButton.getControlLayoutParent();
         mCurrentlySelectedButton.removeButton();
+        mCurrentlySelectedButton = null;
+        if(layout != null) layout.removeEditWindow();
     }
 }

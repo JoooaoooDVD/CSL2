@@ -191,12 +191,15 @@ public class ControlDrawer extends ControlButton {
         ControlDrawerData cloneData = new ControlDrawerData(getDrawerData());
         cloneData.properties.dynamicX = "0.5 * ${screen_width}";
         cloneData.properties.dynamicY = "0.5 * ${screen_height}";
-        ((ControlLayout) getParent()).addDrawer(cloneData);
+        ControlLayout parent = getControlLayoutParent();
+        if(parent == null || parent.getLayout() == null) return;
+        parent.addDrawer(cloneData);
     }
 
     @Override
     public void removeButton() {
         ControlLayout layout = getControlLayoutParent();
+        if(layout == null) return;
         for(ControlSubButton subButton : buttons){
             layout.removeView(subButton);
         }

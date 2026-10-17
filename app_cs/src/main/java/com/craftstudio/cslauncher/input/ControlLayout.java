@@ -102,6 +102,10 @@ public class ControlLayout extends FrameLayout {
 		}
 
 		removeAllButtons();
+		// The controls the editor chrome was attached to are gone: never leave the action row /
+		// resize handle floating over a reloaded layout (or over the game after exiting the editor).
+		if(mActionRow != null) mActionRow.hide();
+		if(mHandleView != null) mHandleView.hide();
 		if(mLayout != null) {
 			mLayout.mControlDataList = null;
 			mLayout = null;

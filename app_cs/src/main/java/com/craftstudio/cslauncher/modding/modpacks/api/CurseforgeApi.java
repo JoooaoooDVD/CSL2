@@ -330,7 +330,10 @@ public class CurseforgeApi implements ModpackApi{
                 break;
             }
         }
-        if (allRestricted || length == 0) {
+        // No file matched the requested version/loader: that is "nothing compatible", not a
+        // distribution block - callers treat null as "no files" and must not open the CF page.
+        if (length == 0) return null;
+        if (allRestricted) {
             // All versions restricted - return a ModDetail with one entry that signals this.
             // The version name shown in spinner makes it clear, tapping Install shows CF dialog.
             return new ModDetail(item,
@@ -466,7 +469,7 @@ public class CurseforgeApi implements ModpackApi{
         Log.i("CurseforgeApi", "filtering...");
         for(int i = 0; i < data.size(); i++) {
             JsonObject fileInfo = data.get(i).getAsJsonObject();
-            if(fileInfo.get("isServerPack").getAsBoolean()) continue;
+            if(GsonJsonUtils.getBooleanSafe(fileInfo, "isServerPack", false)) continue;
             objectList.add(fileInfo);
         }
         Log.i("CurseforgeApi", "pag_end");

@@ -82,6 +82,13 @@ public class GsonJsonUtils {
      *         the int is an actual integer
      *         onNullValue otherwise
      */
+    /** Boolean member or onNullValue when missing, null or not a boolean primitive */
+    public static boolean getBooleanSafe(JsonObject jsonObject, String memberName, boolean onNullValue) {
+        JsonElement jsonElement = getElementSafe(jsonObject, memberName);
+        if(jsonElement == null || !jsonElement.isJsonPrimitive() || !jsonElement.getAsJsonPrimitive().isBoolean()) return onNullValue;
+        return jsonElement.getAsBoolean();
+    }
+
     public static int getIntSafe(JsonObject jsonObject, String memberName, int onNullValue) {
         JsonElement jsonElement = getElementSafe(jsonObject, memberName);
         if(jsonElement == null || !jsonElement.isJsonPrimitive()) return onNullValue;

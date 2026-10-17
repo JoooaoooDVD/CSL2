@@ -24,6 +24,7 @@ public class DownloadUtils {
 
     public static void download(URL url, OutputStream os) throws IOException {
         InputStream is = null;
+        final long cancelGeneration = com.craftstudio.cslauncher.progresskeeper.ProgressKeeper.cancelGeneration();
         try {
             // System.out.println("Connecting: " + url.toString());
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -39,7 +40,7 @@ public class DownloadUtils {
             byte[] buffer = new byte[65536];
             int read;
             while ((read = is.read(buffer)) != -1) {
-                com.craftstudio.cslauncher.progresskeeper.ProgressKeeper.throwIfCancelled();
+                com.craftstudio.cslauncher.progresskeeper.ProgressKeeper.throwIfCancelledSince(cancelGeneration);
                 os.write(buffer, 0, read);
             }
         } catch (IOException e) {
@@ -73,7 +74,16 @@ public class DownloadUtils {
                                              Tools.DownloaderFeedback monitor) throws IOException {
         FileUtils.ensureParentDirectory(outputFile);
 
+        final long cancelGeneration = com.craftstudio.cslauncher.progresskeeper.ProgressKeeper.cancelGeneration();
         HttpURLConnection conn = (HttpURLConnection) new URL(urlInput).openConnection();
+        conn.setRequestProperty("User-Agent", USER_AGENT);
+        conn.setConnectTimeout(15000);
+        conn.setReadTimeout(30000);
+        if (conn.getResponseCode() / 100 != 2) {
+            int code = conn.getResponseCode();
+            conn.disconnect();
+            throw new IOException("Server returned HTTP " + code + " for " + urlInput);
+        }
         InputStream readStr = conn.getInputStream();
         try (FileOutputStream fos = new FileOutputStream(outputFile)) {
             int current;
@@ -83,7 +93,7 @@ public class DownloadUtils {
             if (buffer == null) buffer = new byte[65535];
 
             while ((current = readStr.read(buffer)) != -1) {
-                com.craftstudio.cslauncher.progresskeeper.ProgressKeeper.throwIfCancelled();
+                com.craftstudio.cslauncher.progresskeeper.ProgressKeeper.throwIfCancelledSince(cancelGeneration);
                 overall += current;
                 fos.write(buffer, 0, current);
                 monitor.updateProgress(overall, length);

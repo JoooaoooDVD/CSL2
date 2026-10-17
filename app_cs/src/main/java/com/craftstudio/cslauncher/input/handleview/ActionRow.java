@@ -34,7 +34,7 @@ public class ActionRow extends LinearLayout {
     public final ViewTreeObserver.OnPreDrawListener mFollowedViewListener = new ViewTreeObserver.OnPreDrawListener() {
         @Override
         public boolean onPreDraw() {
-            if(mFollowedView == null || !mFollowedView.isShown()){
+            if(mFollowedView == null || !mFollowedView.isShown() || !isEditorActive()){
                 hide();
                 return true;
             }
@@ -110,17 +110,37 @@ public class ActionRow extends LinearLayout {
         if(mFollowedView != null)
             mFollowedView.getViewTreeObserver().removeOnPreDrawListener(mFollowedViewListener);
 
+        boolean anyAction = false;
         for(ActionButtonInterface buttonInterface: actionButtons){
             buttonInterface.setFollowedView(controlInterface);
-            ((View)(buttonInterface)).setVisibility(buttonInterface.shouldBeVisible() ? VISIBLE : GONE);
+            boolean visible = buttonInterface.shouldBeVisible();
+            anyAction |= visible;
+            ((View)(buttonInterface)).setVisibility(visible ? VISIBLE : GONE);
         }
 
-        boolean appearing = getVisibility() != VISIBLE && controlInterface != null;
+        // Deselecting (null) or nothing to offer: the row must disappear entirely. Showing the
+        // pill with every action GONE left an empty 8dp-wide padded background on screen — the
+        // stray vertical line seen next to the last edited control, in the editor and in game.
+        if(controlInterface == null || !anyAction || !isEditorActive()){
+            mFollowedView = null;
+            setVisibility(GONE);
+            return;
+        }
+
+        boolean appearing = getVisibility() != VISIBLE;
         setVisibility(VISIBLE);
         if (appearing) com.craftstudio.cslauncher.utils.motion.Motion.popIn(this, 0, 0.8f);
         mFollowedView = (View) controlInterface;
-        if(mFollowedView != null)
-            mFollowedView.getViewTreeObserver().addOnPreDrawListener(mFollowedViewListener);
+        mFollowedView.getViewTreeObserver().addOnPreDrawListener(mFollowedViewListener);
+    }
+
+    /** The row only exists for the control editor; in normal gameplay it must never show. */
+    private boolean isEditorActive(){
+        android.view.ViewParent parent = getParent();
+        if(parent instanceof com.craftstudio.cslauncher.input.ControlLayout){
+            return ((com.craftstudio.cslauncher.input.ControlLayout) parent).getModifiable();
+        }
+        return false;
     }
 
     private float getXPosition(int side){
@@ -173,6 +193,7 @@ public class ActionRow extends LinearLayout {
     public void hide(){
         if(mFollowedView != null)
             mFollowedView.getViewTreeObserver().removeOnPreDrawListener(mFollowedViewListener);
+        mFollowedView = null;
         setVisibility(GONE);
     }
 }

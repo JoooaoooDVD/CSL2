@@ -31,6 +31,15 @@ public class ProgressKeeper {
 
     /** Set by {@link #cancelAll()}, cleared once every task has ended */
     private static volatile boolean sCancelRequested;
+    /**
+     * Bumped on every {@link #cancelAll()}. Download loops remember the generation they started
+     * in and only abort when it changed, so a cancel can never leak into downloads that begin
+     * later. (The plain flag used to stay true until every progress record ended; a single stuck
+     * record after a cancel then made every later download - content installs, world zips,
+     * CurseForge files - fail instantly with "cancelled".)
+     */
+    private static final java.util.concurrent.atomic.AtomicLong sCancelGeneration = new java.util.concurrent.atomic.AtomicLong();
+    private static final long CANCEL_FLAG_TTL_MS = 5000L;
 
     /**
      * Launch bookkeeping for the home PLAY button: the game pipeline always runs through the
@@ -59,6 +68,9 @@ public class ProgressKeeper {
     public static void cancelAll() {
         if (getTaskCount() == 0) return;
         sCancelRequested = true;
+        sCancelGeneration.incrementAndGet();
+        // Safety net: the running loops react within milliseconds; never let the flag outlive them
+        sHandler.postDelayed(() -> sCancelRequested = false, CANCEL_FLAG_TTL_MS);
     }
 
     /** @return whether the user asked to cancel the running tasks */
@@ -66,7 +78,25 @@ public class ProgressKeeper {
         return sCancelRequested;
     }
 
-    /** Throws when the user cancelled - call this inside download loops */
+    /** Snapshot to pass to {@link #throwIfCancelledSince}/{@link #isCancelledSince} when a download starts */
+    public static long cancelGeneration() {
+        return sCancelGeneration.get();
+    }
+
+    /** @return true when the user tapped cancel after the given generation was taken */
+    public static boolean isCancelledSince(long generation) {
+        return sCancelGeneration.get() != generation;
+    }
+
+    /** Throws when the user cancelled after the given generation was taken - call inside download loops */
+    public static void throwIfCancelledSince(long generation) throws CancelledException {
+        if (isCancelledSince(generation)) throw new CancelledException();
+    }
+
+    /**
+     * Legacy check kept for callers without a generation: only true while a cancel is being
+     * processed (cleared when the tasks end or after a few seconds), never sticky.
+     */
     public static void throwIfCancelled() throws CancelledException {
         if (sCancelRequested) throw new CancelledException();
     }

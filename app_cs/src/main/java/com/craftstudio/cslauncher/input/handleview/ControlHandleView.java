@@ -83,10 +83,7 @@ public class ControlHandleView extends View {
                 setX(getX() + event.getX() - mXOffset);
                 setY(getY() + event.getY() - mYOffset);
 
-                System.out.println(getX() - mView.getControlView().getX());
-                System.out.println(getY() - mView.getControlView().getY());
-
-
+                if(mView == null) return true;
                 mView.getProperties().setWidth(Math.max(getX() - mView.getControlView().getX(), Tools.dpToPx(MIN_RESIZE_DP)));
                 mView.getProperties().setHeight(Math.max(getY() - mView.getControlView().getY(), Tools.dpToPx(MIN_RESIZE_DP)));
                 mView.regenerateDynamicCoordinates();
@@ -99,6 +96,7 @@ public class ControlHandleView extends View {
     public void hide(){
         if(mView != null)
             mView.getControlView().getViewTreeObserver().removeOnPreDrawListener(mPositionListener);
+        mView = null;
         setVisibility(GONE);
     }
 }

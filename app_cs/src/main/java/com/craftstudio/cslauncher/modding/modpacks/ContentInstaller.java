@@ -74,15 +74,53 @@ public final class ContentInstaller {
                 target = new File(dir, sanitize(fileName));
 
                 File temp = new File(dir, target.getName() + ".part");
-                DownloadUtils.downloadFile(url, temp);
+                final String displayName = target.getName();
+                long expectedSize = detail.versionFileSizes != null && versionIndex < detail.versionFileSizes.length
+                        ? detail.versionFileSizes[versionIndex] : -1;
+                try {
+                    ProgressLayout.setProgress(ProgressLayout.INSTALL_MODPACK, 0, R.string.mcl_launch_downloading, displayName);
+                    final long[] lastReport = {0};
+                    DownloadUtils.downloadFileMonitored(url, temp, null, (curr, max) -> {
+                        long now = System.currentTimeMillis();
+                        if (now - lastReport[0] < 100) return;
+                        lastReport[0] = now;
+                        if (max > 0) {
+                            ProgressLayout.setProgress(ProgressLayout.INSTALL_MODPACK, (int) (curr * 100L / max),
+                                    R.string.mcl_launch_downloading_progress, displayName, curr / ONE_MB, max / ONE_MB);
+                        } else {
+                            ProgressLayout.setProgress(ProgressLayout.INSTALL_MODPACK, 0, R.string.mcl_launch_downloading, displayName);
+                        }
+                    });
+                    // Validate before anything is marked installed: size (when known), then archive structure
+                    if (!temp.isFile() || temp.length() == 0) throw new IOException("Download produced an empty file");
+                    if (expectedSize > 0 && temp.length() != expectedSize) {
+                        throw new IOException("Incomplete download: got " + temp.length() + " of " + expectedSize + " bytes");
+                    }
+                    String sha1 = detail.versionHashes != null && versionIndex < detail.versionHashes.length ? detail.versionHashes[versionIndex] : null;
+                    if (sha1 != null && !sha1.isEmpty()) {
+                        String actual = InstalledContentIndex.sha1(temp);
+                        if (actual != null && !actual.equalsIgnoreCase(sha1)) throw new IOException("Checksum mismatch, the download is corrupted");
+                    }
+                    validateArchive(temp, type);
+                } catch (Exception e) {
+                    if (temp.exists() && !temp.delete()) Log.w(TAG, "Could not remove partial download " + temp);
+                    throw e;
+                }
                 if (target.exists() && !target.delete()) Log.w(TAG, "Could not replace " + target);
-                if (!temp.renameTo(target)) throw new IOException("Unable to move the download into place");
+                if (!temp.renameTo(target)) {
+                    if (temp.exists() && !temp.delete()) Log.w(TAG, "Could not remove partial download " + temp);
+                    throw new IOException("Unable to move the download into place");
+                }
 
                 if (type == ContentType.WORLD) {
                     // A world zip becomes a folder in saves/; the zip itself is not kept
                     ProgressLayout.setProgress(ProgressLayout.INSTALL_MODPACK, 90, R.string.lib_installing);
-                    File worldDir = extractWorld(target, dir, detail.title);
-                    if (!target.delete()) Log.w(TAG, "Could not remove the world archive " + target);
+                    File worldDir;
+                    try {
+                        worldDir = extractWorld(target, dir, detail.title);
+                    } finally {
+                        if (target.exists() && !target.delete()) Log.w(TAG, "Could not remove the world archive " + target);
+                    }
                     target = worldDir;
                 }
 
@@ -107,6 +145,8 @@ public final class ContentInstaller {
                 }
             } catch (Exception e) {
                 failure = e;
+                Log.w(TAG, "Install of " + detail.title + " (" + type + ") failed during "
+                        + (target == null ? "setup" : "download/validation") + ": " + e.getMessage());
             } finally {
                 ProgressLayout.clearProgress(ProgressLayout.INSTALL_MODPACK);
             }
@@ -114,6 +154,51 @@ public final class ContentInstaller {
             final Exception error = failure;
             Tools.runOnUiThread(() -> callback.onFinished(installed, error));
         });
+    }
+
+    private static final double ONE_MB = 1024d * 1024d;
+
+    /**
+     * Rejects downloads that are not what the content type expects, so a HTML error page or a
+     * truncated file is never dropped into the profile as if it were installed.
+     */
+    static void validateArchive(@NonNull File file, @NonNull ContentType type) throws IOException {
+        switch (type) {
+            case MOD: {
+                try (java.util.zip.ZipFile zip = new java.util.zip.ZipFile(file)) {
+                    if (!zip.entries().hasMoreElements()) throw new IOException("The downloaded jar is empty");
+                } catch (java.util.zip.ZipException e) {
+                    throw new IOException("The downloaded file is not a valid mod jar", e);
+                }
+                return;
+            }
+            case RESOURCE_PACK:
+            case SHADER_PACK:
+            case DATAPACK:
+            case WORLD: {
+                try (java.util.zip.ZipFile zip = new java.util.zip.ZipFile(file)) {
+                    boolean ok = false;
+                    java.util.Enumeration<? extends java.util.zip.ZipEntry> entries = zip.entries();
+                    int scanned = 0;
+                    while (entries.hasMoreElements() && scanned++ < 50000) {
+                        String name = entries.nextElement().getName().replace('\\', '/');
+                        if (type == ContentType.WORLD) { if (name.endsWith("level.dat")) { ok = true; break; } }
+                        else if (type == ContentType.SHADER_PACK) { if (name.startsWith("shaders/") || name.contains("/shaders/") || name.endsWith("pack.mcmeta")) { ok = true; break; } }
+                        else if (name.endsWith("pack.mcmeta")) { ok = true; break; }
+                    }
+                    if (!ok) {
+                        throw new IOException(type == ContentType.WORLD
+                                ? "This archive does not contain a Minecraft world (no level.dat)"
+                                : "This archive is missing pack.mcmeta / shaders, Minecraft would not recognise it");
+                    }
+                } catch (java.util.zip.ZipException e) {
+                    throw new IOException("The downloaded file is not a valid zip archive", e);
+                }
+                return;
+            }
+            default:
+                // modpacks are handled by ModpackInstaller
+        }
     }
 
     /** Deletes an installed file (or world folder). Returns whether it is gone afterwards */

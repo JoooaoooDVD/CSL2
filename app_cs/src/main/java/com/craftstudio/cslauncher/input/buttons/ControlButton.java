@@ -283,7 +283,9 @@ public class ControlButton extends TextView implements ControlInterface {
         ControlData cloneData = new ControlData(getProperties());
         cloneData.dynamicX = "0.5 * ${screen_width}";
         cloneData.dynamicY = "0.5 * ${screen_height}";
-        ((ControlLayout) getParent()).addControlButton(cloneData);
+        ControlLayout parent = getControlLayoutParent();
+        if(parent == null || parent.getLayout() == null) return;
+        parent.addControlButton(cloneData);
     }
 
     /** Remove any trace of this button from the layout */
