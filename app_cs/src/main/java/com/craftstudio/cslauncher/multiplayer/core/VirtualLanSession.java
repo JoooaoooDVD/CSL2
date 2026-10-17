@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -47,6 +48,8 @@ public final class VirtualLanSession {
         public int directoryPort = 25560;
         public int guestGamePort = 25565;
         public long maxDurationMs = 12L * 60 * 60 * 1000;
+        /** Force the relay path (used by the harness to prove relays carry traffic; exposed as an advanced option) */
+        public boolean relayOnly;
     }
 
     private static final long TICK_MS = 2500;
@@ -214,6 +217,7 @@ public final class VirtualLanSession {
 
     private void fail(Reason reason, String detail) {
         if (mEndRequested) return;
+        stage("FAILED " + reason + (detail == null || detail.isEmpty() ? "" : " (" + detail + ")"));
         mEndRequested = true;
         mEndReason = reason;
         publish(mState.buildUpon().phase(Phase.FAILED).reason(reason, detail));
@@ -235,8 +239,27 @@ public final class VirtualLanSession {
         try { mListener.onFinished(s); } catch (Exception ignored) {}
     }
 
+    private final List<String> mStages = new ArrayList<>();
+    private final long mStartedAt = System.currentTimeMillis();
+    private String mLastStage = "";
+
+    /** Secret-free, timestamped stage trail surfaced in Diagnostics. Consecutive duplicates collapse. */
+    private void stage(String msg) {
+        if (msg == null || msg.equals(mLastStage)) return;
+        mLastStage = msg;
+        String line = String.format(Locale.US, "+%.1fs %s", (System.currentTimeMillis() - mStartedAt) / 1000.0, msg);
+        mStages.add(line);
+        while (mStages.size() > 40) mStages.remove(0);
+        mEnv.log("stage: " + msg);
+    }
+
+    private static String describe(Throwable e) {
+        String m = e.getMessage();
+        return e.getClass().getSimpleName() + (m == null || m.isEmpty() ? "" : ": " + m);
+    }
+
     private void publish(VirtualLanState.Builder b) {
-        VirtualLanState s = b.events(mEvents).build();
+        VirtualLanState s = b.events(mEvents).stages(mStages).build();
         mState = s;
         try { mListener.onStateChanged(s); } catch (Exception ignored) {}
     }
@@ -289,6 +312,7 @@ public final class VirtualLanSession {
         TunnelConfig c = new TunnelConfig();
         c.networkName = mParams.code.networkName;
         c.networkSecret = mParams.code.networkSecret;
+        c.disableP2p = mParams.relayOnly;
         c.peers.addAll(relayUris);
         c.stunServers.addAll(RelayNodes.resolveStun());
         c.listeners.add("tcp://0.0.0.0:0");
@@ -299,8 +323,10 @@ public final class VirtualLanSession {
     private boolean startEngine(TunnelConfig config) {
         try {
             mTunnel.start(config);
+            stage("engine started (rpc 127.0.0.1:" + mTunnel.rpcPort() + (config.disableP2p ? ", relay-only" : "") + ")");
             return true;
         } catch (IOException e) {
+            stage("engine start failed: " + e.getMessage());
             mEnv.log("engine start failed: " + e.getMessage());
             fail(Reason.ENGINE_FAILED, e.getMessage());
             return false;
@@ -316,6 +342,7 @@ public final class VirtualLanSession {
             return false;
         }
         mEngineRestarts++;
+        stage("engine died (exit " + exit + "), restart " + mEngineRestarts + "/" + MAX_ENGINE_RESTARTS);
         mEnv.log("engine died (exit " + exit + "), restart " + mEngineRestarts);
         mTunnel.stop();
         try { Thread.sleep(1000L * mEngineRestarts); } catch (InterruptedException ignored) {}
@@ -327,6 +354,7 @@ public final class VirtualLanSession {
     // ───────────────────────────── host ─────────────────────────────
 
     private TunnelConfig mHostConfig;
+    private boolean mRelayStageLogged;
 
     private void startHost() {
         setPhase(Phase.STARTING);
@@ -357,8 +385,8 @@ public final class VirtualLanSession {
             mWorld = info;
             mDirectory.setWorld(info);
             if (info.open) mProxy.retarget(info.lanPort);
-            if (info.open && !wasOpen) addEvent(Event.Type.WORLD_OPENED, info.worldName);
-            if (!info.open && wasOpen) addEvent(Event.Type.WORLD_CLOSED, "");
+            if (info.open && !wasOpen) { addEvent(Event.Type.WORLD_OPENED, info.worldName); stage("LAN world detected on port " + info.lanPort + " -> proxy retargeted"); }
+            if (!info.open && wasOpen) { addEvent(Event.Type.WORLD_CLOSED, ""); stage("LAN world closed"); }
             mWorldDirty = true;
             mCommands.offer(this::publishHost);
         });
@@ -369,6 +397,7 @@ public final class VirtualLanSession {
         mHostConfig.ipv4 = TunnelConfig.HOST_VIP;
         mHostConfig.tcpWhitelist.add(mProxy.listenPort());
         mHostConfig.tcpWhitelist.add(mDirectory.port());
+        stage("host services up: proxy 0.0.0.0:" + mProxy.listenPort() + ", directory 0.0.0.0:" + mDirectory.port() + ", hostname " + mHostConfig.hostname);
         if (!startEngine(mHostConfig)) return;
 
         publish(mState.buildUpon().phase(Phase.DISCOVERING).hostVip(TunnelConfig.HOST_VIP)
@@ -396,6 +425,7 @@ public final class VirtualLanSession {
         if (relays > 0) {
             if (phase == Phase.DISCOVERING || phase == Phase.RECONNECTING) {
                 if (phase == Phase.RECONNECTING) addEvent(Event.Type.RECOVERED, "");
+                stage("relay network joined (" + relays + " node" + (relays == 1 ? "" : "s") + ", vip " + mTunnel.queryLocalIp(peers) + ")");
                 phase = Phase.CONNECTED_DIRECT; // host is online on the relay network
                 mPhaseStarted = now;
             }
@@ -408,6 +438,7 @@ public final class VirtualLanSession {
             if (phase.isConnected()) {
                 phase = Phase.RECONNECTING;
                 mLostSince = now;
+                stage("all relay nodes lost, reconnecting");
                 addEvent(Event.Type.RECONNECTING, "");
             } else if (phase == Phase.RECONNECTING && mLostSince > 0 && now - mLostSince > RECONNECT_GIVE_UP_MS) {
                 fail(Reason.RELAY_LOST, "");
@@ -498,6 +529,7 @@ public final class VirtualLanSession {
         VirtualLanState.Builder b = mState.buildUpon().relay(relays, bestRelay, mRelayNames).nat(nat).localVip(localVip);
 
         if (phase == Phase.DISCOVERING) {
+            if (relays > 0 && !mRelayStageLogged) { mRelayStageLogged = true; stage("relay network joined (" + relays + " node" + (relays == 1 ? "" : "s") + ", vip " + localVip + ", nat " + nat + ")"); }
             if (relays == 0 && now - mPhaseStarted > RELAY_TIMEOUT_MS) { fail(Reason.NO_RELAY_REACHABLE, ""); return; }
             if (host == null) {
                 if (now - mPhaseStarted > HOST_FIND_TIMEOUT_MS) { fail(Reason.HOST_NOT_FOUND, ""); return; }
@@ -506,6 +538,8 @@ public final class VirtualLanSession {
             }
             if (!parseHostPorts(host.hostname)) { fail(Reason.HOST_NOT_FOUND, "bad host name"); return; }
             mHostVip = host.ipv4;
+            stage("host peer found: " + host.ipv4 + " path=" + host.cost + " lat=" + (host.latencyMs >= 0 ? Math.round(host.latencyMs) + "ms" : "?")
+                    + (host.tunnelProto.isEmpty() ? "" : " via " + host.tunnelProto) + " (proxy " + mHostProxyPort + ", directory " + mHostDirectoryPort + ")");
             phase = Phase.ESTABLISHING;
             mPhaseStarted = now;
             b.phase(phase).hostVip(mHostVip);
@@ -515,12 +549,15 @@ public final class VirtualLanSession {
         if (phase == Phase.ESTABLISHING) {
             if (host != null && !host.ipv4.equals(mHostVip)) { mHostVip = host.ipv4; mForwardsAdded = false; }
             if (!mForwardsAdded && !addForwards()) {
-                if (now - mPhaseStarted > ESTABLISH_TIMEOUT_MS) { fail(Reason.HOST_UNREACHABLE, "port forward"); return; }
+                String why = mTunnel.lastCliError();
+                stage("port-forward add failed" + (why.isEmpty() ? "" : ": " + why));
+                if (now - mPhaseStarted > ESTABLISH_TIMEOUT_MS) { fail(Reason.HOST_UNREACHABLE, "port-forward: " + (why.isEmpty() ? "no local port" : why)); return; }
                 publish(b);
                 return;
             }
             try {
                 SessionDirectoryClient.Snapshot snap = mClient.join(mMemberId, mParams.playerName, localVip);
+                stage("directory join OK through tunnel (" + (host != null && host.isRelayed() ? "relay" : "direct") + ")");
                 mMemberToken = snap.token;
                 mJoined = true;
                 mHeartbeatFailures = 0;
@@ -533,10 +570,12 @@ public final class VirtualLanSession {
                 publish(b);
             } catch (SessionDirectoryClient.RejectedException e) {
                 if (e.code == 403) { requestEnd(Reason.KICKED, ""); return; }
-                if (now - mPhaseStarted > ESTABLISH_TIMEOUT_MS) { fail(Reason.HOST_UNREACHABLE, e.getMessage()); return; }
+                stage("directory rejected join: HTTP " + e.code + " " + e.getMessage());
+                if (now - mPhaseStarted > ESTABLISH_TIMEOUT_MS) { fail(Reason.HOST_UNREACHABLE, "directory HTTP " + e.code + " " + e.getMessage()); return; }
                 publish(b);
             } catch (IOException e) {
-                if (now - mPhaseStarted > ESTABLISH_TIMEOUT_MS) { fail(Reason.HOST_UNREACHABLE, e.getMessage()); return; }
+                stage("directory join failed via 127.0.0.1:" + mLocalDirectoryPort + " -> " + mHostVip + ":" + mHostDirectoryPort + " \u2014 " + describe(e));
+                if (now - mPhaseStarted > ESTABLISH_TIMEOUT_MS) { fail(Reason.HOST_UNREACHABLE, "directory: " + describe(e)); return; }
                 publish(b);
             }
             return;
@@ -567,6 +606,7 @@ public final class VirtualLanSession {
                 mHeartbeatFailures++;
                 if (mHeartbeatFailures >= 3 && phase.isConnected()) {
                     mLostSince = now;
+                    stage("heartbeat lost x" + mHeartbeatFailures + " (" + describe(e) + "), reconnecting");
                     addEvent(Event.Type.RECONNECTING, "");
                     publish(b.phase(Phase.RECONNECTING));
                 } else if (phase == Phase.RECONNECTING && mLostSince > 0 && now - mLostSince > RECONNECT_GIVE_UP_MS) {
@@ -599,6 +639,8 @@ public final class VirtualLanSession {
         if (!ok) return false;
         mClient = new SessionDirectoryClient(mParams.code.authToken, mLocalDirectoryPort, 4000);
         mForwardsAdded = true;
+        stage("port-forwards added: game 127.0.0.1:" + mLocalGamePort + " -> " + mHostVip + ":" + mHostProxyPort
+                + ", directory 127.0.0.1:" + mLocalDirectoryPort + " -> " + mHostVip + ":" + mHostDirectoryPort);
         mEnv.log("forwards: game 127.0.0.1:" + mLocalGamePort + " -> " + mHostVip + ":" + mHostProxyPort
                 + ", directory 127.0.0.1:" + mLocalDirectoryPort + " -> " + mHostVip + ":" + mHostDirectoryPort);
         return true;

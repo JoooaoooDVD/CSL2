@@ -31,6 +31,7 @@ public final class VirtualLanStateBundler {
         b.putString("proto", s.tunnelProto);
         b.putString("engine", s.engineVersion);
         b.putStringArrayList("relayNames", new ArrayList<>(s.relayNames));
+        b.putStringArrayList("stages", new ArrayList<>(s.stages));
         b.putBoolean("worldOpen", s.worldOpen);
         b.putString("worldName", s.worldName);
         b.putString("motd", s.motd);
@@ -106,6 +107,8 @@ public final class VirtualLanStateBundler {
             if (type != null) events.add(new VirtualLanState.Event(eb.getLong("seq"), type, eb.getString("arg", "")));
         }
         sb.events(events);
+        ArrayList<String> stages = b.getStringArrayList("stages");
+        if (stages != null) sb.stages(stages);
         VirtualLanState state = sb.build();
         return state;
     }

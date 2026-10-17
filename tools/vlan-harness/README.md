@@ -19,14 +19,16 @@ done
 
 # 3. compile core + harness
 mkdir -p /tmp/jc /tmp/harness
-javac -source 8 -target 8 -cp /tmp/lib/json.jar -d /tmp/jc \
+javac -encoding UTF-8 -source 8 -target 8 -cp /tmp/lib/json.jar -d /tmp/jc \
   /tmp/stubs/androidx/annotation/*.java \
   app_cs/src/main/java/com/craftstudio/cslauncher/multiplayer/core/*.java
 javac -cp /tmp/jc:/tmp/lib/json.jar -d /tmp/harness tools/vlan-harness/Harness.java
 
-# 4. run (add "kick" to test removing the guest)
+# 4. run (add "kick" to test removing the guest, "relay" to forbid direct paths so the
+#    guest MUST carry its traffic through the public relay nodes)
 java -Dengine.dir=/tmp/jnitest/x86_64 -cp /tmp/harness:/tmp/jc:/tmp/lib/json.jar Harness
 java -Dengine.dir=/tmp/jnitest/x86_64 -cp /tmp/harness:/tmp/jc:/tmp/lib/json.jar Harness kick
+java -Dengine.dir=/tmp/jnitest/x86_64 -cp /tmp/harness:/tmp/jc:/tmp/lib/json.jar Harness relay
 ```
 
 Expected: guest reaches `CONNECTED_*`, `PING THROUGH TUNNEL -> Status{...}` succeeds, world

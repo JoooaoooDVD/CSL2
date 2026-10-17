@@ -269,6 +269,67 @@ start on Android 14/15, and real cellular NAT behaviour. These are the first thi
 device; all of them have known-good precedents (`libunpack200.so` exec, `GameService` FGS,
 EasyTier's own Android builds).
 
+### 7.1 Device regression found after the first build (fixed)
+
+**Symptom (real phones, same Wi-Fi and Wi-Fi/data):** guest reached *Establishing tunnel* and
+after 45 s failed with *"The host was found but a path to it could not be established"*
+(`HOST_UNREACHABLE`). The engine, peer discovery and port-forwards were all fine.
+
+**Root cause:** the app targets SDK 36, and `res/xml/netconfig.xml` only whitelists `ely.by` for
+cleartext HTTP. `SessionDirectoryClient` used `HttpURLConnection` for
+`http://127.0.0.1:<forwarded-port>/v1/join`; Android applies the cleartext policy to loopback
+too, so every join threw `IOException: Cleartext HTTP traffic to 127.0.0.1 not permitted` — in
+the guest's own process, before a single byte entered the tunnel. The desktop harness (plain
+JVM) cannot reproduce this, which is why it passed.
+
+**Fix (`Fix[multiplayer]`):** the directory client now speaks its tiny HTTP/1.1 subset over a
+plain `java.net.Socket` (the traffic is loopback → encrypted tunnel, so there is nothing to
+protect with the cleartext policy). No manifest / network-security change, no timeout change.
+
+**Diagnostics added (no secrets):** every session now records a timestamped *stage trail* that is
+shown live under the status line while connecting and included in *Copy diagnostics*:
+
+```
++0.4s host services up: proxy 0.0.0.0:25565, directory 0.0.0.0:25560, hostname cslp-host-25565-25560
++0.5s engine started (rpc 127.0.0.1:17175)
++2.9s LAN world detected on port 37461 -> proxy retargeted
++5.3s relay network joined (5 nodes, vip 10.144.144.1)
+--- guest ---
++5.2s relay network joined (5 nodes, vip 10.144.144.2, nat PortRestricted)
++7.8s host peer found: 10.144.144.1 path=relay(2) lat=501ms (proxy 25565, directory 25560)
++8.0s port-forwards added: game 127.0.0.1:25575 -> 10.144.144.1:25565, directory 127.0.0.1:41709 -> 10.144.144.1:25560
++8.6s directory join OK through tunnel (relay)
+```
+
+Failure lines are stage specific: `port-forward add failed: cli port-forward exit 1: …`,
+`directory join failed via 127.0.0.1:41709 -> 10.144.144.1:25560 — ConnectException: …`,
+`directory rejected join: HTTP 401 …`, `engine died (exit 137), restart 1/3`,
+`heartbeat lost x3 (SocketTimeoutException …), reconnecting`. The failure card shows the
+specific detail under the generic reason.
+
+**Relay path really carries traffic:** the harness gained a `relay` mode
+(`disable_p2p = true` on the guest, `Params.relayOnly`). Run 2026-10-17: guest
+`CONNECTED_RELAY`, `PING THROUGH TUNNEL -> Status{Raj - Survival World, 1.20.1/763, 1/8, 356ms}`
+through a public community node, world close/reopen mirrored, host end → `HOST_ENDED`. So the
+relay fallback is proven to forward our private network's data, not just to list peers.
+
+### 7.2 On-device test procedure (A / B / C)
+
+Install the CI `app-debug` APK on two phones. On the host: launch a world → *Open to LAN* →
+pause menu → *Virtual LAN* → *Create session* → share the code. On the guest: *Virtual LAN
+Multiplayer* → *Join* → code → wait for *Connected directly / through relay* → *Join World*
+(or Multiplayer → `[Virtual LAN]` entry).
+
+| Test | Networks | Pass criteria |
+|---|---|---|
+| A | both on the same Wi-Fi | stage trail reaches `directory join OK`; status *Connected directly* (expected) or *through relay* (allowed: some routers isolate clients); world joins and chunks load |
+| B | host Wi-Fi, guest mobile data | same; *through relay* is normal on CGNAT; latency shown is the real engine RTT |
+| C | host mobile data, guest Wi-Fi | same; also confirms the host's LAN port is found from the game log when cellular blocks multicast |
+
+If anything stops, press *Copy diagnostics* on **both** phones and read the last stage line; it
+names the exact hop (engine / relay / host peer / port-forward / directory / heartbeat).
+`adb logcat -s VirtualLAN` shows the same trail with the scrubbed engine log.
+
 ---
 
 ## 8. Known limitations

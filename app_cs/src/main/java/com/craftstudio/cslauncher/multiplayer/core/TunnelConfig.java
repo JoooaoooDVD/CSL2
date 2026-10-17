@@ -38,6 +38,8 @@ public final class TunnelConfig {
     public String networkName;
     public String networkSecret;
     public boolean multiThread = true;
+    /** Diagnostics / restrictive networks: never try direct paths, go through relay nodes only */
+    public boolean disableP2p;
 
     @NonNull
     public String toToml() {
@@ -75,6 +77,7 @@ public final class TunnelConfig {
         sb.append("latency_first = true\n");
         sb.append("private_mode = true\n");
         if (multiThread) sb.append("multi_thread = true\n");
+        if (disableP2p) sb.append("disable_p2p = true\n");
         return sb.toString();
     }
 

@@ -54,7 +54,7 @@ public class Harness {
         VirtualLanSession.Params hp=new VirtualLanSession.Params(); hp.role=VirtualLanState.Role.HOST; hp.code=code; hp.playerName="Raj"; hp.allowRemoteNodeList=false;
         VirtualLanSession host=new VirtualLanSession(new Env("host"), new File("/tmp/harness/cache"), hp, listener("HOST")); host.start();
         Thread.sleep(500);
-        VirtualLanSession.Params gp=new VirtualLanSession.Params(); gp.role=VirtualLanState.Role.GUEST; gp.code=code; gp.playerName="Priya"; gp.allowRemoteNodeList=false; gp.guestGamePort=25575;
+        VirtualLanSession.Params gp=new VirtualLanSession.Params(); gp.role=VirtualLanState.Role.GUEST; gp.code=code; gp.playerName="Priya"; gp.allowRemoteNodeList=false; gp.guestGamePort=25575; gp.relayOnly=Arrays.asList(a).contains("relay");
         VirtualLanSession guest=new VirtualLanSession(new Env("guest"), new File("/tmp/harness/cache"), gp, listener("GUEST")); guest.start();
         long deadline=System.currentTimeMillis()+120000;
         while(System.currentTimeMillis()<deadline && !guest.state().phase.isConnected() && !guest.isFinished()) Thread.sleep(500);

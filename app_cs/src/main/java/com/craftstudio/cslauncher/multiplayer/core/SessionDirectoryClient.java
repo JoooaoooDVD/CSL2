@@ -10,8 +10,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.io.BufferedInputStream;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -131,27 +132,52 @@ public final class SessionDirectoryClient {
         }
     }
 
+    /**
+     * Minimal HTTP/1.1 client over a plain socket. Deliberately NOT HttpURLConnection: on
+     * targetSdk >= 28 Android applies the network-security cleartext policy to loopback as well,
+     * so an http://127.0.0.1 request fails with "Cleartext HTTP traffic not permitted" unless the
+     * manifest whitelists it. The traffic here never leaves the device (it enters the encrypted
+     * tunnel on 127.0.0.1), so a raw socket is the correct, policy-independent transport.
+     */
     private JSONObject call(String method, String path, @Nullable JSONObject body) throws IOException {
         int port = mLocalPort;
         if (port <= 0) throw new IOException("directory port not ready");
-        HttpURLConnection c = (HttpURLConnection) new URL("http://127.0.0.1:" + port + path).openConnection();
+        byte[] payload = body == null ? new byte[0] : body.toString().getBytes(StandardCharsets.UTF_8);
+        StringBuilder head = new StringBuilder(256);
+        head.append(method).append(' ').append(path).append(" HTTP/1.1\r\n")
+                .append("Host: 127.0.0.1:").append(port).append("\r\n")
+                .append("X-CSL-Auth: ").append(mAuthToken).append("\r\n")
+                .append("Connection: close\r\n")
+                .append("Accept: application/json\r\n");
+        if (body != null) {
+            head.append("Content-Type: application/json; charset=utf-8\r\n")
+                    .append("Content-Length: ").append(payload.length).append("\r\n");
+        }
+        head.append("\r\n");
+        Socket socket = new Socket();
         try {
-            c.setRequestMethod(method);
-            c.setConnectTimeout(mTimeoutMs);
-            c.setReadTimeout(mTimeoutMs);
-            c.setUseCaches(false);
-            c.setRequestProperty("X-CSL-Auth", mAuthToken);
-            c.setRequestProperty("Connection", "close");
-            if (body != null) {
-                byte[] bytes = body.toString().getBytes(StandardCharsets.UTF_8);
-                c.setDoOutput(true);
-                c.setFixedLengthStreamingMode(bytes.length);
-                c.setRequestProperty("Content-Type", "application/json; charset=utf-8");
-                try (OutputStream out = c.getOutputStream()) { out.write(bytes); }
+            socket.setTcpNoDelay(true);
+            socket.setSoTimeout(mTimeoutMs);
+            socket.connect(new InetSocketAddress("127.0.0.1", port), mTimeoutMs);
+            OutputStream out = socket.getOutputStream();
+            out.write(head.toString().getBytes(StandardCharsets.ISO_8859_1));
+            out.write(payload);
+            out.flush();
+            InputStream in = new BufferedInputStream(socket.getInputStream(), 8192);
+            String statusLine = readLine(in);
+            if (statusLine == null || !statusLine.startsWith("HTTP/")) throw new IOException("bad directory status line");
+            String[] parts = statusLine.split(" ", 3);
+            int code;
+            try { code = Integer.parseInt(parts[1].trim()); } catch (Exception e) { throw new IOException("bad directory status: " + statusLine); }
+            int contentLength = -1;
+            String line;
+            while ((line = readLine(in)) != null && !line.isEmpty()) {
+                int colon = line.indexOf(':');
+                if (colon > 0 && line.substring(0, colon).trim().equalsIgnoreCase("Content-Length")) {
+                    try { contentLength = Integer.parseInt(line.substring(colon + 1).trim()); } catch (NumberFormatException ignored) {}
+                }
             }
-            int code = c.getResponseCode();
-            InputStream in = code >= 400 ? c.getErrorStream() : c.getInputStream();
-            String text = in == null ? "" : readAll(in);
+            String text = readBody(in, contentLength);
             if (code >= 400) {
                 String reason = "";
                 try { reason = new JSONObject(text).optString("error", ""); } catch (Exception ignored) {}
@@ -161,15 +187,41 @@ public final class SessionDirectoryClient {
         } catch (org.json.JSONException e) {
             throw new IOException("bad directory response", e);
         } finally {
-            c.disconnect();
+            try { socket.close(); } catch (IOException ignored) {}
         }
     }
 
-    private static String readAll(InputStream in) throws IOException {
+    @Nullable
+    private static String readLine(InputStream in) throws IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream(128);
+        int c;
+        boolean any = false;
+        while ((c = in.read()) >= 0) {
+            any = true;
+            if (c == '\n') break;
+            if (c != '\r') bos.write(c);
+            if (bos.size() > 16 * 1024) throw new IOException("directory header too long");
+        }
+        if (!any) return null;
+        return new String(bos.toByteArray(), StandardCharsets.ISO_8859_1);
+    }
+
+    private static String readBody(InputStream in, int contentLength) throws IOException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         byte[] buf = new byte[4096];
-        int n;
-        while ((n = in.read(buf)) >= 0) bos.write(buf, 0, n);
+        if (contentLength >= 0) {
+            int remaining = contentLength;
+            while (remaining > 0) {
+                int n = in.read(buf, 0, Math.min(buf.length, remaining));
+                if (n < 0) break;
+                bos.write(buf, 0, n);
+                remaining -= n;
+            }
+        } else {
+            int n;
+            while ((n = in.read(buf)) >= 0) bos.write(buf, 0, n);
+        }
         return new String(bos.toByteArray(), StandardCharsets.UTF_8);
     }
+
 }

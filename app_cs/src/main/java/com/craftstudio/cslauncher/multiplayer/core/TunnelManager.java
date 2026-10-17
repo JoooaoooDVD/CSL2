@@ -266,13 +266,30 @@ public final class TunnelManager {
 
     public boolean addPortForward(@NonNull String proto, @NonNull String bind, @NonNull String dst) {
         String out = cli(5000, "port-forward", "add", proto, bind, dst);
-        return out != null && !out.toLowerCase(Locale.ROOT).contains("error");
+        if (out == null) return false;
+        if (out.toLowerCase(Locale.ROOT).contains("error")) {
+            mLastCliError = "cli: " + oneLine(out);
+            return false;
+        }
+        return true;
+    }
+
+    /** Human-readable reason for the last failed CLI call (no secrets: only CLI output / exit codes) */
+    @NonNull
+    public String lastCliError() { String e = mLastCliError; return e == null ? "" : e; }
+
+    private volatile String mLastCliError;
+
+    private static String oneLine(String s) {
+        String t = s.replace('\r', ' ').replace('\n', ' ').trim();
+        return t.length() > 160 ? t.substring(0, 160) + "\u2026" : t;
     }
 
     @Nullable
     private String cli(long timeoutMs, String... args) {
         File cli = mEnv.cliBinary();
-        if (cli == null || mRpcPort <= 0 || !mStarted) return null;
+        if (cli == null) { mLastCliError = "cli binary missing"; return null; }
+        if (mRpcPort <= 0 || !mStarted) { mLastCliError = "engine not running"; return null; }
         List<String> cmd = new ArrayList<>();
         cmd.add(cli.getAbsolutePath());
         cmd.add("-p");
@@ -285,9 +302,14 @@ public final class TunnelManager {
             Process p = pb.start();
             String out = readAll(p.getInputStream(), timeoutMs, p);
             int code = waitFor(p, 500);
-            if (code != 0) return null;
+            if (code != 0) {
+                mLastCliError = "cli " + args[0] + (args.length > 1 ? " " + args[1] : "") + " exit " + code + (out.isEmpty() ? "" : ": " + oneLine(out));
+                return null;
+            }
+            mLastCliError = null;
             return out;
         } catch (Exception e) {
+            mLastCliError = "cli exec failed: " + e.getClass().getSimpleName() + " " + e.getMessage();
             return null;
         }
     }

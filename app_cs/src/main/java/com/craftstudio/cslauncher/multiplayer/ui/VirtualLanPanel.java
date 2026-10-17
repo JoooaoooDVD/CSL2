@@ -797,8 +797,8 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
     private String phaseDetail(VirtualLanState s) {
         switch (s.phase) {
             case STARTING: return mContext.getString(R.string.vlan_detail_starting);
-            case DISCOVERING: return mContext.getString(s.isHost() ? R.string.vlan_detail_host_discovering : R.string.vlan_detail_guest_discovering);
-            case ESTABLISHING: return mContext.getString(R.string.vlan_detail_establishing);
+            case DISCOVERING: return withStage(s, mContext.getString(s.isHost() ? R.string.vlan_detail_host_discovering : R.string.vlan_detail_guest_discovering));
+            case ESTABLISHING: return withStage(s, mContext.getString(R.string.vlan_detail_establishing));
             case CONNECTED_DIRECT:
             case CONNECTED_RELAY:
                 if (s.isHost()) {
@@ -811,6 +811,15 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
         }
     }
 
+    /** Busy phases show the latest engine stage underneath so a stall is explainable without the log */
+    private static String withStage(VirtualLanState s, String base) {
+        if (s.stages.isEmpty()) return base;
+        String last = s.stages.get(s.stages.size() - 1);
+        int sp = last.indexOf(' ');
+        if (sp > 0 && last.startsWith("+")) last = last.substring(sp + 1);
+        return base + "\n" + last;
+    }
+
     private String reasonText(VirtualLanState s) {
         switch (s.reason) {
             case UNSUPPORTED_DEVICE: return mContext.getString(R.string.vlan_unsupported);
@@ -820,7 +829,7 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
             case NO_RELAY_REACHABLE: return mContext.getString(R.string.vlan_reason_no_relay);
             case RELAY_LOST: return mContext.getString(R.string.vlan_reason_relay_lost);
             case HOST_NOT_FOUND: return mContext.getString(R.string.vlan_reason_host_not_found);
-            case HOST_UNREACHABLE: return mContext.getString(R.string.vlan_reason_host_unreachable);
+            case HOST_UNREACHABLE: return mContext.getString(R.string.vlan_reason_host_unreachable) + (s.detail.isEmpty() ? "" : "\n" + s.detail);
             case HOST_LOST: return mContext.getString(R.string.vlan_reason_host_lost);
             case HOST_ENDED: return mContext.getString(R.string.vlan_reason_host_ended);
             case KICKED: return mContext.getString(R.string.vlan_reason_kicked);
@@ -881,6 +890,8 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
             b.append("member ").append(m.name).append(' ').append(m.vip).append(" lat=").append(m.latencyMs).append(" direct=").append(m.direct).append('\n');
         }
         b.append("detail=").append(s.detail).append('\n');
+        b.append("stages:\n");
+        for (String line : s.stages) b.append("  ").append(line).append('\n');
         return b.toString();
     }
 

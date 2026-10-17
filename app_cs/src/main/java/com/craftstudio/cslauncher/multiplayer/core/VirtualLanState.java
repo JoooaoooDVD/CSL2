@@ -119,6 +119,8 @@ public final class VirtualLanState {
 
     public final List<Member> members;
     public final List<Event> events;
+    /** Structured, secret-free stage trail ("+3.2s host found cost=relay lat=180ms") for diagnostics */
+    public final List<String> stages;
 
     private VirtualLanState(Builder b) {
         role = b.role; phase = b.phase; reason = b.reason; detail = b.detail; phaseSince = b.phaseSince;
@@ -131,6 +133,7 @@ public final class VirtualLanState {
         hostName = b.hostName; hostLatencyMs = b.hostLatencyMs; localGamePort = b.localGamePort;
         members = Collections.unmodifiableList(new ArrayList<>(b.members));
         events = Collections.unmodifiableList(new ArrayList<>(b.events));
+        stages = Collections.unmodifiableList(new ArrayList<>(b.stages));
     }
 
     public static final VirtualLanState IDLE = new Builder().build();
@@ -163,6 +166,7 @@ public final class VirtualLanState {
         int localGamePort;
         List<Member> members = new ArrayList<>();
         List<Event> events = new ArrayList<>();
+        List<String> stages = new ArrayList<>();
 
         public Builder() {}
 
@@ -174,7 +178,7 @@ public final class VirtualLanState {
             worldOpen = s.worldOpen; worldName = s.worldName; motd = s.motd; versionName = s.versionName; lanPort = s.lanPort;
             proxyPort = s.proxyPort; directoryPort = s.directoryPort; playersOnline = s.playersOnline; playersMax = s.playersMax; inGame = s.inGame;
             hostName = s.hostName; hostLatencyMs = s.hostLatencyMs; localGamePort = s.localGamePort;
-            members = new ArrayList<>(s.members); events = new ArrayList<>(s.events);
+            members = new ArrayList<>(s.members); events = new ArrayList<>(s.events); stages = new ArrayList<>(s.stages);
         }
 
         public Builder role(Role v) { role = v; return this; }
@@ -199,6 +203,7 @@ public final class VirtualLanState {
         public Builder hostLatency(double v) { hostLatencyMs = v; return this; }
         public Builder members(List<Member> v) { members = new ArrayList<>(v); return this; }
         public Builder events(List<Event> v) { events = new ArrayList<>(v); return this; }
+        public Builder stages(List<String> v) { stages = new ArrayList<>(v); return this; }
         public VirtualLanState build() { return new VirtualLanState(this); }
     }
 }
