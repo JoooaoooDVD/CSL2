@@ -268,11 +268,13 @@ public final class VirtualLanService extends Service {
         if (relays != null) params.userRelayUris = relays;
 
         AndroidTunnelEnvironment env = new AndroidTunnelEnvironment(this, role == VirtualLanState.Role.HOST ? "host" : "guest");
+        final VirtualLanSession[] ref = new VirtualLanSession[1];
         VirtualLanSession session = new VirtualLanSession(env, new java.io.File(getCacheDir(), "virtual_lan"), params, new VirtualLanSession.Listener() {
             @Override
             public void onStateChanged(@NonNull VirtualLanState state) {
                 mMain.post(() -> {
-                    if (mSession != session) return;
+                    VirtualLanSession current = ref[0];
+                    if (current == null || mSession != current) return;
                     mState = state;
                     broadcast();
                 });
@@ -281,10 +283,11 @@ public final class VirtualLanService extends Service {
             @Override
             public void onFinished(@NonNull VirtualLanState finalState) {
                 mMain.post(() -> {
-                    if (mSession != session) return;
-                    mLastLog = session.engineLog();
+                    VirtualLanSession current = ref[0];
+                    if (current == null || mSession != current) return;
+                    mLastLog = current.engineLog();
                     mSession = null;
-                    if (sActive == session) sActive = null;
+                    if (sActive == current) sActive = null;
                     mState = finalState;
                     LogTap.removeSink(mLogSink);
                     releaseNetworkWatch();
@@ -294,6 +297,7 @@ public final class VirtualLanService extends Service {
                 });
             }
         });
+        ref[0] = session;
         mSession = session;
         sActive = session;
         mState = session.state();
