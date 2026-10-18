@@ -412,7 +412,6 @@
                         android:layout_height="match_parent"
                         android:alpha="0"
                         android:background="@drawable/bg_home_play_fill"
-                        android:scaleX="0"
                         android:visibility="gone" />
 
                     <View
@@ -425,6 +424,7 @@
                 </FrameLayout>
 
                 <View
+                    android:id="@+id/home_play_edge"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_margin="3dp"

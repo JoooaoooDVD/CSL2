@@ -4,6 +4,14 @@
      Hidden by GameActivity.hideLoadingScreen() when the game surface appears. -->
 <merge xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- The PLAY rocket, idling above the pill; flies up and bursts when the game appears -->
+    <com.craftstudio.cslauncher.game.LaunchRocketView
+        android:id="@+id/ls_rocket"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clickable="false"
+        android:focusable="false" />
+
     <LinearLayout
         android:id="@+id/ls_pill"
         android:layout_width="wrap_content"

@@ -731,6 +731,8 @@
     <string name="ss_restarting">Restart ho raha hai…</string>
     <string name="ss_footnote">Custom folder chunne ke baad launcher ek baar restart hoga.</string>
     <string name="ss_err_not_writable">Is folder mein likh nahi sakte. Koi aur try karo.</string>
+    <string name="ss_err_not_empty">Yeh folder khaali nahi hai aur isme CS Launcher ka data bhi nahi hai. Khaali folder chuno, ya wahi folder jo pehle use kiya tha.</string>
+    <string name="ss_existing_data">Yahan CS Launcher ka purana data mila \u2014 tumhare profiles, worlds aur versions wapas use honge.</string>
     <string name="ss_err_pick_first">Pehle folder chuno, ya app folder ke saath chalo.</string>
     <string name="auth_select_banner_sub">Login ka tareeka chuno</string>
     <string name="auth_select_section_signin">ISSE LOGIN KARO</string>

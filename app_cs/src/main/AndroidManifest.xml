@@ -175,10 +175,11 @@
             </intent-filter>
         </service>
         <!-- Shows Android's VPN consent dialog, then starts / refuses the session via the service -->
+        <!-- No noHistory: OEM ROMs show the consent as a full activity, which would finish a
+             noHistory caller before the result could ever be delivered. -->
         <activity android:name=".multiplayer.VpnConsentActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"
             android:excludeFromRecents="true"
-            android:noHistory="true"
             android:launchMode="singleTop"
             android:exported="false"/>
     </application>

@@ -40,17 +40,36 @@ public final class WelcomePolicy {
         View root = LayoutInflater.from(activity).inflate(R.layout.fragment_policy, content, false);
         content.addView(root, new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        // Full-bleed page: the sheet fills the whole window. (With the card inset by a margin on a
+        // translucent scrim, the launcher showed through as dark bands at the top and bottom.)
+        root.setBackgroundColor(0xFF0F1218);
+        View card = root.findViewById(R.id.policy_card);
+        ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) card.getLayoutParams();
+        lp.setMargins(0, 0, 0, 0);
+        card.setLayoutParams(lp);
+        card.setBackground(null);
+        card.setElevation(0f);
         root.setAlpha(0f);
         root.animate().alpha(1f).setDuration(Motion.MEDIUM).setInterpolator(Motion.ENTER).start();
-        View card = root.findViewById(R.id.policy_card);
-        card.setScaleX(0.94f);
-        card.setScaleY(0.94f);
-        card.setTranslationY(24f * activity.getResources().getDisplayMetrics().density);
-        card.animate().scaleX(1f).scaleY(1f).translationY(0f).setDuration(Motion.LONG).setInterpolator(Motion.ENTER).start();
+        View header = root.findViewById(R.id.policy_header);
+        View scroll = root.findViewById(R.id.policy_scroll);
+        View footer = root.findViewById(R.id.policy_footer);
+        float d = activity.getResources().getDisplayMetrics().density;
+        for (View v : new View[]{header, scroll, footer}) {
+            if (v == null) continue;
+            v.setAlpha(0f);
+            v.setTranslationY(18f * d);
+        }
+        long delay = 80L;
+        for (View v : new View[]{header, scroll, footer}) {
+            if (v == null) continue;
+            v.animate().alpha(1f).translationY(0f).setStartDelay(delay).setDuration(Motion.LONG).setInterpolator(Motion.ENTER).start();
+            delay += 70L;
+        }
 
         PolicyBinder.bind(root, true, () -> {
             LauncherPreferences.DEFAULT_PREF.edit().putBoolean(PREF_KEY, true).apply();
-            root.animate().alpha(0f).scaleX(1.03f).scaleY(1.03f)
+            root.animate().alpha(0f)
                     .setDuration(Motion.MEDIUM).setInterpolator(Motion.EXIT)
                     .withEndAction(() -> {
                         content.removeView(root);

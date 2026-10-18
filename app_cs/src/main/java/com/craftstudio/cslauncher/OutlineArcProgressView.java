@@ -203,17 +203,27 @@ public class OutlineArcProgressView extends View {
         canvas.drawPath(mOutlinePath, mTrackPaint);
         mOutlinePath.rewind();
 
-        // Solid arc for the known percent (determinate feedback, smoothly animated)
+        // Determinate: one solid arc with a bright head at its front - no extra travelling band
         if (mDisplayedProgress >= 0) {
             float done = total * Math.min(Math.max(mDisplayedProgress, 0), 100) / 100f;
             if (done > 1f) {
                 mMeasure.getSegment(0f, done, mOutlinePath, true);
+                canvas.drawPath(mOutlinePath, mGlowPaint);
                 canvas.drawPath(mOutlinePath, mProgressPaint);
                 mOutlinePath.rewind();
+                if (mMeasure.getPosTan(Math.min(done, total - 0.5f), mHeadPos, null)) {
+                    float r = mStrokeWidthPx * 0.9f;
+                    float pulse = 1.4f + 0.6f * (float) Math.sin(mPhase * Math.PI * 2f);
+                    mHeadPaint.setAlpha(80);
+                    canvas.drawCircle(mHeadPos[0], mHeadPos[1], r * pulse, mHeadPaint);
+                    mHeadPaint.setAlpha(255);
+                    canvas.drawCircle(mHeadPos[0], mHeadPos[1], r, mHeadPaint);
+                }
             }
+            return;
         }
 
-        // Traveling segment: soft glow underneath, bright core on top
+        // Indeterminate: a travelling segment with a soft glow underneath and a bright head
         float segment = total * 0.28f;
         float start = mPhase * total;
         float front = (start + segment) % total;

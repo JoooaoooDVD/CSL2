@@ -1,70 +1,82 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Settings row (every Preference): rounded card, icon tile, title + summary, widget frame
-    for switches / chevrons. IDs follow the androidx preference contract so every existing
-    preference keeps working.
+    Settings row (every Preference). Rows are grouped into one rounded card per section by
+    SettingsPageAdapter, which sets the background (top / middle / bottom / single) and shows
+    the hairline between rows. IDs follow the androidx preference contract.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginLeft="2dp"
-    android:layout_marginRight="2dp"
-    android:layout_marginBottom="8dp"
-    android:background="@drawable/bg_sr_card"
-    android:gravity="center_vertical"
-    android:minHeight="66dp"
-    android:orientation="horizontal"
-    android:paddingLeft="12dp"
-    android:paddingTop="11dp"
-    android:paddingRight="10dp"
-    android:paddingBottom="11dp">
-
-    <ImageView
-        android:id="@android:id/icon"
-        android:layout_width="42dp"
-        android:layout_height="42dp"
-        android:background="@drawable/bg_sr_icon"
-        android:contentDescription="@null"
-        android:padding="10dp"
-        android:scaleType="fitCenter"
-        android:tint="@color/pe_icon"
-        android:visibility="gone" />
+    android:background="@drawable/bg_sr_row_single"
+    android:orientation="vertical">
 
     <LinearLayout
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="13dp"
-        android:layout_weight="1"
-        android:orientation="vertical">
+        android:gravity="center_vertical"
+        android:minHeight="64dp"
+        android:orientation="horizontal"
+        android:paddingLeft="14dp"
+        android:paddingTop="11dp"
+        android:paddingRight="12dp"
+        android:paddingBottom="11dp">
 
-        <TextView
-            android:id="@android:id/title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:fontFamily="@font/noto_sans_bold"
-            android:includeFontPadding="false"
-            android:maxLines="2"
-            android:textColor="@color/pe_text_primary"
-            android:textSize="14sp" />
-
-        <TextView
-            android:id="@android:id/summary"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="3dp"
-            android:ellipsize="end"
-            android:lineSpacingExtra="1dp"
-            android:maxLines="3"
-            android:textColor="@color/pe_text_secondary"
-            android:textSize="11.5sp"
+        <ImageView
+            android:id="@android:id/icon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/bg_sr_icon"
+            android:contentDescription="@null"
+            android:padding="10dp"
+            android:scaleType="fitCenter"
+            android:tint="@color/pe_icon"
             android:visibility="gone" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="13dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@android:id/title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="@font/noto_sans_bold"
+                android:includeFontPadding="false"
+                android:maxLines="2"
+                android:textColor="@color/pe_text_primary"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@android:id/summary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:ellipsize="end"
+                android:lineSpacingExtra="1dp"
+                android:maxLines="3"
+                android:textColor="@color/pe_text_secondary"
+                android:textSize="11.5sp"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@android:id/widget_frame"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="12dp" />
     </LinearLayout>
 
-    <FrameLayout
-        android:id="@android:id/widget_frame"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:layout_marginLeft="10dp" />
+    <View
+        android:id="@+id/sr_divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginLeft="67dp"
+        android:layout_marginRight="12dp"
+        android:background="@color/pe_card_stroke"
+        android:visibility="gone" />
 </LinearLayout>

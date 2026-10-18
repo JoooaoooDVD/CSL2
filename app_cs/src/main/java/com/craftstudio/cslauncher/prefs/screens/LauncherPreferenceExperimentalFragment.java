@@ -9,6 +9,11 @@ import com.craftstudio.cslauncher.utils.GpuUtils;
 import com.craftstudio.cslauncher.R;
 
 public class LauncherPreferenceExperimentalFragment extends LauncherPreferenceFragment {
+    @Override
+    protected int[] pageHeader() {
+        return new int[]{R.drawable.ic_st_flask, R.string.preference_experimental_title, R.string.preference_experimental_description};
+    }
+
 
     @Override
     public void onCreatePreferences(Bundle b, String str) {

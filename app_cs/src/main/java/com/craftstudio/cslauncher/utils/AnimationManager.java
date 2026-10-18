@@ -162,100 +162,90 @@ public final class AnimationManager {
         Context context = root.getContext();
         if (!isEnabled(context, TYPE_SCREENS) && !isEnabled(context, TYPE_CONTENT)) return;
 
-        final FrameLayout overlay = new FrameLayout(context);
-        overlay.setClickable(false);
-        overlay.setFocusable(false);
-
-        View scrim = new View(context);
-        scrim.setBackgroundColor(Color.BLACK);
-        scrim.setAlpha(0f);
-        overlay.addView(scrim, new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-
-        LinearLayout group = buildBrandGroup(context);
-        group.setAlpha(0f);
-        group.setScaleX(0.88f);
-        group.setScaleY(0.88f);
-        FrameLayout.LayoutParams groupParams = new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        groupParams.gravity = Gravity.CENTER;
-        overlay.addView(group, groupParams);
-
+        final View overlay = android.view.LayoutInflater.from(context).inflate(R.layout.view_brand_intro, root, false);
         root.addView(overlay, new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        final float d = context.getResources().getDisplayMetrics().density;
 
-        final int enterMs = 340, holdMs = 520, exitMs = 300;
-        group.animate()
-                .alpha(1f).scaleX(1f).scaleY(1f)
-                .setDuration(enterMs)
-                .setInterpolator(new DecelerateInterpolator(1.6f))
-                .start();
-        scrim.animate()
-                .alpha(0.45f)
-                .setDuration(enterMs)
-                .setInterpolator(new DecelerateInterpolator())
-                .withEndAction(() -> group.postDelayed(() -> {
-                    group.animate()
-                            .alpha(0f).scaleX(1.06f).scaleY(1.06f)
-                            .setDuration(exitMs)
-                            .setInterpolator(new AccelerateInterpolator(1.2f))
-                            .start();
-                    scrim.animate()
-                            .alpha(0f)
-                            .setDuration(exitMs)
-                            .setInterpolator(new AccelerateInterpolator())
-                            .withEndAction(() -> root.removeView(overlay))
-                            .start();
-                }, holdMs))
-                .start();
+        final View group = overlay.findViewById(R.id.bi_group);
+        final View glow = overlay.findViewById(R.id.bi_glow);
+        final View logo = overlay.findViewById(R.id.bi_logo);
+        final View line = overlay.findViewById(R.id.bi_line);
+        final TextView team = overlay.findViewById(R.id.bi_team);
+        final TextView title = overlay.findViewById(R.id.bi_title);
+        final View version = overlay.findViewById(R.id.bi_version);
+
+        // Initial pose
+        glow.setAlpha(0f); glow.setScaleX(0.6f); glow.setScaleY(0.6f);
+        logo.setAlpha(0f); logo.setScaleX(0.72f); logo.setScaleY(0.72f); logo.setTranslationY(22f * d);
+        line.setScaleX(0f); line.setAlpha(0f);
+        team.setAlpha(0f); team.setTranslationY(10f * d); team.setLetterSpacing(0.9f);
+        title.setAlpha(0f); title.setTranslationY(14f * d);
+        version.setAlpha(0f);
+
+        final android.view.animation.Interpolator out = new DecelerateInterpolator(2.2f);
+        final android.view.animation.Interpolator soft = new android.view.animation.OvershootInterpolator(1.1f);
+
+        // 1. logo rises, halo blooms
+        logo.animate().alpha(1f).scaleX(1f).scaleY(1f).translationY(0f)
+                .setStartDelay(60L).setDuration(560L).setInterpolator(soft).start();
+        glow.animate().alpha(1f).scaleX(1f).scaleY(1f)
+                .setStartDelay(60L).setDuration(760L).setInterpolator(out).start();
+        // 2. platinum rule draws from the centre
+        line.animate().alpha(1f).scaleX(1f).setStartDelay(380L).setDuration(460L).setInterpolator(out).start();
+        // 3. CRAFT STUDIO tracks in (letter spacing tightens while it fades up)
+        android.animation.ValueAnimator tracking = android.animation.ValueAnimator.ofFloat(0.9f, 0.42f);
+        tracking.setStartDelay(520L);
+        tracking.setDuration(620L);
+        tracking.setInterpolator(out);
+        tracking.addUpdateListener(a -> team.setLetterSpacing((Float) a.getAnimatedValue()));
+        tracking.start();
+        team.animate().alpha(1f).translationY(0f).setStartDelay(520L).setDuration(520L).setInterpolator(out).start();
+        // 4. title lands, then a highlight sweeps across it once
+        title.animate().alpha(1f).translationY(0f).setStartDelay(700L).setDuration(520L).setInterpolator(out)
+                .withEndAction(() -> shimmerOnce(title)).start();
+        version.animate().alpha(1f).setStartDelay(980L).setDuration(400L).start();
+        // 5. idle breathing of the halo while we hold
+        android.animation.ObjectAnimator breathe = android.animation.ObjectAnimator.ofFloat(glow, View.ALPHA, 1f, 0.55f, 1f);
+        breathe.setStartDelay(900L);
+        breathe.setDuration(1500L);
+        breathe.setRepeatCount(android.animation.ValueAnimator.INFINITE);
+        breathe.start();
+
+        // 6. reveal the launcher: backdrop fades, brand lifts and softens
+        final long holdUntil = 2050L;
+        overlay.postDelayed(() -> {
+            breathe.cancel();
+            group.animate().alpha(0f).scaleX(1.05f).scaleY(1.05f).translationY(-12f * d)
+                    .setDuration(380L).setInterpolator(new AccelerateInterpolator(1.3f)).start();
+            overlay.animate().alpha(0f).setStartDelay(120L).setDuration(420L)
+                    .setInterpolator(new AccelerateInterpolator())
+                    .withEndAction(() -> root.removeView(overlay)).start();
+        }, holdUntil);
     }
 
-    /** CS Launcher Plus 1.4 / CRAFT STUDIO brand block used by the intro animation */
-    private static LinearLayout buildBrandGroup(@NonNull Context context) {
-        float density = context.getResources().getDisplayMetrics().density;
-        LinearLayout group = new LinearLayout(context);
-        group.setOrientation(LinearLayout.VERTICAL);
-        group.setGravity(Gravity.CENTER_HORIZONTAL);
-        int padH = (int) (24 * density);
-        int padV = (int) (18 * density);
-        group.setPadding(padH, padV, padH, padV);
-
-        int accent = themeColor(context, R.attr.colorPrimary, 0xFFB87333);
-
-        TextView title = new TextView(context);
-        title.setText(R.string.brand_short_name);
-        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 26);
-        title.setTypeface(Typeface.create("sans-serif-black", Typeface.NORMAL));
-        title.setLetterSpacing(0.14f);
-        title.setTextColor(Color.WHITE);
-        title.setGravity(Gravity.CENTER);
-        group.addView(title);
-
-        TextView version = new TextView(context);
-        version.setText(R.string.brand_version);
-        version.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17);
-        version.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
-        version.setLetterSpacing(0.30f);
-        version.setTextColor(accent);
-        version.setGravity(Gravity.CENTER);
-        LinearLayout.LayoutParams versionParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        versionParams.topMargin = (int) (4 * density);
-        group.addView(version, versionParams);
-
-        TextView team = new TextView(context);
-        team.setText(R.string.brand_team_name);
-        team.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
-        team.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
-        team.setLetterSpacing(0.34f);
-        team.setTextColor(0xB3FFFFFF);
-        team.setGravity(Gravity.CENTER);
-        LinearLayout.LayoutParams teamParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        teamParams.topMargin = (int) (10 * density);
-        group.addView(team, teamParams);
-
-        return group;
+    /** One pass of a light band across the glyphs (shader on the text paint, restored afterwards). */
+    private static void shimmerOnce(@NonNull final TextView text) {
+        final int base = text.getCurrentTextColor();
+        final float width = Math.max(1f, text.getWidth());
+        android.animation.ValueAnimator sweep = android.animation.ValueAnimator.ofFloat(-0.6f, 1.6f);
+        sweep.setDuration(900L);
+        sweep.setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator());
+        sweep.addUpdateListener(a -> {
+            float p = (Float) a.getAnimatedValue();
+            float x0 = (p - 0.35f) * width, x1 = (p + 0.35f) * width;
+            text.getPaint().setShader(new android.graphics.LinearGradient(x0, 0f, x1, 0f,
+                    new int[]{base, 0xFFFFFFFF, base}, new float[]{0f, 0.5f, 1f}, android.graphics.Shader.TileMode.CLAMP));
+            text.invalidate();
+        });
+        sweep.addListener(new android.animation.AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(android.animation.Animator animation) {
+                text.getPaint().setShader(null);
+                text.invalidate();
+            }
+        });
+        sweep.start();
     }
 
     /** Resolves a theme color attribute, with a fallback for exotic themes */

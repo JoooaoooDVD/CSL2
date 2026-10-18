@@ -622,14 +622,28 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
             mLaunchBarAnimator.cancel();
             mLaunchBarAnimator = null;
         }
-        screen.animate()
-                .alpha(0f)
-                .setDuration(300)
-                .withEndAction(() -> {
-                    ViewGroup parent = (ViewGroup) screen.getParent();
-                    if (parent != null) parent.removeView(screen);
-                })
-                .start();
+        final Runnable remove = () -> {
+            ViewGroup parent = (ViewGroup) screen.getParent();
+            if (parent != null) parent.removeView(screen);
+        };
+        final LaunchRocketView rocket = screen.findViewById(R.id.ls_rocket);
+        final View pill = screen.findViewById(R.id.ls_pill);
+        boolean motion = com.craftstudio.cslauncher.utils.AnimationManager.isEnabled(this,
+                com.craftstudio.cslauncher.utils.AnimationManager.TYPE_CONTENT);
+        if (rocket == null || !motion || isFinishing()) {
+            if (rocket != null) rocket.finishNow();
+            screen.animate().alpha(0f).setDuration(300).withEndAction(remove).start();
+            return;
+        }
+        // Lift-off: the pill drops away while the rocket climbs and bursts, then the layer goes
+        if (pill != null) {
+            pill.animate().alpha(0f).translationY(14f * getResources().getDisplayMetrics().density)
+                    .setStartDelay(220L).setDuration(320L)
+                    .setInterpolator(new android.view.animation.AccelerateInterpolator()).start();
+        }
+        rocket.launch(() -> screen.animate().alpha(0f).setDuration(220).withEndAction(remove).start());
+        // Safety net: never leave the layer around if the burst somehow stalls
+        screen.postDelayed(() -> { if (screen.getParent() != null) { rocket.finishNow(); remove.run(); } }, 4000L);
     }
 
     /**
@@ -668,6 +682,12 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
             });
             sweep.start();
             mLaunchBarAnimator = sweep;
+        }
+        LaunchRocketView rocket = mLoadingScreen.findViewById(R.id.ls_rocket);
+        if (rocket != null) {
+            float density = getResources().getDisplayMetrics().density;
+            // Rest just above the pill (pill ~46dp tall + 14dp margin + clearance)
+            rocket.setRestOffsetFromBottom(96f * density);
         }
         View pill = mLoadingScreen.findViewById(R.id.ls_pill);
         if (pill != null) {

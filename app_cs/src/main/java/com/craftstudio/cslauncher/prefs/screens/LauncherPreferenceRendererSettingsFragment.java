@@ -17,6 +17,11 @@ import java.util.Objects;
 
 /** Extra settings screen for the MobileGlues (MG-ES) renderer, reachable from the video settings */
 public class LauncherPreferenceRendererSettingsFragment extends LauncherPreferenceFragment {
+    @Override
+    protected int[] pageHeader() {
+        return new int[]{R.drawable.ic_px_layers_buffer, R.string.mcl_setting_title_renderer_settings, R.string.mcl_setting_title_renderer_subtitle};
+    }
+
     EditTextPreference GLSLCachePreference;
     ListPreference MultiDrawEmulationPreference;
     SwitchPreferenceCompat ComputeMultiDrawPreference;

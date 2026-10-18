@@ -236,6 +236,23 @@ request). The foreground notification is silent and offers an "End session" acti
 
 ---
 
+### 5.1 VPN consent robustness (round 13)
+
+Field reports: after entering a session code the guest's status stayed on "waiting" and, on
+some phones, the VPN never came up after the consent dialog. Root causes and fixes:
+
+* `VpnConsentActivity` was declared `noHistory`, so on ROMs that show the consent as a
+  full-screen activity the caller was finished before `onActivityResult` arrived and the
+  result was lost. `noHistory` is gone; the activity keeps `asked/left/delivered` across
+  recreation, treats `VpnService.prepare() == null` as the only truth (also when the ROM
+  returns `RESULT_CANCELED` after granting) and delivers the result exactly once, either as
+  `ACTION_START` or `ACTION_VPN_DENIED` to the foreground service.
+* Guest with an invalid / expired code now gets a `FAILED / HOST_NOT_FOUND` broadcast
+  instead of silently staying in the pending state.
+* `VirtualLanPanel` arms a 45 s watchdog while consent is pending: when the popup comes back
+  to the foreground it re-checks `prepare()` and either continues the create/join or shows
+  `VPN_DENIED`, so the UI can never be stuck on a stale status.
+
 ## 6. Relay / bootstrap nodes and costs
 
 EasyTier needs at least one reachable node to **meet** (exchange candidates); once peers are

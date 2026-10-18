@@ -1166,7 +1166,8 @@
     <string name="ss_err_perm">All files access is still off. Tap Allow and switch it on for CS Launcher Plus.</string>
     <string name="ss_err_unsupported">That location can\'t be used. Pick a folder on internal storage or the SD card.</string>
     <string name="ss_err_not_writable">Can\'t write in that folder. Try another one.</string>
-    <string name="ss_err_not_empty">That folder isn\'t empty. Please pick or create an empty folder so your files don\'t get mixed up.</string>
+    <string name="ss_err_not_empty">That folder isn\'t empty and doesn\'t contain CS Launcher data. Pick an empty folder, or the folder you used before.</string>
+    <string name="ss_existing_data">Existing CS Launcher data found here \u2014 your profiles, worlds and versions will be used again.</string>
     <string name="ss_err_pick_first">Pick a folder first, or go with the app folder.</string>
     <string name="auth_select_banner_sub">Choose how you want to sign in</string>
     <string name="auth_select_section_signin">SIGN IN WITH</string>

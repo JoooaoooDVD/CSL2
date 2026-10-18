@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launcher start: CS brand intro (driven by AnimationManager.playBrandIntro) -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/bi_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_bi_backdrop"
+    android:clickable="true"
+    android:focusable="true">
+
+    <LinearLayout
+        android:id="@+id/bi_group"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <FrameLayout
+            android:layout_width="188dp"
+            android:layout_height="188dp">
+
+            <View
+                android:id="@+id/bi_glow"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_bi_glow" />
+
+            <ImageView
+                android:id="@+id/bi_logo"
+                android:layout_width="96dp"
+                android:layout_height="96dp"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_cs_full" />
+        </FrameLayout>
+
+        <View
+            android:id="@+id/bi_line"
+            android:layout_width="150dp"
+            android:layout_height="2dp"
+            android:layout_marginTop="-6dp"
+            android:background="@drawable/bg_bi_line" />
+
+        <TextView
+            android:id="@+id/bi_team"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:letterSpacing="0.42"
+            android:text="@string/brand_team_name"
+            android:textColor="#C6C6CE"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/bi_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:fontFamily="@font/minecraft_ten"
+            android:includeFontPadding="false"
+            android:letterSpacing="0.06"
+            android:text="@string/brand_short_name"
+            android:textColor="#F2F5FA"
+            android:textSize="30sp" />
+
+        <TextView
+            android:id="@+id/bi_version"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:letterSpacing="0.3"
+            android:text="@string/brand_version"
+            android:textColor="#6E6E76"
+            android:textSize="11.5sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+</FrameLayout>

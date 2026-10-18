@@ -34,6 +34,7 @@ public class StorageSetupDialog extends CSPopupDialog {
     private final Host mHost;
     private boolean mCustom;
     @Nullable private File mPickedDir;
+    private int mErrorColor;
     private boolean mFinishing;
 
     private View mOptDefault, mOptCustom, mSteps, mPermBtn, mPickBtn, mContinue;
@@ -66,6 +67,7 @@ public class StorageSetupDialog extends CSPopupDialog {
         mError = findViewById(R.id.ss_error);
         mPermNum = findViewById(R.id.ss_step_perm_num);
         mPickNum = findViewById(R.id.ss_step_pick_num);
+        mErrorColor = mError != null ? mError.getCurrentTextColor() : 0;
 
         ((TextView) findViewById(R.id.ss_default_path)).setText(StorageRoot.defaultRootLabel(getContext()));
 
@@ -175,7 +177,7 @@ public class StorageSetupDialog extends CSPopupDialog {
         if (treeUri == null) return; // cancelled
         File dir = StorageRoot.treeUriToFile(treeUri);
         if (dir == null) { showError(R.string.ss_err_unsupported); return; }
-        if (!StorageRoot.isEmptyOrMissing(dir)) { showError(R.string.ss_err_not_empty); return; }
+        if (!StorageRoot.isUsableRoot(dir)) { showError(R.string.ss_err_not_empty); return; }
         StorageRoot.persistTreeGrant(getContext(), treeUri);
         acceptPick(dir);
     }
@@ -193,7 +195,18 @@ public class StorageSetupDialog extends CSPopupDialog {
             showError(R.string.ss_err_perm_needed);
             Motion.shake(findViewById(R.id.ss_step_perm));
         } else {
+            if (StorageRoot.isLauncherData(dir)) showInfo(R.string.ss_existing_data);
             Motion.pulse(mContinue);
+        }
+    }
+
+    /** Positive note in the error slot (e.g. "existing data found"), without the shake. */
+    private void showInfo(int res) {
+        mError.setText(res);
+        mError.setTextColor(getContext().getColor(R.color.hm_text_dim));
+        if (mError.getVisibility() != View.VISIBLE) {
+            mError.setVisibility(View.VISIBLE);
+            Motion.riseIn(mError, 0L, 8f);
         }
     }
 
@@ -230,6 +243,7 @@ public class StorageSetupDialog extends CSPopupDialog {
 
     private void showError(int res) {
         mError.setText(res);
+        if (mErrorColor != 0) mError.setTextColor(mErrorColor);
         if (mError.getVisibility() != View.VISIBLE) {
             mError.setVisibility(View.VISIBLE);
             Motion.riseIn(mError, 0L, 8f);

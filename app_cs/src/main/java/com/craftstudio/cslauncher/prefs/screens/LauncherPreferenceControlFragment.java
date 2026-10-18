@@ -12,6 +12,11 @@ import com.craftstudio.cslauncher.prefs.CustomSeekBarPreference;
 import com.craftstudio.cslauncher.prefs.LauncherPreferences;
 
 public class LauncherPreferenceControlFragment extends LauncherPreferenceFragment {
+    @Override
+    protected int[] pageHeader() {
+        return new int[]{R.drawable.ic_pe_gamepad, R.string.preference_control_title, R.string.st_control_description};
+    }
+
     private boolean mGyroAvailable = false;
     @Override
     public void onCreatePreferences(Bundle b, String str) {

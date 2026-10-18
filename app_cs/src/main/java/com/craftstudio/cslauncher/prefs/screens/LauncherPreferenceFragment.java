@@ -45,7 +45,53 @@ public class LauncherPreferenceFragment extends PreferenceFragmentCompat impleme
         list.setOverScrollMode(View.OVER_SCROLL_NEVER);
         setDivider(null);
         setDividerHeight(0);
+        if (getClass() != LauncherPreferenceFragment.class) {
+            installPageHeader();
+            upgradeListRows();
+        }
         AnimationManager.applyListAnimation(list);
+    }
+
+    /** Category pages use the grouped-card adapter (see SettingsPageAdapter) */
+    @NonNull
+    @Override
+    protected androidx.recyclerview.widget.RecyclerView.Adapter onCreateAdapter(@NonNull PreferenceScreen preferenceScreen) {
+        return new com.craftstudio.cslauncher.prefs.SettingsPageAdapter(preferenceScreen);
+    }
+
+    /** Icon / title / description of this category page, shown in the page head. {@code null} for none. */
+    @Nullable
+    protected int[] pageHeader() {
+        return null;
+    }
+
+    private void installPageHeader() {
+        int[] header = pageHeader();
+        PreferenceScreen screen = getPreferenceScreen();
+        if (header == null || screen == null || screen.findPreference("cs_page_header") != null) return;
+        // Keep the back row first, then the head, then everything from the XML
+        for (int i = 0; i < screen.getPreferenceCount(); i++) {
+            Preference p = screen.getPreference(i);
+            if (p instanceof BackButtonPreference) p.setOrder(-2);
+        }
+        com.craftstudio.cslauncher.prefs.SettingsHeaderPreference head =
+                new com.craftstudio.cslauncher.prefs.SettingsHeaderPreference(requireContext(), header[0], header[1], header[2]);
+        head.setOrder(-1);
+        screen.addPreference(head);
+    }
+
+    /** Every list row shows its value as a chip (widget_setting_value), nested groups included */
+    private void upgradeListRows() {
+        PreferenceScreen screen = getPreferenceScreen();
+        if (screen != null) upgradeListRows(screen);
+    }
+
+    private void upgradeListRows(androidx.preference.PreferenceGroup group) {
+        for (int i = 0; i < group.getPreferenceCount(); i++) {
+            Preference p = group.getPreference(i);
+            if (p instanceof androidx.preference.PreferenceGroup) upgradeListRows((androidx.preference.PreferenceGroup) p);
+            else if (p instanceof androidx.preference.ListPreference) p.setWidgetLayoutResource(R.layout.widget_setting_value);
+        }
     }
 
     @Override

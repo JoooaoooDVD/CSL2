@@ -227,6 +227,23 @@ public final class StorageRoot {
         return list == null || list.length == 0;
     }
 
+    /**
+     * True when the folder already holds CS Launcher Plus data from an earlier install (the
+     * user reinstalled and wants their profiles, worlds and versions back). Recognised by the
+     * launcher's own layout: {@code .minecraft/}, {@code instances/} or {@code controlmap/}.
+     */
+    public static boolean isLauncherData(@NonNull File dir) {
+        if (!dir.isDirectory()) return false;
+        return new File(dir, ".minecraft").isDirectory()
+                || new File(dir, "instances").isDirectory()
+                || new File(dir, "controlmap").isDirectory();
+    }
+
+    /** Empty/new folder, or one that is ours already: both are safe to use as the root. */
+    public static boolean isUsableRoot(@NonNull File dir) {
+        return isEmptyOrMissing(dir) || isLauncherData(dir);
+    }
+
     /** Keeps the SAF grant on the picked tree too (best effort; the game itself uses plain paths). */
     public static void persistTreeGrant(@NonNull Context context, @NonNull Uri treeUri) {
         try {

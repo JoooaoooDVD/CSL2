@@ -194,8 +194,16 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
         mRelayInput.setText(join(mRepo.customRelays(), "\n"));
         renderRecent();
         mUnsupported.setVisibility(mSupported ? View.GONE : View.VISIBLE);
-        showScreen(Screen.HOME, false);
+        boolean pending = mPendingCreate || mPendingJoinCode != null;
+        // Coming back from the system VPN dialog: stay on the session screen, do not reset
+        showScreen(pending ? Screen.SESSION : Screen.HOME, false);
         mClient.bind();
+        if (pending && mAwaitingConsent) {
+            // The consent activity may have been killed by the ROM before it could deliver its
+            // result. The OS knows the truth: granted => start directly (the service ignores a
+            // duplicate start), still not granted => treat as declined.
+            mRoot.postDelayed(this::resolvePendingConsent, 600L);
+        }
     }
 
     public void onHide() {
@@ -203,7 +211,40 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
         mShown = false;
         persistInputs();
         stopSweep();
+        mRoot.removeCallbacks(mConsentWatchdog);
         mClient.unbind();
+    }
+
+    /** No state after asking for consent for this long => resolve it ourselves */
+    private static final long CONSENT_WATCHDOG_MS = 45_000L;
+    private final Runnable mConsentWatchdog = this::resolvePendingConsent;
+
+    private void armConsentWatchdog() {
+        mRoot.removeCallbacks(mConsentWatchdog);
+        mRoot.postDelayed(mConsentWatchdog, CONSENT_WATCHDOG_MS);
+    }
+
+    private void resolvePendingConsent() {
+        if (!mShown || !mAwaitingConsent) return;
+        if (mClient.state().isActive()) { mAwaitingConsent = false; return; }
+        boolean pendingCreate = mPendingCreate;
+        String pendingJoin = mPendingJoinCode;
+        if (!pendingCreate && pendingJoin == null) { mAwaitingConsent = false; return; }
+        if (!needsVpnConsent()) {
+            mAwaitingConsent = false;
+            if (pendingCreate) mClient.createSession(mRepo.playerName(), mRepo.customRelays());
+            else mClient.joinSession(pendingJoin, mRepo.playerName(), mRepo.customRelays());
+        } else {
+            mAwaitingConsent = false;
+            mPendingCreate = false;
+            mPendingJoinCode = null;
+            VirtualLanState failed = new VirtualLanState.Builder()
+                    .role(pendingCreate ? VirtualLanState.Role.HOST : VirtualLanState.Role.GUEST)
+                    .sessionCode(pendingJoin == null ? "" : pendingJoin)
+                    .phase(VirtualLanState.Phase.FAILED)
+                    .reason(VirtualLanState.Reason.VPN_DENIED, "").build();
+            onState(failed);
+        }
     }
 
     /** Back press: closes inline boxes first, then lets the host handle it */
@@ -322,6 +363,7 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
         if (needsVpnConsent()) {
             mAwaitingConsent = true;
             launchConsent("host", null);
+            armConsentWatchdog();
         } else {
             mClient.createSession(mRepo.playerName(), mRepo.customRelays());
         }
@@ -376,6 +418,7 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
         if (needsVpnConsent()) {
             mAwaitingConsent = true;
             launchConsent("guest", code);
+            armConsentWatchdog();
         } else {
             mClient.joinSession(code, mRepo.playerName(), mRepo.customRelays());
         }
@@ -463,12 +506,14 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
             mPendingCreate = false;
             mPendingJoinCode = null;
             mAwaitingConsent = false;
+            mRoot.removeCallbacks(mConsentWatchdog);
             if (mScreen != Screen.SESSION) showScreen(Screen.SESSION, true);
             renderSession(state, previous);
         } else if (state.phase == VirtualLanState.Phase.FAILED || state.phase == VirtualLanState.Phase.ENDED) {
             mPendingCreate = false;
             mPendingJoinCode = null;
             mAwaitingConsent = false;
+            mRoot.removeCallbacks(mConsentWatchdog);
             if (state.isGuest() && state.reason != VirtualLanState.Reason.NONE) {
                 Instance instance = Instances.loadSelectedInstance();
                 if (instance != null) {

@@ -23,6 +23,11 @@ import com.craftstudio.cslauncher.utils.GpuUtils;
  * Fragment for any settings video related
  */
 public class LauncherPreferenceVideoFragment extends LauncherPreferenceFragment {
+    @Override
+    protected int[] pageHeader() {
+        return new int[]{R.drawable.ic_st_monitor, R.string.preference_video_title, R.string.preference_video_description};
+    }
+
     private Boolean hasAngle = null;
     @Override
     public void onCreatePreferences(Bundle b, String str) {

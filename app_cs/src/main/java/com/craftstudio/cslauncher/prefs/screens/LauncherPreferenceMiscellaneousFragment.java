@@ -29,6 +29,11 @@ import java.io.File;
 import java.io.IOException;
 
 public class LauncherPreferenceMiscellaneousFragment extends LauncherPreferenceFragment {
+    @Override
+    protected int[] pageHeader() {
+        return new int[]{R.drawable.ic_pe_cube, R.string.preference_misc_title, R.string.preference_misc_description};
+    }
+
 
     private final ActivityResultLauncher<Uri> mMigrateLauncher = registerForActivityResult(
             new ActivityResultContracts.OpenDocumentTree(), (uri) -> {

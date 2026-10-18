@@ -270,7 +270,7 @@ public class LauncherActivity extends BaseActivity {
             java.io.File dir = StorageRoot.treeUriToFile(uri);
             if (dir == null) {
                 StorageRoot.setPendingError(this, R.string.ss_err_unsupported);
-            } else if (!StorageRoot.isEmptyOrMissing(dir)) {
+            } else if (!StorageRoot.isUsableRoot(dir)) {
                 StorageRoot.setPendingError(this, R.string.ss_err_not_empty);
             } else {
                 StorageRoot.persistTreeGrant(this, uri);

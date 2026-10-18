@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Chevron shown at the end of navigation preference rows -->
+<!-- Chevron shown at the end of navigation / list preference rows: round tile -->
 <ImageView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
+    android:layout_width="30dp"
+    android:layout_height="30dp"
+    android:background="@drawable/bg_sr_chevron"
     android:contentDescription="@null"
+    android:padding="7dp"
     android:scaleType="fitCenter"
     android:src="@drawable/ic_chevron_right_home"
-    android:tint="?attr/colorOnSurfaceVariant" />
+    android:tint="@color/pe_text_secondary" />

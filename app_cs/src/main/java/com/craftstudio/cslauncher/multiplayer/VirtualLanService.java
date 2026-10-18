@@ -135,8 +135,18 @@ public final class VirtualLanService extends Service {
             if (host) {
                 startSession(VirtualLanState.Role.HOST, SessionCode.generate(), args);
             } else {
-                SessionCode code = SessionCode.extract(intent.getStringExtra(VpnConsentActivity.EXTRA_CODE));
-                if (code != null) startSession(VirtualLanState.Role.GUEST, code, args);
+                String raw = intent.getStringExtra(VpnConsentActivity.EXTRA_CODE);
+                SessionCode code = SessionCode.extract(raw);
+                if (code != null) {
+                    startSession(VirtualLanState.Role.GUEST, code, args);
+                } else if (mSession == null) {
+                    // Never fail silently: the UI would wait forever
+                    mState = new VirtualLanState.Builder().role(VirtualLanState.Role.GUEST)
+                            .sessionCode(raw == null ? "" : raw).phase(VirtualLanState.Phase.FAILED)
+                            .reason(VirtualLanState.Reason.HOST_NOT_FOUND, "invalid session code").build();
+                    broadcast();
+                    stopForegroundCompat();
+                }
             }
             return START_NOT_STICKY;
         }

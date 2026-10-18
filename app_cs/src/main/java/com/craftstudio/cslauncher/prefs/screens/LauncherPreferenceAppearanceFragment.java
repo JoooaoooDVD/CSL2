@@ -18,6 +18,11 @@ import com.craftstudio.cslauncher.R;
  * Theme, color, orientation and animation settings of the launcher.
  */
 public class LauncherPreferenceAppearanceFragment extends LauncherPreferenceFragment {
+    @Override
+    protected int[] pageHeader() {
+        return new int[]{R.drawable.ic_pe_image, R.string.preference_appearance_title, R.string.preference_appearance_description};
+    }
+
 
     @Override
     public void onCreatePreferences(Bundle b, String str) {

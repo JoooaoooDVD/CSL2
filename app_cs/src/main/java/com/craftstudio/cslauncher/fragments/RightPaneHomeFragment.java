@@ -75,6 +75,9 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
     private static final int PLAY_TITLE_DARK = 0xFF0E1525, PLAY_SUB_DARK = 0xFF1B2740;
     private static final int PLAY_TITLE_LIGHT = 0xFFF4F7FF, PLAY_SUB_LIGHT = 0xFF8DB8FF;
     private boolean mDownloading;
+    private float mDlFillFraction;
+    private View mPlayEdge;
+    private boolean mDlFillLayoutHooked;
     private int mAggregateProgress = -1;
     /** One listener covers every progress record + the initial state on registration */
     private final ProgressKeeper.GlobalProgressListener mGlobalProgressListener =
@@ -129,6 +132,7 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         mPlaySubtitle = view.findViewById(R.id.home_play_subtitle);
         mPlayArc = view.findViewById(R.id.home_play_arc);
         mDlBg = view.findViewById(R.id.home_play_download_bg);
+        mPlayEdge = view.findViewById(R.id.home_play_edge);
         mDlFill = view.findViewById(R.id.home_play_download_fill);
         mDlSweep = view.findViewById(R.id.home_play_download_sweep);
         mDlBadge = view.findViewById(R.id.home_play_download_badge);
@@ -388,8 +392,12 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         for (View v : new View[]{mDlBg, mDlFill, mDlSweep}) {
             v.setVisibility(View.VISIBLE);
         }
+        // Fill starts closed and is grown by updateDownloadFill (clip-based, keeps its rounded corners)
+        if (mDlFillFraction <= 0f) mDlFill.setClipBounds(new android.graphics.Rect(0, 0, 0, 0));
         mDlBg.animate().alpha(1f).setDuration(360).setInterpolator(ease).start();
         mDlFill.animate().alpha(1f).setDuration(360).setStartDelay(80).start();
+        // The bright rim steps aside: the outline arc takes over the edge so they never stack
+        if (mPlayEdge != null) mPlayEdge.animate().alpha(0f).setDuration(240).start();
         if (mPlayMore != null) mPlayMore.animate().alpha(0f).setDuration(200).start();
         animateTextColor(mPlayTitle, PLAY_TITLE_LIGHT);
         animateTextColor(mPlaySubtitle, PLAY_SUB_LIGHT);
@@ -451,8 +459,10 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
             for (View v : new View[]{mDlBg, mDlFill, mDlSweep, mDlBadge}) {
                 v.setVisibility(View.GONE);
             }
-            mDlFill.setScaleX(0f);
+            mDlFillFraction = 0f;
+            mDlFill.setClipBounds(null);
         };
+        if (mPlayEdge != null) mPlayEdge.animate().alpha(1f).setDuration(320).setStartDelay(80).start();
         mDlBg.animate().alpha(0f).setDuration(300).withEndAction(hide).start();
         mDlFill.animate().alpha(0f).setDuration(220).start();
         mDlSweep.animate().alpha(0f).setDuration(150).start();
@@ -520,17 +530,32 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         }
     }
 
-    /** Grows the fill to the aggregate percentage; indeterminate shows a gentle breathing fill */
+    /** Grows the fill to the aggregate percentage; indeterminate shows a short resting fill */
     private void updateDownloadFill() {
         if (mDlFill == null || !mDownloading) return;
         float target = mAggregateProgress >= 0 ? Math.max(0.03f, mAggregateProgress / 100f) : 0.08f;
         if (mLaunchMode) target = Math.max(0.12f, target);
         if (mDlFillAnimator != null) mDlFillAnimator.cancel();
-        mDlFillAnimator = android.animation.ValueAnimator.ofFloat(mDlFill.getScaleX(), target);
+        if (!mDlFillLayoutHooked) {
+            mDlFillLayoutHooked = true;
+            mDlFill.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> applyFillFraction());
+        }
+        mDlFillAnimator = android.animation.ValueAnimator.ofFloat(mDlFillFraction, target);
         mDlFillAnimator.setDuration(380);
         mDlFillAnimator.setInterpolator(new android.view.animation.DecelerateInterpolator());
-        mDlFillAnimator.addUpdateListener(a -> mDlFill.setScaleX((float) a.getAnimatedValue()));
+        mDlFillAnimator.addUpdateListener(a -> {
+            mDlFillFraction = (float) a.getAnimatedValue();
+            applyFillFraction();
+        });
         mDlFillAnimator.start();
+    }
+
+    /** The fill is a full-size rounded layer clipped on the right, so its corners never squash */
+    private void applyFillFraction() {
+        if (mDlFill == null) return;
+        int w = mDlFill.getWidth(), h = mDlFill.getHeight();
+        if (w <= 0 || h <= 0) return;
+        mDlFill.setClipBounds(new android.graphics.Rect(0, 0, Math.round(w * mDlFillFraction), h));
     }
 
     private static void animateTextColor(TextView view, int to) {

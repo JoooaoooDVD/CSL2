@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Section heading: small caps label with a hairline running to the end -->
+<!-- Section heading above a grouped card: ink dot + small caps label -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginLeft="4dp"
-    android:layout_marginRight="4dp"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:paddingTop="12dp"
+    android:paddingLeft="8dp"
+    android:paddingTop="16dp"
+    android:paddingRight="8dp"
     android:paddingBottom="8dp">
 
     <View
-        android:layout_width="8dp"
-        android:layout_height="8dp"
+        android:layout_width="7dp"
+        android:layout_height="7dp"
         android:background="@drawable/bg_ll_rule_ok"
-        android:backgroundTint="?attr/colorPrimary" />
+        android:backgroundTint="@color/pe_text_secondary" />
 
     <TextView
         android:id="@android:id/title"
@@ -23,15 +23,8 @@
         android:layout_marginLeft="8dp"
         android:fontFamily="@font/noto_sans_bold"
         android:includeFontPadding="false"
-        android:letterSpacing="0.12"
+        android:letterSpacing="0.14"
         android:textAllCaps="true"
         android:textColor="@color/pe_text_secondary"
         android:textSize="10.5sp" />
-
-    <View
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:layout_marginLeft="10dp"
-        android:layout_weight="1"
-        android:background="@color/pe_card_stroke" />
 </LinearLayout>

@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Widget of every switch preference row: an M3 switch instead of the stock SwitchCompat.
+<!-- Widget of every switch preference row: an M3 switch in the settings ink palette.
      Same id and attributes as androidx.preference's preference_widget_switch_compat, the
      row itself handles clicks. -->
 <com.google.android.material.materialswitch.MaterialSwitch
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/switchWidget"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:background="@null"
     android:clickable="false"
-    android:focusable="false" />
+    android:focusable="false"
+    app:thumbTint="@color/sr_switch_thumb"
+    app:trackDecorationTint="@color/sr_switch_track_outline"
+    app:trackTint="@color/sr_switch_track" />

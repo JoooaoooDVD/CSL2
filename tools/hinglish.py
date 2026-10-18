@@ -736,6 +736,8 @@ T = {
 "ss_restarting": "Restart ho raha hai…",
 "ss_footnote": "Custom folder chunne ke baad launcher ek baar restart hoga.",
 "ss_err_not_writable": "Is folder mein likh nahi sakte. Koi aur try karo.",
+"ss_err_not_empty": "Yeh folder khaali nahi hai aur isme CS Launcher ka data bhi nahi hai. Khaali folder chuno, ya wahi folder jo pehle use kiya tha.",
+"ss_existing_data": "Yahan CS Launcher ka purana data mila \\u2014 tumhare profiles, worlds aur versions wapas use honge.",
 "ss_err_pick_first": "Pehle folder chuno, ya app folder ke saath chalo.",
 "auth_select_banner_sub": "Login ka tareeka chuno",
 "auth_select_section_signin": "ISSE LOGIN KARO",

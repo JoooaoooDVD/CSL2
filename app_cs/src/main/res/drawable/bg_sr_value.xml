@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Value pill of slider rows -->
+<!-- Value pill of slider rows: solid ink pill, high contrast -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="?attr/colorPrimaryContainer" />
-    <corners android:radius="10dp" />
+    <solid android:color="@color/pe_btn_primary_bg" />
+    <corners android:radius="11dp" />
 </shape>
