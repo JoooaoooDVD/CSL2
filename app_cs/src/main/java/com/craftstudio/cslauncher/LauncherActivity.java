@@ -304,7 +304,21 @@ public class LauncherActivity extends BaseActivity {
             // Setup already done (e.g. we just restarted into the custom folder): scheduled community invite
             View root = findViewById(android.R.id.content);
             if (root != null) root.postDelayed(this::showDiscordInvite, savedInstanceState == null ? 1200L : 300L);
+        } else if (savedInstanceState == null) {
+            // Quiet update check after the intro (throttled inside, never blocks, errors ignored)
+            View root = findViewById(android.R.id.content);
+            if (root != null) root.postDelayed(() -> {
+                if (isFinishing() || isDestroyed()) return;
+                if (mStorageSetupDialog != null && mStorageSetupDialog.isShowing()) return;
+                com.craftstudio.cslauncher.update.UpdateManager.autoCheck(this);
+            }, 3200L);
         }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable android.content.Intent data) {
+        if (com.craftstudio.cslauncher.update.UpdateManager.onActivityResult(this, requestCode, resultCode, data)) return;
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     private void showDiscordInvite() {

@@ -63,14 +63,14 @@ public class LaunchRocketView extends View {
     public LaunchRocketView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         mDensity = getResources().getDisplayMetrics().density;
-        mGrid = 3f * mDensity;
+        mGrid = 4f * mDensity;
         mPixel.setAntiAlias(false);
         mPixel.setStyle(Paint.Style.FILL);
         mFlash.setAntiAlias(true);
         mFlash.setStyle(Paint.Style.FILL);
         mRocket = ContextCompat.getDrawable(context, R.drawable.ic_home_rocket);
-        mRocketSize = 30f * mDensity;
-        mRestY = 96f * mDensity;
+        mRocketSize = 44f * mDensity;
+        mRestY = 104f * mDensity;
         setClickable(false);
         setFocusable(false);
         setLayerType(LAYER_TYPE_HARDWARE, null);
@@ -88,7 +88,7 @@ public class LaunchRocketView extends View {
         super.onSizeChanged(w, h, oldw, oldh);
         mRocketX = w / 2f;
         if (mPhase == IDLE) mRocketY = h - mRestY;
-        mApexY = h * 0.36f;
+        mApexY = h * 0.30f;
     }
 
     @Override
@@ -178,7 +178,7 @@ public class LaunchRocketView extends View {
             }
             case BURST: {
                 mBurstT += dt;
-                if (mBurstT > 1.25f && mParticles.isEmpty()) {
+                if (mBurstT > 1.4f && mParticles.isEmpty()) {
                     mPhase = DONE;
                     stopClock();
                     Runnable r = mOnDone;
@@ -199,10 +199,10 @@ public class LaunchRocketView extends View {
         while (mExhaustAcc >= 1f) {
             mExhaustAcc -= 1f;
             Particle p = new Particle();
-            p.x = mRocketX + (mRnd.nextFloat() - 0.5f) * 5f * mDensity;
+            p.x = mRocketX + (mRnd.nextFloat() - 0.5f) * 8f * mDensity;
             p.y = mRocketY + mRocketSize * 0.42f;
             p.vx = (mRnd.nextFloat() - 0.5f) * 30f * mDensity;
-            p.vy = (60f + mRnd.nextFloat() * 90f) * mDensity;
+            p.vy = (80f + mRnd.nextFloat() * 120f) * mDensity;
             p.size = (1f + mRnd.nextInt(2)) * mGrid;
             p.life = 0.25f + mRnd.nextFloat() * 0.3f;
             boolean smoke = mRnd.nextFloat() < 0.35f;
@@ -215,28 +215,28 @@ public class LaunchRocketView extends View {
     private void explode() {
         float cx = mRocketX, cy = mRocketY;
         // Fire core: fast, bright, short-lived
-        for (int i = 0; i < 46; i++) {
+        for (int i = 0; i < 70; i++) {
             Particle p = new Particle();
             double ang = mRnd.nextDouble() * Math.PI * 2;
-            float speed = (90f + mRnd.nextFloat() * 260f) * mDensity;
+            float speed = (120f + mRnd.nextFloat() * 340f) * mDensity;
             p.x = cx; p.y = cy;
             p.vx = (float) Math.cos(ang) * speed;
             p.vy = (float) Math.sin(ang) * speed;
             p.size = (1f + mRnd.nextInt(3)) * mGrid;
-            p.life = 0.45f + mRnd.nextFloat() * 0.45f;
+            p.life = 0.55f + mRnd.nextFloat() * 0.45f;
             p.color = FIRE[mRnd.nextInt(FIRE.length)];
             mParticles.add(p);
         }
         // Smoke puffs: slower, bigger, linger and drift up
-        for (int i = 0; i < 22; i++) {
+        for (int i = 0; i < 34; i++) {
             Particle p = new Particle();
             double ang = mRnd.nextDouble() * Math.PI * 2;
-            float speed = (30f + mRnd.nextFloat() * 110f) * mDensity;
+            float speed = (40f + mRnd.nextFloat() * 150f) * mDensity;
             p.x = cx + (mRnd.nextFloat() - 0.5f) * 10f * mDensity;
             p.y = cy + (mRnd.nextFloat() - 0.5f) * 10f * mDensity;
             p.vx = (float) Math.cos(ang) * speed;
             p.vy = (float) Math.sin(ang) * speed - 25f * mDensity;
-            p.size = (2f + mRnd.nextInt(3)) * mGrid;
+            p.size = (2f + mRnd.nextInt(4)) * mGrid;
             p.life = 0.7f + mRnd.nextFloat() * 0.55f;
             p.smoke = true;
             p.color = SMOKE[mRnd.nextInt(SMOKE.length)];
@@ -287,12 +287,12 @@ public class LaunchRocketView extends View {
             // Short white flash + expanding ring at the burst point
             float t = Math.min(1f, mBurstT / 0.32f);
             if (t < 1f) {
-                float r = (10f + 70f * t) * mDensity;
+                float r = (14f + 110f * t) * mDensity;
                 mFlash.setColor(0xFFFFFFFF);
                 mFlash.setAlpha((int) (200 * (1f - t)));
                 canvas.drawCircle(mRocketX, mRocketY, r * 0.35f, mFlash);
                 mFlash.setStyle(Paint.Style.STROKE);
-                mFlash.setStrokeWidth(3f * mDensity * (1f - t) + 1f);
+                mFlash.setStrokeWidth(4f * mDensity * (1f - t) + 1f);
                 mFlash.setAlpha((int) (160 * (1f - t)));
                 canvas.drawCircle(mRocketX, mRocketY, r, mFlash);
                 mFlash.setStyle(Paint.Style.FILL);

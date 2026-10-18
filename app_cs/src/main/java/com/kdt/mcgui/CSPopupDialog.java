@@ -63,6 +63,11 @@ public abstract class CSPopupDialog extends Dialog {
         onDismissRequested();
     }
 
+    /** Public animated close for owners of the popup (see UpdateManager) */
+    public void closeThen(@Nullable Runnable then) {
+        close(then);
+    }
+
     /** Animated close, {@code then} runs once the popup is gone */
     protected void close(@Nullable Runnable then) {
         if (mClosing) return;

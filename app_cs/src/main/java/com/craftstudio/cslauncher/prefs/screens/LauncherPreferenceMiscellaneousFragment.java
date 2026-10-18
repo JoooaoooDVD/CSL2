@@ -65,7 +65,19 @@ public class LauncherPreferenceMiscellaneousFragment extends LauncherPreferenceF
         setupCacheClearPreference();
         setupMicrophoneRequestPreference();
         setupDiscordPreferences();
+        setupUpdatePreference();
         updateVisibility();
+    }
+
+    private void setupUpdatePreference() {
+        Preference check = requirePreference("checkUpdates");
+        check.setSummary(getString(R.string.preference_check_updates_summary_fmt,
+                com.craftstudio.cslauncher.update.UpdateManager.currentLabel()));
+        check.setOnPreferenceClickListener(preference -> {
+            android.app.Activity activity = getActivity();
+            if (activity != null) com.craftstudio.cslauncher.update.UpdateManager.manualCheck(activity);
+            return true;
+        });
     }
 
     private final ActivityResultLauncher<android.content.Intent> mDiscordLoginLauncher = registerForActivityResult(

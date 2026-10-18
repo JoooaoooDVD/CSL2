@@ -166,6 +166,8 @@ public final class AnimationManager {
         root.addView(overlay, new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         final float d = context.getResources().getDisplayMetrics().density;
+        // Startup chime: swell with the logo rise, bells land with the title (0.76 s / 0.98 s)
+        StartupSound.playOnce(context);
 
         final View group = overlay.findViewById(R.id.bi_group);
         final View glow = overlay.findViewById(R.id.bi_glow);

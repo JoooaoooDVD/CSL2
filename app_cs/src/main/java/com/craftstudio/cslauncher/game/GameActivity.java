@@ -643,7 +643,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         }
         rocket.launch(() -> screen.animate().alpha(0f).setDuration(220).withEndAction(remove).start());
         // Safety net: never leave the layer around if the burst somehow stalls
-        screen.postDelayed(() -> { if (screen.getParent() != null) { rocket.finishNow(); remove.run(); } }, 4000L);
+        screen.postDelayed(() -> { if (screen.getParent() != null) { rocket.finishNow(); remove.run(); } }, 4500L);
     }
 
     /**
@@ -687,7 +687,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         if (rocket != null) {
             float density = getResources().getDisplayMetrics().density;
             // Rest just above the pill (pill ~46dp tall + 14dp margin + clearance)
-            rocket.setRestOffsetFromBottom(96f * density);
+            rocket.setRestOffsetFromBottom(104f * density);
         }
         View pill = mLoadingScreen.findViewById(R.id.ls_pill);
         if (pill != null) {

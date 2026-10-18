@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Folder of downloaded launcher updates (UpdateDownloader.updateDir) -->
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <external-files-path name="updates" path="updates/" />
+    <files-path name="updates_internal" path="updates/" />
+</paths>

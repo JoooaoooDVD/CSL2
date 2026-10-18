@@ -180,7 +180,7 @@ public class LauncherPreferenceFragment extends PreferenceFragmentCompat impleme
     public void onSharedPreferenceChanged(SharedPreferences p, String s) {
         LauncherPreferences.loadPreferences(getContext());
         if(ThemeManager.PREF_THEME_MODE.equals(s)) {
-            ThemeManager.applyThemeMode(p.getString(s, "system"));
+            ThemeManager.applyThemeMode(p.getString(s, "dark"));
         }else if(ThemeManager.PREF_COLOR_SOURCE.equals(s) || ThemeManager.PREF_CUSTOM_COLOR.equals(s)
                 || AnimationManager.PREF_TYPES.equals(s)) {
             scheduleRecreate();

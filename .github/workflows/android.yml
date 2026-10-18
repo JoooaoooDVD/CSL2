@@ -24,6 +24,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Get LTW
         uses: dawidd6/action-download-artifact@v6
@@ -96,6 +98,34 @@ jobs:
           mv app_cs/build/outputs/apk/full/pubRelease/app_cs-full-pubRelease.apk out/CS Launcher Plus-release.apk
           md5sum "out/CS Launcher Plus-release.apk" > out/CS Launcher Plus-release.md5
 
+      - name: Release notes + in-app update metadata
+        run: |
+          VERSION_NAME=$(grep -oP 'versionName "\K[^"]+' app_cs/build.gradle | head -1)
+          {
+            if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+              echo "## CS Launcher Plus ${GITHUB_REF_NAME}"
+              echo ""
+              echo "Release build of ${GITHUB_SHA}."
+            else
+              echo "## CS Launcher Plus ${VERSION_NAME} - build ${GITHUB_RUN_NUMBER}"
+              echo ""
+              echo "Automated build of ${GITHUB_SHA} (${GITHUB_REF_NAME}), published by GitHub Actions."
+            fi
+            echo "**app-debug-full.apk** is the one to install (includes the Java runtime)."
+            echo ""
+            echo "### What's new"
+            git log -15 --no-merges --pretty=format:'- %s' | sed -E 's/^- (Fix|Feat|Upd)\[([^]]*)\]: ?/- **\2:** /' || true
+            echo ""
+            echo ""
+            echo "<!-- cs-update-begin (read by the launcher's update checker, do not edit) -->"
+            echo "cs-update: versionCode=${GITHUB_RUN_NUMBER} versionName=${VERSION_NAME}"
+            for f in out/*.apk; do
+              echo "cs-apk: file=$(basename "$f") sha256=$(sha256sum "$f" | cut -d' ' -f1) size=$(stat -c%s "$f")"
+            done
+            echo "<!-- cs-update-end -->"
+          } > out/release-body.md
+          cat out/release-body.md
+
       - name: Publish rolling latest build (main branch)
         if: github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'master')
         uses: softprops/action-gh-release@v2
@@ -103,10 +133,7 @@ jobs:
           tag_name: latest
           name: CS Launcher Plus 1.4 - latest build
           prerelease: true
-          body: |
-            Automated build of @{{ github.sha }}
-            Built by GitHub Actions - no manual upload needed.
-            app-debug-full.apk is the one to install (includes the Java runtime).
+          body_path: out/release-body.md
           files: |
             out/app-debug-full.apk
             out/app-debug-full.md5
@@ -121,9 +148,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: CS Launcher Plus ${{ github.ref_name }}
-          body: |
-            Release build of @{{ github.sha }}
-            Install app-debug-full.apk.
+          body_path: out/release-body.md
           files: |
             out/app-debug-full.apk
             out/app-debug-full.md5

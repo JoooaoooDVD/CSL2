@@ -47,7 +47,7 @@ public final class ThemeManager {
     /** Call once from Application#onCreate */
     public static void init(Application application) {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(application);
-        applyThemeMode(preferences.getString(PREF_THEME_MODE, "system"));
+        applyThemeMode(preferences.getString(PREF_THEME_MODE, "dark"));
         application.registerActivityLifecycleCallbacks(new ColorCallbacks());
     }
 

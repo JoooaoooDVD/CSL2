@@ -1321,4 +1321,61 @@
     <string name="home_launching">Launching</string>
     <string name="home_launching_sub">Starting Minecraft…</string>
     <string name="home_launching_check">Checking game files…</string>
+
+    <!-- In-app updates -->
+    <string name="preference_category_updates">Updates</string>
+    <string name="preference_check_updates_title">Check for updates</string>
+    <string name="preference_check_updates_description">Look for a newer CS Launcher Plus build on GitHub</string>
+    <string name="preference_check_updates_summary_fmt">Installed: %1$s \u2014 tap to check GitHub</string>
+    <string name="preference_update_auto_title">Check automatically</string>
+    <string name="preference_update_auto_description">Look for new builds when the launcher starts (at most every 6 hours)</string>
+    <string name="preference_update_channel_title">Update channel</string>
+    <string name="upd_eyebrow">Craft Studio \u00b7 CS Launcher Plus</string>
+    <string name="upd_available_title">Update available</string>
+    <string name="upd_installed">Installed</string>
+    <string name="upd_latest">Latest release</string>
+    <string name="upd_latest_build">Latest build</string>
+    <string name="upd_published_fmt">Published %1$s</string>
+    <string name="upd_whats_new">What\'s new</string>
+    <string name="upd_no_notes">No release notes for this build. Tap to open the release on GitHub.</string>
+    <string name="upd_update_now">Update now</string>
+    <string name="upd_later">Later</string>
+    <string name="upd_skip">Skip this build</string>
+    <string name="upd_install">Install</string>
+    <string name="upd_allow">Allow installs</string>
+    <string name="upd_retry">Retry</string>
+    <string name="upd_ok">OK</string>
+    <string name="upd_open_github">Open GitHub</string>
+    <string name="upd_downloading">Downloading update\u2026</string>
+    <string name="upd_verifying">Verifying download\u2026</string>
+    <string name="upd_verifying_detail">Checking the SHA-256, package name and signing key</string>
+    <string name="upd_ready">Verified and ready to install</string>
+    <string name="upd_ready_detail">Android will ask you to confirm. Your profiles, worlds and settings are kept.</string>
+    <string name="upd_installer_open">Opening the Android installer\u2026</string>
+    <string name="upd_need_permission">Permission needed</string>
+    <string name="upd_need_permission_detail">Allow CS Launcher Plus to install updates, then come back here.</string>
+    <string name="upd_install_cancelled">Installation cancelled \u2014 the downloaded update is kept for later.</string>
+    <string name="upd_install_failed_fmt">Installation failed. %1$s</string>
+    <string name="upd_no_asset_fmt">This release has no file for your installation (%1$s). You can get it from GitHub.</string>
+    <string name="upd_checking_title">Checking for updates</string>
+    <string name="upd_checking_msg">Asking GitHub for the newest published build\u2026</string>
+    <string name="upd_current_fmt">Installed: %1$s</string>
+    <string name="upd_up_to_date_title">You\'re up to date</string>
+    <string name="upd_up_to_date_msg">%1$s is the newest CS Launcher Plus build.</string>
+    <string name="upd_none_published">No update information has been published yet. Check again after the next release.</string>
+    <string name="upd_error_title">Update check failed</string>
+    <string name="upd_error_check_fmt">Couldn\'t reach GitHub: %1$s. The launcher keeps working normally \u2014 try again later.</string>
+    <string-array name="update_channel_names">
+        <item>All builds (latest)</item>
+        <item>Stable releases only</item>
+    </string-array>
+    <string-array name="update_channel_values">
+        <item>latest</item>
+        <item>stable</item>
+    </string-array>
+
+    <!-- Startup sound -->
+    <string name="preference_category_startup">Startup</string>
+    <string name="preference_startup_sound_title">Startup sound</string>
+    <string name="preference_startup_sound_description">Short Craft Studio chime with the launcher intro (silent in silent/vibrate mode)</string>
 </resources>
