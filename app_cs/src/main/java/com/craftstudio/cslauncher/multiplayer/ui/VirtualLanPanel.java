@@ -162,6 +162,10 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
         mEvents = root.findViewById(R.id.vl_events);
         mEnd = root.findViewById(R.id.vl_end);
         mDiagnostics = root.findViewById(R.id.vl_diagnostics);
+        View sendLogs = root.findViewById(R.id.vl_send_logs);
+        if (sendLogs != null) sendLogs.setOnClickListener(v -> sendLogs());
+        View copyHome = root.findViewById(R.id.vl_copy_diag_home);
+        if (copyHome != null) copyHome.setOnClickListener(v -> copy(diagnostics(mLast), R.string.vlan_copied_diagnostics));
 
         mResult = root.findViewById(R.id.vl_result);
         mResultIcon = root.findViewById(R.id.vl_result_icon);
@@ -975,6 +979,52 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
             default: res = R.color.vl_platinum;
         }
         return ContextCompat.getColor(mContext, res);
+    }
+
+    /** Beta feedback: diagnostics + the tail of the launcher log as one file, through the share sheet. */
+    private void sendLogs() {
+        try {
+            StringBuilder report = new StringBuilder();
+            report.append(diagnostics(mLast)).append('\n');
+            report.append("device=").append(android.os.Build.MANUFACTURER).append(' ').append(android.os.Build.MODEL)
+                    .append(" android=").append(android.os.Build.VERSION.RELEASE).append(" sdk=").append(android.os.Build.VERSION.SDK_INT)
+                    .append(" abi=").append(android.os.Build.SUPPORTED_ABIS.length > 0 ? android.os.Build.SUPPORTED_ABIS[0] : "?")
+                    .append(" launcher=").append(com.craftstudio.cslauncher.BuildConfig.VERSION_NAME)
+                    .append(" build=").append(com.craftstudio.cslauncher.BuildConfig.VERSION_CODE).append('\n');
+            java.io.File log = new java.io.File(com.craftstudio.cslauncher.Tools.DIR_GAME_HOME, "latestlog.txt");
+            report.append("\n==== launcher log (tail) ====\n");
+            if (log.isFile()) {
+                try (java.io.RandomAccessFile raf = new java.io.RandomAccessFile(log, "r")) {
+                    long max = 96 * 1024;
+                    long start = Math.max(0, raf.length() - max);
+                    raf.seek(start);
+                    byte[] buf = new byte[(int) (raf.length() - start)];
+                    raf.readFully(buf);
+                    report.append(new String(buf, "UTF-8"));
+                }
+            } else {
+                report.append("(no latestlog.txt)\n");
+            }
+            java.io.File dir = new java.io.File(mContext.getCacheDir(), "reports");
+            //noinspection ResultOfMethodCallIgnored
+            dir.mkdirs();
+            java.io.File out = new java.io.File(dir, "cs-virtual-lan-report.txt");
+            try (java.io.FileOutputStream fos = new java.io.FileOutputStream(out)) {
+                fos.write(report.toString().getBytes("UTF-8"));
+            }
+            android.net.Uri uri = androidx.core.content.FileProvider.getUriForFile(mContext, mContext.getPackageName() + ".updates", out);
+            android.content.Intent send = new android.content.Intent(android.content.Intent.ACTION_SEND);
+            send.setType("text/plain");
+            send.putExtra(android.content.Intent.EXTRA_STREAM, uri);
+            send.putExtra(android.content.Intent.EXTRA_SUBJECT, mContext.getString(R.string.vlan_report_title));
+            send.putExtra(android.content.Intent.EXTRA_TEXT, mContext.getString(R.string.vlan_report_title));
+            send.addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            android.content.Intent chooser = android.content.Intent.createChooser(send, mContext.getString(R.string.vlan_send_logs));
+            chooser.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+            mContext.startActivity(chooser);
+        } catch (Throwable t) {
+            android.widget.Toast.makeText(mContext, R.string.vlan_report_failed, android.widget.Toast.LENGTH_SHORT).show();
+        }
     }
 
     private String diagnostics(VirtualLanState s) {

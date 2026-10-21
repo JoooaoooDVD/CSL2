@@ -253,8 +253,10 @@ public class LauncherActivity extends BaseActivity {
         mProgressLayout.observe(ProgressLayout.INSTANCE_INSTALL);
         mProgressLayout.observe(ProgressLayout.DATA_MIGRATION);
 
-        // CS Launcher Plus brand intro - only on a fresh start, never on recreation
-        if (savedInstanceState == null) {
+        // CS Launcher Plus brand intro - only on a fresh start, never on recreation, and not
+        // when a home-screen profile shortcut wants the game as fast as possible
+        final String shortcutProfile = com.craftstudio.cslauncher.utils.ProfileShortcuts.profileFrom(getIntent());
+        if (savedInstanceState == null && shortcutProfile == null) {
             ViewGroup content = findViewById(android.R.id.content);
             if (content != null) content.post(() -> AnimationManager.playBrandIntro(content));
         }
@@ -300,6 +302,8 @@ public class LauncherActivity extends BaseActivity {
         } else if (!StorageRoot.isSetupDone(this)) {
             // Existing install from before the setup existed: keep its current folder silently
             StorageRoot.markSetupDone(this);
+        } else if (shortcutProfile != null && savedInstanceState == null) {
+            handleProfileShortcut(getIntent());
         } else if (com.kdt.mcgui.DiscordInviteDialog.isDue(this)) {
             // Setup already done (e.g. we just restarted into the custom folder): scheduled community invite
             View root = findViewById(android.R.id.content);
@@ -313,6 +317,55 @@ public class LauncherActivity extends BaseActivity {
                 com.craftstudio.cslauncher.update.UpdateManager.autoCheck(this);
             }, 3200L);
         }
+    }
+
+    @Override
+    protected void onNewIntent(android.content.Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        if (com.craftstudio.cslauncher.utils.ProfileShortcuts.profileFrom(intent) != null) {
+            if (!com.craftstudio.cslauncher.about.WelcomePolicy.isAccepted() || !StorageRoot.isSetupDone(this)) return;
+            handleProfileShortcut(intent);
+        }
+    }
+
+    /**
+     * Home-screen shortcut of a profile: select it and start the game without any tap. Waits
+     * (briefly) for the version list so the launch pipeline has everything it normally has.
+     */
+    private void handleProfileShortcut(@NonNull android.content.Intent intent) {
+        final String key = com.craftstudio.cslauncher.utils.ProfileShortcuts.profileFrom(intent);
+        intent.removeExtra(com.craftstudio.cslauncher.utils.ProfileShortcuts.EXTRA_PROFILE);
+        if (key == null) return;
+        // Pop whatever screen is open so the home (with the PLAY state) is what the user sees
+        try {
+            androidx.fragment.app.FragmentManager fm = getSupportFragmentManager();
+            if (fm.getBackStackEntryCount() > 0) fm.popBackStack(null, androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        } catch (Exception ignored) {
+        }
+        com.craftstudio.cslauncher.instances.Instance instance = Instances.loadInstance(key);
+        if (instance == null) {
+            Toast.makeText(this, R.string.shortcut_profile_missing, Toast.LENGTH_LONG).show();
+            com.craftstudio.cslauncher.utils.ProfileShortcuts.disable(this, key);
+            return;
+        }
+        Instances.setSelectedInstance(instance);
+        Toast.makeText(this, getString(R.string.shortcut_launching_fmt, instance.name), Toast.LENGTH_SHORT).show();
+        final long deadline = System.currentTimeMillis() + 6000L;
+        final View root = findViewById(android.R.id.content);
+        if (root == null) return;
+        final Runnable[] waitForList = new Runnable[1];
+        waitForList[0] = () -> {
+            if (isFinishing() || isDestroyed()) return;
+            boolean ready = ExtraCore.getValue(ExtraConstants.RELEASE_TABLE) != null;
+            if (!ready && System.currentTimeMillis() < deadline) {
+                root.postDelayed(waitForList[0], 200L);
+                return;
+            }
+            if (mProgressLayout != null && mProgressLayout.hasProcesses()) return; // PLAY already busy
+            ExtraCore.setValue(ExtraConstants.LAUNCH_GAME, true);
+        };
+        root.postDelayed(waitForList[0], 350L);
     }
 
     @Override
@@ -372,6 +425,7 @@ public class LauncherActivity extends BaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        if (StorageRoot.isSetupDone(this)) com.craftstudio.cslauncher.utils.ProfileShortcuts.refreshDynamic(this);
         ContextExecutor.setActivity(this);
         InstanceInstaller.postInstallCheck(this);
         if (mStorageSetupDialog != null) mStorageSetupDialog.onHostResumed();

@@ -356,6 +356,14 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
             rowFiles.setOnClickListener(v -> openFileManager());
             CSAnimationEngine.attachPressFeedback(rowFiles);
         }
+        View rowShortcut = view.findViewById(R.id.pe_row_shortcut);
+        if (rowShortcut != null) {
+            rowShortcut.setOnClickListener(v -> {
+                if (mInstance == null || getActivity() == null) return;
+                com.craftstudio.cslauncher.utils.ProfileShortcuts.pin(getActivity(), mInstance);
+            });
+            CSAnimationEngine.attachPressFeedback(rowShortcut);
+        }
 
         for (View v : new View[]{back, save, delete, cancel, controlSelect, iconGallery, iconAdd, iconBadge,
                 bannerChoose, bannerReset, bannerBadge, rowVersion, rowRuntime, rowControl, rowJvm, rowRenderer, rowShared}) {

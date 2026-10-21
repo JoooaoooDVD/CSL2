@@ -177,4 +177,12 @@
     <string name="vlan_tips_vpn">• Tap Retry and choose OK in the Android VPN dialog\n• Turn off other VPN apps while you play (Android allows one VPN at a time)\n• Some work/school profiles block VPNs: try a personal profile</string>
     <string name="vlan_notif_vpn_on">VPN on</string>
     <string name="vlan_notif_vpn_off">VPN starting</string>
+    <!-- beta notice -->
+    <string name="vlan_beta">Beta</string>
+    <string name="vlan_beta_title">Virtual LAN is in beta</string>
+    <string name="vlan_beta_body">If joining doesn\'t work or nothing happens, send us the logs: they help us fix it. Tap Send logs after trying, pick Discord (or any app) and share the file with the Craft Studio team. Nothing private is included \u2014 only the Virtual LAN status and the launcher log.</string>
+    <string name="vlan_send_logs">Send logs</string>
+    <string name="vlan_diagnostics_copy">Copy diagnostics</string>
+    <string name="vlan_report_title">CS Launcher Plus \u2014 Virtual LAN report</string>
+    <string name="vlan_report_failed">Could not prepare the report</string>
 </resources>

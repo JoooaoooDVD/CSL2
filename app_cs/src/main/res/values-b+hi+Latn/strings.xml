@@ -1175,4 +1175,17 @@ Virtual LAN Multiplayer → Session Join karo kholo aur yeh code daalo:
     <string name="preference_category_startup">Startup</string>
     <string name="preference_startup_sound_title">Startup sound</string>
     <string name="preference_startup_sound_description">Launcher intro ke saath chhota Craft Studio chime (silent/vibrate mode mein nahi bajega)</string>
+    <string name="shortcut_add">Home screen pe add karo</string>
+    <string name="shortcut_add_desc">Shortcut pe ek tap se yeh profile seedha start hogi</string>
+    <string name="shortcut_requested">Shortcut home screen pe add ho gaya</string>
+    <string name="shortcut_unsupported">Tumhari home screen pinned shortcuts support nahi karti</string>
+    <string name="shortcut_profile_missing">Yeh profile ab maujood nahi hai</string>
+    <string name="shortcut_launching_fmt">%1$s start ho raha hai…</string>
+    <string name="vlan_beta">Beta</string>
+    <string name="vlan_beta_title">Virtual LAN abhi beta mein hai</string>
+    <string name="vlan_beta_body">Agar join kaam na kare ya kuch bhi na ho, toh humein logs bhejo — isse hum fix kar paate hain. Try karne ke baad Send logs dabao, Discord (ya koi bhi app) chuno aur file Craft Studio team ko bhejo. Isme kuch private nahi hota — sirf Virtual LAN status aur launcher log.</string>
+    <string name="vlan_send_logs">Logs bhejo</string>
+    <string name="vlan_diagnostics_copy">Diagnostics copy karo</string>
+    <string name="vlan_report_title">CS Launcher Plus — Virtual LAN report</string>
+    <string name="vlan_report_failed">Report taiyaar nahi ho paayi</string>
 </resources>

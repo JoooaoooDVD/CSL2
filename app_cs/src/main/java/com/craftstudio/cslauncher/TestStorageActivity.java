@@ -97,6 +97,12 @@ public class TestStorageActivity extends Activity {
         AsyncAssetManager.unpackSingleFiles(this);
 
         Intent intent =  new Intent(this, LauncherActivity.class);
+        // Profile shortcut: hand the profile over and land on the running launcher if there is one
+        String profile = com.craftstudio.cslauncher.utils.ProfileShortcuts.profileFrom(getIntent());
+        if (profile != null) {
+            intent.putExtra(com.craftstudio.cslauncher.utils.ProfileShortcuts.EXTRA_PROFILE, profile);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        }
         startActivity(intent);
         finish();
     }

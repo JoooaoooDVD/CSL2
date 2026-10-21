@@ -1164,6 +1164,20 @@ T = {
 "preference_category_startup": "Startup",
 "preference_startup_sound_title": "Startup sound",
 "preference_startup_sound_description": "Launcher intro ke saath chhota Craft Studio chime (silent/vibrate mode mein nahi bajega)",
+# ---- shortcuts / vlan beta
+"shortcut_add": "Home screen pe add karo",
+"shortcut_add_desc": "Shortcut pe ek tap se yeh profile seedha start hogi",
+"shortcut_requested": "Shortcut home screen pe add ho gaya",
+"shortcut_unsupported": "Tumhari home screen pinned shortcuts support nahi karti",
+"shortcut_profile_missing": "Yeh profile ab maujood nahi hai",
+"shortcut_launching_fmt": "%1$s start ho raha hai\u2026",
+"vlan_beta": "Beta",
+"vlan_beta_title": "Virtual LAN abhi beta mein hai",
+"vlan_beta_body": "Agar join kaam na kare ya kuch bhi na ho, toh humein logs bhejo \u2014 isse hum fix kar paate hain. Try karne ke baad Send logs dabao, Discord (ya koi bhi app) chuno aur file Craft Studio team ko bhejo. Isme kuch private nahi hota \u2014 sirf Virtual LAN status aur launcher log.",
+"vlan_send_logs": "Logs bhejo",
+"vlan_diagnostics_copy": "Diagnostics copy karo",
+"vlan_report_title": "CS Launcher Plus \u2014 Virtual LAN report",
+"vlan_report_failed": "Report taiyaar nahi ho paayi",
 }
 
 TEMPLATE_SRC = ["strings.xml", "strings_resource_browser.xml", "strings_virtual_lan.xml", "strings_cs14.xml", "strings_cs15.xml", "strings_manager.xml",

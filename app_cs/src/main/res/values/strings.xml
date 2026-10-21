@@ -1378,4 +1378,12 @@
     <string name="preference_category_startup">Startup</string>
     <string name="preference_startup_sound_title">Startup sound</string>
     <string name="preference_startup_sound_description">Short Craft Studio chime with the launcher intro (silent in silent/vibrate mode)</string>
+
+    <!-- Profile shortcuts -->
+    <string name="shortcut_add">Add to home screen</string>
+    <string name="shortcut_add_desc">One tap on the shortcut starts this profile straight away</string>
+    <string name="shortcut_requested">Shortcut added to your home screen</string>
+    <string name="shortcut_unsupported">Your home screen doesn\'t support pinned shortcuts</string>
+    <string name="shortcut_profile_missing">This profile no longer exists</string>
+    <string name="shortcut_launching_fmt">Starting %1$s\u2026</string>
 </resources>
