@@ -434,7 +434,7 @@ public class LauncherActivity extends BaseActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        ContextExecutor.clearActivity();
+        ContextExecutor.clearActivity(this);
     }
 
     @Override

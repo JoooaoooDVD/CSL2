@@ -63,6 +63,18 @@ public class ContextExecutor {
     }
 
     /**
+     * Clear the Activity only if it is still the one registered. An activity that is stopped
+     * after another one already resumed (e.g. the shortcut page handing over to the launcher)
+     * must not unregister its successor, otherwise the "game ready" hand-off degrades to a
+     * notification instead of starting the game.
+     */
+    public static void clearActivity(Activity activity) {
+        if(sActivity == null) return;
+        Activity current = Tools.getWeakReference(sActivity);
+        if(current == null || current == activity) sActivity.clear();
+    }
+
+    /**
      * Set the Application that will be used to execute tasks if the Activity won't be available.
      * @param application the application to use as the fallback
      */

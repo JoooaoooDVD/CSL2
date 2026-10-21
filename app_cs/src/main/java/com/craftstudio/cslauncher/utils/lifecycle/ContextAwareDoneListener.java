@@ -60,6 +60,18 @@ public class ContextAwareDoneListener implements MoJsonExtras.DoneListener, Cont
     @Override
     public void executeWithApplication(Context context) {
         Intent gameStartIntent = createGameStartIntent(context);
+        // PLAY must start the game by itself. Even when no activity is registered at this exact
+        // moment (a dialog, a permission prompt, a hand-over between activities) try to start
+        // GameActivity directly; it lives in its own process so this is safe. The notification
+        // below stays as the fallback for when Android refuses a background start.
+        try {
+            Intent direct = new Intent(gameStartIntent);
+            direct.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(direct);
+            android.util.Log.i("ContextAwareDoneListener", "Started the game without a foreground activity");
+        } catch (Throwable t) {
+            android.util.Log.w("ContextAwareDoneListener", "Direct game start failed, falling back to the notification", t);
+        }
         // Since the game is a separate process anyway, it does not matter if it gets invoked
         // from somewhere other than the launcher activity.
         // The only problem may arise if the launcher starts doing something when the user starts the notification.

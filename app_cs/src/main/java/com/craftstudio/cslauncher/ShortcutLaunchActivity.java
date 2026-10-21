@@ -245,7 +245,7 @@ public class ShortcutLaunchActivity extends BaseActivity implements ProgressKeep
     @Override
     protected void onStop() {
         super.onStop();
-        ContextExecutor.clearActivity();
+        ContextExecutor.clearActivity(this);
     }
 
     @Override

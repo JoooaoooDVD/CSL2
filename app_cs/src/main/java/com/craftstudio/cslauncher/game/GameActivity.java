@@ -137,6 +137,11 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         sRunning = true;
+        // The game is starting: drop the "download finished, tap to start" fallback notification if it was posted
+        try {
+            android.app.NotificationManager nm = (android.app.NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            if (nm != null) nm.cancel(com.craftstudio.cslauncher.utils.NotificationUtils.NOTIFICATION_ID_GAME_START);
+        } catch (Throwable ignored) {}
         // Route the native game log through the tap so the Virtual LAN host can see "Started serving on"
         com.craftstudio.cslauncher.multiplayer.LogTap.install();
         instance = Instances.loadSelectedInstance();
@@ -372,7 +377,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
 
     @Override
     protected void onPause() {
-        ContextExecutor.clearActivity();
+        ContextExecutor.clearActivity(this);
         mGyroControl.disable();
         // Avoid going through the JNI each time.
         if (Platform.isGrabbing()){
@@ -402,7 +407,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         super.onDestroy();
         if (mLaunchBarAnimator != null) { mLaunchBarAnimator.cancel(); mLaunchBarAnimator = null; }
         sRunning = false;
-        ContextExecutor.clearActivity();
+        ContextExecutor.clearActivity(this);
     }
 
     @Override

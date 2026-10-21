@@ -73,7 +73,8 @@ public class MoJsonDownloader extends Downloader {
         super(ProgressLayout.DOWNLOAD_GAME);
     }
 
-    public static void prepareSubstitutionMap(AssetManager assetManager) {
+    public static synchronized void prepareSubstitutionMap(AssetManager assetManager) {
+        if (sSubstitutionMapFuture != null && !sSubstitutionMapFuture.isCancelled()) return;
         sSubstitutionMapFuture = sExecutorService.submit(()->{
             try (InputStream stream = assetManager.open("substitutions.json")) {
                 return JSONUtils.readFromStream(stream, SubstitutionMap.class).prepare();
@@ -126,6 +127,12 @@ public class MoJsonDownloader extends Downloader {
         mAllLibraries = new LinkedHashSet<>();
 
         try {
+            // The launcher activity normally kicks this off at startup; a shortcut launch (or a
+            // process restart) can reach here first, so make sure the map is being loaded.
+            if (sSubstitutionMapFuture == null) {
+                if (assetManager == null) throw new IllegalStateException("No AssetManager to read substitutions.json");
+                prepareSubstitutionMap(assetManager);
+            }
             mSubstitutionMap = sSubstitutionMapFuture.get();
         } catch (Exception e) {
             throw new PresentableException(e, R.string.mjdl_submap_error_title, R.string.mjdl_submap_error_subtitle);
