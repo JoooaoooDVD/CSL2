@@ -65,6 +65,9 @@ public class EditControlSideDialog extends SideDialogView {
     private MaterialSwitch mToggleSwitch, mPassthroughSwitch, mSwipeableSwitch, mForwardLockSwitch, mAbsoluteTrackingSwitch;
     private Spinner mOrientationSpinner, mFpsStyleSpinner;
     private TextView mFpsStyleTextView, mRemoveBackgroundBitmap;
+    private TextView mCommandTextView, mCommandHelpTextView;
+    private EditText mCommandEditText;
+    private MaterialSwitch mCommandSlashSwitch;
     private View mBitmapRow;
     private android.widget.ImageView mBitmapPreview;
     private final TextView[] mKeycodeTextviews = new TextView[4];
@@ -168,6 +171,10 @@ public class EditControlSideDialog extends SideDialogView {
         mAbsoluteTrackingSwitch.setVisibility(GONE);
         mFpsStyleTextView.setVisibility(GONE);
         mFpsStyleSpinner.setVisibility(GONE);
+        mCommandTextView.setVisibility(GONE);
+        mCommandEditText.setVisibility(GONE);
+        mCommandHelpTextView.setVisibility(GONE);
+        mCommandSlashSwitch.setVisibility(GONE);
 
         mNameEditText.setText(data.name);
         mWidthEditText.setText(String.valueOf(data.getWidth()));
@@ -197,6 +204,23 @@ public class EditControlSideDialog extends SideDialogView {
         }
 
         setHasBitmap(Tools.isValidString(data.bitmapTag));
+
+        if (data.isCommandButton()) {
+            mCommandTextView.setVisibility(VISIBLE);
+            mCommandEditText.setVisibility(VISIBLE);
+            mCommandHelpTextView.setVisibility(VISIBLE);
+            mCommandSlashSwitch.setVisibility(VISIBLE);
+            mCommandEditText.setText(data.command == null ? "" : data.command);
+            mCommandSlashSwitch.setChecked(data.commandAutoSlash);
+            // A command runs on tap: key mapping, toggle and swipe make no sense here
+            mMappingTextView.setVisibility(GONE);
+            for (int i = 0; i < mKeycodeSpinners.length; i++) {
+                mKeycodeSpinners[i].setVisibility(GONE);
+                mKeycodeTextviews[i].setVisibility(GONE);
+            }
+            mToggleSwitch.setVisibility(GONE);
+            mSwipeableSwitch.setVisibility(GONE);
+        }
 
         if (data.isFpsCounter()) {
             mFpsStyleTextView.setVisibility(VISIBLE);
@@ -374,6 +398,10 @@ public class EditControlSideDialog extends SideDialogView {
         mKeycodeTextviews[3] = mDialogContent.findViewById(R.id.mapping_4_textview);
         mOrientationSpinner = mDialogContent.findViewById(R.id.editOrientation_spinner);
         mFpsStyleSpinner = mDialogContent.findViewById(R.id.editFpsStyle_spinner);
+        mCommandTextView = mDialogContent.findViewById(R.id.editCommand_textView);
+        mCommandEditText = mDialogContent.findViewById(R.id.editCommand_editText);
+        mCommandHelpTextView = mDialogContent.findViewById(R.id.editCommand_help);
+        mCommandSlashSwitch = mDialogContent.findViewById(R.id.checkboxCommandSlash);
         mFpsStyleTextView = mDialogContent.findViewById(R.id.editFpsStyle_textView);
         mBitmapRow = mDialogContent.findViewById(R.id.backgroundBitmap_row);
         mBitmapPreview = mDialogContent.findViewById(R.id.backgroundBitmap_preview);
@@ -416,6 +444,15 @@ public class EditControlSideDialog extends SideDialogView {
      * @noinspection SuspiciousNameCombination
      */
     private void setupRealTimeListeners() {
+        mCommandEditText.addTextChangedListener((SimpleTextWatcher) s -> {
+            if (internalChanges) return;
+            mCurrentlyEditedButton.getProperties().command = s.toString();
+        });
+        mCommandSlashSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (internalChanges) return;
+            mCurrentlyEditedButton.getProperties().commandAutoSlash = isChecked;
+        });
+
         mNameEditText.addTextChangedListener((SimpleTextWatcher) s -> {
             if (internalChanges) return;
 

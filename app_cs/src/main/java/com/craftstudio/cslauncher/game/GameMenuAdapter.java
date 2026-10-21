@@ -41,6 +41,7 @@ public class GameMenuAdapter extends ArrayAdapter<String> {
             R.drawable.ic_gm_add_button, // Add button
             R.drawable.ic_gm_layers,     // Add drawer
             R.drawable.ic_gm_joystick,   // Add joystick
+            R.drawable.ic_gm_terminal,   // Add command button
             R.drawable.ic_gm_folder,     // Load
             R.drawable.ic_gm_save,       // Save
             R.drawable.ic_gm_star,       // Set as default

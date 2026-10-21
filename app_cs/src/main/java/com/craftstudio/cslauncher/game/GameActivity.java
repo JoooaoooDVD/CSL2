@@ -224,10 +224,11 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
                 case 0: mControlLayout.addControlButton(new ControlData("New")); break;
                 case 1: mControlLayout.addDrawer(new ControlDrawerData()); break;
                 case 2: mControlLayout.addJoystickButton(new ControlJoystickData()); break;
-                case 3: mControlLayout.openLoadDialog(); break;
-                case 4: mControlLayout.openSaveDialog(this); break;
-                case 5: mControlLayout.openSetDefaultDialog(); break;
-                case 6: mControlLayout.openExitDialog(this);
+                case 3: mControlLayout.addControlButton(ControlData.createCommandButton()); break;
+                case 4: mControlLayout.openLoadDialog(); break;
+                case 5: mControlLayout.openSaveDialog(this); break;
+                case 6: mControlLayout.openSetDefaultDialog(); break;
+                case 7: mControlLayout.openExitDialog(this);
             }
         };
 

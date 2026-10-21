@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/hm_backdrop_bottom">
+
+    <LinearLayout
+        android:id="@+id/sl_card"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:background="@drawable/bg_pp_card"
+        android:gravity="center_horizontal"
+        android:minWidth="300dp"
+        android:orientation="vertical"
+        android:paddingStart="28dp"
+        android:paddingTop="26dp"
+        android:paddingEnd="28dp"
+        android:paddingBottom="18dp">
+
+        <FrameLayout
+            android:layout_width="108dp"
+            android:layout_height="108dp">
+
+            <View
+                android:id="@+id/sl_ring"
+                android:layout_width="108dp"
+                android:layout_height="108dp"
+                android:background="@drawable/bg_sl_ring" />
+
+            <ImageView
+                android:id="@+id/sl_icon"
+                android:layout_width="76dp"
+                android:layout_height="76dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_sl_icon"
+                android:contentDescription="@null"
+                android:padding="12dp"
+                android:scaleType="fitCenter"
+                tools:src="@drawable/ic_pe_shortcut" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/sl_eyebrow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0.16"
+            android:text="@string/sl_eyebrow"
+            android:textColor="@color/hm_accent"
+            android:textSize="10.5sp" />
+
+        <TextView
+            android:id="@+id/sl_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-medium"
+            android:maxLines="1"
+            android:maxWidth="320dp"
+            android:textColor="@color/hm_text"
+            android:textSize="21sp"
+            tools:text="Survival 1.21.4" />
+
+        <TextView
+            android:id="@+id/sl_version"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:textColor="@color/hm_text_dim"
+            android:textSize="12.5sp"
+            tools:text="1.21.4 · Fabric" />
+
+        <ProgressBar
+            android:id="@+id/sl_progress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="240dp"
+            android:layout_height="4dp"
+            android:layout_marginTop="18dp"
+            android:indeterminate="true"
+            android:indeterminateTint="@color/hm_accent"
+            android:max="100"
+            android:progressBackgroundTint="@color/hm_inner_stroke"
+            android:progressTint="@color/hm_accent" />
+
+        <TextView
+            android:id="@+id/sl_status"
+            android:layout_width="240dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:maxLines="2"
+            android:text="@string/sl_preparing"
+            android:textColor="@color/hm_text_dim"
+            android:textSize="12.5sp" />
+
+        <TextView
+            android:id="@+id/sl_open_launcher"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_vl_btn_ghost"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:paddingStart="18dp"
+            android:paddingEnd="18dp"
+            android:text="@string/sl_open_launcher"
+            android:textColor="@color/hm_text"
+            android:textSize="12.5sp" />
+    </LinearLayout>
+</FrameLayout>

@@ -89,6 +89,10 @@ public class CustomControlsActivity extends BaseActivity implements EditorExitab
 			mControlLayout.addControlButton(ControlData.createFpsCounter());
 			showHint(R.string.ce_added, 3500);
 		});
+		bindAction(R.id.ce_add_command, () -> {
+			mControlLayout.addControlButton(ControlData.createCommandButton());
+			showHint(R.string.customctrl_command_added_hint, 5000);
+		});
 		bindAction(R.id.ce_load, () -> mControlLayout.openLoadDialog());
 		bindAction(R.id.ce_save, () -> mControlLayout.openSaveDialog(this));
 		bindAction(R.id.ce_default, () -> mControlLayout.openSetDefaultDialog());

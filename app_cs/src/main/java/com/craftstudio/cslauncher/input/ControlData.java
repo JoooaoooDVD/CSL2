@@ -32,6 +32,8 @@ public class ControlData {
     public static final int SPECIALBTN_MENU = -9;
     public static final int SPECIALBTN_KEYBOARDPAN = -10;
     public static final int SPECIALBTN_FPS = -11;
+    /** Runs a chat command (or several) when tapped, see {@link #command} */
+    public static final int SPECIALBTN_COMMAND = -12;
 
     /** Visual styles for the FPS counter control, see {@link #fpsStyle} */
     public static final int FPS_STYLE_CLASSIC = 0;   // "60 FPS"
@@ -75,6 +77,10 @@ public class ControlData {
     public String bitmapTag;
     /** Only meaningful when {@link #isFpsCounter()}: one of the FPS_STYLE_* constants */
     public int fpsStyle;
+    /** Only meaningful when {@link #isCommandButton()}: one command per line, run in order */
+    public String command;
+    /** Command button: prepend "/" to lines that don't start with one (off = send as plain chat) */
+    public boolean commandAutoSlash = true;
     private float width;         //Dp instead of Px now
     private float height;        //Dp instead of Px now
 
@@ -164,6 +170,29 @@ public class ControlData {
                 controlData.bitmapTag
         );
         this.fpsStyle = controlData.fpsStyle;
+        this.command = controlData.command;
+        this.commandAutoSlash = controlData.commandAutoSlash;
+    }
+
+    /** True when this control runs chat commands instead of pressing keys */
+    public boolean isCommandButton() {
+        if (keycodes == null) return false;
+        for (int keycode : keycodes) {
+            if (keycode == SPECIALBTN_COMMAND) return true;
+        }
+        return false;
+    }
+
+    /** Ready-to-place command button with sensible defaults */
+    public static ControlData createCommandButton() {
+        ControlData data = new ControlData("CMD", new int[]{SPECIALBTN_COMMAND}, "${right} - ${margin} - ${width}", "0.5 * ${screen_height} - 0.5 * ${height}", 60, 50, false);
+        data.bgColor = 0x7A1B1B20;
+        data.strokeColor = 0x99C6C6CE;
+        data.strokeWidth = 1;
+        data.cornerRadius = 30;
+        data.command = "gamemode creative";
+        data.commandAutoSlash = true;
+        return data;
     }
 
     /** True when this control is the live FPS counter rather than a key button */
@@ -200,7 +229,8 @@ public class ControlData {
                     new ControlData("SCROLLDOWN", new int[]{SPECIALBTN_SCROLLDOWN}, "${margin}", "${margin}"),
                     new ControlData("MENU", new int[]{SPECIALBTN_MENU}, "${margin}", "${margin}"),
                     new ControlData("KeyboardPan", new int[]{SPECIALBTN_KEYBOARDPAN}, "${margin}", "${margin}"),
-                    new ControlData("FPS", new int[]{SPECIALBTN_FPS}, "${margin}", "${margin}", false)
+                    new ControlData("FPS", new int[]{SPECIALBTN_FPS}, "${margin}", "${margin}", false),
+                    new ControlData("Command", new int[]{SPECIALBTN_COMMAND}, "${margin}", "${margin}")
             };
         }
 

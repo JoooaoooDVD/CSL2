@@ -70,28 +70,12 @@ public final class UpdatePopup extends CSPopupDialog implements UpdateDownloader
         TextView newLabel = findViewById(R.id.upd_new_label);
         newLabel.setText(mInfo.prerelease ? R.string.upd_latest_build : R.string.upd_latest);
 
-        TextView meta = findViewById(R.id.upd_meta);
-        StringBuilder sb = new StringBuilder();
-        if (mInfo.publishedAt > 0) {
-            sb.append(getContext().getString(R.string.upd_published_fmt,
-                    DateUtils.getRelativeTimeSpanString(mInfo.publishedAt, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS)));
-        }
-        if (mApk != null && mApk.size > 0) {
-            if (sb.length() > 0) sb.append("  \u00b7  ");
-            sb.append(formatSize(mApk.size));
-        }
-        if (!TextUtils.isEmpty(mInfo.tag)) {
-            if (sb.length() > 0) sb.append("  \u00b7  ");
-            sb.append(mInfo.tag);
-        }
-        meta.setText(sb);
-        meta.setVisibility(sb.length() == 0 ? View.GONE : View.VISIBLE);
-
-        TextView notes = findViewById(R.id.upd_notes);
-        String body = mInfo.notes;
-        if (TextUtils.isEmpty(body)) body = getContext().getString(R.string.upd_no_notes);
-        notes.setText(renderMarkdown(body));
-        notes.setOnClickListener(v -> openRelease());
+        // Only the version is shown: no publish date, size, tag or notes (owner's choice)
+        View meta = findViewById(R.id.upd_meta);
+        if (meta != null) meta.setVisibility(View.GONE);
+        View notesTitle = findViewById(R.id.upd_notes_title);
+        if (notesTitle != null) notesTitle.setVisibility(View.GONE);
+        notesScroll.setVisibility(View.GONE);
 
         mPrimary = findViewById(R.id.upd_primary);
         mLater = findViewById(R.id.upd_later);

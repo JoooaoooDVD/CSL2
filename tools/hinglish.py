@@ -1178,6 +1178,23 @@ T = {
 "vlan_diagnostics_copy": "Diagnostics copy karo",
 "vlan_report_title": "CS Launcher Plus \u2014 Virtual LAN report",
 "vlan_report_failed": "Report taiyaar nahi ho paayi",
+# ---- shortcut launch / command button / update
+"sl_eyebrow": "PROFILE START HO RAHI HAI",
+"sl_preparing": "Taiyaari ho rahi hai\u2026",
+"sl_version_list": "Version list check ho rahi hai\u2026",
+"sl_checking_files": "Game files check ho rahi hain\u2026",
+"sl_checking_fmt": "Game files check ho rahi hain\u2026 %1$d%%",
+"sl_downloading_fmt": "Game files download ho rahi hain\u2026 %1$d%%",
+"sl_starting": "Game start ho raha hai\u2026",
+"sl_open_launcher": "Launcher kholo",
+"customctrl_addbutton_command": "Command button add karo",
+"customctrl_command": "Commands",
+"customctrl_command_hint": "gamemode creative\ntime set day",
+"customctrl_command_help": "Ek line mein ek command, button dabate hi order mein chalti hain. # se shuru lines ignore hoti hain. Chat khul ke commands khud type hoti hain, isliye jo bhi tum type kar sakte ho woh chalega: servers, mods, cheats-enabled worlds.",
+"customctrl_command_autoslash": "/ apne aap lagao",
+"customctrl_command_empty": "Is button mein abhi koi command nahi hai \u2014 edit karke add karo",
+"customctrl_command_preview": "%1$d command(s) ready \u2014 pehli: %2$s",
+"customctrl_command_added_hint": "Command button add ho gaya \u2014 tap karke uski commands likho",
 }
 
 TEMPLATE_SRC = ["strings.xml", "strings_resource_browser.xml", "strings_virtual_lan.xml", "strings_cs14.xml", "strings_cs15.xml", "strings_manager.xml",

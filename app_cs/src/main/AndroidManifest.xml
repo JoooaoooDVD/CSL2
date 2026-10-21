@@ -71,6 +71,12 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".ShortcutLaunchActivity"
+            android:exported="true"
+            android:label="@string/app_short_name"
+            android:launchMode="singleTop"
+            android:screenOrientation="sensorLandscape" />
+        <activity
             android:name=".LauncherActivity"
             android:label="@string/app_short_name"
             android:screenOrientation="sensorLandscape"

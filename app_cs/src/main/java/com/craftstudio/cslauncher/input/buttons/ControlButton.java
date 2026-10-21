@@ -428,6 +428,9 @@ public class ControlButton extends TextView implements ControlInterface {
             case ControlData.SPECIALBTN_FPS:
                 // Display only
                 break;
+            case ControlData.SPECIALBTN_COMMAND:
+                if (isDown) com.craftstudio.cslauncher.input.CommandRunner.run(getContext(), getProperties());
+                break;
         }
     }
 

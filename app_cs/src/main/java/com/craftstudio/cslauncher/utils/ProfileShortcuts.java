@@ -18,7 +18,6 @@ import androidx.core.content.pm.ShortcutManagerCompat;
 import androidx.core.graphics.drawable.IconCompat;
 
 import com.craftstudio.cslauncher.R;
-import com.craftstudio.cslauncher.TestStorageActivity;
 import com.craftstudio.cslauncher.Tools;
 import com.craftstudio.cslauncher.instances.DisplayInstance;
 import com.craftstudio.cslauncher.instances.Instance;
@@ -45,7 +44,7 @@ public final class ProfileShortcuts {
 
     @NonNull
     public static Intent launchIntent(@NonNull Context context, @NonNull String key) {
-        Intent intent = new Intent(context, TestStorageActivity.class);
+        Intent intent = new Intent(context, com.craftstudio.cslauncher.ShortcutLaunchActivity.class);
         intent.setAction(ACTION_LAUNCH_PROFILE);
         intent.putExtra(EXTRA_PROFILE, key);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
