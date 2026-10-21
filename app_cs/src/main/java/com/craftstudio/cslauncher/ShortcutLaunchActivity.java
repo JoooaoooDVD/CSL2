@@ -121,7 +121,7 @@ public class ShortcutLaunchActivity extends BaseActivity implements ProgressKeep
         if (ExtraCore.getValue(ExtraConstants.RELEASE_TABLE) != null) {
             launch();
         } else {
-            setStatus(getString(R.string.sl_version_list));
+            setStatus(getString(R.string.psl_version_list));
             new AsyncVersionList().getVersionList(versions -> {
                 if (versions != null) ExtraCore.setValue(ExtraConstants.RELEASE_TABLE, versions);
                 runOnUiThread(this::launch);
@@ -146,7 +146,7 @@ public class ShortcutLaunchActivity extends BaseActivity implements ProgressKeep
         name.setText(display);
         version.setText(mInstance.versionId == null ? "" : mInstance.versionId);
         version.setVisibility(mInstance.versionId == null ? View.GONE : View.VISIBLE);
-        setStatus(getString(R.string.sl_preparing));
+        setStatus(getString(R.string.psl_preparing));
 
         View card = findViewById(R.id.sl_card);
         card.setAlpha(0f);
@@ -180,7 +180,7 @@ public class ShortcutLaunchActivity extends BaseActivity implements ProgressKeep
         try {
             String normalized = MoJsonExtras.normalizeVersionId(mInstance.versionId);
             JVersionList.Version mcVersion = MoJsonExtras.getListedVersion(normalized);
-            setStatus(getString(R.string.sl_checking_files));
+            setStatus(getString(R.string.psl_checking_files));
             ProgressKeeper.markLaunching();
             new MoJsonDownloader().start(getAssets(), mcVersion, normalized, new ContextAwareDoneListener(this, normalized));
         } catch (Throwable t) {
@@ -201,13 +201,13 @@ public class ShortcutLaunchActivity extends BaseActivity implements ProgressKeep
                 mProgress.setIndeterminate(false);
                 mProgress.setProgress(aggregatePercent);
                 setStatus(ProgressKeeper.isRealDownload()
-                        ? getString(R.string.sl_downloading_fmt, aggregatePercent)
-                        : getString(R.string.sl_checking_fmt, aggregatePercent));
+                        ? getString(R.string.psl_downloading_fmt, aggregatePercent)
+                        : getString(R.string.psl_checking_fmt, aggregatePercent));
             } else if (taskCount > 0) {
                 mProgress.setIndeterminate(true);
             } else if (mLaunched) {
                 mProgress.setIndeterminate(true);
-                setStatus(getString(R.string.sl_starting));
+                setStatus(getString(R.string.psl_starting));
             }
         });
     }

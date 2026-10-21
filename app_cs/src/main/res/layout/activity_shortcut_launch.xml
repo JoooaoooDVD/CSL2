@@ -48,7 +48,7 @@
             android:layout_marginTop="16dp"
             android:fontFamily="sans-serif-medium"
             android:letterSpacing="0.16"
-            android:text="@string/sl_eyebrow"
+            android:text="@string/psl_eyebrow"
             android:textColor="@color/hm_accent"
             android:textSize="10.5sp" />
 
@@ -94,7 +94,7 @@
             android:ellipsize="end"
             android:gravity="center"
             android:maxLines="2"
-            android:text="@string/sl_preparing"
+            android:text="@string/psl_preparing"
             android:textColor="@color/hm_text_dim"
             android:textSize="12.5sp" />
 
@@ -108,7 +108,7 @@
             android:gravity="center"
             android:paddingStart="18dp"
             android:paddingEnd="18dp"
-            android:text="@string/sl_open_launcher"
+            android:text="@string/psl_open_launcher"
             android:textColor="@color/hm_text"
             android:textSize="12.5sp" />
     </LinearLayout>

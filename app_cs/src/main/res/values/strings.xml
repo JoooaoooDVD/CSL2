@@ -1394,12 +1394,12 @@
     <string name="shortcut_unsupported">Your home screen doesn\'t support pinned shortcuts</string>
     <string name="shortcut_profile_missing">This profile no longer exists</string>
     <string name="shortcut_launching_fmt">Starting %1$s\u2026</string>
-    <string name="sl_eyebrow">STARTING PROFILE</string>
-    <string name="sl_preparing">Preparing\u2026</string>
-    <string name="sl_version_list">Checking the version list\u2026</string>
-    <string name="sl_checking_files">Checking game files\u2026</string>
-    <string name="sl_checking_fmt">Checking game files\u2026 %1$d%%</string>
-    <string name="sl_downloading_fmt">Downloading game files\u2026 %1$d%%</string>
-    <string name="sl_starting">Starting the game\u2026</string>
-    <string name="sl_open_launcher">Open launcher instead</string>
+    <string name="psl_eyebrow">STARTING PROFILE</string>
+    <string name="psl_preparing">Preparing\u2026</string>
+    <string name="psl_version_list">Checking the version list\u2026</string>
+    <string name="psl_checking_files">Checking game files\u2026</string>
+    <string name="psl_checking_fmt">Checking game files\u2026 %1$d%%</string>
+    <string name="psl_downloading_fmt">Downloading game files\u2026 %1$d%%</string>
+    <string name="psl_starting">Starting the game\u2026</string>
+    <string name="psl_open_launcher">Open launcher instead</string>
 </resources>
