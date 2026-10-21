@@ -177,6 +177,12 @@ public class AWTActivity extends BaseActivity implements View.OnTouchListener {
             final List<String> javaArgs = extras.getStringArrayList("javaArgs");
             final Uri resourceUri = extras.getParcelable("modUri");
             final String jarPath = extras.getString("modPath");
+            android.widget.TextView title = findViewById(R.id.awt_title);
+            if (title != null) {
+                String shown = jarPath != null ? new File(jarPath).getName()
+                        : resourceUri != null && resourceUri.getLastPathSegment() != null ? resourceUri.getLastPathSegment() : null;
+                if (shown != null) title.setText(shown);
+            }
             if(jarPath != null) {
                 File jarFile = new File(jarPath);
                 startModInstaller(jarFile, javaArgs);

@@ -1,201 +1,330 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
-	xmlns:android="http://schemas.android.com/apk/res/android"
-	xmlns:app="http://schemas.android.com/apk/res-auto"
-	xmlns:tools="http://schemas.android.com/tools"
-	android:layout_height="match_parent"
-	android:layout_width="match_parent">
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0B0B0E">
 
-	<androidx.constraintlayout.widget.ConstraintLayout
-		android:layout_width="match_parent"
-		android:layout_height="match_parent"
-		android:background="#000000">
+    <!-- The Java window surface: must stay full-size, mouse coordinates map onto it -->
+    <com.craftstudio.cslauncher.input.keyboard.TouchCharInput
+        android:id="@+id/awt_touch_char"
+        android:layout_width="1dp"
+        android:layout_height="1dp"
+        android:background="@android:color/transparent"
+        android:ems="10"
+        android:imeOptions="flagNoFullscreen|flagNoExtractUi|flagNoPersonalizedLearning|actionDone"
+        android:inputType="textFilter|textImeMultiLine|textAutoComplete|textAutoCorrect"
+        tools:ignore="TouchTargetSizeCheck" />
 
-		<com.craftstudio.cslauncher.input.keyboard.TouchCharInput
-			android:id="@+id/awt_touch_char"
-			android:layout_width="1dp"
-			android:layout_height="1dp"
-			android:background="@android:color/darker_gray"
-			android:ems="10"
-			android:imeOptions="flagNoFullscreen|flagNoExtractUi|flagNoPersonalizedLearning|actionDone"
-			android:inputType="textFilter|textImeMultiLine|textAutoComplete|textAutoCorrect"
-			tools:ignore="TouchTargetSizeCheck"
-			/>
+    <com.craftstudio.cslauncher.awt.AWTView
+        android:id="@+id/installmod_surfaceview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
-		<com.craftstudio.cslauncher.awt.AWTView
-			android:id="@+id/installmod_surfaceview"
-			android:layout_width="match_parent"
-			android:layout_height="match_parent"
-			android:foregroundGravity="bottom"
-			app:layout_constraintBottom_toBottomOf="parent"
-			app:layout_constraintEnd_toEndOf="parent"
-			app:layout_constraintStart_toStartOf="parent"
-			app:layout_constraintTop_toTopOf="parent" />
+    <LinearLayout
+        android:id="@+id/main_touchpad"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-		<LinearLayout
-			android:id="@+id/main_touchpad"
-			android:layout_width="0dp"
-			android:layout_height="0dp"
-			android:orientation="vertical"
-			app:layout_constraintStart_toStartOf="@id/installmod_surfaceview"
-			app:layout_constraintTop_toTopOf="@id/installmod_surfaceview"
-            app:layout_constraintBottom_toBottomOf="@id/installmod_surfaceview"
-            app:layout_constraintEnd_toEndOf="@id/installmod_surfaceview"
-            >
+        <ImageView
+            android:id="@+id/main_mouse_pointer"
+            android:layout_width="18dp"
+            android:layout_height="27dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_mouse_pointer" />
+    </LinearLayout>
 
-			<ImageView
-				android:id="@+id/main_mouse_pointer"
-				android:layout_width="18dp"
-				android:layout_height="27dp"
-				android:src="@drawable/ic_mouse_pointer" />
+    <!-- Top bar: text tools on the left, title in the middle, session tools on the right -->
+    <LinearLayout
+        android:id="@+id/awt_topbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:background="@drawable/bg_awt_header"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="10dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="10dp"
+        android:paddingBottom="18dp">
 
-		</LinearLayout>
+        <TextView
+            android:id="@+id/awt_btn_keyboard"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            
+            android:background="@drawable/bg_awt_pill"
+            android:clickable="true"
+            android:drawableStart="@drawable/ic_gm_keyboard"
+            android:drawablePadding="7dp"
+            android:drawableTint="#FFF2F5FA"
+            android:focusable="true"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:onClick="toggleKeyboard"
+            android:paddingStart="12dp"
+            android:paddingEnd="14dp"
+            android:text="@string/awt_keyboard"
+            android:textColor="#FFF2F5FA"
+            android:textSize="12.5sp" />
+        <TextView
+            android:id="@+id/awt_btn_copy"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/bg_awt_pill"
+            android:clickable="true"
+            android:drawableStart="@drawable/ic_cc_copy"
+            android:drawablePadding="7dp"
+            android:drawableTint="#FFF2F5FA"
+            android:focusable="true"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:onClick="performCopy"
+            android:paddingStart="12dp"
+            android:paddingEnd="14dp"
+            android:text="@string/awt_copy"
+            android:textColor="#FFF2F5FA"
+            android:textSize="12.5sp" />
+        <TextView
+            android:id="@+id/awt_btn_paste"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/bg_awt_pill"
+            android:clickable="true"
+            android:drawableStart="@drawable/ic_awt_paste"
+            android:drawablePadding="7dp"
+            android:drawableTint="#FFF2F5FA"
+            android:focusable="true"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:onClick="performPaste"
+            android:paddingStart="12dp"
+            android:paddingEnd="14dp"
+            android:text="@string/awt_paste"
+            android:textColor="#FFF2F5FA"
+            android:textSize="12.5sp" />
 
-		<Button
-			android:id="@+id/installmod_btn2"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_alignParentRight="true"
-			android:background="@drawable/control_button"
-			android:onClick="forceClose"
-			android:text="@string/control_forceclose"
-			app:layout_constraintRight_toRightOf="parent"
-			app:layout_constraintTop_toTopOf="parent" />
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
 
-		<Button
-			android:id="@+id/installmod_btn3"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_toLeftOf="@id/installmod_btn2"
-			android:layout_marginTop="2dp"
-			android:background="@drawable/control_button"
-			android:onClick="openLogOutput"
-			android:text="@string/control_viewout"
-			app:layout_constraintEnd_toEndOf="parent"
-			app:layout_constraintRight_toLeftOf="@id/installmod_btn2"
-			app:layout_constraintTop_toBottomOf="@+id/installmod_btn2" />
+            <TextView
+                android:id="@+id/awt_eyebrow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="0.16"
+                android:text="@string/awt_eyebrow"
+                android:textColor="#FFC6C6CE"
+                android:textSize="10sp" />
 
-		<Button
-			android:id="@+id/button2"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_toLeftOf="@id/installmod_btn3"
-			android:layout_marginTop="2dp"
-			android:background="@drawable/control_button"
-			android:onClick="toggleVirtualMouse"
-			android:text="@string/control_mouse"
-			app:layout_constraintEnd_toEndOf="parent"
-			app:layout_constraintRight_toLeftOf="@id/installmod_btn3"
-			app:layout_constraintTop_toBottomOf="@+id/installmod_btn3" />
+            <TextView
+                android:id="@+id/awt_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="middle"
+                android:fontFamily="sans-serif-medium"
+                android:maxLines="1"
+                android:maxWidth="360dp"
+                android:text="@string/awt_title_default"
+                android:textColor="#FFF2F5FA"
+                android:textSize="14sp" />
+        </LinearLayout>
 
-		<Button
-			android:id="@+id/button"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_marginStart="2dp"
-			android:layout_marginTop="2dp"
-			android:background="@drawable/control_button"
-			android:onClick="toggleKeyboard"
-			android:text="Keyboard"
-			app:layout_constraintStart_toStartOf="parent"
-			app:layout_constraintTop_toTopOf="parent" />
+        <TextView
+            android:id="@+id/button2"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/bg_awt_pill"
+            android:clickable="true"
+            android:drawableStart="@drawable/ic_awt_mouse"
+            android:drawablePadding="7dp"
+            android:drawableTint="#FFF2F5FA"
+            android:focusable="true"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:onClick="toggleVirtualMouse"
+            android:paddingStart="12dp"
+            android:paddingEnd="14dp"
+            android:text="@string/control_mouse"
+            android:textColor="#FFF2F5FA"
+            android:textSize="12.5sp" />
+        <TextView
+            android:id="@+id/installmod_btn3"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/bg_awt_pill"
+            android:clickable="true"
+            android:drawableStart="@drawable/ic_gm_terminal"
+            android:drawablePadding="7dp"
+            android:drawableTint="#FFF2F5FA"
+            android:focusable="true"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:onClick="openLogOutput"
+            android:paddingStart="12dp"
+            android:paddingEnd="14dp"
+            android:text="@string/awt_log"
+            android:textColor="#FFF2F5FA"
+            android:textSize="12.5sp" />
+        <TextView
+            android:id="@+id/installmod_btn2"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/bg_awt_pill_danger"
+            android:clickable="true"
+            android:drawableStart="@drawable/ic_gm_close"
+            android:drawablePadding="7dp"
+            android:drawableTint="#FFFF8A8A"
+            android:focusable="true"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:onClick="forceClose"
+            android:paddingStart="12dp"
+            android:paddingEnd="14dp"
+            android:text="@string/awt_close"
+            android:textColor="#FFFF8A8A"
+            android:textSize="12.5sp" />
+    </LinearLayout>
 
-		<Button
-			android:id="@+id/button3"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_marginStart="2dp"
-			android:layout_marginTop="2dp"
-			android:background="@drawable/control_button"
-			android:onClick="performCopy"
-			android:text="Copy"
-			app:layout_constraintStart_toStartOf="parent"
-			app:layout_constraintTop_toBottomOf="@+id/button" />
+    <!-- Hint: how to use the page -->
+    <TextView
+        android:id="@+id/awt_hint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="14dp"
+        android:background="@drawable/bg_awt_pad"
+        android:paddingStart="14dp"
+        android:paddingTop="7dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="7dp"
+        android:text="@string/awt_hint"
+        android:textColor="#FF9C9CA4"
+        android:textSize="11.5sp" />
 
-		<Button
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_marginStart="2dp"
-			android:layout_marginTop="2dp"
-			android:background="@drawable/control_button"
-			android:onClick="performPaste"
-			android:text="Paste"
-			app:layout_constraintStart_toStartOf="parent"
-			app:layout_constraintTop_toBottomOf="@+id/button3" />
+    <!-- Bottom left: mouse buttons -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        android:layout_margin="10dp"
+        android:orientation="horizontal">
 
-		<Button
-			android:id="@+id/installmod_mouse_pri"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_alignParentBottom="true"
-			android:layout_marginBottom="2dp"
-			android:background="@drawable/control_button"
-			android:text="@string/control_primary"
-			app:layout_constraintBottom_toTopOf="@+id/installmod_mouse_sec"
-			app:layout_constraintStart_toStartOf="parent" />
+        <TextView
+            android:id="@+id/installmod_mouse_pri"
+            android:layout_width="84dp"
+            android:layout_height="46dp"
+            android:background="@drawable/bg_awt_pill"
+            android:clickable="true"
+            android:focusable="true"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:text="@string/awt_left_click"
+            android:textColor="#FFF2F5FA"
+            android:textSize="12.5sp" />
 
-		<Button
-			android:id="@+id/installmod_mouse_sec"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_alignParentBottom="true"
-			android:layout_toRightOf="@id/installmod_mouse_pri"
-			android:background="@drawable/control_button"
-			android:text="@string/control_secondary"
-			app:layout_constraintBottom_toBottomOf="parent"
-			app:layout_constraintLeft_toRightOf="@id/installmod_mouse_pri"
-			app:layout_constraintStart_toStartOf="parent" />
+        <TextView
+            android:id="@+id/installmod_mouse_sec"
+            android:layout_width="84dp"
+            android:layout_height="46dp"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/bg_awt_pill"
+            android:clickable="true"
+            android:focusable="true"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:text="@string/awt_right_click"
+            android:textColor="#FFF2F5FA"
+            android:textSize="12.5sp" />
+    </LinearLayout>
 
-		<Button
-			android:id="@+id/installmod_window_moveleft"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_alignParentBottom="true"
-			android:background="@drawable/control_button"
-			android:text="◀"
-			app:layout_constraintBottom_toBottomOf="parent"
-			app:layout_constraintEnd_toEndOf="parent" />
+    <!-- Bottom right: move the Java window -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="10dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
-		<Button
-			android:id="@+id/installmod_window_moveright"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_alignParentBottom="true"
-			android:layout_toRightOf="@id/installmod_mouse_pri"
-			android:background="@drawable/control_button"
-			android:text="▶"
-			app:layout_constraintBottom_toTopOf="@+id/installmod_window_moveleft"
-			app:layout_constraintEnd_toEndOf="@+id/installmod_window_moveleft" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:text="@string/awt_move_window"
+            android:textColor="#FF9C9CA4"
+            android:textSize="11sp" />
 
-		<Button
-			android:id="@+id/installmod_window_moveup"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_alignParentBottom="true"
-			android:layout_toRightOf="@id/installmod_mouse_pri"
-			android:background="@drawable/control_button"
-			android:text="▲"
-			app:layout_constraintBottom_toTopOf="@+id/installmod_window_moveleft"
-			app:layout_constraintEnd_toStartOf="@+id/installmod_window_moveright" />
+        <FrameLayout
+            android:layout_width="124dp"
+            android:layout_height="124dp"
+            android:background="@drawable/bg_awt_pad"
+            android:padding="2dp">
 
-		<Button
-			android:id="@+id/installmod_window_movedown"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_alignParentBottom="true"
-			android:background="@drawable/control_button"
-			android:text="▼"
-			app:layout_constraintBottom_toBottomOf="parent"
-			app:layout_constraintEnd_toStartOf="@+id/installmod_window_moveleft" />
+            <ImageView
+                android:id="@+id/installmod_window_moveup"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="top|center_horizontal"
+                android:background="@drawable/bg_awt_pad_key"
+                android:clickable="true"
+                android:contentDescription="@null"
+                android:focusable="true"
+                android:padding="9dp"
+                android:rotation="0"
+                android:src="@drawable/ic_awt_chevron" />
+            <ImageView
+                android:id="@+id/installmod_window_movedown"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="bottom|center_horizontal"
+                android:background="@drawable/bg_awt_pad_key"
+                android:clickable="true"
+                android:contentDescription="@null"
+                android:focusable="true"
+                android:padding="9dp"
+                android:rotation="180"
+                android:src="@drawable/ic_awt_chevron" />
+            <ImageView
+                android:id="@+id/installmod_window_moveleft"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="start|center_vertical"
+                android:background="@drawable/bg_awt_pad_key"
+                android:clickable="true"
+                android:contentDescription="@null"
+                android:focusable="true"
+                android:padding="9dp"
+                android:rotation="-90"
+                android:src="@drawable/ic_awt_chevron" />
+            <ImageView
+                android:id="@+id/installmod_window_moveright"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="end|center_vertical"
+                android:background="@drawable/bg_awt_pad_key"
+                android:clickable="true"
+                android:contentDescription="@null"
+                android:focusable="true"
+                android:padding="9dp"
+                android:rotation="90"
+                android:src="@drawable/ic_awt_chevron" />
+        </FrameLayout>
+    </LinearLayout>
 
-	</androidx.constraintlayout.widget.ConstraintLayout>
-
-	<com.kdt.LoggerView
-		android:id="@+id/launcherLoggerView"
-		android:layout_width="match_parent"
-		android:layout_height="match_parent"
-		android:visibility="gone"
-		/>
-
+    <com.kdt.LoggerView
+        android:id="@+id/launcherLoggerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
 </FrameLayout>
-

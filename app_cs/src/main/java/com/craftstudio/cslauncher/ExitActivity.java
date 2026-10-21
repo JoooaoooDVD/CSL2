@@ -56,11 +56,8 @@ public class ExitActivity extends AppCompatActivity {
 
         Object lock = new Object();
         Tools.runOnUiThread(()->{
-            Intent i = new Intent(ctx,ExitActivity.class);
-            i.putExtra("code",code);
-            i.putExtra("isSignal", isSignal);
-            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            // Full crash page in the launcher process (log, diagnosis, share, play again)
+            Intent i = com.craftstudio.cslauncher.game.crash.GameCrashActivity.createIntent(ctx, code, isSignal);
             ctx.startActivity(i);
             synchronized (lock) {
                 lock.notify();

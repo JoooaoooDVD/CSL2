@@ -118,6 +118,12 @@
             android:screenOrientation="sensorLandscape"
             android:theme="@style/Theme.CS.Dialog" />
         <activity
+            android:name=".game.crash.GameCrashActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize|keyboard|navigation"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:screenOrientation="sensorLandscape" />
+        <activity
             android:name=".ExitActivity"
             android:configChanges="keyboardHidden|orientation|screenSize|keyboard|navigation"
             android:screenOrientation="sensorLandscape"
