@@ -223,7 +223,12 @@ public final class TunnelManager {
         try {
             if (pidFile.exists()) {
                 int pid = Integer.parseInt(readFile(pidFile).trim());
-                if (pid > 1) mEnv.killProcess(pid);
+                if (pid > 1 && pid != mEnv.myPid()) {
+                    // pids get reused: only ever kill a process that really is the tunnel engine
+                    File cmdline = new File("/proc/" + pid + "/cmdline");
+                    String cmd = cmdline.exists() ? readFile(cmdline) : "";
+                    if (cmd.contains("easytier")) mEnv.killProcess(pid);
+                }
             }
         } catch (Exception ignored) {
         }

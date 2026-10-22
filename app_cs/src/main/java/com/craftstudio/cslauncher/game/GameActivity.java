@@ -93,6 +93,7 @@ import com.craftstudio.cslauncher.R;
 public class GameActivity extends BaseActivity implements ControlButtonMenuListener, EditorExitable, ServiceConnection {
     public static final String INTENT_LAUNCH_VERSION = "intent_version";
     public static final String INTENT_LAUNCH_CLASSPATH = "intent_classpath";
+    public static final String INTENT_LAUNCH_ACCOUNT = "intent_account_file";
 
     public static TouchCharInput touchCharInput;
     private GameView launcherGLView;
@@ -145,9 +146,17 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         // Route the native game log through the tap so the Virtual LAN host can see "Started serving on"
         com.craftstudio.cslauncher.multiplayer.LogTap.install();
         instance = Instances.loadSelectedInstance();
-        account = Accounts.getCurrent();
+        // The launcher hands the account file over: this process may hold a stale preference
+        // cache (separate process) and must never start the game with a null account.
+        account = Accounts.resolveForLaunch(getIntent() != null ? getIntent().getStringExtra(INTENT_LAUNCH_ACCOUNT) : null);
         if(instance == null) {
             Toast.makeText(this, R.string.instance_dir_missing, Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
+        if(account == null) {
+            Toast.makeText(this, R.string.no_saved_accounts, Toast.LENGTH_LONG).show();
+            Tools.restartLauncherActivity(this);
             finish();
             return;
         }

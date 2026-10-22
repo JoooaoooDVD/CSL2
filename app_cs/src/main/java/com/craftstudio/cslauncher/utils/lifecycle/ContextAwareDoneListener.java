@@ -30,6 +30,7 @@ public class ContextAwareDoneListener implements MoJsonExtras.DoneListener, Cont
         Intent mainIntent = new Intent(context, GameActivity.class);
         mainIntent.putExtra(INTENT_LAUNCH_VERSION, mNormalizedVersionid);
         mainIntent.putExtra(INTENT_LAUNCH_CLASSPATH, classpath);
+        mainIntent.putExtra(GameActivity.INTENT_LAUNCH_ACCOUNT, com.craftstudio.cslauncher.authenticator.accounts.Accounts.getCurrentFileName());
         mainIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         return mainIntent;
     }

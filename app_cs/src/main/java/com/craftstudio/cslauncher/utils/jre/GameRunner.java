@@ -263,6 +263,7 @@ public class GameRunner {
         // other options fixes) so the cached options are reloaded once below. Never blocks launch.
         applyBrandingBeforeLaunch(activity, instance, versionId);
         // Local accounts with a launcher skin/cape: local Yggdrasil server (before the args: it sets the UUID)
+        if (account == null) throw new IllegalStateException("No account selected: open the launcher and sign in or create a local account");
         com.craftstudio.cslauncher.authenticator.yggdrasil.LocalSkinBridge.prepare(account);
         List<String> launchArgs = getMoJsonClientArgs(account, versionInfo, gamedir);
 

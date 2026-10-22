@@ -86,6 +86,43 @@ public class Accounts {
 		return loadAccount(new File(Tools.DIR_ACCOUNT_NEW, selectedAccount));
     }
 
+	/** File name (inside the accounts dir) of the selected account, "" when none */
+	public static String getCurrentFileName() {
+		return getSelectedAccount();
+	}
+
+	/** Loads an account by its file name; null when missing/corrupt */
+	@androidx.annotation.Nullable
+	public static Account loadByFileName(@androidx.annotation.Nullable String fileName) {
+		if (fileName == null || fileName.isEmpty()) return null;
+		return loadAccount(new File(Tools.DIR_ACCOUNT_NEW, fileName));
+	}
+
+	/**
+	 * The account the game should run with, never null when at least one account exists.
+	 * Order: the file name handed over by the launcher (always fresh, even if this process has a
+	 * stale preference cache), then the selected account from preferences, then the first
+	 * account on disk (and it becomes the selected one).
+	 */
+	@androidx.annotation.Nullable
+	public static Account resolveForLaunch(@androidx.annotation.Nullable String preferredFileName) {
+		Account acc = loadByFileName(preferredFileName);
+		if (acc != null) return acc;
+		acc = getCurrent();
+		if (acc != null) return acc;
+		try {
+			Accounts all = load();
+			if (!all.accounts.isEmpty()) {
+				acc = all.accounts.get(Math.max(0, Math.min(all.selectionIndex, all.accounts.size() - 1)));
+				if (acc != null && acc.mSaveLocation != null) setCurrent(acc);
+				return acc;
+			}
+		} catch (Exception e) {
+			Log.w("Accounts", "resolveForLaunch: could not list accounts", e);
+		}
+		return null;
+	}
+
 	private static File pickAccountPath() {
 		File profilePath;
 		do {

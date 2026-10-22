@@ -65,14 +65,17 @@ public final class RelayNodes {
     public static final String REMOTE_LIST_URL =
             "https://raw.githubusercontent.com/JoooaoooDVD/CSL2/main/multiplayer/relay_nodes.json";
     private static final long REMOTE_TTL_MS = 6 * 60 * 60 * 1000L;
-    private static final int PROBE_TIMEOUT_MS = 2500;
-    public static final int MAX_NODES = 6;
+    private static final int PROBE_TIMEOUT_MS = 4500;
+    /** Host and guest pick their relays independently: keep enough of them that the two sets always overlap */
+    public static final int MAX_NODES = 10;
 
     /** Verified 2026-10: full EasyTier handshake succeeded against each of these. */
     public static final List<Node> BUILT_IN = Collections.unmodifiableList(java.util.Arrays.asList(
             new Node("tcp://225284.xyz:11010", "Haibo (Shanghai Telecom)", "CN", true),
             new Node("udp://us01.225284.xyz:11010", "Haibo (United States)", "US", true),
             new Node("tcp://183.230.36.171:11010", "Murphy (Chongqing Mobile)", "CN", true),
+            new Node("tcp://161.33.207.13:51010", "Community (Japan)", "JP", true),
+            new Node("udp://161.33.207.13:51010", "Community (Japan, UDP)", "JP", true),
             new Node("tcp://easytier.weiai.org.cn:11010", "Weiai (Xiamen Telecom)", "CN", true),
             new Node("tcp://et.sumnight.top:11010", "Sumnight (Shanghai BGP)", "CN", false),
             new Node("udp://et.basd1.de:11010", "Basd1 (Zaozhuang BGP)", "CN", true)
