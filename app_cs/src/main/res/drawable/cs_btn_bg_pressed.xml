@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="15dp" />
+            <solid android:color="@color/cs_btn_border_press" />
+        </shape>
+    </item>
+    <item android:left="1.5dp" android:top="1.5dp" android:right="1.5dp" android:bottom="4dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="13dp" />
+            <gradient android:angle="270" android:startColor="@color/cs_btn_top_press" android:endColor="@color/cs_btn_bottom_press" />
+        </shape>
+    </item>
+</layer-list>
