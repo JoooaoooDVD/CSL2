@@ -37,6 +37,9 @@ public final class VirtualLanVpnService extends VpnService {
     public static final String ACTION_DISCONNECT = "com.craftstudio.cslauncher.multiplayer.VPN_DISCONNECT";
     public static final String EXTRA_VIP = "vip";
     public static final String EXTRA_SOCKS5_PORT = "socks5";
+    /** pid of the process that owns the session; when it disappears the TUN is released (no orphan VPN). */
+    public static final String EXTRA_OWNER_PID = "owner_pid";
+    private int mOwnerPid;
     private static final int MTU = 1380; // EasyTier's default virtual MTU
 
     public enum State { DOWN, STARTING, UP, REVOKED, FAILED }
@@ -51,9 +54,30 @@ public final class VirtualLanVpnService extends VpnService {
     @NonNull public static String error() { return sError; }
     @NonNull public static String currentVip() { return sVip; }
 
-    /** Called by the controller when a new session starts, so a stale REVOKED/FAILED does not leak into it */
-    static void resetState() {
-        if (sInstance == null) { sState = State.DOWN; sError = ""; sVip = ""; }
+    private final android.os.Handler mHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Runnable mHeartbeat = new Runnable() {
+        @Override public void run() {
+            if (mOwnerPid > 0 && !new File("/proc/" + mOwnerPid).exists()) {
+                disconnect(State.DOWN, "owner process " + mOwnerPid + " is gone");
+                stopSelf();
+                return;
+            }
+            if (sState == State.UP && mBridgeRunning && !TProxyService.TProxyIsRunning()) {
+                // The native bridge thread ended on its own (socks5 side gone, fatal config): report it
+                publish(State.FAILED, "bridge stopped by itself (see vpn_bridge.log)");
+                teardownQuietly();
+                return;
+            }
+            publish(sState, sError);
+            if (sState == State.UP || sState == State.STARTING) mHandler.postDelayed(this, VpnBridgeState.HEARTBEAT_MS);
+        }
+    };
+
+    /** Mirrors the in-process state to the cross-process file (the session lives in :game, we live in :vpn). */
+    private void publish(State state, String error) {
+        sState = state;
+        sError = error == null ? "" : error;
+        VpnBridgeState.write(this, state.name(), sError, sVip);
     }
 
     private ParcelFileDescriptor mTun;
@@ -63,6 +87,7 @@ public final class VirtualLanVpnService extends VpnService {
     public void onCreate() {
         super.onCreate();
         sInstance = this;
+        VpnBridgeState.log(this, "service created (process " + android.os.Process.myPid() + ", abi " + Build.SUPPORTED_ABIS[0] + ")");
     }
 
     @Override
@@ -71,6 +96,7 @@ public final class VirtualLanVpnService extends VpnService {
         if (ACTION_CONNECT.equals(action)) {
             String vip = intent.getStringExtra(EXTRA_VIP);
             int socks = intent.getIntExtra(EXTRA_SOCKS5_PORT, 0);
+            mOwnerPid = intent.getIntExtra(EXTRA_OWNER_PID, 0);
             if (vip == null || vip.isEmpty() || socks <= 0) {
                 setFailed("bad VPN parameters");
             } else {
@@ -87,9 +113,9 @@ public final class VirtualLanVpnService extends VpnService {
         if (sState == State.UP && vip.equals(sVip) && mBridgeRunning && TProxyService.TProxyIsRunning()) return;
         // (re)establish: tear down the previous device first (vip changed or bridge died)
         teardownQuietly();
-        sState = State.STARTING;
-        sError = "";
         sVip = vip;
+        publish(State.STARTING, "");
+        VpnBridgeState.log(this, "connect requested: vip=" + vip + " socks5=127.0.0.1:" + socks5Port);
 
         Throwable load = TProxyService.loadError();
         if (load != null) {
@@ -127,9 +153,13 @@ public final class VirtualLanVpnService extends VpnService {
             return;
         }
         mTun = tun;
+        VpnBridgeState.log(this, "TUN established fd=" + tun.getFd() + " mtu=" + MTU + " route " + TunnelConfig.SUBNET_CIDR);
         File cfg = new File(getFilesDir(), "virtual_lan_tun.yml");
+        File bridgeLog = VpnBridgeState.bridgeLog(this);
+        //noinspection ResultOfMethodCallIgnored
+        bridgeLog.delete(); // one bridge run per log so the report always shows the current attempt
         try (FileOutputStream out = new FileOutputStream(cfg)) {
-            out.write(bridgeConfig(vip, socks5Port).getBytes(StandardCharsets.UTF_8));
+            out.write(bridgeConfig(vip, socks5Port, bridgeLog).getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
             teardownQuietly();
             setFailed("bridge config: " + e.getMessage());
@@ -148,11 +178,14 @@ public final class VirtualLanVpnService extends VpnService {
             return;
         }
         mBridgeRunning = true;
-        sState = State.UP;
+        publish(State.UP, "");
+        VpnBridgeState.log(this, "bridge running (hev-socks5-tunnel) -> socks5 127.0.0.1:" + socks5Port);
         Log.i(TAG, "VPN up " + vip + "/24 -> socks5 127.0.0.1:" + socks5Port);
+        mHandler.removeCallbacks(mHeartbeat);
+        mHandler.postDelayed(mHeartbeat, VpnBridgeState.HEARTBEAT_MS);
     }
 
-    private static String bridgeConfig(String vip, int socks5Port) {
+    private static String bridgeConfig(String vip, int socks5Port, File bridgeLog) {
         return "tunnel:\n"
                 + "  name: tun0\n"
                 + "  mtu: " + MTU + "\n"
@@ -172,19 +205,22 @@ public final class VirtualLanVpnService extends VpnService {
                 + "  connect-timeout: 8000\n"
                 + "  tcp-read-write-timeout: 300000\n"
                 + "  udp-read-write-timeout: 60000\n"
-                + "  log-level: warn\n";
+                + "  log-file: " + bridgeLog.getAbsolutePath() + "\n"
+                + "  log-level: info\n";
     }
 
     private void setFailed(String why) {
-        sError = why;
-        sState = State.FAILED;
+        publish(State.FAILED, why);
+        VpnBridgeState.log(this, "FAILED: " + why);
         Log.w(TAG, "VPN failed: " + why);
     }
 
     private void teardownQuietly() {
+        mHandler.removeCallbacks(mHeartbeat);
         if (mBridgeRunning) {
             try { TProxyService.TProxyStopService(); } catch (Throwable ignored) {}
             mBridgeRunning = false;
+            VpnBridgeState.log(this, "bridge stopped");
         }
         if (mTun != null) {
             try { mTun.close(); } catch (IOException ignored) {}
@@ -194,9 +230,9 @@ public final class VirtualLanVpnService extends VpnService {
 
     private void disconnect(State next, String why) {
         teardownQuietly();
-        sState = next;
-        sError = why;
         if (next == State.DOWN) sVip = "";
+        publish(next, why);
+        VpnBridgeState.log(this, "disconnect -> " + next + (why.isEmpty() ? "" : ": " + why));
         Log.i(TAG, "VPN " + next + (why.isEmpty() ? "" : ": " + why));
     }
 
@@ -210,7 +246,8 @@ public final class VirtualLanVpnService extends VpnService {
     @Override
     public void onDestroy() {
         teardownQuietly();
-        if (sState == State.UP || sState == State.STARTING) { sState = State.DOWN; sVip = ""; }
+        if (sState == State.UP || sState == State.STARTING) { sVip = ""; publish(State.DOWN, ""); }
+        VpnBridgeState.log(this, "service destroyed");
         if (sInstance == this) sInstance = null;
         super.onDestroy();
     }

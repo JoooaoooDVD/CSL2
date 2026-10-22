@@ -991,6 +991,21 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
                     .append(" abi=").append(android.os.Build.SUPPORTED_ABIS.length > 0 ? android.os.Build.SUPPORTED_ABIS[0] : "?")
                     .append(" launcher=").append(com.craftstudio.cslauncher.BuildConfig.VERSION_NAME)
                     .append(" build=").append(com.craftstudio.cslauncher.BuildConfig.VERSION_CODE).append('\n');
+            report.append("\n==== VPN bridge state ====\n");
+            com.craftstudio.cslauncher.multiplayer.VpnBridgeState.Snapshot vs = com.craftstudio.cslauncher.multiplayer.VpnBridgeState.read(mContext);
+            report.append("state=").append(vs.state.isEmpty() ? "none" : vs.state).append(vs.stale ? " (stale heartbeat: process gone)" : "")
+                    .append(" pid=").append(vs.pid).append(" vip=").append(vs.vip)
+                    .append(vs.error.isEmpty() ? "" : " error=" + vs.error).append('\n');
+            report.append("\n==== VPN service log ====\n");
+            report.append(com.craftstudio.cslauncher.multiplayer.VpnBridgeState.tail(com.craftstudio.cslauncher.multiplayer.VpnBridgeState.serviceLog(mContext), 24 * 1024));
+            report.append("\n==== VPN bridge (tun2socks) log ====\n");
+            report.append(com.craftstudio.cslauncher.multiplayer.VpnBridgeState.tail(com.craftstudio.cslauncher.multiplayer.VpnBridgeState.bridgeLog(mContext), 48 * 1024));
+            java.io.File hs = newestHsErr();
+            if (hs != null) {
+                report.append("\n==== JVM crash file ").append(hs.getName()).append(" (head) ====\n");
+                String head = com.craftstudio.cslauncher.multiplayer.VpnBridgeState.tail(hs, 1 << 20);
+                report.append(head.length() > 12000 ? head.substring(0, 12000) + "\n[...]\n" : head);
+            }
             java.io.File log = new java.io.File(com.craftstudio.cslauncher.Tools.DIR_GAME_HOME, "latestlog.txt");
             report.append("\n==== launcher log (tail) ====\n");
             if (log.isFile()) {
@@ -1025,6 +1040,23 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
         } catch (Throwable t) {
             android.widget.Toast.makeText(mContext, R.string.vlan_report_failed, android.widget.Toast.LENGTH_SHORT).show();
         }
+    }
+
+    /** Newest hs_err_pid*.log from the last hour, if the JVM died natively while Virtual LAN was on. */
+    @androidx.annotation.Nullable
+    private static java.io.File newestHsErr() {
+        java.io.File best = null;
+        for (String dirName : new String[]{com.craftstudio.cslauncher.Tools.DIR_GAME_HOME, com.craftstudio.cslauncher.Tools.DIR_GAME_NEW}) {
+            if (dirName == null) continue;
+            java.io.File[] files = new java.io.File(dirName).listFiles();
+            if (files == null) continue;
+            for (java.io.File f : files) {
+                if (f.isFile() && f.getName().startsWith("hs_err_pid") && f.getName().endsWith(".log")
+                        && (best == null || f.lastModified() > best.lastModified())) best = f;
+            }
+        }
+        if (best != null && System.currentTimeMillis() - best.lastModified() > 60 * 60 * 1000L) return null;
+        return best;
     }
 
     private String diagnostics(VirtualLanState s) {

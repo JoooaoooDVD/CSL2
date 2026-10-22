@@ -96,7 +96,11 @@ public final class VirtualLanSession {
             fail(Reason.VPN_FAILED, "TUN device did not come up in " + (VPN_TIMEOUT_MS / 1000) + " s");
             return false;
         }
-        if (mVpnWasUp) { mVpnWasUp = false; stage("VPN: TUN device went down, waiting for it to return"); }
+        if (mVpnWasUp) {
+            mVpnWasUp = false;
+            mVpnRequestedAt = now; // give the bridge a full window to come back
+            stage("VPN: TUN device went down, waiting for it to return");
+        }
         return false;
     }
 

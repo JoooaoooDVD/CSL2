@@ -189,9 +189,11 @@
                 android:value="Keeps a user-started virtual LAN tunnel alive so friends can play a Minecraft LAN world together across networks while the game runs; the user ends it from the launcher or the notification."/>
         </service>
         <!-- The real Android VPN of Virtual LAN: a TUN device that owns the virtual IP and routes
-             ONLY 10.144.144.0/24 for this app; packets are bridged to the tunnel engine. Same
-             process as the session so its lifetime is the session's. -->
-        <service android:name=".multiplayer.VirtualLanVpnService" android:process=":game"
+             ONLY 10.144.144.0/24 for this app; packets are bridged to the tunnel engine by a native
+             tun2socks library. It runs in its OWN process so a native fault in that library can
+             never take the game down; it releases the TUN by itself when the session's process
+             disappears (owner pid heartbeat). -->
+        <service android:name=".multiplayer.VirtualLanVpnService" android:process=":vpn"
             android:permission="android.permission.BIND_VPN_SERVICE"
             android:exported="true">
             <intent-filter>
