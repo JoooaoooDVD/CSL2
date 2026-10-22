@@ -92,6 +92,19 @@ public final class BrandingPackGenerator {
             new Mapping("menu_list_background.png", GUI + "menu_list_background.png", false, BrandingPart.SCREENS),
             new Mapping("header_separator.png", GUI + "header_separator.png", false, BrandingPart.SCREENS),
             new Mapping("footer_separator.png", GUI + "footer_separator.png", false, BrandingPart.SCREENS),
+            // Same screens while a world is loaded (pause menu, options in-game): translucent dark tiles
+            new Mapping("inworld_menu_background.png", GUI + "inworld_menu_background.png", false, BrandingPart.SCREENS),
+            new Mapping("inworld_menu_list_background.png", GUI + "inworld_menu_list_background.png", false, BrandingPart.SCREENS),
+            new Mapping("inworld_header_separator.png", GUI + "inworld_header_separator.png", false, BrandingPart.SCREENS),
+            new Mapping("inworld_footer_separator.png", GUI + "inworld_footer_separator.png", false, BrandingPart.SCREENS),
+            // Loading / progress screens (world loading, downloading terrain, realms) and tab headers
+            new Mapping("light_dirt_background.png", GUI + "light_dirt_background.png", false, BrandingPart.SCREENS),
+            new Mapping("tab_header_background.png", GUI + "tab_header_background.png", false, BrandingPart.SCREENS),
+            // Tab buttons (world creation, controls): nine-slice like the pill buttons
+            new Mapping("tab.png", GUI + "sprites/widget/tab.png", true, BrandingPart.WIDGETS),
+            new Mapping("tab_highlighted.png", GUI + "sprites/widget/tab_highlighted.png", true, BrandingPart.WIDGETS),
+            new Mapping("tab_selected.png", GUI + "sprites/widget/tab_selected.png", true, BrandingPart.WIDGETS),
+            new Mapping("tab_selected_highlighted.png", GUI + "sprites/widget/tab_selected_highlighted.png", true, BrandingPart.WIDGETS),
     };
     private static final String SPLASHES = "assets/minecraft/texts/splashes.txt";
     private static final String EN_US = "assets/minecraft/lang/en_us.json";
@@ -174,6 +187,9 @@ public final class BrandingPackGenerator {
         }
 
         File packDir = new File(resourcepacksDir, BrandingPack.DIR_NAME);
+        // Older launcher builds used a different folder name: drop it when (and only when) it is ours
+        File legacy = new File(resourcepacksDir, BrandingPack.LEGACY_DIR_NAME);
+        if (legacy.isDirectory() && isOwned(legacy)) deleteRecursively(legacy);
         String stamp = stampFor(facts, parts);
         List<String> reusable = reusableFiles(packDir, stamp);
         if (reusable != null) {
@@ -319,13 +335,26 @@ public final class BrandingPackGenerator {
             pack.addProperty("min_format", facts.resourceMajor);
             pack.addProperty("max_format", facts.resourceMajor);
         }
-        JsonObject description = new JsonObject();
-        description.addProperty("text", "CS Dynamic Branding");
-        description.addProperty("color", "gray");
+        // Rich description (text components are accepted here since 1.13; hex colours since 1.16).
+        // Two lines: that is exactly what the pack selection screen shows.
+        JsonArray description = new JsonArray();
+        description.add("");
+        description.add(component("\u2726 ", "#C6C6CE", false));
+        description.add(component("Craft Studio Look", "white", true));
+        description.add(component(" \u00b7 " + facts.versionId, "#9C9CA4", false));
+        description.add(component("\nMenus, widgets & screens in the launcher style", "gray", false));
         pack.add("description", description);
         JsonObject root = new JsonObject();
         root.add("pack", pack);
         return GSON.toJson(root);
+    }
+
+    private static JsonObject component(String text, String color, boolean bold) {
+        JsonObject o = new JsonObject();
+        o.addProperty("text", text);
+        o.addProperty("color", color);
+        if (bold) o.addProperty("bold", true);
+        return o;
     }
 
     private static String marker(String stamp, ClientJarFacts facts, List<String> files) {

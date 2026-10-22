@@ -1247,6 +1247,7 @@ T = {
 "gc_dx_world_advice": "World ki koi entity ya block game crash kar gaya. Neeche crash report dekho; usko add karne wala mod aksar wajah hota hai. Backups Worlds mein hain.",
 "gc_dx_loader_title": "Mod / loader version mismatch",
 "gc_dx_loader_advice": "Koi mod alag loader ya game version ke liye bana hai. Har mod is profile ke Minecraft version aur loader se match hona chahiye.",
+"lib_mods_need_loader": "Mods ke liye mod loader chahiye \u2014 yeh profile Vanilla / OptiFine hai. Resource packs, shaders aur worlds yahan chalte hain.",
 "gc_dx_lan_title": "Open to LAN ke turant baad crash",
 "gc_dx_lan_advice": "LAN world publish hone ke ek pal baad game process band ho gaya, bina kisi Java error ke \u2014 yeh network layer ka native crash hai. Neeche wali JVM crash file (hs_err) bani ho toh hume bhejo; OptiFine/mods ke bina plain profile pe bhi try karke dekho.",
 "gc_share_hserr_fmt": "JVM crash file bhejo \u00b7 %1$s",

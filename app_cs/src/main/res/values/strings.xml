@@ -1068,6 +1068,7 @@
     <string name="lib_subtitle_worlds">Download maps straight into your saves</string>
     <string name="lib_tab_worlds">Worlds</string>
     <string name="lib_search_worlds">Search worlds…</string>
+    <string name="lib_mods_need_loader">Mods need a mod loader \u2014 this profile is Vanilla / OptiFine. Resource packs, shaders and worlds still work here.</string>
     <string name="lib_worlds_curseforge_only">Worlds are available on CurseForge only</string>
     <string name="lib_world_installed">World added to your saves: %1$s</string>
     <!-- About page -->

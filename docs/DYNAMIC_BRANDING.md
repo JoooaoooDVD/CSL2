@@ -6,7 +6,7 @@ Per-profile switch between the stock Minecraft look and a Craft Studio look, imp
 | Option | What happens |
 |---|---|
 | **Vanilla Experience** (default) | Launcher pack is removed from `options.txt` → `resourcePacks` / `incompatibleResourcePacks`; the `darkMojangStudiosBackgroundColor` value that was there before is restored (or the line removed if it never existed). The pack folder stays on disk for reuse; nothing else is touched. |
-| **CS Custom Experience** | At launch (and right after saving the profile) the launcher reads the profile's client jar, builds/reuses `resourcepacks/CS-Dynamic-Branding`, appends `file/CS-Dynamic-Branding` to the **end** of `resourcePacks` (highest priority, other packs and their order preserved), removes it from the incompatible list, sets `darkMojangStudiosBackgroundColor:true`, then re-reads both the pack and `options.txt` before reporting success. |
+| **CS Custom Experience** | At launch (and right after saving the profile) the launcher reads the profile's client jar, builds/reuses `resourcepacks/CS Launcher Plus`, appends `file/CS Launcher Plus` to the **end** of `resourcePacks` (highest priority, other packs and their order preserved), removes it from the incompatible list, sets `darkMojangStudiosBackgroundColor:true`, then re-reads both the pack and `options.txt` before reporting success. |
 
 ## 1. Where things live
 
@@ -55,8 +55,8 @@ profile that alternates between two versions rebuilds the pack on switch (≈10�
 
 ## 3. Safety
 
-* Temp folder `.CS-Dynamic-Branding.tmp` → rename swap with `.old` fallback → verify → done.
-* A `CS-Dynamic-Branding` folder **without the marker is never replaced** (refuses with a message).
+* Temp folder `.CS Launcher Plus.tmp` → rename swap with `.old` fallback → verify → done.
+* A `CS Launcher Plus` folder **without the marker is never replaced** (refuses with a message).
 * `options.txt`: only `resourcePacks`, `incompatibleResourcePacks`, `darkMojangStudiosBackgroundColor`
   lines change; everything else keeps its bytes and order (unlike the HashMap writer). Atomic save.
 * Restore record is captured once (first activation) and cleared on vanilla restore; corrupted record ⇒ game default.
@@ -138,7 +138,7 @@ work when the game is not being launched.
 3. In game: Options → Resource Packs shows "CS Dynamic Branding" selected (top of the list); title
    screen shows the Craft Studio logo + night panorama; buttons dark; loading screen black.
 4. Switch to *Vanilla Experience* → Save → launch: stock menu; `options.txt` no longer lists
-   `file/CS-Dynamic-Branding`; `darkMojangStudiosBackgroundColor` back to its earlier value/absent.
+   `file/CS Launcher Plus`; `darkMojangStudiosBackgroundColor` back to its earlier value/absent.
 5. Try a 1.20.x profile with Custom: toast "needs Minecraft 1.21 or newer", game launches vanilla.
 6. Scoping: pick *Home screen only* → Save → launch: title/panorama are CS, buttons and option
    screens are stock, loading screen red/vanilla; `options.txt` still lists the pack. Then pick only
@@ -146,3 +146,14 @@ work when the game is not being launched.
 7. Every launch: a small pill at the bottom shows "Launching Minecraft <version> • <profile>" with a
    moving platinum line; the controls behind it stay touchable/editable; it fades when the game
    window appears.
+
+## Revision 4 (pack folder rename + more coverage)
+
+* Folder/entry is now `resourcepacks/CS Launcher Plus` (`file/CS Launcher Plus`). The old
+  `CS-Dynamic-Branding` folder is deleted on the next apply **only if it carries our marker**, and its
+  `file/…` entries are dropped from both options lists.
+* `pack.mcmeta` description is a rich text component (two lines, launcher colours, game version).
+* Added: in-world menu/list backgrounds + separators, `light_dirt_background` (loading/progress
+  screens), `tab_header_background`, and the four `widget/tab*` sprites (nine-slice 130x24, border 2/2/2/0).
+* Still impossible by design: the Mojang Studios loading logo. `LoadingOverlay` reads it from the
+  vanilla pack only; `darkMojangStudiosBackgroundColor` (black background) is the maximum a launcher can do.

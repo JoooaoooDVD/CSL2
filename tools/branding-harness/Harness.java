@@ -86,7 +86,7 @@ public class Harness {
             File opts = new File(gameDir, "options.txt");
             try (Writer w = new OutputStreamWriter(new FileOutputStream(opts), "UTF-8")) {
                 w.write("version:3955\nautoJump:false\nresourcePacks:[\"vanilla\",\"file/UserPack.zip\",\"fabric\"]\n"
-                        + "incompatibleResourcePacks:[\"file/CS-Dynamic-Branding\"]\nlang:en_us\nrenderDistance:8\n");
+                        + "incompatibleResourcePacks:[\"file/CS Launcher Plus\"]\nlang:en_us\nrenderDistance:8\n");
             }
             GameOptionsFile o = new GameOptionsFile(opts);
             List<String> packsList = o.getList(BrandingPack.OPT_RESOURCE_PACKS);
@@ -98,7 +98,7 @@ public class Harness {
             o.save();
             String after = BrandingPackGenerator.readTextForTest(opts);
             System.out.println("  options after activate:\n" + indent(after));
-            boolean ok = after.contains("resourcePacks:[\"vanilla\",\"file/UserPack.zip\",\"fabric\",\"file/CS-Dynamic-Branding\"]")
+            boolean ok = after.contains("resourcePacks:[\"vanilla\",\"file/UserPack.zip\",\"fabric\",\"file/CS Launcher Plus\"]")
                     && after.contains("incompatibleResourcePacks:[]") && after.contains("darkMojangStudiosBackgroundColor:true")
                     && after.startsWith("version:3955\nautoJump:false\n") && after.contains("lang:en_us\nrenderDistance:8\n");
             if (!ok) { System.out.println("  OPTIONS ACTIVATE CHECK FAILED"); failures++; }

@@ -5,7 +5,10 @@ public final class BrandingPack {
     private BrandingPack() {}
 
     /** Folder name inside {@code <gameDir>/resourcepacks}. No spaces: keeps options.txt and shells simple. */
-    public static final String DIR_NAME = "CS-Dynamic-Branding";
+    public static final String DIR_NAME = "CS Launcher Plus";
+    /** Folder/entry name used by generator revisions <= 3; cleaned up (folder + options entries) on the next apply. */
+    public static final String LEGACY_DIR_NAME = "CS-Dynamic-Branding";
+    public static final String LEGACY_PACK_ENTRY = "file/" + LEGACY_DIR_NAME;
     /** Entry Minecraft expects in options.txt {@code resourcePacks} for a folder pack of that name. */
     public static final String PACK_ENTRY = "file/" + DIR_NAME;
     /** Ownership marker written inside the pack. A folder without it is never touched or replaced. */
@@ -15,7 +18,7 @@ public final class BrandingPack {
     public static final String OLD_DIR_NAME = "." + DIR_NAME + ".old";
 
     /** Bump when the generator logic or the bundled branding assets change; forces a one-time rebuild. */
-    public static final int GENERATOR_REVISION = 3;
+    public static final int GENERATOR_REVISION = 4;
 
     /** First resource pack format that this generator supports (Minecraft 1.21 / 1.21.1 = 34). */
     public static final int MIN_SUPPORTED_RESOURCE_FORMAT = 34;

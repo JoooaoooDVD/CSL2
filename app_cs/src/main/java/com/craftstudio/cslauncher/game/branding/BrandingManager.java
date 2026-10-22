@@ -221,6 +221,12 @@ public final class BrandingManager {
         boolean dirty = false;
 
         List<String> packs = options.getList(BrandingPack.OPT_RESOURCE_PACKS);
+        // Entries from the old folder name are always dropped (the folder itself is removed by the generator)
+        if (options.has(BrandingPack.OPT_RESOURCE_PACKS) && packs.remove(BrandingPack.LEGACY_PACK_ENTRY)) {
+            while (packs.remove(BrandingPack.LEGACY_PACK_ENTRY)) { /* all occurrences */ }
+            options.setList(BrandingPack.OPT_RESOURCE_PACKS, packs);
+            dirty = true;
+        }
         if (wantPack) {
             if (packs.isEmpty() && !options.has(BrandingPack.OPT_RESOURCE_PACKS)) packs.add("vanilla");
             int pos = packs.indexOf(BrandingPack.PACK_ENTRY);
@@ -240,7 +246,8 @@ public final class BrandingManager {
         }
         if (options.has(BrandingPack.OPT_INCOMPATIBLE_PACKS)) {
             List<String> incompatible = options.getList(BrandingPack.OPT_INCOMPATIBLE_PACKS);
-            if (incompatible.remove(BrandingPack.PACK_ENTRY)) {
+            boolean legacyGone = incompatible.remove(BrandingPack.LEGACY_PACK_ENTRY);
+            if (incompatible.remove(BrandingPack.PACK_ENTRY) || legacyGone) {
                 options.setList(BrandingPack.OPT_INCOMPATIBLE_PACKS, incompatible);
                 dirty = true;
             }

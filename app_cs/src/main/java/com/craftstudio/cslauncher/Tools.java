@@ -393,10 +393,11 @@ public final class Tools {
                     .setMessage(errMsg)
                     .setPositiveButton(android.R.string.ok, (p1, p2) -> {
                         if(exitIfOk) {
-                            if (ctx instanceof GameActivity) {
+                            Activity host = activityOf(ctx);
+                            if (host instanceof GameActivity) {
                                 fullyExit();
-                            } else if (ctx instanceof Activity) {
-                                ((Activity) ctx).finish();
+                            } else if (host != null) {
+                                host.finish();
                             }
                         }
                     })
@@ -405,10 +406,11 @@ public final class Tools {
                         ClipboardManager mgr = (ClipboardManager) ctx.getSystemService(Context.CLIPBOARD_SERVICE);
                         mgr.setPrimaryClip(ClipData.newPlainText("error", printToString(e)));
                         if(exitIfOk) {
-                            if (ctx instanceof GameActivity) {
+                            Activity host = activityOf(ctx);
+                            if (host instanceof GameActivity) {
                                 fullyExit();
-                            } else {
-                                ((Activity) ctx).finish();
+                            } else if (host != null) {
+                                host.finish();
                             }
                         }
                     })
@@ -416,11 +418,24 @@ public final class Tools {
             builder.show();
         };
 
-        if (ctx instanceof Activity) {
-            ((Activity) ctx).runOnUiThread(runnable);
+        Activity host = activityOf(ctx);
+        if (host != null) {
+            host.runOnUiThread(runnable);
         } else {
             runnable.run();
         }
+    }
+
+    /** Unwraps themed/wrapped contexts (dialogs, fragments, Material theme overlays) down to their Activity, or null. */
+    @Nullable
+    public static Activity activityOf(@Nullable Context ctx) {
+        int guard = 0;
+        while (ctx != null && guard++ < 16) {
+            if (ctx instanceof Activity) return (Activity) ctx;
+            if (ctx instanceof android.content.ContextWrapper) ctx = ((android.content.ContextWrapper) ctx).getBaseContext();
+            else return null;
+        }
+        return null;
     }
 
     /**

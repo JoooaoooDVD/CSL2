@@ -378,4 +378,13 @@ public final class LibraryCatalog {
         if (text == null || text.isEmpty()) return "";
         return text.substring(0, 1).toUpperCase(Locale.ROOT) + text.substring(1);
     }
+
+    /** True for the loaders that actually load mods from the mods folder (not vanilla, not OptiFine). */
+    public static boolean isModLoader(String loader) {
+        if (loader == null) return false;
+        switch (loader.trim().toLowerCase(java.util.Locale.ROOT)) {
+            case "fabric": case "quilt": case "forge": case "neoforge": case "liteloader": case "rift": return true;
+            default: return false;
+        }
+    }
 }

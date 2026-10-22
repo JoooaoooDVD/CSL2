@@ -220,6 +220,10 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         if (!mInitialized) {
             mInitialized = true;
             applyPresetArgs();
+            if (mFilters.contentType == ContentType.MOD && !modsSupported()) {
+                // Vanilla / OptiFine profile: land on resource packs instead of a tab that can't be used
+                mFilters.contentType = ContentType.RESOURCE_PACK;
+            }
             mFilters.engine = restoreSource();
             applyContentType(mFilters.contentType, false);
             applySource(mFilters.engine, false);
@@ -312,11 +316,32 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         mPreferredLoader = loader == null ? "" : loader;
     }
 
+    /**
+     * Mods only make sense on a profile with a mod loader. Vanilla and OptiFine profiles have no
+     * mods folder the game would read, so the Mods tab is shown greyed out and inert there while
+     * resource packs, shaders and worlds stay available.
+     */
+    private boolean modsSupported() {
+        return LibraryCatalog.isModLoader(mProfileLoader);
+    }
+
+    private void applyModsAvailability() {
+        if (mTabMods == null) return;
+        boolean ok = modsSupported();
+        mTabMods.setEnabled(ok);
+        mTabMods.setAlpha(ok ? 1f : 0.38f);
+        mTabMods.setContentDescription(ok ? getString(R.string.lib_tab_mods) : getString(R.string.lib_mods_need_loader));
+    }
+
     private void setupTabs(View view) {
         View.OnClickListener listener = v -> {
             ContentType type = v == mTabResourcePacks ? ContentType.RESOURCE_PACK
                     : v == mTabShaders ? ContentType.SHADER_PACK
                     : v == mTabWorlds ? ContentType.WORLD : ContentType.MOD;
+            if (type == ContentType.MOD && !modsSupported()) {
+                Toast.makeText(requireContext(), R.string.lib_mods_need_loader, Toast.LENGTH_SHORT).show();
+                return;
+            }
             if (type == mFilters.contentType || isModpackMode()) return;
             if (type == ContentType.WORLD && mCurseforgeKey == null) {
                 Toast.makeText(requireContext(), R.string.lib_worlds_curseforge_only, Toast.LENGTH_SHORT).show();
@@ -331,6 +356,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
             tab.setOnClickListener(listener);
             CSAnimationEngine.attachPressFeedback(tab);
         }
+        applyModsAvailability();
     }
 
     // ─── Content source (Modrinth / CurseForge) ──────────────────────────────

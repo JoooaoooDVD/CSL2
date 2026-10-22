@@ -13,4 +13,4 @@ java -cp /tmp/bh:gson.jar Harness app_cs/src/main/assets/cs_branding /tmp/bh-wor
 
 Checks: version facts (pack format form), generation + atomic install, reuse on the second run,
 file presence, exact `pack.mcmeta`, options.txt activation/restore with other packs preserved,
-and that a foreign `CS-Dynamic-Branding` folder (no marker) is never replaced.
+and that a foreign `CS Launcher Plus` folder (no marker) is never replaced.
