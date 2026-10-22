@@ -87,31 +87,7 @@ public class LauncherPreferenceMiscellaneousFragment extends LauncherPreferenceF
         Preference account = requirePreference("discordAccount");
         updateDiscordAccountSummary();
         account.setOnPreferenceClickListener(preference -> {
-            android.content.Context context = requireContext();
-            android.graphics.drawable.Drawable icon = androidx.core.content.ContextCompat.getDrawable(context, R.drawable.ic_discord_mark);
-            if (DiscordAccount.isLoggedIn(context)) {
-                new SettingsPopup(context)
-                        .title(R.string.preference_discord_logout_title)
-                        .icon(icon)
-                        .message(getString(R.string.preference_discord_logout_message, DiscordAccount.getDisplayName(context)))
-                        .positive(R.string.preference_discord_logout, () -> {
-                            DiscordAccount.logout(context);
-                            updateDiscordAccountSummary();
-                        })
-                        .negative(android.R.string.cancel, null)
-                        .show();
-            } else {
-                // Explain what the login is for (and the risk) before opening Discord's page
-                new SettingsPopup(context)
-                        .title(R.string.preference_discord_login_title)
-                        .subtitle(getString(R.string.preference_discord_login_subtitle))
-                        .icon(icon)
-                        .message(R.string.preference_discord_login_message)
-                        .positive(R.string.preference_discord_login, () -> mDiscordLoginLauncher.launch(
-                                new android.content.Intent(context, DiscordLoginActivity.class)))
-                        .negative(android.R.string.cancel, null)
-                        .show();
-            }
+            com.craftstudio.cslauncher.discord.CSDiscordRpcSheet.show(requireActivity());
             return true;
         });
 
@@ -133,10 +109,16 @@ public class LauncherPreferenceMiscellaneousFragment extends LauncherPreferenceF
         if (getContext() == null) return;
         Preference account = findPreference("discordAccount");
         if (account == null) return;
-        String name = DiscordAccount.getDisplayName(requireContext());
-        account.setSummary(DiscordAccount.isLoggedIn(requireContext())
-                ? getString(R.string.preference_discord_account_logged_in, name == null ? "Discord" : name)
-                : getString(R.string.preference_discord_account_logged_out));
+        com.craftstudio.cslauncher.discord.DiscordAccountStorage.DiscordProfile profile =
+                com.craftstudio.cslauncher.discord.DiscordAccountStorage.loadAccount(requireContext());
+        if (profile.isLinked) {
+            account.setSummary(getString(R.string.preference_discord_account_logged_in, "@" + profile.getEffectiveName()));
+        } else {
+            String name = DiscordAccount.getDisplayName(requireContext());
+            account.setSummary(DiscordAccount.isLoggedIn(requireContext())
+                    ? getString(R.string.preference_discord_account_logged_in, name == null ? "Discord" : name)
+                    : getString(R.string.preference_discord_account_logged_out));
+        }
     }
 
     private void updateVisibility(){
@@ -182,5 +164,11 @@ public class LauncherPreferenceMiscellaneousFragment extends LauncherPreferenceF
             });
             return true;
         });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        updateDiscordAccountSummary();
     }
 }

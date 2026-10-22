@@ -1463,4 +1463,29 @@
     <string name="gc_share_hserr_fmt">Share JVM crash file \u00b7 %1$s</string>
     <string name="gc_dx_unknown_title">No known cause found</string>
     <string name="gc_dx_unknown_advice">The log doesn\'t match a known problem. Share the logs with us \u2014 the link is all we need to look into it.</string>
+
+    <!-- Discord Rich Presence -->
+    <string name="cs_discord_rpc_title">Discord Rich Presence</string>
+    <string name="cs_discord_rpc_sub">Show live Minecraft game activity on Discord</string>
+    <string name="cs_discord_rpc_enable">Enable Discord Presence</string>
+    <string name="cs_discord_rpc_enable_desc">Friends will see your live game, profile &amp; modpack on Discord</string>
+    <string name="cs_discord_rpc_token_title">Discord User Token</string>
+    <string name="cs_discord_rpc_token_hint">Paste your Discord token here</string>
+    <string name="cs_discord_rpc_token_desc">Required to authenticate and display live presence on your Discord profile</string>
+    <string name="cs_discord_rpc_token_saved">Discord token saved successfully!</string>
+    <string name="cs_discord_rpc_token_empty">Please enter your Discord user token</string>
+    <string name="cs_discord_rpc_test_connection">Test Connection</string>
+    <string name="cs_discord_rpc_testing">Connecting to Discord Gateway...</string>
+    <string name="cs_discord_rpc_connected">🟢 Connected to Discord (Live!)</string>
+    <string name="cs_discord_rpc_auth_failed">🔴 Invalid Token! Please check your token.</string>
+    <string name="cs_discord_rpc_offline">Offline / Disabled</string>
+    <string name="cs_discord_rpc_connecting">Connecting...</string>
+    <string name="cs_discord_rpc_show_mods">Show Mod Count &amp; Modpack</string>
+    <string name="cs_discord_rpc_show_mods_desc">Display active modpack name and number of installed mods</string>
+    <string name="cs_discord_rpc_show_elapsed">Show Elapsed Playtime</string>
+    <string name="cs_discord_rpc_show_elapsed_desc">Display live timer showing how long you have been playing</string>
+    <string name="cs_discord_rpc_preview_title">DISCORD STATUS PREVIEW</string>
+    <string name="cs_discord_rpc_preview_playing">PLAYING A GAME</string>
+    <string name="cs_tools_close_hint">Close</string>
+    <string name="cs_badge_plus">PLUS</string>
 </resources>

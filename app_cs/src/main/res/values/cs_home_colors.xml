@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- CS LAUNCHER PRO BETA — obsidian dark premium palette (NO green theme).
+     Names wahi hain taaki purane references toote nahi; values neutral
+     dark/white/grey hain. Runtime theme (dark/light/system/custom) ke liye
+     centralized source net.kdt.pojavlaunch.cstheme.CSTheme hai — ye file
+     sirf default (dark) baseline hai. -->
+<resources>
+    <color name="cs_bg_top">#07080A</color>
+    <color name="cs_bg_bottom">#07080A</color>
+    <color name="cs_bg_glow">#101216</color>
+
+    <color name="cs_card_top">#101216</color>
+    <color name="cs_card_bottom">#101216</color>
+    <color name="cs_card_border">#252A31</color>
+    <color name="cs_card_top_press">#16191E</color>
+    <color name="cs_card_bottom_press">#16191E</color>
+    <color name="cs_card_border_press">#39404A</color>
+
+    <color name="cs_bevel_light">#14FFFFFF</color>
+    <color name="cs_bevel_dark">#00000000</color>
+
+    <!-- PLAY = neutral light surface + dark ink (no green) -->
+    <color name="cs_play_top">#F2F2F2</color>
+    <color name="cs_play_bottom">#E2E5E9</color>
+    <color name="cs_play_border">#252A31</color>
+    <color name="cs_play_top_press">#D9DDE2</color>
+    <color name="cs_play_bottom_press">#CFD4D9</color>
+    <color name="cs_play_border_press">#39404A</color>
+
+    <color name="cs_btn_top">#1D2129</color>
+    <color name="cs_btn_bottom">#181B22</color>
+    <color name="cs_btn_border">#2C323D</color>
+    <color name="cs_btn_top_press">#262B35</color>
+    <color name="cs_btn_bottom_press">#20242C</color>
+    <color name="cs_btn_border_press">#3A4150</color>
+
+    <color name="cs_chip_bg">#CC14161B</color>
+    <color name="cs_chip_border">#39404A</color>
+
+    <color name="cs_tile_top">#1D2129</color>
+    <color name="cs_tile_bottom">#171A21</color>
+    <color name="cs_tile_border">#2A2F3A</color>
+
+    <!-- legacy "green" names -> neutral accents (koi neon nahi) -->
+    <color name="cs_green">#F2F2F2</color>
+    <color name="cs_green_light">#FFFFFF</color>
+    <color name="cs_green_dark">#9A9FA7</color>
+    <color name="cs_green_glow">#00000000</color>
+    <color name="cs_ink">#F2F2F2</color>
+    <color name="cs_ink_dim">#9A9FA7</color>
+    <!-- bottom nav: active tab (light pill) ke upar dark ink -->
+    <color name="cs_nav_active_ink">#07080A</color>
+</resources>

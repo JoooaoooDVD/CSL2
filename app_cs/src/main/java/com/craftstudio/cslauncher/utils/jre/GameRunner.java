@@ -352,6 +352,8 @@ public class GameRunner {
 
         try {
             // Discord status ("Playing Minecraft" + profile + time) while this game process lives
+            com.craftstudio.cslauncher.discord.DiscordRpcManager.getInstance().onGameStarted(activity, instance, versionId);
+            com.craftstudio.cslauncher.discord.DiscordPresenceManager.getInstance(activity).setMinecraftPlaying(versionId, false, null);
             com.craftstudio.cslauncher.discord.DiscordPresence.startForGame(activity, instance);
             JavaRunner.nativeSetupExit(activity);
             JavaRunner.startJvm(runtime, javaArgList, launchClassPath, mainClass, launchArgs);
@@ -362,6 +364,9 @@ public class GameRunner {
             if(LifecycleAwareAlertDialog.haltOnDialog(activity.getLifecycle(), activity, dialogCreator)) {
                 return;
             }
+        } finally {
+            com.craftstudio.cslauncher.discord.DiscordRpcManager.getInstance().onGameStopped(activity);
+            com.craftstudio.cslauncher.discord.DiscordPresenceManager.getInstance(activity).clearPresence();
         }
 
         // Let an active Virtual LAN session say goodbye before the process dies

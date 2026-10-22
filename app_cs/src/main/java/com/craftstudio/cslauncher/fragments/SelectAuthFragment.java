@@ -68,7 +68,7 @@ public class SelectAuthFragment extends Fragment {
         bind(local, tiles[2], LocalLoginFragment.class, LocalLoginFragment.TAG);
         discord.setOnClickListener(v -> {
             Motion.bounce(view.findViewById(R.id.auth_discord_tile));
-            onDiscordTapped();
+            com.craftstudio.cslauncher.discord.CSDiscordRpcSheet.show(requireActivity());
         });
         refreshDiscordRow();
         view.post(() -> adaptToWidth(view));
@@ -94,6 +94,7 @@ public class SelectAuthFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        refreshDiscordRow();
         // Coming back from a sign-in screen: the cards that faded out return
         for (View option : mOptions) {
             if (option.getAlpha() < 1f && option.getAlpha() > 0f) {
@@ -162,7 +163,11 @@ public class SelectAuthFragment extends Fragment {
         if (root == null) return;
         TextView status = root.findViewById(R.id.auth_discord_status);
         Context context = root.getContext();
-        if (DiscordAccount.isLoggedIn(context)) {
+        com.craftstudio.cslauncher.discord.DiscordAccountStorage.DiscordProfile profile =
+                com.craftstudio.cslauncher.discord.DiscordAccountStorage.loadAccount(context);
+        if (profile.isLinked) {
+            status.setText(getString(R.string.auth_discord_linked, "@" + profile.getEffectiveName()));
+        } else if (DiscordAccount.isLoggedIn(context)) {
             status.setText(getString(R.string.auth_discord_linked, DiscordAccount.getDisplayName(context)));
         } else {
             status.setText(R.string.auth_desc_discord);

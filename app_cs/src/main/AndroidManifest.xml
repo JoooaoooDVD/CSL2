@@ -151,6 +151,20 @@
             android:process=":game"
             android:screenOrientation="sensorLandscape" />
 
+        <!-- Official Discord Social SDK Authentication Activity -->
+        <activity
+            android:name="com.discord.socialsdk.AuthenticationActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:launchMode="singleTask"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="discord-1551939107549225000" />
+            </intent-filter>
+        </activity>
+
         <provider
             android:name=".utils.scoped.FolderProvider"
             android:authorities="@string/storageProviderAuthorities"

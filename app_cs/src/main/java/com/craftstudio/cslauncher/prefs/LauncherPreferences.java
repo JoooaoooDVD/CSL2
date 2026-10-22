@@ -86,6 +86,15 @@ public class LauncherPreferences {
     public static boolean PREF_DISCORD_RPC = true;
     /** Discord Rich Presence: show the profile name and version (otherwise only "Minecraft") */
     public static boolean PREF_DISCORD_RPC_DETAILS = true;
+    public static boolean PREF_DISCORD_RPC_ENABLED = true;
+    public static String PREF_DISCORD_TOKEN = "";
+    public static String PREF_DISCORD_APP_ID = "1551939107549225000";
+    public static boolean PREF_DISCORD_SHOW_MODS = true;
+    public static boolean PREF_DISCORD_SHOW_ELAPSED = true;
+    public static boolean PREF_DISCORD_BROADCAST_EXTERNAL = true;
+    public static boolean PREF_DISCORD_SHOW_VERSION = true;
+    public static boolean PREF_DISCORD_SHOW_SERVER = true;
+    public static boolean PREF_DISCORD_ONLY_IN_GAME = false;
     public static short PREF_BUTTON_TRANSPARENCY = 100;
     public static boolean PREF_UBWC_WORKAROUND = false;
 
@@ -146,6 +155,15 @@ public class LauncherPreferences {
         PREF_LOCAL_SKINS = DEFAULT_PREF.getBoolean("localSkins", true);
         PREF_DISCORD_RPC = DEFAULT_PREF.getBoolean("discordRpc", true);
         PREF_DISCORD_RPC_DETAILS = DEFAULT_PREF.getBoolean("discordRpcDetails", true);
+        PREF_DISCORD_RPC_ENABLED = DEFAULT_PREF.getBoolean("discord_rpc_enabled", PREF_DISCORD_RPC);
+        PREF_DISCORD_TOKEN = DEFAULT_PREF.getString("discord_token", "");
+        PREF_DISCORD_APP_ID = DEFAULT_PREF.getString("discord_app_id", "1551939107549225000");
+        PREF_DISCORD_SHOW_MODS = DEFAULT_PREF.getBoolean("discord_show_mods", true);
+        PREF_DISCORD_SHOW_ELAPSED = DEFAULT_PREF.getBoolean("discord_show_elapsed", true);
+        PREF_DISCORD_BROADCAST_EXTERNAL = DEFAULT_PREF.getBoolean("discord_broadcast_external", true);
+        PREF_DISCORD_SHOW_VERSION = DEFAULT_PREF.getBoolean("discord_show_version", true);
+        PREF_DISCORD_SHOW_SERVER = DEFAULT_PREF.getBoolean("discord_show_server", true);
+        PREF_DISCORD_ONLY_IN_GAME = DEFAULT_PREF.getBoolean("discord_only_in_game", false);
         PREF_BUTTON_TRANSPARENCY = (short) DEFAULT_PREF.getInt("buttonTransparency", 100);
         PREF_UBWC_WORKAROUND = DEFAULT_PREF.getBoolean("ubwcWorkaround", false);
 

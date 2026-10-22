@@ -174,6 +174,8 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         ContextCompat.startForegroundService(this, gameServiceIntent);
         initLayout(R.layout.activity_basemain);
 
+        com.craftstudio.cslauncher.discord.DiscordPresenceManager.getInstance(this).setMinecraftLaunching(instance != null ? instance.versionId : "");
+
         Platform.initialize(this, launcherGLView);
 
         mGyroControl = new GyroControl(this);
@@ -413,6 +415,10 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
 
     @Override
     protected void onDestroy() {
+        if (isFinishing()) {
+            com.craftstudio.cslauncher.discord.DiscordRpcManager.getInstance().onGameStopped(this);
+            com.craftstudio.cslauncher.discord.DiscordPresenceManager.getInstance(this).clearPresence();
+        }
         super.onDestroy();
         if (mLaunchBarAnimator != null) { mLaunchBarAnimator.cancel(); mLaunchBarAnimator = null; }
         sRunning = false;

@@ -72,3 +72,30 @@ add_library(awt_xawt SHARED
         awt_xawt/xawt_fake.c
 )
 target_link_libraries(awt_xawt PRIVATE awt_headless)
+
+# ------ Discord Partner SDK & Bridge ------
+
+add_library(discord_partner_prebuilt SHARED IMPORTED)
+set_target_properties(discord_partner_prebuilt PROPERTIES
+    IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/../jniLibs/${ANDROID_ABI}/libdiscord_partner_sdk.so"
+)
+
+add_library(discord_bridge SHARED
+    discord_bridge.cpp
+)
+
+target_include_directories(discord_bridge PRIVATE
+    .
+    discord_sdk/include
+)
+
+target_compile_options(discord_bridge PRIVATE
+    -std=c++17
+    -frtti
+    -fexceptions
+)
+
+target_link_libraries(discord_bridge PRIVATE
+    log
+    discord_partner_prebuilt
+)
