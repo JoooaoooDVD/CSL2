@@ -233,4 +233,8 @@ public class Instance extends DisplayInstance {
         if(sharedData) return Instances.SHARED_DATA_DIRECTORY;
         return mInstanceRoot;
     }
+
+    public File getInstanceRoot() {
+        return mInstanceRoot;
+    }
 }

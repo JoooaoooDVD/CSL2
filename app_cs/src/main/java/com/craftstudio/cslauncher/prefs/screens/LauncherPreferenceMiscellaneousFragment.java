@@ -126,11 +126,6 @@ public class LauncherPreferenceMiscellaneousFragment extends LauncherPreferenceF
         requirePreference("clearMetadataCache").setVisible(new File(Tools.DIR_CACHE, "string_cache").exists());
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-    }
-
     private void setupMicrophoneRequestPreference() {
         Preference mRequestMicrophonePermissionPreference = requirePreference("microphoneAccessRequest");
         Activity activity = getActivity();
