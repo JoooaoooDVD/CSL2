@@ -162,10 +162,16 @@ public final class VirtualLanVpnService extends VpnService {
                 + "  address: 127.0.0.1\n"
                 + "  udp: 'udp'\n"
                 + "misc:\n"
-                + "  task-stack-size: 20480\n"
+                // The bridge runs INSIDE the game process. Its coroutines run on their own stacks
+                // of this size; hev's default is 86016 and anything much smaller overflows a few
+                // seconds after the first sessions start (plain SIGSEGV, no Java trace). 128 KiB
+                // leaves headroom for bionic's resolver/TLS frames on arm64.
+                + "  task-stack-size: 131072\n"
                 + "  tcp-buffer-size: 65536\n"
-                + "  connect-timeout: 5000\n"
-                + "  read-write-timeout: 120000\n"
+                + "  udp-recv-buffer-size: 524288\n"
+                + "  connect-timeout: 8000\n"
+                + "  tcp-read-write-timeout: 300000\n"
+                + "  udp-read-write-timeout: 60000\n"
                 + "  log-level: warn\n";
     }
 

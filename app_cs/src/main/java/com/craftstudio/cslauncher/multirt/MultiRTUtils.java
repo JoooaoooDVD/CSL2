@@ -106,8 +106,13 @@ public class MultiRTUtils {
         if(!dest.exists()) return;
 
         Runtime runtime = read(name);
+        if(runtime.arch == null) {
+            // A stale cache entry (read before the files landed) or a broken "release" file: re-read once
+            sCache.remove(name);
+            runtime = read(name);
+        }
         File vmPath = JavaRunner.findVmPath(dest, runtime.arch);
-        if(vmPath == null) throw new IOException("Could not find libjvm.so after extraction");
+        if(vmPath == null) throw new IOException("Could not find libjvm.so after extraction (arch=" + runtime.arch + ")");
         File libDir = Objects.requireNonNull(vmPath.getParentFile()).getParentFile();
 
         File ftIn = new File(libDir, "libfreetype.so.6");

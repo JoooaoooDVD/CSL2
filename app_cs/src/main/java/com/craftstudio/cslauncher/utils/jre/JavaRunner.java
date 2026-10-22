@@ -163,6 +163,14 @@ public class JavaRunner {
     public static File findVmPath(File runtimeHomeDir, String runtimeArch) {
         File finalPath;
         if((finalPath = findVmForArch(runtimeHomeDir, null)) != null) return finalPath;
+        if(runtimeArch == null) {
+            // The runtime's "release" file was missing or unreadable (interrupted extraction, foreign
+            // runtime): try every layout this device could run instead of crashing on the switch
+            for(String arch : deviceArchCandidates()) {
+                if((finalPath = findVmForArch(runtimeHomeDir, arch)) != null) return finalPath;
+            }
+            return null;
+        }
         switch (runtimeArch) {
             case "i386": case "i486": case "i586":
                 if((finalPath = findVmForArch(runtimeHomeDir, "i386")) != null) return finalPath;
@@ -173,6 +181,17 @@ public class JavaRunner {
                 if((finalPath = findVmForArch(runtimeHomeDir, runtimeArch)) != null) return finalPath;
         }
         return null;
+    }
+
+    /** Folder names OpenJDK builds use under lib/ for this device's architecture (most likely first). */
+    private static String[] deviceArchCandidates() {
+        switch (com.craftstudio.cslauncher.Tools.DEVICE_ARCHITECTURE) {
+            case com.craftstudio.cslauncher.Architecture.ARCH_ARM64: return new String[]{"aarch64", "arm64"};
+            case com.craftstudio.cslauncher.Architecture.ARCH_ARM: return new String[]{"aarch32", "arm", "armhf"};
+            case com.craftstudio.cslauncher.Architecture.ARCH_X86_64: return new String[]{"amd64", "x86_64"};
+            case com.craftstudio.cslauncher.Architecture.ARCH_X86: return new String[]{"i386", "i486", "i586", "x86"};
+            default: return new String[]{"aarch64", "arm64", "aarch32", "arm", "amd64", "x86_64", "i386"};
+        }
     }
 
     private static void relocateLdLibPath(File vmPath, List<String> extraDirs) {
