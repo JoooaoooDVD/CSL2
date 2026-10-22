@@ -1457,6 +1457,9 @@
     <string name="gc_dx_loader_advice">A mod was built for a different loader or game version. Make sure every mod matches this profile\'s Minecraft version and loader.</string>
     <string name="gc_dx_native_title">The game process was killed</string>
     <string name="gc_dx_native_advice">Android or the renderer stopped the process \u2014 most often low memory. Close other apps, lower the memory allocation a little, and try a different renderer if it repeats.</string>
+    <string name="gc_dx_lan_title">Crashed right after Open to LAN</string>
+    <string name="gc_dx_lan_advice">The game process died a moment after publishing the LAN world, without a Java error \u2014 that is a native crash in the network layer. Share the JVM crash file below (hs_err) with us if one was written; also try a plain profile without OptiFine or mods to see if it still happens.</string>
+    <string name="gc_share_hserr_fmt">Share JVM crash file \u00b7 %1$s</string>
     <string name="gc_dx_unknown_title">No known cause found</string>
     <string name="gc_dx_unknown_advice">The log doesn\'t match a known problem. Share the logs with us \u2014 the link is all we need to look into it.</string>
 </resources>

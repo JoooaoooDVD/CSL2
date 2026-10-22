@@ -246,6 +246,25 @@
                 tools:visibility="visible" />
 
             <TextView
+                android:id="@+id/gc_hs_err"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_gc_btn_ghost"
+                android:clickable="true"
+                android:drawableStart="@drawable/ic_pe_terminal"
+                android:drawablePadding="10dp"
+                android:drawableTint="@color/hm_text"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:padding="12dp"
+                android:textColor="@color/hm_text"
+                android:textSize="12.5sp"
+                android:visibility="gone"
+                tools:text="Share JVM crash file · hs_err_pid12345.log"
+                tools:visibility="visible" />
+
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"

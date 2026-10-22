@@ -35,7 +35,7 @@ public final class LanHostDetector {
         void onWorldChanged(@NonNull SessionDirectoryServer.WorldInfo info, @Nullable MinecraftPinger.Status status);
     }
 
-    private static final Pattern LOG_PORT = Pattern.compile("(?:Started serving on|Local game hosted on port)\\s+(\\d{2,5})");
+    private static final Pattern LOG_PORT = Pattern.compile("(?:Started serving on|Local game hosted on port|Published LAN server on port)\\s+(\\d{2,5})");
     private static final Pattern AD_PORT = Pattern.compile("\\[AD\\]\\s*(?:[^\\[\\]]*?:)?(\\d{2,5})\\s*\\[/AD\\]");
     private static final String MC_GROUP = "224.0.2.60";
     private static final int MC_PORT = 4445;

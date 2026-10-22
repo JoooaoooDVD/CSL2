@@ -101,6 +101,8 @@ public class JavaRunner {
         ArrayList<String> overridableArguments = new ArrayList<>(Arrays.asList(
                 "-Djava.home=" + runtimeHome,
                 "-Djava.io.tmpdir=" + Tools.DIR_CACHE.getAbsolutePath(),
+                // Native JVM crashes (SIGSEGV etc.) land next to latestlog.txt so the crash screen can show them
+                "-XX:ErrorFile=" + new File(Tools.DIR_GAME_HOME, "hs_err_pid%p.log").getAbsolutePath(),
                 "-Djna.boot.library.path=" + NATIVE_LIB_DIR,
                 "-Duser.home=" + Tools.DIR_GAME_HOME,
                 "-Duser.language=en",

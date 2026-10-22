@@ -85,10 +85,64 @@ public final class CrashAnalyzer {
                 return new Diagnosis(rule.title, rule.advice, detail, compact(line), true);
             }
         }
-        if (isSignal || exitCode == 137 || exitCode == 9 || exitCode == 139 || exitCode == 134) {
-            return new Diagnosis(R.string.gc_dx_native_title, R.string.gc_dx_native_advice, null, null, true);
+        if (isSignal || exitCode == 137 || exitCode == 9 || exitCode == 139 || exitCode == 134 || exitCode == 1) {
+            String lan = lanTail(lines);
+            if (lan != null) return new Diagnosis(R.string.gc_dx_lan_title, R.string.gc_dx_lan_advice, null, lan, true);
+            if (isSignal || exitCode != 1) return new Diagnosis(R.string.gc_dx_native_title, R.string.gc_dx_native_advice, null, null, true);
         }
         return new Diagnosis(R.string.gc_dx_unknown_title, R.string.gc_dx_unknown_advice, null, lastErrorLine(lines), false);
+    }
+
+    /**
+     * The game died (no Java exception) within the last few log lines of a LAN publish. Returns the
+     * matching line, or null. Chat echo and empty lines are skipped so the "Local game hosted" chat
+     * message that follows the publish line doesn't hide it.
+     */
+    @Nullable
+    private static String lanTail(@NonNull List<String> lines) {
+        int seen = 0;
+        for (int i = lines.size() - 1; i >= 0 && seen < 6; i--) {
+            String l = lines.get(i);
+            if (l.trim().isEmpty()) continue;
+            if (l.contains("Published LAN server on port") || l.contains("Started serving on") || l.contains("Local game hosted on port")) return compact(l);
+            if (!l.contains("[CHAT]")) seen++;
+        }
+        return null;
+    }
+
+    /**
+     * Pulls the useful header out of a HotSpot hs_err_pid file: the signal line and the problematic
+     * frame. Returns null when the file isn't readable or doesn't look like one.
+     */
+    @Nullable
+    public static String summarizeHsErr(@NonNull java.io.File file) {
+        StringBuilder out = new StringBuilder();
+        try (java.io.BufferedReader r = new java.io.BufferedReader(new java.io.InputStreamReader(new java.io.FileInputStream(file), "UTF-8"))) {
+            String line; int n = 0; boolean frameNext = false;
+            while ((line = r.readLine()) != null && n++ < 60) {
+                String t = line.trim();
+                if (frameNext) {
+                    if (t.startsWith("#")) { append(out, t.substring(1).trim()); }
+                    frameNext = false;
+                    continue;
+                }
+                if (t.startsWith("#  SIG") || t.startsWith("#  EXCEPTION") || t.startsWith("#  Internal Error") || t.startsWith("#  Out of Memory")) {
+                    append(out, t.substring(1).trim());
+                } else if (t.startsWith("# Problematic frame:")) {
+                    frameNext = true;
+                } else if (t.startsWith("# JRE version:") || t.startsWith("# Java VM:")) {
+                    append(out, t.substring(1).trim());
+                }
+            }
+        } catch (Throwable ignored) {
+            return null;
+        }
+        return out.length() == 0 ? null : out.toString();
+    }
+
+    private static void append(StringBuilder sb, String s) {
+        if (sb.length() > 0) sb.append('\n');
+        sb.append(s.length() > 220 ? s.substring(0, 220) + "\u2026" : s);
     }
 
     /** true when the line is worth highlighting (errors, exceptions, stack frames) */

@@ -85,7 +85,12 @@ public class GameCrashActivity extends BaseActivity {
         if (dx.detail != null) title = title + " \u2014 " + dx.detail;
         dxTitle.setText(title);
         dxAdvice.setText(dx.adviceRes);
-        if (dx.evidence != null) dxEvidence.setText(dx.evidence); else dxEvidence.setVisibility(View.GONE);
+        // A HotSpot hs_err file written for this crash is the best evidence we can get for a native death
+        File hsErr = newestHsErr(instance);
+        String hsSummary = hsErr == null ? null : CrashAnalyzer.summarizeHsErr(hsErr);
+        String evidence = dx.evidence;
+        if (hsSummary != null) evidence = evidence == null ? hsSummary : evidence + "\n" + hsSummary;
+        if (evidence != null) dxEvidence.setText(evidence); else dxEvidence.setVisibility(View.GONE);
 
         // Log pane
         mLog = findViewById(R.id.gc_log);
@@ -125,6 +130,16 @@ public class GameCrashActivity extends BaseActivity {
             reportView.setText(getString(R.string.gc_share_report_fmt, report.getName()));
             reportView.setOnClickListener(v -> {
                 try { Tools.openPath(this, report, true); } catch (Throwable t) { Toast.makeText(this, R.string.gc_share_failed, Toast.LENGTH_SHORT).show(); }
+            });
+        }
+
+        TextView hsView = findViewById(R.id.gc_hs_err);
+        if (hsErr != null) {
+            final File fHsErr = hsErr;
+            hsView.setVisibility(View.VISIBLE);
+            hsView.setText(getString(R.string.gc_share_hserr_fmt, fHsErr.getName()));
+            hsView.setOnClickListener(v -> {
+                try { Tools.openPath(this, fHsErr, true); } catch (Throwable t) { Toast.makeText(this, R.string.gc_share_failed, Toast.LENGTH_SHORT).show(); }
             });
         }
 
@@ -218,6 +233,27 @@ public class GameCrashActivity extends BaseActivity {
             if (files == null) continue;
             for (File f : files) {
                 if (!f.isFile() || !f.getName().endsWith(".txt")) continue;
+                if (best == null || f.lastModified() > best.lastModified()) best = f;
+            }
+        }
+        if (best != null && System.currentTimeMillis() - best.lastModified() > 10 * 60 * 1000L) return null;
+        return best;
+    }
+
+    /** Newest hs_err_pid*.log the JVM wrote in the last 10 minutes (game home, game dir, instance dir) */
+    @Nullable
+    private static File newestHsErr(@Nullable Instance instance) {
+        List<File> dirs = new ArrayList<>();
+        if (Tools.DIR_GAME_HOME != null) dirs.add(new File(Tools.DIR_GAME_HOME));
+        if (Tools.DIR_GAME_NEW != null) dirs.add(new File(Tools.DIR_GAME_NEW));
+        try { if (instance != null) dirs.add(instance.getGameDirectory()); } catch (Throwable ignored) {}
+        File best = null;
+        for (File dir : dirs) {
+            File[] files = dir.listFiles();
+            if (files == null) continue;
+            for (File f : files) {
+                String n = f.getName();
+                if (!f.isFile() || !n.startsWith("hs_err_pid") || !n.endsWith(".log")) continue;
                 if (best == null || f.lastModified() > best.lastModified()) best = f;
             }
         }
