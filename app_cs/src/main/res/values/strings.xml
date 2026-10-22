@@ -1181,9 +1181,9 @@
     <string name="auth_select_banner_sub">Choose how you want to sign in</string>
     <string name="auth_select_section_signin">SIGN IN WITH</string>
     <string name="auth_select_section_discord">EXTRAS</string>
-    <string name="auth_select_discord">Link with Discord</string>
-    <string name="auth_desc_discord">Show what you\'re playing as your Discord status.</string>
-    <string name="auth_discord_linked">Connected as %1$s · tap to disconnect</string>
+    <string name="auth_select_discord">Discord Rich Presence</string>
+    <string name="auth_desc_discord">Friends see what you play, live. Preview &amp; optional account link.</string>
+    <string name="auth_discord_linked">Linked as %1$s · tap to open</string>
     <string name="lp_search_hint">Search…</string>
     <string name="lp_empty">Nothing matches.</string>
     <!-- Local account page -->
@@ -1464,28 +1464,43 @@
     <string name="gc_dx_unknown_title">No known cause found</string>
     <string name="gc_dx_unknown_advice">The log doesn\'t match a known problem. Share the logs with us \u2014 the link is all we need to look into it.</string>
 
-    <!-- Discord Rich Presence -->
+    <!-- Discord Rich Presence popup -->
     <string name="cs_discord_rpc_title">Discord Rich Presence</string>
-    <string name="cs_discord_rpc_sub">Show live Minecraft game activity on Discord</string>
-    <string name="cs_discord_rpc_enable">Enable Discord Presence</string>
-    <string name="cs_discord_rpc_enable_desc">Friends will see your live game, profile &amp; modpack on Discord</string>
-    <string name="cs_discord_rpc_token_title">Discord User Token</string>
-    <string name="cs_discord_rpc_token_hint">Paste your Discord token here</string>
-    <string name="cs_discord_rpc_token_desc">Required to authenticate and display live presence on your Discord profile</string>
-    <string name="cs_discord_rpc_token_saved">Discord token saved successfully!</string>
-    <string name="cs_discord_rpc_token_empty">Please enter your Discord user token</string>
-    <string name="cs_discord_rpc_test_connection">Test Connection</string>
-    <string name="cs_discord_rpc_testing">Connecting to Discord Gateway...</string>
-    <string name="cs_discord_rpc_connected">🟢 Connected to Discord (Live!)</string>
-    <string name="cs_discord_rpc_auth_failed">🔴 Invalid Token! Please check your token.</string>
-    <string name="cs_discord_rpc_offline">Offline / Disabled</string>
-    <string name="cs_discord_rpc_connecting">Connecting...</string>
-    <string name="cs_discord_rpc_show_mods">Show Mod Count &amp; Modpack</string>
-    <string name="cs_discord_rpc_show_mods_desc">Display active modpack name and number of installed mods</string>
-    <string name="cs_discord_rpc_show_elapsed">Show Elapsed Playtime</string>
-    <string name="cs_discord_rpc_show_elapsed_desc">Display live timer showing how long you have been playing</string>
-    <string name="cs_discord_rpc_preview_title">DISCORD STATUS PREVIEW</string>
-    <string name="cs_discord_rpc_preview_playing">PLAYING A GAME</string>
+    <string name="cs_discord_rpc_sub">Friends see what you play, live. Nothing to set up.</string>
+    <string name="cs_discord_done">Done</string>
+    <string name="cs_discord_link">Link Discord</string>
+    <string name="cs_discord_unlink">Unlink</string>
+    <string name="cs_discord_opening_auth">Opening Discord…</string>
+    <string name="cs_discord_linked_toast">Linked as %1$s</string>
+    <string name="cs_discord_unlinked_toast">Discord account unlinked</string>
+    <string name="cs_discord_auth_failed">Discord link failed: %1$s</string>
+    <string name="cs_discord_status_live">Live on Discord</string>
+    <string name="cs_discord_status_live_desc">Shown through the Discord app on this phone — no account link needed</string>
+    <string name="cs_discord_status_connecting">Connecting to the Discord app…</string>
+    <string name="cs_discord_status_connecting_desc">Make sure Discord is installed and signed in on this phone</string>
+    <string name="cs_discord_status_no_app">Discord app not installed</string>
+    <string name="cs_discord_status_no_app_desc">Install Discord from the Play Store and sign in — the presence then appears automatically</string>
+    <string name="cs_discord_status_off">Presence is off</string>
+    <string name="cs_discord_status_off_desc">Turn on “Discord game status” in Settings → Miscellaneous</string>
+    <string name="cs_discord_status_error">Discord did not accept the update</string>
+    <string name="cs_discord_status_error_desc">Check Discord → Settings → Activity Privacy → “Share your detected activities”</string>
+    <string name="cs_discord_preview_eyebrow">LIVE PREVIEW</string>
+    <string name="cs_discord_preview_app_name" translatable="false">CS Launcher Plus</string>
+    <string name="cs_discord_preview_elapsed">%1$s elapsed</string>
+    <string name="cs_discord_button_discord" translatable="false">Join our Discord</string>
+    <string name="cs_discord_button_youtube" translatable="false">YouTube channel</string>
+    <string name="cs_discord_scene_home">HOME SCREEN</string>
+    <string name="cs_discord_scene_launching">LAUNCHING</string>
+    <string name="cs_discord_scene_loading">LOADING</string>
+    <string name="cs_discord_scene_menu">MAIN MENU</string>
+    <string name="cs_discord_scene_singleplayer">SINGLEPLAYER</string>
+    <string name="cs_discord_scene_lan">LAN WORLD</string>
+    <string name="cs_discord_scene_multiplayer">MULTIPLAYER</string>
+    <string name="cs_discord_account_title">Discord account</string>
+    <string name="cs_discord_account_unlinked_desc">Optional · the presence already works without it</string>
+    <string name="cs_discord_account_linked_desc">Linked · tap Unlink to remove this phone’s access</string>
+    <string name="cs_discord_account_linked_pill">LINKED</string>
+    <string name="cs_discord_footnote">The card updates by itself: home screen, launching, main menu, singleplayer world, LAN world or server — with the profile’s own icon.</string>
     <string name="cs_tools_close_hint">Close</string>
     <string name="cs_badge_plus">PLUS</string>
 </resources>

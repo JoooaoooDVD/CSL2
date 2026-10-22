@@ -13,8 +13,6 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.preference.Preference;
 
 import com.craftstudio.cslauncher.R;
-import com.craftstudio.cslauncher.discord.DiscordAccount;
-import com.craftstudio.cslauncher.discord.DiscordLoginActivity;
 import com.craftstudio.cslauncher.prefs.SettingsPopup;
 
 import com.craftstudio.cslauncher.LauncherActivity;
@@ -80,9 +78,6 @@ public class LauncherPreferenceMiscellaneousFragment extends LauncherPreferenceF
         });
     }
 
-    private final ActivityResultLauncher<android.content.Intent> mDiscordLoginLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(), result -> updateDiscordAccountSummary());
-
     private void setupDiscordPreferences() {
         Preference account = requirePreference("discordAccount");
         updateDiscordAccountSummary();
@@ -90,19 +85,14 @@ public class LauncherPreferenceMiscellaneousFragment extends LauncherPreferenceF
             com.craftstudio.cslauncher.discord.CSDiscordRpcSheet.show(requireActivity());
             return true;
         });
-
-        Preference appId = requirePreference(DiscordAccount.PREF_APPLICATION_ID);
-        appId.setSummaryProvider(preference -> {
-            String value = ((androidx.preference.EditTextPreference) preference).getText();
-            return value == null || value.trim().isEmpty()
-                    ? getString(R.string.preference_discord_app_id_description) : value.trim();
-        });
-        appId.setOnPreferenceChangeListener((preference, newValue) -> {
-            String value = newValue == null ? "" : newValue.toString().trim();
-            if (value.isEmpty() || value.matches("\\d{15,22}")) return true;
-            Toast.makeText(requireContext(), R.string.preference_discord_app_id_invalid, Toast.LENGTH_SHORT).show();
-            return false;
-        });
+        Preference enabled = findPreference(com.craftstudio.cslauncher.discord.DiscordPresenceManager.PREF_ENABLED);
+        if (enabled != null) {
+            enabled.setOnPreferenceChangeListener((preference, newValue) -> {
+                boolean on = Boolean.TRUE.equals(newValue);
+                com.craftstudio.cslauncher.discord.DiscordPresenceManager.getInstance(requireContext()).setEnabled(on);
+                return true;
+            });
+        }
     }
 
     private void updateDiscordAccountSummary() {
@@ -114,10 +104,7 @@ public class LauncherPreferenceMiscellaneousFragment extends LauncherPreferenceF
         if (profile.isLinked) {
             account.setSummary(getString(R.string.preference_discord_account_logged_in, "@" + profile.getEffectiveName()));
         } else {
-            String name = DiscordAccount.getDisplayName(requireContext());
-            account.setSummary(DiscordAccount.isLoggedIn(requireContext())
-                    ? getString(R.string.preference_discord_account_logged_in, name == null ? "Discord" : name)
-                    : getString(R.string.preference_discord_account_logged_out));
+            account.setSummary(getString(R.string.preference_discord_account_logged_out));
         }
     }
 

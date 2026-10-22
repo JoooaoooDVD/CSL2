@@ -18,8 +18,6 @@ import com.kdt.mcgui.ProgressLayout;
 
 import com.craftstudio.cslauncher.R;
 import com.craftstudio.cslauncher.Tools;
-import com.craftstudio.cslauncher.discord.DiscordAccount;
-import com.craftstudio.cslauncher.discord.DiscordLoginActivity;
 import com.craftstudio.cslauncher.prefs.SettingsPopup;
 import com.craftstudio.cslauncher.progresskeeper.ProgressKeeper;
 import com.craftstudio.cslauncher.utils.CSAnimationEngine;
@@ -28,13 +26,10 @@ import com.craftstudio.cslauncher.utils.motion.Motion;
 
 /**
  * Add account: a banner, one clean card per sign-in method (Microsoft, Ely.by, Local) and a
- * "Link with Discord" row that connects the Discord session used for the game status.
+ * "Discord Rich Presence" row that opens the presence preview / account link popup.
  */
 public class SelectAuthFragment extends Fragment {
     public static final String TAG = "AUTH_SELECT_FRAGMENT";
-
-    private final ActivityResultLauncher<Intent> mDiscordLoginLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(), result -> refreshDiscordRow());
 
     public SelectAuthFragment(){
         super(R.layout.fragment_select_auth_method);
@@ -167,37 +162,8 @@ public class SelectAuthFragment extends Fragment {
                 com.craftstudio.cslauncher.discord.DiscordAccountStorage.loadAccount(context);
         if (profile.isLinked) {
             status.setText(getString(R.string.auth_discord_linked, "@" + profile.getEffectiveName()));
-        } else if (DiscordAccount.isLoggedIn(context)) {
-            status.setText(getString(R.string.auth_discord_linked, DiscordAccount.getDisplayName(context)));
         } else {
             status.setText(R.string.auth_desc_discord);
-        }
-    }
-
-    private void onDiscordTapped() {
-        Context context = requireContext();
-        android.graphics.drawable.Drawable icon = androidx.core.content.ContextCompat.getDrawable(context, R.drawable.ic_discord_mark);
-        if (DiscordAccount.isLoggedIn(context)) {
-            new SettingsPopup(context)
-                    .title(R.string.preference_discord_logout_title)
-                    .icon(icon)
-                    .message(getString(R.string.preference_discord_logout_message, DiscordAccount.getDisplayName(context)))
-                    .positive(R.string.preference_discord_logout, () -> {
-                        DiscordAccount.logout(context);
-                        refreshDiscordRow();
-                    })
-                    .negative(android.R.string.cancel, null)
-                    .show();
-        } else {
-            new SettingsPopup(context)
-                    .title(R.string.preference_discord_login_title)
-                    .subtitle(getString(R.string.preference_discord_login_subtitle))
-                    .icon(icon)
-                    .message(R.string.preference_discord_login_message)
-                    .positive(R.string.preference_discord_login, () -> mDiscordLoginLauncher.launch(
-                            new Intent(context, DiscordLoginActivity.class)))
-                    .negative(android.R.string.cancel, null)
-                    .show();
         }
     }
 

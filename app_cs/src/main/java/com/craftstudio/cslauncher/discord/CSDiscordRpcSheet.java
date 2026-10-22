@@ -1,283 +1,285 @@
 package com.craftstudio.cslauncher.discord;
 
 import android.app.Activity;
-import android.app.Dialog;
 import android.content.Context;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
+import android.content.Intent;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
-import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.Window;
-import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.SwitchCompat;
-
-import java.io.File;
+import androidx.core.content.ContextCompat;
 
 import com.craftstudio.cslauncher.R;
-import com.craftstudio.cslauncher.instances.Instance;
-import com.craftstudio.cslauncher.instances.Instances;
+import com.craftstudio.cslauncher.instances.InstanceIconProvider;
+import com.craftstudio.cslauncher.prefs.SettingsPopup;
+
+import java.util.Locale;
 
 /**
- * CS Launcher Plus — Official Discord Rich Presence & Account Linking Sheet.
- *
- * Dedicated bottom sheet with native Discord presence toggle, 1-tap OAuth2 account linking,
- * and live Discord dark profile preview.
+ * "Discord Rich Presence" popup: delivery status, a live preview of the Discord activity card
+ * (mirrors exactly what {@link DiscordPresenceManager} publishes, even before any account is
+ * linked) and the optional account link. There is nothing to configure.
  */
 public final class CSDiscordRpcSheet {
 
     private CSDiscordRpcSheet() {}
 
-    public static void show(final Activity activity) {
-        final Dialog dialog = new Dialog(activity);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(R.layout.cs_discord_rpc_sheet);
-        dialog.setCanceledOnTouchOutside(true);
-
-        Window window = dialog.getWindow();
-        if (window != null) {
-            window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            window.setGravity(Gravity.BOTTOM);
-            window.setDimAmount(0.60f);
-            window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
-            window.setWindowAnimations(R.style.CSBottomSheetAnimation);
-        }
-
+    public static void show(@NonNull final Activity activity) {
         final Context context = activity;
+        final DiscordPresenceManager presence = DiscordPresenceManager.getInstance(context);
+        presence.attach(activity);
         final Handler handler = new Handler(Looper.getMainLooper());
-        final DiscordPresenceManager presenceMgr = DiscordPresenceManager.getInstance(context);
 
-        View root = dialog.findViewById(R.id.cs_discord_root);
+        final View content = LayoutInflater.from(context).inflate(R.layout.cs_discord_rpc_sheet, null, false);
+        final View statusDot = content.findViewById(R.id.cs_discord_status_dot);
+        final TextView statusText = content.findViewById(R.id.cs_discord_status_text);
+        final TextView statusSub = content.findViewById(R.id.cs_discord_status_sub);
+        final TextView sceneChip = content.findViewById(R.id.cs_discord_preview_scene);
+        final ImageView previewLarge = content.findViewById(R.id.cs_discord_preview_large);
+        final View previewSmallWrap = content.findViewById(R.id.cs_discord_preview_small_wrap);
+        final ImageView previewSmall = content.findViewById(R.id.cs_discord_preview_small);
+        final TextView previewDetails = content.findViewById(R.id.cs_discord_preview_details);
+        final TextView previewState = content.findViewById(R.id.cs_discord_preview_state);
+        final TextView previewElapsed = content.findViewById(R.id.cs_discord_preview_elapsed);
+        final TextView previewBtn1 = content.findViewById(R.id.cs_discord_preview_btn1);
+        final TextView previewBtn2 = content.findViewById(R.id.cs_discord_preview_btn2);
+        final ImageView accountAvatar = content.findViewById(R.id.cs_discord_account_avatar);
+        final TextView accountName = content.findViewById(R.id.cs_discord_account_name);
+        final TextView accountStatus = content.findViewById(R.id.cs_discord_account_status);
+        final View accountPill = content.findViewById(R.id.cs_discord_account_pill);
 
-        View close = dialog.findViewById(R.id.cs_discord_close);
-        if (close != null) {
-            close.setOnClickListener(v -> dialog.dismiss());
-        }
+        previewLarge.setClipToOutline(true);
+        previewBtn1.setOnClickListener(v -> openUrl(context, DiscordPresenceManager.DISCORD_INVITE_URL));
+        previewBtn2.setOnClickListener(v -> openUrl(context, DiscordPresenceManager.YOUTUBE_URL));
 
-        // Master switch
-        SwitchCompat switchMaster = dialog.findViewById(R.id.cs_discord_switch_master);
-        ImageView statusDot = dialog.findViewById(R.id.cs_discord_status_dot);
-        TextView statusText = dialog.findViewById(R.id.cs_discord_status_text);
+        final long[] startMs = {0L};
+        final boolean[] closed = {false};
 
-        // Account linking views
-        ImageView accountAvatar = dialog.findViewById(R.id.cs_discord_account_avatar);
-        TextView accountName = dialog.findViewById(R.id.cs_discord_account_name);
-        TextView accountStatus = dialog.findViewById(R.id.cs_discord_account_status);
-        Button btnLink = dialog.findViewById(R.id.cs_discord_btn_link);
-        Button btnUnlink = dialog.findViewById(R.id.cs_discord_btn_unlink);
+        // ---- live preview -------------------------------------------------------------
+        final DiscordPresenceManager.Listener listener = snapshot -> {
+            if (closed[0]) return;
+            previewDetails.setText(snapshot.details);
+            previewState.setText(snapshot.state);
+            sceneChip.setText(sceneLabel(context, snapshot.scene));
+            startMs[0] = snapshot.startMs;
 
-        // Preview views
-        TextView previewDetails = dialog.findViewById(R.id.cs_discord_preview_details);
-        TextView previewState = dialog.findViewById(R.id.cs_discord_preview_state);
-        TextView previewElapsed = dialog.findViewById(R.id.cs_discord_preview_elapsed);
-
-        // Options switches
-        SwitchCompat switchVersion = dialog.findViewById(R.id.cs_discord_toggle_version);
-        SwitchCompat switchServer = dialog.findViewById(R.id.cs_discord_toggle_server);
-        SwitchCompat switchOnlyInGame = dialog.findViewById(R.id.cs_discord_toggle_only_in_game);
-        SwitchCompat switchElapsed = dialog.findViewById(R.id.cs_discord_toggle_elapsed);
-        SwitchCompat switchMods = dialog.findViewById(R.id.cs_discord_toggle_mods);
-
-        // 1. Master Switch state
-        boolean rpcEnabled = presenceMgr.isRpcEnabled();
-        if (switchMaster != null) {
-            switchMaster.setChecked(rpcEnabled);
-            updateStatusUi(rpcEnabled, DiscordSdkBridge.isInitialized(), statusDot, statusText);
-            switchMaster.setOnCheckedChangeListener((btn, isChecked) -> {
-                presenceMgr.setRpcEnabled(isChecked);
-                updateStatusUi(isChecked, DiscordSdkBridge.isInitialized(), statusDot, statusText);
-                if (isChecked) {
-                    handler.postDelayed(() -> updateStatusUi(true, DiscordSdkBridge.isInitialized(), statusDot, statusText), 900L);
+            Drawable large;
+            if (snapshot.scene == DiscordPresenceManager.Scene.HOME || snapshot.instance == null) {
+                large = ContextCompat.getDrawable(context, R.drawable.ic_cs_full);
+            } else {
+                try {
+                    large = InstanceIconProvider.fetchIcon(context.getResources(), snapshot.instance);
+                    // Snapshots carry fresh Instance objects: do not let them pile up in the icon cache
+                    InstanceIconProvider.dropIcon(snapshot.instance);
+                } catch (Throwable t) {
+                    large = ContextCompat.getDrawable(context, R.drawable.ic_cs_full);
                 }
-            });
-        }
+            }
+            previewLarge.setImageDrawable(large);
 
-        // Live preview updater
-        Runnable updatePreview = () -> {
-            try {
-                Instance instance = Instances.loadSelectedInstance();
-                String profileName = presenceMgr.resolveProfileOrModpackName(instance);
-                String mcVersion = presenceMgr.resolveMinecraftVersion(instance);
-                File gameDir = instance != null ? instance.getGameDirectory() : null;
-                File modsDir = gameDir != null ? new File(gameDir, "mods") : null;
-                int modCount = 0;
-                if (modsDir != null && modsDir.exists()) {
-                    File[] jars = modsDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".jar"));
-                    if (jars != null) modCount = jars.length;
-                }
-
-                String modText = (presenceMgr.isShowModsEnabled() && modCount > 0) ? " (" + modCount + " Mods)" : "";
-                String verText = presenceMgr.isShowVersionEnabled() ? " " + mcVersion : "";
-                String detailsText = "Playing Minecraft" + verText + modText;
-
-                String modSuffix = (presenceMgr.isShowModsEnabled() && modCount > 0) ? " (" + modCount + " Mods)" : "";
-                String stateText = "Profile: " + profileName + modSuffix;
-
-                if (previewDetails != null) previewDetails.setText(detailsText);
-                if (previewState != null) previewState.setText(stateText);
-                if (previewElapsed != null) {
-                    previewElapsed.setVisibility(presenceMgr.isShowElapsedEnabled() ? View.VISIBLE : View.GONE);
-                }
-            } catch (Throwable ignored) {}
+            if (snapshot.scene == DiscordPresenceManager.Scene.HOME) {
+                previewSmallWrap.setVisibility(View.GONE);
+            } else {
+                previewSmallWrap.setVisibility(View.VISIBLE);
+                previewSmall.setImageResource(smallBadgeFor(snapshot));
+            }
+            bindDelivery(context, presence, statusDot, statusText, statusSub);
         };
 
-        // 2. Options Switches
-        if (switchVersion != null) {
-            switchVersion.setChecked(presenceMgr.isShowVersionEnabled());
-            switchVersion.setOnCheckedChangeListener((btn, isChecked) -> {
-                presenceMgr.setShowVersionEnabled(isChecked);
-                updatePreview.run();
-            });
-        }
-        if (switchServer != null) {
-            switchServer.setChecked(presenceMgr.isShowServerEnabled());
-            switchServer.setOnCheckedChangeListener((btn, isChecked) -> {
-                presenceMgr.setShowServerEnabled(isChecked);
-                updatePreview.run();
-            });
-        }
-        if (switchOnlyInGame != null) {
-            switchOnlyInGame.setChecked(presenceMgr.isOnlyInGameEnabled());
-            switchOnlyInGame.setOnCheckedChangeListener((btn, isChecked) -> {
-                presenceMgr.setOnlyInGameEnabled(isChecked);
-                updatePreview.run();
-            });
-        }
-        if (switchElapsed != null) {
-            switchElapsed.setChecked(presenceMgr.isShowElapsedEnabled());
-            switchElapsed.setOnCheckedChangeListener((btn, isChecked) -> {
-                presenceMgr.setShowElapsedEnabled(isChecked);
-                updatePreview.run();
-            });
-        }
-        if (switchMods != null) {
-            switchMods.setChecked(presenceMgr.isShowModsEnabled());
-            switchMods.setOnCheckedChangeListener((btn, isChecked) -> {
-                presenceMgr.setShowModsEnabled(isChecked);
-                updatePreview.run();
-            });
-        }
-
-        // 3. Bind Account UI Helper
-        Runnable bindAccountUi = new Runnable() {
+        final Runnable tick = new Runnable() {
             @Override
             public void run() {
-                DiscordAccountStorage.DiscordProfile profile = DiscordAccountStorage.loadAccount(context);
-                if (profile.isLinked) {
-                    if (accountName != null) {
-                        accountName.setText("Connected: @" + profile.getEffectiveName());
-                        accountName.setTextColor(Color.parseColor("#57F287")); // Discord Green
-                    }
-                    if (accountStatus != null) {
-                        accountStatus.setText("User ID: " + (profile.userId != null ? profile.userId : "Connected"));
-                    }
-                    if (btnLink != null) btnLink.setVisibility(View.GONE);
-                    if (btnUnlink != null) btnUnlink.setVisibility(View.VISIBLE);
-                    if (accountAvatar != null && profile.avatarUrl != null) {
-                        DiscordAvatarLoader.loadAvatar(context, profile.avatarUrl, accountAvatar);
-                    }
+                if (closed[0]) return;
+                long start = startMs[0];
+                if (start > 0L) {
+                    long seconds = Math.max(0L, (System.currentTimeMillis() - start) / 1000L);
+                    previewElapsed.setText(context.getString(R.string.cs_discord_preview_elapsed,
+                            String.format(Locale.US, "%02d:%02d:%02d", seconds / 3600, (seconds / 60) % 60, seconds % 60)));
+                    previewElapsed.setVisibility(View.VISIBLE);
                 } else {
-                    if (accountName != null) {
-                        accountName.setText("Link Discord Account");
-                        accountName.setTextColor(Color.parseColor("#F2F3F5"));
-                    }
-                    if (accountStatus != null) {
-                        accountStatus.setText("1-Tap Official OAuth · No token or setup needed");
-                    }
-                    if (btnLink != null) btnLink.setVisibility(View.VISIBLE);
-                    if (btnUnlink != null) btnUnlink.setVisibility(View.GONE);
-                    if (accountAvatar != null) {
-                        accountAvatar.setImageResource(R.drawable.ic_brand_discord);
-                    }
+                    previewElapsed.setVisibility(View.GONE);
                 }
+                handler.postDelayed(this, 1000L);
+            }
+        };
+        final Runnable pollDelivery = new Runnable() {
+            @Override
+            public void run() {
+                if (closed[0]) return;
+                bindDelivery(context, presence, statusDot, statusText, statusSub);
+                handler.postDelayed(this, 2000L);
             }
         };
 
-        bindAccountUi.run();
+        // ---- popup ----------------------------------------------------------------------
+        final SettingsPopup popup = new SettingsPopup(context)
+                .title(R.string.cs_discord_rpc_title)
+                .subtitle(context.getString(R.string.cs_discord_rpc_sub))
+                .icon(ContextCompat.getDrawable(context, R.drawable.ic_discord_mark))
+                .customView(content)
+                .positive(R.string.cs_discord_done, null);
 
-        // Asynchronously refresh connected profile to verify latest avatar & name
-        presenceMgr.getAuthManager().refreshConnectedProfile(() -> {
-            if (dialog.isShowing()) {
-                bindAccountUi.run();
+        final Runnable[] bindAccount = new Runnable[1];
+        final SettingsPopup[] popupRef = {popup};
+
+        popup.neutral(context.getString(R.string.cs_discord_link), () -> {
+            DiscordAccountStorage.DiscordProfile profile = DiscordAccountStorage.loadAccount(context);
+            if (profile.isLinked) {
+                presence.getAuthManager().unlinkCurrentAccount();
+                Toast.makeText(context, R.string.cs_discord_unlinked_toast, Toast.LENGTH_SHORT).show();
+                bindAccount[0].run();
+                return;
             }
-        });
+            Toast.makeText(context, R.string.cs_discord_opening_auth, Toast.LENGTH_SHORT).show();
+            presence.getAuthManager().startAuthorization(activity, new DiscordAuthManager.AuthCallback() {
+                @Override
+                public void onSuccess(String username, String userId, @Nullable String avatarUrl) {
+                    handler.post(() -> {
+                        if (closed[0]) return;
+                        Toast.makeText(context, context.getString(R.string.cs_discord_linked_toast, "@" + username), Toast.LENGTH_LONG).show();
+                        bindAccount[0].run();
+                    });
+                }
 
-        // Link button click
-        if (btnLink != null) {
-            btnLink.setOnClickListener(v -> {
-                Toast.makeText(context, "Opening Discord authorization...", Toast.LENGTH_SHORT).show();
-                presenceMgr.getAuthManager().startAuthorization(activity, new DiscordAuthManager.AuthCallback() {
-                    @Override
-                    public void onSuccess(String username, String userId, @Nullable String avatarUrl) {
-                        handler.post(() -> {
-                            if (dialog.isShowing()) {
-                                Toast.makeText(context, "Connected to Discord: @" + username, Toast.LENGTH_LONG).show();
-                                bindAccountUi.run();
-                            }
-                        });
-                    }
-
-                    @Override
-                    public void onError(String error) {
-                        handler.post(() -> {
-                            if (dialog.isShowing()) {
-                                Toast.makeText(context, "Discord auth: " + error, Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    }
-                });
+                @Override
+                public void onError(String error) {
+                    handler.post(() -> {
+                        if (closed[0]) return;
+                        Toast.makeText(context, context.getString(R.string.cs_discord_auth_failed, error), Toast.LENGTH_SHORT).show();
+                    });
+                }
             });
+        }, false);
+
+        bindAccount[0] = () -> {
+            DiscordAccountStorage.DiscordProfile profile = DiscordAccountStorage.loadAccount(context);
+            if (profile.isLinked) {
+                accountName.setText("@" + profile.getEffectiveName());
+                accountStatus.setText(R.string.cs_discord_account_linked_desc);
+                accountPill.setVisibility(View.VISIBLE);
+                accountAvatar.setPadding(0, 0, 0, 0);
+                if (profile.avatarUrl != null && !profile.avatarUrl.isEmpty()) {
+                    DiscordAvatarLoader.loadAvatar(context, profile.avatarUrl, accountAvatar);
+                } else {
+                    accountAvatar.setImageResource(R.drawable.ic_discord_mark);
+                    int pad = (int) (9 * context.getResources().getDisplayMetrics().density);
+                    accountAvatar.setPadding(pad, pad, pad, pad);
+                }
+                popupRef[0].setNeutralText(context.getString(R.string.cs_discord_unlink));
+            } else {
+                accountName.setText(R.string.cs_discord_account_title);
+                accountStatus.setText(R.string.cs_discord_account_unlinked_desc);
+                accountPill.setVisibility(View.GONE);
+                int pad = (int) (9 * context.getResources().getDisplayMetrics().density);
+                accountAvatar.setPadding(pad, pad, pad, pad);
+                accountAvatar.setImageResource(R.drawable.ic_discord_mark);
+                popupRef[0].setNeutralText(context.getString(R.string.cs_discord_link));
+            }
+        };
+
+        final Runnable cleanup = () -> {
+            closed[0] = true;
+            presence.removeListener(listener);
+            handler.removeCallbacks(tick);
+            handler.removeCallbacks(pollDelivery);
+        };
+        popup.onClosed(cleanup);
+        popup.setOnDismissListener(d -> cleanup.run());
+
+        popup.show();
+        bindAccount[0].run();
+        presence.addListener(listener);
+        presence.refreshPreview();
+        handler.post(tick);
+        handler.postDelayed(pollDelivery, 2000L);
+        presence.getAuthManager().refreshConnectedProfile(() -> handler.post(() -> {
+            if (!closed[0]) bindAccount[0].run();
+        }));
+    }
+
+    private static void bindDelivery(@NonNull Context context, @NonNull DiscordPresenceManager presence,
+                                     @NonNull View dot, @NonNull TextView text, @NonNull TextView sub) {
+        DiscordPresenceManager.Delivery delivery = presence.getDelivery();
+        int dotRes;
+        int textRes;
+        CharSequence subText;
+        switch (delivery) {
+            case LIVE:
+                dotRes = R.drawable.cs_discord_dot_green;
+                textRes = R.string.cs_discord_status_live;
+                subText = context.getString(R.string.cs_discord_status_live_desc);
+                break;
+            case NO_DISCORD_APP:
+                dotRes = R.drawable.cs_discord_dot_red;
+                textRes = R.string.cs_discord_status_no_app;
+                subText = context.getString(R.string.cs_discord_status_no_app_desc);
+                break;
+            case DISABLED:
+                dotRes = R.drawable.cs_discord_dot_gray;
+                textRes = R.string.cs_discord_status_off;
+                subText = context.getString(R.string.cs_discord_status_off_desc);
+                break;
+            case ERROR:
+                dotRes = R.drawable.cs_discord_dot_red;
+                textRes = R.string.cs_discord_status_error;
+                String error = presence.getDeliveryError();
+                subText = error.isEmpty() ? context.getString(R.string.cs_discord_status_error_desc)
+                        : context.getString(R.string.cs_discord_status_error_desc) + "\n" + error;
+                break;
+            case CONNECTING:
+            default:
+                dotRes = R.drawable.cs_discord_dot_yellow;
+                textRes = R.string.cs_discord_status_connecting;
+                subText = context.getString(R.string.cs_discord_status_connecting_desc);
+                break;
         }
+        dot.setBackgroundResource(dotRes);
+        text.setText(textRes);
+        sub.setText(subText);
+    }
 
-        // Unlink button click
-        if (btnUnlink != null) {
-            btnUnlink.setOnClickListener(v -> {
-                presenceMgr.unlinkCurrentAccount();
-                Toast.makeText(context, "Discord account unlinked", Toast.LENGTH_SHORT).show();
-                bindAccountUi.run();
-            });
-        }
-
-        // 4. Update preview card with current data
-        updatePreview.run();
-
-        dialog.show();
-
-        // Slide up animation
-        if (root != null) {
-            root.setTranslationY(140f * activity.getResources().getDisplayMetrics().density);
-            root.animate().translationY(0f).setDuration(260L)
-                    .setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
+    @NonNull
+    private static String sceneLabel(@NonNull Context context, @NonNull DiscordPresenceManager.Scene scene) {
+        switch (scene) {
+            case LAUNCHING: return context.getString(R.string.cs_discord_scene_launching);
+            case LOADING: return context.getString(R.string.cs_discord_scene_loading);
+            case MENU: return context.getString(R.string.cs_discord_scene_menu);
+            case SINGLEPLAYER: return context.getString(R.string.cs_discord_scene_singleplayer);
+            case LAN_HOST: return context.getString(R.string.cs_discord_scene_lan);
+            case MULTIPLAYER: return context.getString(R.string.cs_discord_scene_multiplayer);
+            case HOME:
+            default: return context.getString(R.string.cs_discord_scene_home);
         }
     }
 
-    private static void updateStatusUi(boolean enabled, boolean sdkReady,
-                                       @Nullable ImageView dot,
-                                       @Nullable TextView text) {
-        if (dot != null) {
-            dot.setImageResource(enabled && sdkReady
-                    ? R.drawable.cs_discord_dot_green : R.drawable.cs_discord_dot_gray);
+    private static int smallBadgeFor(@NonNull DiscordPresenceManager.Snapshot snapshot) {
+        if (!snapshot.isInGame() || snapshot.scene == DiscordPresenceManager.Scene.LOADING
+                || snapshot.scene == DiscordPresenceManager.Scene.MENU) {
+            return R.drawable.ic_cs_full;
         }
-        if (text != null) {
-            if (!enabled) {
-                text.setText("Discord presence disabled");
-                text.setTextColor(Color.parseColor("#949BA4"));
-            } else if (sdkReady) {
-                text.setText("Connected · presence publishing");
-                text.setTextColor(Color.parseColor("#57F287"));
-            } else {
-                text.setText("Enabled · waiting for Discord");
-                text.setTextColor(Color.parseColor("#F0B35A"));
-            }
+        switch (snapshot.loader) {
+            case "fabric": return R.drawable.ic_fabric;
+            case "forge": return R.drawable.ic_forge;
+            case "neoforge": return R.drawable.ic_neoforge;
+            case "quilt": return R.drawable.ic_quilt;
+            case "optifine": return R.drawable.ic_loader_optifine;
+            default: return R.drawable.ic_pe_px_grass;
+        }
+    }
+
+    private static void openUrl(@NonNull Context context, @NonNull String url) {
+        try {
+            context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        } catch (Throwable t) {
+            Toast.makeText(context, url, Toast.LENGTH_SHORT).show();
         }
     }
 }

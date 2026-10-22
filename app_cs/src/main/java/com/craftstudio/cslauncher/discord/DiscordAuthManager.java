@@ -153,7 +153,7 @@ public final class DiscordAuthManager {
 
         mMainHandler.post(() -> {
             if (callback != null) callback.onSuccess(finalName, finalId, avatarUrl);
-            DiscordPresenceManager.getInstance(mContext).refreshPresence();
+            DiscordPresenceManager.getInstance(mContext).refresh();
         });
     }
 
@@ -235,7 +235,7 @@ public final class DiscordAuthManager {
         try {
             DiscordAccountStorage.clearAccount(mContext);
             // Rich Presence remains active via unauthenticated Android RPC
-            DiscordPresenceManager.getInstance(mContext).refreshPresence();
+            DiscordPresenceManager.getInstance(mContext).refresh();
         } catch (Throwable t) {
             Log.w(TAG, "Error unlinking Discord account", t);
         }

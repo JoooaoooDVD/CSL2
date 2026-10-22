@@ -174,7 +174,9 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         ContextCompat.startForegroundService(this, gameServiceIntent);
         initLayout(R.layout.activity_basemain);
 
-        com.craftstudio.cslauncher.discord.DiscordPresenceManager.getInstance(this).setMinecraftLaunching(instance != null ? instance.versionId : "");
+        // Discord presence is owned by this process from now on (the launcher released it)
+        com.craftstudio.cslauncher.discord.DiscordPresenceManager.getInstance(this)
+                .onGameProcessStarted(this, instance, instance != null ? instance.versionId : "");
 
         Platform.initialize(this, launcherGLView);
 
@@ -416,8 +418,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
     @Override
     protected void onDestroy() {
         if (isFinishing()) {
-            com.craftstudio.cslauncher.discord.DiscordRpcManager.getInstance().onGameStopped(this);
-            com.craftstudio.cslauncher.discord.DiscordPresenceManager.getInstance(this).clearPresence();
+            com.craftstudio.cslauncher.discord.DiscordPresenceManager.getInstance(this).onGameExiting();
         }
         super.onDestroy();
         if (mLaunchBarAnimator != null) { mLaunchBarAnimator.cancel(); mLaunchBarAnimator = null; }

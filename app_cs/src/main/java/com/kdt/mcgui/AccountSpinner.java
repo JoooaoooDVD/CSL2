@@ -40,7 +40,7 @@ import com.craftstudio.cslauncher.authenticator.BackgroundLogin;
 import com.craftstudio.cslauncher.authenticator.accounts.Accounts;
 import com.craftstudio.cslauncher.authenticator.accounts.Account;
 import com.craftstudio.cslauncher.authenticator.listener.LoginListener;
-import com.craftstudio.cslauncher.discord.DiscordAccount;
+import com.craftstudio.cslauncher.discord.DiscordAccountStorage;
 import com.craftstudio.cslauncher.extra.ExtraConstants;
 import com.craftstudio.cslauncher.extra.ExtraCore;
 import com.craftstudio.cslauncher.extra.ExtraListener;
@@ -397,7 +397,7 @@ public class AccountSpinner extends AppCompatSpinner implements LoginListener, A
             // Discord link badge: a connected Discord session on this device shows
             // right after the name, with a small gap, in the pill and in the list
             if (discordBadge != null) {
-                discordBadge.setVisibility(DiscordAccount.isLoggedIn(getContext())
+                discordBadge.setVisibility(DiscordAccountStorage.loadAccount(getContext()).isLinked
                         ? View.VISIBLE : View.GONE);
             }
             if (!isDropDown && view.getId() == R.id.account_compact_root) {

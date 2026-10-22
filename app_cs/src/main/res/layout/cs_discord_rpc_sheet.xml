@@ -1,599 +1,323 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<!--
+    Discord Rich Presence: content of the settings popup (SettingsPopup.customView).
+    Status strip → live preview of the Discord card → optional account link. No options:
+    the presence is composed automatically from what is running.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/cs_discord_root"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/cs_sheet_bg"
-    android:paddingStart="@dimen/_14sdp"
-    android:paddingEnd="@dimen/_14sdp"
-    android:paddingTop="@dimen/_10sdp"
-    android:paddingBottom="@dimen/_14sdp">
+    android:orientation="vertical">
 
-    <!-- Drag Handle -->
-    <View
-        android:id="@+id/cs_discord_handle"
-        android:layout_width="@dimen/_42sdp"
-        android:layout_height="@dimen/_4sdp"
-        android:background="@drawable/cs_top_highlight"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <!-- Top Header -->
-    <ImageView
-        android:id="@+id/cs_discord_icon"
-        android:layout_width="@dimen/_24sdp"
-        android:layout_height="@dimen/_24sdp"
-        android:layout_marginTop="@dimen/_12sdp"
-        android:src="@drawable/csl_launcher_logo"
-        android:contentDescription="@null"
-        app:layout_constraintTop_toBottomOf="@id/cs_discord_handle"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/cs_discord_scroll" />
-
-    <TextView
-        android:id="@+id/cs_discord_title"
-        style="@style/CSSectionTitle"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/_8sdp"
-        android:text="@string/cs_discord_rpc_title"
-        app:layout_constraintTop_toTopOf="@id/cs_discord_icon"
-        app:layout_constraintBottom_toBottomOf="@id/cs_discord_icon"
-        app:layout_constraintStart_toEndOf="@id/cs_discord_icon"
-        app:layout_constraintEnd_toStartOf="@id/cs_discord_badge" />
-
-    <TextView
-        android:id="@+id/cs_discord_badge"
-        style="@style/CSBadgePro"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/_8sdp"
-        android:text="@string/cs_badge_plus"
-        app:layout_constraintTop_toTopOf="@id/cs_discord_icon"
-        app:layout_constraintBottom_toBottomOf="@id/cs_discord_icon"
-        app:layout_constraintEnd_toStartOf="@id/cs_discord_close" />
-
-    <androidx.appcompat.widget.AppCompatImageButton
-        android:id="@+id/cs_discord_close"
-        android:layout_width="@dimen/_32sdp"
-        android:layout_height="@dimen/_32sdp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:src="@drawable/ic_px_collapse"
-        android:scaleType="fitCenter"
-        android:padding="@dimen/_6sdp"
-        android:contentDescription="@string/cs_tools_close_hint"
-        app:layout_constraintTop_toTopOf="@id/cs_discord_icon"
-        app:layout_constraintBottom_toBottomOf="@id/cs_discord_icon"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <!-- Scrollable Content -->
-    <ScrollView
-        android:id="@+id/cs_discord_scroll"
+    <!-- Delivery status -->
+    <LinearLayout
+        android:id="@+id/cs_discord_status_row"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/_10sdp"
-        android:scrollbars="none"
-        android:clipToPadding="false"
-        app:layout_constrainedHeight="true"
-        app:layout_constraintHeight_max="@dimen/_460sdp"
-        app:layout_constraintTop_toBottomOf="@id/cs_discord_icon"
-        app:layout_constraintBottom_toBottomOf="parent">
+        android:background="@drawable/bg_pp_row"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="14dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="10dp">
+
+        <View
+            android:id="@+id/cs_discord_status_dot"
+            android:layout_width="9dp"
+            android:layout_height="9dp"
+            android:background="@drawable/cs_discord_dot_gray" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="11dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/cs_discord_status_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/hm_text"
+                android:textSize="12.5sp"
+                android:textStyle="bold"
+                tools:text="Live on Discord" />
+
+            <TextView
+                android:id="@+id/cs_discord_status_sub"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textColor="@color/hm_text_dim"
+                android:textSize="11sp"
+                tools:text="Shown through the Discord app on this phone" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Live preview of the activity card -->
+    <LinearLayout
+        android:id="@+id/cs_discord_preview_card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_pp_row"
+        android:orientation="vertical"
+        android:padding="14dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingBottom="@dimen/_8sdp">
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-            <!-- 1. Master Toggle Card -->
-            <LinearLayout
-                android:layout_width="match_parent"
+            <TextView
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:background="@drawable/cs_card_bg"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:padding="@dimen/_12sdp">
+                android:layout_weight="1"
+                android:letterSpacing="0.25"
+                android:text="@string/cs_discord_preview_eyebrow"
+                android:textColor="@color/hm_accent"
+                android:textSize="10.5sp"
+                android:textStyle="bold" />
 
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/cs_discord_rpc_enable"
-                        android:textColor="@color/cs_ink"
-                        android:textSize="@dimen/_13ssp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/_2sdp"
-                        android:text="@string/cs_discord_rpc_enable_desc"
-                        android:textColor="@color/cs_ink_dim"
-                        android:textSize="@dimen/_10ssp" />
-                </LinearLayout>
-
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/cs_discord_switch_master"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/_10sdp" />
-            </LinearLayout>
-
-            <!-- 2. Live Connection Status Bar -->
-            <LinearLayout
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/cs_discord_preview_scene"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/_8sdp"
-                android:background="@drawable/cs_btn_bg"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingStart="@dimen/_10sdp"
-                android:paddingEnd="@dimen/_10sdp"
-                android:paddingTop="@dimen/_7sdp"
-                android:paddingBottom="@dimen/_7sdp">
+                android:background="@drawable/bg_pp_active_pill"
+                android:letterSpacing="0.2"
+                android:paddingStart="9dp"
+                android:paddingTop="3dp"
+                android:paddingEnd="9dp"
+                android:paddingBottom="3dp"
+                android:textColor="@color/hm_green_text"
+                android:textSize="9.5sp"
+                android:textStyle="bold"
+                tools:text="HOME SCREEN" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <FrameLayout
+                android:layout_width="72dp"
+                android:layout_height="72dp">
 
                 <ImageView
-                    android:id="@+id/cs_discord_status_dot"
-                    android:layout_width="@dimen/_10sdp"
-                    android:layout_height="@dimen/_10sdp"
-                    android:src="@drawable/cs_discord_dot_green"
-                    android:contentDescription="@null" />
+                    android:id="@+id/cs_discord_preview_large"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:background="@drawable/bg_pp_icon_tile"
+                    android:contentDescription="@null"
+                    android:scaleType="centerCrop" />
+
+                <FrameLayout
+                    android:id="@+id/cs_discord_preview_small_wrap"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_gravity="bottom|end"
+                    android:background="@drawable/cs_discord_badge_ring">
+
+                    <ImageView
+                        android:id="@+id/cs_discord_preview_small"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="@null"
+                        android:scaleType="fitCenter" />
+                </FrameLayout>
+            </FrameLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
 
                 <TextView
-                    android:id="@+id/cs_discord_status_text"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="@dimen/_8sdp"
-                    android:text="Discord Social SDK Active"
-                    android:textColor="@color/cs_ink"
-                    android:textSize="@dimen/_10ssp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <!-- 3. Built-in Link Discord Account Card -->
-            <TextView
-                style="@style/CSSectionTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/_14sdp"
-                android:layout_marginBottom="@dimen/_6sdp"
-                android:text="DISCORD ACCOUNT LINKING" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/cs_card_bg"
-                android:orientation="vertical"
-                android:padding="@dimen/_12sdp">
-
-                <LinearLayout
+                    android:id="@+id/cs_discord_preview_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-
-                    <FrameLayout
-                        android:layout_width="@dimen/_36sdp"
-                        android:layout_height="@dimen/_36sdp">
-
-                        <ImageView
-                            android:id="@+id/cs_discord_account_avatar"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:src="@drawable/ic_brand_discord"
-                            android:scaleType="centerInside"
-                            android:background="@drawable/cs_discord_btn_blurple"
-                            android:padding="@dimen/_6sdp"
-                            android:contentDescription="@null" />
-                    </FrameLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="@dimen/_10sdp"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/cs_discord_account_name"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Link Discord Account"
-                            android:textColor="@color/cs_ink"
-                            android:textSize="@dimen/_11ssp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/cs_discord_account_status"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/_2sdp"
-                            android:text="1-Tap Official OAuth · No token or setup needed"
-                            android:textColor="@color/cs_ink_dim"
-                            android:textSize="@dimen/_9ssp" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <!-- Action Button Row -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/_10sdp"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-
-                    <Button
-                        android:id="@+id/cs_discord_btn_link"
-                        style="@style/CSClassicButton"
-                        android:layout_width="0dp"
-                        android:layout_height="@dimen/_32sdp"
-                        android:layout_weight="1"
-                        android:background="@drawable/cs_discord_btn_blurple"
-                        android:text="Link Discord Account"
-                        android:textColor="#FFFFFF"
-                        android:textStyle="bold"
-                        android:textSize="@dimen/_10ssp" />
-
-                    <Button
-                        android:id="@+id/cs_discord_btn_unlink"
-                        style="@style/CSClassicButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="@dimen/_32sdp"
-                        android:layout_marginStart="@dimen/_6sdp"
-                        android:background="@drawable/cs_btn_bg"
-                        android:text="Unlink"
-                        android:textColor="#ED4245"
-                        android:textSize="@dimen/_10ssp"
-                        android:visibility="gone" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <!-- 4. Realistic Discord Profile Preview Card -->
-            <TextView
-                style="@style/CSSectionTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/_14sdp"
-                android:layout_marginBottom="@dimen/_6sdp"
-                android:text="@string/cs_discord_rpc_preview_title" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/cs_discord_card_bg"
-                android:orientation="vertical"
-                android:padding="@dimen/_12sdp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/cs_discord_rpc_preview_playing"
-                    android:textColor="#949BA4"
-                    android:textSize="@dimen/_8ssp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.1" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/_8sdp"
-                    android:background="@drawable/cs_discord_inner_bg"
-                    android:orientation="horizontal"
-                    android:padding="@dimen/_10sdp"
-                    android:gravity="center_vertical">
-
-                    <!-- App Icon + Badge Container -->
-                    <FrameLayout
-                        android:layout_width="@dimen/_44sdp"
-                        android:layout_height="@dimen/_44sdp">
-
-                        <ImageView
-                            android:id="@+id/cs_discord_preview_large_img"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:src="@drawable/csl_launcher_logo"
-                            android:scaleType="fitCenter"
-                            android:contentDescription="@null" />
-
-                        <ImageView
-                            android:id="@+id/cs_discord_preview_small_img"
-                            android:layout_width="@dimen/_16sdp"
-                            android:layout_height="@dimen/_16sdp"
-                            android:layout_gravity="bottom|end"
-                            android:src="@drawable/ic_cs_discord"
-                            android:contentDescription="@null" />
-                    </FrameLayout>
-
-                    <!-- Text details -->
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="@dimen/_10sdp"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="CS Launcher Plus"
-                            android:textColor="#F2F3F5"
-                            android:textSize="@dimen/_11ssp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/cs_discord_preview_details"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/_1sdp"
-                            android:text="Modpack: Better MC (1.20.1)"
-                            android:textColor="#DBDEE1"
-                            android:textSize="@dimen/_9ssp" />
-
-                        <TextView
-                            android:id="@+id/cs_discord_preview_state"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/_1sdp"
-                            android:text="Profile: My Survival • 42 Mods"
-                            android:textColor="#DBDEE1"
-                            android:textSize="@dimen/_9ssp" />
-
-                        <TextView
-                            android:id="@+id/cs_discord_preview_elapsed"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/_2sdp"
-                            android:text="00:15:32 elapsed"
-                            android:textColor="#949BA4"
-                            android:textSize="@dimen/_8ssp" />
-                    </LinearLayout>
-                </LinearLayout>
-            </LinearLayout>
-
-            <!-- 5. Presence Options Toggles -->
-            <TextView
-                style="@style/CSSectionTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/_14sdp"
-                android:layout_marginBottom="@dimen/_6sdp"
-                android:text="PRESENCE OPTIONS" />
-
-            <!-- Option 1: Show Minecraft Version -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/cs_card_bg"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:padding="@dimen/_10sdp">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Show Minecraft Version"
-                        android:textColor="@color/cs_ink"
-                        android:textSize="@dimen/_11ssp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/_1sdp"
-                        android:text="Display game version in Discord status"
-                        android:textColor="@color/cs_ink_dim"
-                        android:textSize="@dimen/_9ssp" />
-                </LinearLayout>
-
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/cs_discord_toggle_version"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/_8sdp" />
-            </LinearLayout>
-
-            <!-- Option 2: Show Multiplayer Server & Modpack -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/_6sdp"
-                android:background="@drawable/cs_card_bg"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:padding="@dimen/_10sdp">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Show Server &amp; Modpack"
-                        android:textColor="@color/cs_ink"
-                        android:textSize="@dimen/_11ssp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/_1sdp"
-                        android:text="Display multiplayer server and modpack names"
-                        android:textColor="@color/cs_ink_dim"
-                        android:textSize="@dimen/_9ssp" />
-                </LinearLayout>
-
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/cs_discord_toggle_server"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/_8sdp" />
-            </LinearLayout>
-
-            <!-- Option 3: Only Broadcast While In Game -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/_6sdp"
-                android:background="@drawable/cs_card_bg"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:padding="@dimen/_10sdp">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Only Broadcast In-Game"
-                        android:textColor="@color/cs_ink"
-                        android:textSize="@dimen/_11ssp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/_1sdp"
-                        android:text="Hide Discord presence when sitting on home screen"
-                        android:textColor="@color/cs_ink_dim"
-                        android:textSize="@dimen/_9ssp" />
-                </LinearLayout>
-
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/cs_discord_toggle_only_in_game"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/_8sdp" />
-            </LinearLayout>
-
-            <!-- Option 4: Show Elapsed Playtime -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/_6sdp"
-                android:background="@drawable/cs_card_bg"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:padding="@dimen/_10sdp">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Show Elapsed Timer"
-                        android:textColor="@color/cs_ink"
-                        android:textSize="@dimen/_11ssp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/_1sdp"
-                        android:text="Display playtime elapsed timer while in-game"
-                        android:textColor="@color/cs_ink_dim"
-                        android:textSize="@dimen/_9ssp" />
-                </LinearLayout>
-
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/cs_discord_toggle_elapsed"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/_8sdp" />
-            </LinearLayout>
-
-            <!-- Option 5: Show Mod Count -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/_6sdp"
-                android:background="@drawable/cs_card_bg"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:padding="@dimen/_10sdp">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Show Mod Count"
-                        android:textColor="@color/cs_ink"
-                        android:textSize="@dimen/_11ssp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/_1sdp"
-                        android:text="Display installed mods count in Discord status"
-                        android:textColor="@color/cs_ink_dim"
-                        android:textSize="@dimen/_9ssp" />
-                </LinearLayout>
-
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/cs_discord_toggle_mods"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/_8sdp" />
-            </LinearLayout>
-
-            <!-- 6. Information Card -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/_12sdp"
-                android:background="@drawable/cs_card_bg"
-                android:orientation="vertical"
-                android:padding="@dimen/_12sdp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Official Discord Partner Integration"
-                    android:textColor="@color/cs_green"
-                    android:textSize="@dimen/_11ssp"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="@string/cs_discord_preview_app_name"
+                    android:textColor="@color/hm_text"
+                    android:textSize="14sp"
                     android:textStyle="bold" />
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:id="@+id/cs_discord_preview_details"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/_4sdp"
-                    android:text="Powered by the official Discord Social SDK. Displays real-time Rich Presence directly to your friends without needing bot tokens or manual setup."
-                    android:textColor="@color/cs_ink"
-                    android:textSize="@dimen/_9ssp" />
-            </LinearLayout>
+                    android:layout_marginTop="2dp"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/hm_text"
+                    android:textSize="12.5sp"
+                    tools:text="Playing Skyblock Adventures" />
 
+                <TextView
+                    android:id="@+id/cs_discord_preview_state"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="1dp"
+                    android:ellipsize="end"
+                    android:maxLines="2"
+                    android:textColor="@color/hm_text_dim"
+                    android:textSize="12.5sp"
+                    tools:text="Minecraft 1.21.4 · Fabric · 42 mods" />
+
+                <TextView
+                    android:id="@+id/cs_discord_preview_elapsed"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="1dp"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/hm_text_dim"
+                    android:textSize="12sp"
+                    tools:text="00:12:34 elapsed" />
+            </LinearLayout>
         </LinearLayout>
-    </ScrollView>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/cs_discord_preview_btn1"
+                android:layout_width="0dp"
+                android:layout_height="34dp"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_sp_btn_ghost"
+                android:clickable="true"
+                android:ellipsize="end"
+                android:focusable="true"
+                android:gravity="center"
+                android:maxLines="1"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:text="@string/cs_discord_button_discord"
+                android:textColor="@color/hm_text"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/cs_discord_preview_btn2"
+                android:layout_width="0dp"
+                android:layout_height="34dp"
+                android:layout_marginStart="4dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_sp_btn_ghost"
+                android:clickable="true"
+                android:ellipsize="end"
+                android:focusable="true"
+                android:gravity="center"
+                android:maxLines="1"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:text="@string/cs_discord_button_youtube"
+                android:textColor="@color/hm_text"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Optional account link -->
+    <LinearLayout
+        android:id="@+id/cs_discord_account_row"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_pp_row"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="12dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="10dp">
+
+        <ImageView
+            android:id="@+id/cs_discord_account_avatar"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/cs_discord_avatar_bg"
+            android:contentDescription="@null"
+            android:padding="9dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_discord_mark" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/cs_discord_account_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/hm_text"
+                android:textSize="13.5sp"
+                android:textStyle="bold"
+                tools:text="Discord account" />
+
+            <TextView
+                android:id="@+id/cs_discord_account_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textColor="@color/hm_text_dim"
+                android:textSize="11.5sp"
+                tools:text="Not linked · optional" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/cs_discord_account_pill"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_pp_active_pill"
+            android:letterSpacing="0.2"
+            android:paddingStart="9dp"
+            android:paddingTop="3dp"
+            android:paddingEnd="9dp"
+            android:paddingBottom="3dp"
+            android:text="@string/cs_discord_account_linked_pill"
+            android:textColor="@color/hm_green_text"
+            android:textSize="9.5sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/cs_discord_footnote"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        android:text="@string/cs_discord_footnote"
+        android:textColor="@color/hm_text_dim"
+        android:textSize="11.5sp" />
+</LinearLayout>

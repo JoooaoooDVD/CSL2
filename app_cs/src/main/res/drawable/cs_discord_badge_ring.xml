@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ring behind the small presence badge (same colour as the popup card, so it "cuts" the big icon) -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+    <solid android:color="@color/hm_dialog" />
+</shape>

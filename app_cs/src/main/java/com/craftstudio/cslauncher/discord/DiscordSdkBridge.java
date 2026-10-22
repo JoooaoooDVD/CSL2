@@ -106,9 +106,14 @@ public final class DiscordSdkBridge {
         } catch (Throwable ignored) {}
     }
 
+    /**
+     * Clear the presence and drop the native client so another process (launcher / game) can own
+     * the single RPC connection to the Discord app. {@link #initialize} may be called again later.
+     */
     public static synchronized void shutdown() {
         if (sCallbackTicker != null) {
             sCallbackTicker.shutdownNow();
+            try { sCallbackTicker.awaitTermination(400, java.util.concurrent.TimeUnit.MILLISECONDS); } catch (InterruptedException ignored) {}
             sCallbackTicker = null;
         }
         if (sSdkInitialized) {
@@ -124,10 +129,18 @@ public final class DiscordSdkBridge {
         void onError(String error);
     }
 
-    public static boolean updateRichPresence(@Nullable String details, @Nullable String state, long startTimestampMs) {
-        return updateRichPresence("CS Launcher Plus", details, state, "app_icon", "CS Launcher Plus", null, null, startTimestampMs);
-    }
+    /** Friends-list text after "Playing": the application name */
+    public static final int DISPLAY_NAME = 0;
+    /** Friends-list text after "Playing": the state line */
+    public static final int DISPLAY_STATE = 1;
+    /** Friends-list text after "Playing": the details line */
+    public static final int DISPLAY_DETAILS = 2;
 
+    /**
+     * Push a full activity to the Discord app. Images are public https URLs (Discord proxies
+     * them), buttons are optional (both label and url needed), {@code detailsUrl} makes the
+     * details line clickable and {@code largeUrl} makes the big image clickable.
+     */
     public static boolean updateRichPresence(
             @Nullable String name,
             @Nullable String details,
@@ -136,14 +149,48 @@ public final class DiscordSdkBridge {
             @Nullable String largeText,
             @Nullable String smallImage,
             @Nullable String smallText,
-            long startTimestampMs) {
+            long startTimestampMs,
+            int statusDisplayType,
+            @Nullable String largeUrl,
+            @Nullable String detailsUrl,
+            @Nullable String button1Label, @Nullable String button1Url,
+            @Nullable String button2Label, @Nullable String button2Url) {
         if (!sSdkInitialized) return false;
         try {
-            return nativeUpdateRichPresence(name, details, state, largeImage, largeText, smallImage, smallText, startTimestampMs);
+            return nativeUpdateRichPresence(name, details, state, largeImage, largeText, smallImage, smallText,
+                    startTimestampMs, statusDisplayType, largeUrl, detailsUrl,
+                    button1Label, button1Url, button2Label, button2Url);
         } catch (Throwable t) {
             Log.w(TAG, "Error in nativeUpdateRichPresence", t);
             return false;
         }
+    }
+
+    /**
+     * Outcome of the latest presence round trip: {@code ""} while nothing was acknowledged yet,
+     * {@code "ok"} once the Discord app accepted an update, {@code "error:<text>"} otherwise.
+     */
+    @NonNull
+    public static String getLastPresenceResult() {
+        if (!sLibraryLoaded || !sSdkInitialized) return "";
+        try {
+            String result = nativeGetLastPresenceResult();
+            return result == null ? "" : result;
+        } catch (Throwable t) {
+            return "";
+        }
+    }
+
+    /** Whether the Discord Android app (the RPC transport) is installed on this device */
+    public static boolean isDiscordAppInstalled(@NonNull Context context) {
+        android.content.pm.PackageManager pm = context.getPackageManager();
+        for (String pkg : new String[]{"com.discord", "com.discord.canary", "com.discord.ptb"}) {
+            try {
+                pm.getPackageInfo(pkg, 0);
+                return true;
+            } catch (Throwable ignored) {}
+        }
+        return false;
     }
 
     public static void clearRichPresence() {
@@ -201,7 +248,14 @@ public final class DiscordSdkBridge {
             String largeText,
             String smallImage,
             String smallText,
-            long startTimestampMs);
+            long startTimestampMs,
+            int statusDisplayType,
+            String largeUrl,
+            String detailsUrl,
+            String button1Label, String button1Url,
+            String button2Label, String button2Url);
+    private static native String nativeGetLastPresenceResult();
+    private static native boolean nativeIsInitialized();
     private static native void nativeClearRichPresence();
     private static native void nativeAuthorize(long clientId, String scopes, NativeAuthCallback callback);
     private static native void nativeGetToken(long applicationId, String code, String verifier, String redirectUri, TokenCallback callback);

@@ -164,7 +164,7 @@ public class LauncherActivity extends BaseActivity {
         }
         String normalizedVersionId = MoJsonExtras.normalizeVersionId(selectedInstance.versionId);
         JVersionList.Version mcVersion = MoJsonExtras.getListedVersion(normalizedVersionId);
-        com.craftstudio.cslauncher.discord.DiscordPresenceManager.getInstance(this).setMinecraftLaunching(normalizedVersionId);
+        com.craftstudio.cslauncher.discord.DiscordPresenceManager.getInstance(this).setMinecraftLaunching(this, selectedInstance, normalizedVersionId);
         com.craftstudio.cslauncher.progresskeeper.ProgressKeeper.markLaunching();
         new MoJsonDownloader().start(
                 this.getAssets(),
@@ -430,13 +430,20 @@ public class LauncherActivity extends BaseActivity {
         ContextExecutor.setActivity(this);
         InstanceInstaller.postInstallCheck(this);
         if (mStorageSetupDialog != null) mStorageSetupDialog.onHostResumed();
-        com.craftstudio.cslauncher.discord.DiscordPresenceManager.getInstance(this).setLauncherIdle();
+        com.craftstudio.cslauncher.discord.DiscordPresenceManager.getInstance(this).setLauncherIdle(this);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         ContextExecutor.clearActivity(this);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // Not visible any more (game taking over, or another app): hand the Discord presence back
+        com.craftstudio.cslauncher.discord.DiscordPresenceManager.getInstance(this).releaseFromLauncher();
     }
 
     @Override

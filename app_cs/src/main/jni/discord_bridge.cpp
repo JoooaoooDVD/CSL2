@@ -19,6 +19,10 @@ static bool g_discord_initialized = false;
 static JavaVM* g_jvm = nullptr;
 static jobject g_auth_callback_global = nullptr;
 static std::string g_last_code_verifier;
+// Result of the most recent Discord_Client_UpdateRichPresence round trip ("" = none yet,
+// "ok" = accepted by the Discord app, anything else = SDK error text). Read by the UI.
+static std::string g_last_presence_result;
+static std::string g_last_presence_error;
 
 static inline Discord_String make_discord_string(const char* str) {
     Discord_String ds;
@@ -74,7 +78,12 @@ Java_net_kdt_pojavlaunch_discord_DiscordSdkBridge_nativeShutdown(
         try {
             Discord_Client_ClearRichPresence(&g_discord_client);
             Discord_RunCallbacks();
+            Discord_Client_Drop(&g_discord_client);
         } catch (...) {}
+        g_discord_client.opaque = nullptr;
+        g_discord_initialized = false;
+        g_last_presence_result.clear();
+        g_last_presence_error.clear();
     }
     if (g_auth_callback_global != nullptr && env != nullptr) {
         env->DeleteGlobalRef(g_auth_callback_global);
@@ -99,15 +108,47 @@ static void on_rich_presence_updated(Discord_ClientResult* result, void* userDat
     if (result != nullptr) {
         if (Discord_ClientResult_Successful(result)) {
             LOGI("Discord_Client_UpdateRichPresence succeeded");
+            g_last_presence_result = "ok";
+            g_last_presence_error.clear();
         } else {
             Discord_String errStr = {nullptr, 0};
             Discord_ClientResult_ToString(result, &errStr);
-            LOGW("Discord_Client_UpdateRichPresence callback result: %s", to_std_string(errStr).c_str());
+            std::string err = to_std_string(errStr);
+            LOGW("Discord_Client_UpdateRichPresence callback result: %s", err.c_str());
             if (errStr.ptr != nullptr) {
                 Discord_Free(errStr.ptr);
             }
+            g_last_presence_result = "error";
+            g_last_presence_error = err.empty() ? "Discord rejected the presence update" : err;
         }
     }
+}
+
+static void set_optional_string(Discord_Activity* activity, JNIEnv* env, jstring value,
+                                void (*setter)(Discord_Activity*, Discord_String*)) {
+    if (value == nullptr) return;
+    const char* chars = env->GetStringUTFChars(value, nullptr);
+    if (chars != nullptr && strlen(chars) > 0) {
+        Discord_String ds = make_discord_string(chars);
+        setter(activity, &ds);
+    }
+    env->ReleaseStringUTFChars(value, chars);
+}
+
+static void add_button(Discord_Activity* activity, JNIEnv* env, jstring jLabel, jstring jUrl) {
+    if (jLabel == nullptr || jUrl == nullptr) return;
+    const char* label = env->GetStringUTFChars(jLabel, nullptr);
+    const char* url = env->GetStringUTFChars(jUrl, nullptr);
+    if (label != nullptr && url != nullptr && strlen(label) > 0 && strlen(url) > 0) {
+        Discord_ActivityButton button;
+        Discord_ActivityButton_Init(&button);
+        Discord_ActivityButton_SetLabel(&button, make_discord_string(label));
+        Discord_ActivityButton_SetUrl(&button, make_discord_string(url));
+        Discord_Activity_AddButton(activity, &button);
+        Discord_ActivityButton_Drop(&button);
+    }
+    env->ReleaseStringUTFChars(jLabel, label);
+    env->ReleaseStringUTFChars(jUrl, url);
 }
 
 struct FetchConnectedUserData {
@@ -239,7 +280,14 @@ Java_net_kdt_pojavlaunch_discord_DiscordSdkBridge_nativeUpdateRichPresence(
         jstring jLargeText,
         jstring jSmallImage,
         jstring jSmallText,
-        jlong startTimestampMs) {
+        jlong startTimestampMs,
+        jint statusDisplayType,
+        jstring jLargeUrl,
+        jstring jDetailsUrl,
+        jstring jButton1Label,
+        jstring jButton1Url,
+        jstring jButton2Label,
+        jstring jButton2Url) {
     std::lock_guard<std::recursive_mutex> lock(g_discord_mutex);
     if (!g_discord_initialized) {
         return JNI_FALSE;
@@ -276,6 +324,15 @@ Java_net_kdt_pojavlaunch_discord_DiscordSdkBridge_nativeUpdateRichPresence(
             env->ReleaseStringUTFChars(jState, stateChars);
         }
 
+        // What the friends list shows after "Playing": 0 = app name, 1 = state, 2 = details
+        if (statusDisplayType >= 0 && statusDisplayType <= 2) {
+            Discord_StatusDisplayTypes displayType = static_cast<Discord_StatusDisplayTypes>(statusDisplayType);
+            Discord_Activity_SetStatusDisplayType(&activity, &displayType);
+        }
+        set_optional_string(&activity, env, jDetailsUrl, Discord_Activity_SetDetailsUrl);
+        add_button(&activity, env, jButton1Label, jButton1Url);
+        add_button(&activity, env, jButton2Label, jButton2Url);
+
         Discord_ActivityAssets assets;
         Discord_ActivityAssets_Init(&assets);
         bool hasAssets = false;
@@ -286,6 +343,15 @@ Java_net_kdt_pojavlaunch_discord_DiscordSdkBridge_nativeUpdateRichPresence(
             Discord_ActivityAssets_SetLargeImage(&assets, &ds);
             env->ReleaseStringUTFChars(jLargeImage, s);
             hasAssets = true;
+        }
+
+        if (jLargeUrl != nullptr) {
+            const char* s = env->GetStringUTFChars(jLargeUrl, nullptr);
+            if (s != nullptr && strlen(s) > 0) {
+                Discord_String ds = make_discord_string(s);
+                Discord_ActivityAssets_SetLargeUrl(&assets, &ds);
+            }
+            env->ReleaseStringUTFChars(jLargeUrl, s);
         }
 
         if (jLargeText != nullptr) {
@@ -654,9 +720,33 @@ Java_com_craftstudio_cslauncher_discord_DiscordSdkBridge_nativeUpdateRichPresenc
         jstring jLargeText,
         jstring jSmallImage,
         jstring jSmallText,
-        jlong startTimestampMs) {
+        jlong startTimestampMs,
+        jint statusDisplayType,
+        jstring jLargeUrl,
+        jstring jDetailsUrl,
+        jstring jButton1Label,
+        jstring jButton1Url,
+        jstring jButton2Label,
+        jstring jButton2Url) {
     return Java_net_kdt_pojavlaunch_discord_DiscordSdkBridge_nativeUpdateRichPresence(
-            env, clazz, jName, jDetails, jState, jLargeImage, jLargeText, jSmallImage, jSmallText, startTimestampMs);
+            env, clazz, jName, jDetails, jState, jLargeImage, jLargeText, jSmallImage, jSmallText, startTimestampMs,
+            statusDisplayType, jLargeUrl, jDetailsUrl, jButton1Label, jButton1Url, jButton2Label, jButton2Url);
+}
+
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_craftstudio_cslauncher_discord_DiscordSdkBridge_nativeGetLastPresenceResult(
+        JNIEnv* env, jclass clazz) {
+    std::lock_guard<std::recursive_mutex> lock(g_discord_mutex);
+    std::string out = g_last_presence_result;
+    if (out == "error" && !g_last_presence_error.empty()) out = "error:" + g_last_presence_error;
+    return env->NewStringUTF(out.c_str());
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_craftstudio_cslauncher_discord_DiscordSdkBridge_nativeIsInitialized(
+        JNIEnv* env, jclass clazz) {
+    std::lock_guard<std::recursive_mutex> lock(g_discord_mutex);
+    return g_discord_initialized ? JNI_TRUE : JNI_FALSE;
 }
 
 extern "C" JNIEXPORT void JNICALL
