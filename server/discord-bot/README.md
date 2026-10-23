@@ -15,6 +15,19 @@ On unlink the role is removed and a short DM is sent. If a linked player joins t
 Slash commands (guild only): `/links stats`, `/links lookup @user`, `/links sync`, `/links queue`
 (`lookup`/`sync`/`queue` are staff-only: Administrator / Manage Server / `ADMIN_ROLE_ID`).
 
+## Features (v2)
+
+| Area | What the bot does |
+|---|---|
+| **Account link** | auto-join via `guilds.join` · Linked role · welcome DM with buttons + persistent *Rich Presence help* button · log embed · token wiped |
+| **Unlink** | role removed · short DM · log |
+| **Zero-config** | auto-detects the server, creates the **Linked** role, a private **#launcher-links** log channel and a locked **🔗 Linked: N** counter channel; remembers IDs in `data/state.json` |
+| **Reliability** | transient Discord/network errors retried with back-off (max 5), poison rows never block the queue, Supabase outage/recovery alerts, graceful fallback when the Members intent is off |
+| **Anti-spam** | re-linking within 60 min doesn't re-send the DM |
+| **Members** | welcome embed for new members (system channel), instant role for linked players on join, role sync every 5 min, role flags cleared when someone leaves |
+| **Stats** | per-day counters (`discord_bot_stats`), 7-day bar chart, daily digest in the log channel, milestone posts (10 · 25 · 50 · 100 · …), bot status "Watching N linked players" |
+| **Commands** | `/links me` · `/links stats` · staff: `lookup`, `recent`, `sync`, `unlink`, `queue`, `setup`, `export` (CSV) · `/launcher download` / `faq [search]` / `features` / `links` / `presence` (live from the website CMS) · `/bot status` / `invite` / `preview-dm` · right-click user → *Launcher link info* |
+
 ## How it works
 
 ```
