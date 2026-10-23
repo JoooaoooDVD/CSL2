@@ -29,78 +29,36 @@ Launcher (link OK) ──INSERT──▶ Supabase table discord_link_events (ano
 The launcher can only *insert* rows (RLS), it cannot read anything back. The OAuth token in the row
 is deleted right after it is used.
 
-## Setup (one time)
+## Setup — 2 minutes
 
-### 1. Discord application
-
-Use the **same application** as the launcher's Social SDK app id (`DiscordPresenceManager.APPLICATION_ID`)
-— `guilds.join` only works with a token issued to the same app as the bot.
-
-* *Bot* tab → **Add Bot** (if not yet) → copy the **token** → `DISCORD_BOT_TOKEN`.
-* *Bot* tab → **Privileged Gateway Intents** → enable **Server Members Intent**.
-* *OAuth2* tab → the Social SDK redirect `discord-<APP_ID>:/authorize/callback` must already be there
-  (it is, from the Rich Presence setup). Nothing else to add — the launcher now requests
-  `identify guilds.join` when linking.
-* Invite the bot to the Craft Studio server with this URL (replace `APP_ID`):
-
-  ```
-  https://discord.com/oauth2/authorize?client_id=APP_ID&scope=bot%20applications.commands&permissions=268435457
-  ```
-
-  `268435457` = **Create Invite** (needed for `guilds.join`) + **Manage Roles** + **View Channels**.
-  Give the bot **Send Messages + Embed Links** in the log channel.
-
-### 2. Server
-
-* Create a role, e.g. **Linked** → copy its id → `LINKED_ROLE_ID`.
-* **Move the bot's role above the Linked role** in *Server Settings → Roles*, otherwise it cannot assign it.
-* (Optional) create a private `#launcher-links` channel → `LOG_CHANNEL_ID`.
-* Developer Mode (User Settings → Advanced) lets you right-click → *Copy ID* for the server/role/channel.
-
-### 3. Supabase
-
-The tables already exist in the project (`discord_link_events`, `discord_links`). The bot needs the
-**service_role** key: Supabase dashboard → *Project Settings → API → service_role*. Keep it secret
-(it is only ever on the machine running the bot).
-
-### 4. Run it
+Everything is pre-configured in `.env` (server id, Supabase, invite link). The bot creates the
+**Linked** role and a private **#launcher-links** channel by itself on first start.
 
 ```bash
-cd server/discord-bot
-python3 -m venv .venv && . .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env     # fill in the values
-python bot.py
+unzip cs-discord-bot.zip && cd cs-discord-bot
+sudo bash setup.sh
 ```
 
-Expected log:
+`setup.sh` installs Python, the dependencies, asks for the **bot token** once (Developer Portal →
+Applications → *CS Launcher Plus* `1551939107549225000` → **Bot** → *Reset Token*; on the same page
+turn ON **Server Members Intent**), verifies token + Supabase + server membership, and installs a
+systemd service (`cs-discord-bot`) that auto-starts on reboot.
 
-```
-INFO cs-bot: Slash commands synced to guild 123…
-INFO cs-bot: Logged in as Craft Studio#1234 (…); guild: Craft Studio
-INFO cs-bot: Permission check OK
-```
+If the bot is not in the server yet, setup prints a one-click **invite link** — open it, Authorize, done.
 
-If the permission check warns, fix exactly what it says (missing permission / role order).
-
-#### systemd (VPS)
+Commands afterwards:
 
 ```bash
-sudo useradd -r -m -d /opt/cs-discord-bot csbot
-sudo cp -r . /opt/cs-discord-bot && sudo chown -R csbot:csbot /opt/cs-discord-bot
-sudo -u csbot bash -c 'cd /opt/cs-discord-bot && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt'
-sudo cp cs-discord-bot.service /etc/systemd/system/ && sudo systemctl enable --now cs-discord-bot
-journalctl -u cs-discord-bot -f
+journalctl -u cs-discord-bot -f      # live logs
+systemctl restart cs-discord-bot     # restart
+./update.sh                          # after replacing bot.py
+./run.sh                             # foreground run (Termux / no systemd)
 ```
 
-#### Docker
+Docker / Railway / Render: `Dockerfile` + `Procfile` are included; set the same variables as `.env`.
 
-```bash
-docker build -t cs-discord-bot . && docker run -d --name cs-discord-bot --env-file .env --restart unless-stopped cs-discord-bot
-```
-
-Works on any free/cheap host too (Railway, Fly.io, Oracle free tier, a Raspberry Pi) — it only
-needs outbound HTTPS.
+Slash commands: `/links me` (anyone), `/links stats`, and for staff `/links lookup`, `/links recent`,
+`/links sync`, `/links unlink`, `/links queue`, `/links setup`.
 
 ## Testing
 

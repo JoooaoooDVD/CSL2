@@ -59,15 +59,43 @@ def _env_int(name: str, default: int = 0, required: bool = False) -> int:
         sys.exit(2)
 
 
+import json
+from pathlib import Path
+
 BOT_TOKEN = _env("DISCORD_BOT_TOKEN", required=True)
-GUILD_ID = _env_int("GUILD_ID", required=True)
-LINKED_ROLE_ID = _env_int("LINKED_ROLE_ID")  # 0 = don't give a role
-LOG_CHANNEL_ID = _env_int("LOG_CHANNEL_ID")  # 0 = no log channel
+GUILD_ID = _env_int("GUILD_ID")  # 0 = auto: the (single) server the bot is in
+LINKED_ROLE_ID = _env_int("LINKED_ROLE_ID")  # 0 = auto-create "Linked" role
+LINKED_ROLE_NAME = _env("LINKED_ROLE_NAME", "Linked")
+LOG_CHANNEL_ID = _env_int("LOG_CHANNEL_ID")  # 0 = auto-create private #launcher-links
+LOG_CHANNEL_NAME = _env("LOG_CHANNEL_NAME", "launcher-links")
 ADMIN_ROLE_ID = _env_int("ADMIN_ROLE_ID")  # 0 = server admins only
 SUPABASE_URL = _env("SUPABASE_URL", required=True).rstrip("/")
 SUPABASE_SERVICE_KEY = _env("SUPABASE_SERVICE_KEY", required=True)
-POLL_SECONDS = max(3, _env_int("POLL_SECONDS", 10))
-INVITE_URL = _env("DISCORD_INVITE_URL", "https://discord.gg/craftstudio")
+POLL_SECONDS = max(3, _env_int("POLL_SECONDS", 5))
+INVITE_URL = _env("DISCORD_INVITE_URL", "https://discord.gg/dmteYqZZyY")
+STATE_FILE = Path(_env("STATE_FILE", str(Path(__file__).with_name("data")) + "/state.json"))
+
+
+def _load_state() -> dict:
+    try:
+        return json.loads(STATE_FILE.read_text("utf-8"))
+    except Exception:
+        return {}
+
+
+def _save_state(state: dict) -> None:
+    try:
+        STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        STATE_FILE.write_text(json.dumps(state, indent=2), "utf-8")
+    except Exception as e:  # pragma: no cover
+        logging.getLogger("cs-bot").warning("Could not save state: %s", e)
+
+
+_STATE = _load_state()
+# ids remembered from a previous auto-setup win over "0" in .env
+GUILD_ID = GUILD_ID or int(_STATE.get("guild_id") or 0)
+LINKED_ROLE_ID = LINKED_ROLE_ID or int(_STATE.get("linked_role_id") or 0)
+LOG_CHANNEL_ID = LOG_CHANNEL_ID or int(_STATE.get("log_channel_id") or 0)
 YOUTUBE_URL = _env("YOUTUBE_URL", "https://youtube.com/@craft-studio-official")
 WEBSITE_URL = _env("WEBSITE_URL", "")
 LAUNCHER_NAME = _env("LAUNCHER_NAME", "CS Launcher Plus")
@@ -208,22 +236,128 @@ class CraftStudioBot(discord.Client):
     async def setup_hook(self) -> None:
         await self.db.start()
         links_group.bot = self  # type: ignore[attr-defined]
-        self.tree.add_command(links_group, guild=discord.Object(GUILD_ID))
-        await self.tree.sync(guild=discord.Object(GUILD_ID))
-        self.poll_events.start()
-        log.info("Slash commands synced to guild %s", GUILD_ID)
+        self._ready_once = False
 
     async def close(self) -> None:
         self.poll_events.cancel()
+        self.update_status.cancel()
         await self.db.close()
         await super().close()
 
     async def on_ready(self) -> None:
+        global GUILD_ID
+        log.info("Logged in as %s (%s)", self.user, self.user.id if self.user else "?")
+        if not GUILD_ID:
+            guilds = list(self.guilds)
+            if len(guilds) == 1:
+                GUILD_ID = guilds[0].id
+                _STATE["guild_id"] = GUILD_ID
+                _save_state(_STATE)
+                log.info("Auto-detected server: %s (%s)", guilds[0].name, GUILD_ID)
+            elif not guilds:
+                log.error("The bot is not in any server yet. Invite it with:\n  %s", self.invite_url())
+                return
+            else:
+                log.error("Bot is in %d servers - set GUILD_ID in .env to pick one: %s", len(guilds),
+                          ", ".join(f"{g.name}={g.id}" for g in guilds))
+                return
         self._guild = self.get_guild(GUILD_ID) or await self.fetch_guild(GUILD_ID)
-        log.info("Logged in as %s (%s); guild: %s", self.user, self.user.id if self.user else "?", self._guild)
-        await self.change_presence(activity=discord.Activity(
-            type=discord.ActivityType.watching, name=f"{LAUNCHER_NAME} links"))
+        if self._guild is None:
+            log.error("Bot is not a member of server %s. Invite it with:\n  %s", GUILD_ID, self.invite_url())
+            return
+        log.info("Server: %s (%s members)", self._guild.name, self._guild.member_count)
+        if not self._ready_once:
+            self._ready_once = True
+            await self.auto_setup()
+            self.tree.add_command(links_group, guild=discord.Object(GUILD_ID))
+            await self.tree.sync(guild=discord.Object(GUILD_ID))
+            log.info("Slash commands synced")
+            self.poll_events.start()
+            self.update_status.start()
         self._check_permissions()
+
+    def invite_url(self) -> str:
+        app_id = self.user.id if self.user else "APP_ID"
+        return (f"https://discord.com/oauth2/authorize?client_id={app_id}"
+                "&scope=bot%20applications.commands&permissions=268454929")
+
+    async def auto_setup(self) -> None:
+        """Create the Linked role and the private log channel when they are not configured."""
+        global LINKED_ROLE_ID, LOG_CHANNEL_ID
+        guild = self._guild
+        if guild is None or guild.me is None:
+            return
+        perms = guild.me.guild_permissions
+        # role
+        if LINKED_ROLE_ID and guild.get_role(LINKED_ROLE_ID) is None:
+            log.warning("Configured role %s no longer exists - creating a new one", LINKED_ROLE_ID)
+            LINKED_ROLE_ID = 0
+        if not LINKED_ROLE_ID:
+            existing = discord.utils.get(guild.roles, name=LINKED_ROLE_NAME)
+            if existing is not None and existing < guild.me.top_role:
+                LINKED_ROLE_ID = existing.id
+                log.info("Using existing role '%s' (%s)", existing.name, existing.id)
+            elif perms.manage_roles:
+                try:
+                    role = await guild.create_role(
+                        name=LINKED_ROLE_NAME, colour=discord.Colour(EMBED_COLOR), mentionable=False,
+                        reason=f"{LAUNCHER_NAME}: role for players who linked their account")
+                    # put it right under the bot's own top role so we can always manage it
+                    try:
+                        await role.edit(position=max(1, guild.me.top_role.position - 1))
+                    except discord.HTTPException:
+                        pass
+                    LINKED_ROLE_ID = role.id
+                    log.info("Created role '%s' (%s)", role.name, role.id)
+                except discord.HTTPException as e:
+                    log.warning("Could not create the Linked role: %s", e)
+            else:
+                log.warning("No Manage Roles permission - cannot create the Linked role")
+            if LINKED_ROLE_ID:
+                _STATE["linked_role_id"] = LINKED_ROLE_ID
+                _save_state(_STATE)
+        # log channel
+        if LOG_CHANNEL_ID and guild.get_channel(LOG_CHANNEL_ID) is None:
+            log.warning("Configured log channel %s no longer exists - creating a new one", LOG_CHANNEL_ID)
+            LOG_CHANNEL_ID = 0
+        if not LOG_CHANNEL_ID:
+            existing_ch = discord.utils.get(guild.text_channels, name=LOG_CHANNEL_NAME)
+            if existing_ch is not None:
+                LOG_CHANNEL_ID = existing_ch.id
+                log.info("Using existing channel #%s (%s)", existing_ch.name, existing_ch.id)
+            elif perms.manage_channels:
+                try:
+                    overwrites = {
+                        guild.default_role: discord.PermissionOverwrite(view_channel=False),
+                        guild.me: discord.PermissionOverwrite(view_channel=True, send_messages=True, embed_links=True),
+                    }
+                    channel = await guild.create_text_channel(
+                        LOG_CHANNEL_NAME, overwrites=overwrites,
+                        topic=f"{LAUNCHER_NAME} account link / unlink log (bot only)",
+                        reason=f"{LAUNCHER_NAME}: private log channel")
+                    LOG_CHANNEL_ID = channel.id
+                    log.info("Created private channel #%s (%s)", channel.name, channel.id)
+                except discord.HTTPException as e:
+                    log.warning("Could not create the log channel: %s", e)
+            else:
+                log.warning("No Manage Channels permission - log channel disabled")
+            if LOG_CHANNEL_ID:
+                _STATE["log_channel_id"] = LOG_CHANNEL_ID
+                _save_state(_STATE)
+
+    @tasks.loop(minutes=10)
+    async def update_status(self) -> None:
+        try:
+            s = await self.db.stats()
+            await self.change_presence(activity=discord.Activity(
+                type=discord.ActivityType.watching,
+                name=f"{s['linked']} linked players · {LAUNCHER_NAME}"))
+        except Exception as e:
+            log.debug("status update failed: %s", e)
+
+    @update_status.before_loop
+    async def _status_wait(self) -> None:
+        await self.wait_until_ready()
 
     def _check_permissions(self) -> None:
         guild = self._guild
@@ -618,6 +752,78 @@ async def links_sync(interaction: discord.Interaction) -> None:
     await interaction.followup.send(
         f"Checked **{len(links)}** linked accounts · **{present}** are in the server · gave the role to **{given}**.",
         ephemeral=True)
+
+
+@links_group.command(name="me", description="Is my Discord linked with the launcher?")
+async def links_me(interaction: discord.Interaction) -> None:
+    bot: CraftStudioBot = links_group.bot  # type: ignore[attr-defined]
+    await interaction.response.defer(ephemeral=True)
+    link = await bot.db.get_link(interaction.user.id)
+    if link and not link.get("unlinked_at"):
+        when = (link.get("linked_at") or "")[:10]
+        msg = f"✅ Linked with **{LAUNCHER_NAME}** since {when}."
+        if LINKED_ROLE_ID and isinstance(interaction.user, discord.Member):
+            if not any(r.id == LINKED_ROLE_ID for r in interaction.user.roles):
+                if await bot.give_role(interaction.user, "/links me"):
+                    msg += f" Gave you the <@&{LINKED_ROLE_ID}> role."
+    else:
+        msg = (f"❌ Not linked. Open **{LAUNCHER_NAME} → Settings → Discord Rich Presence → Link** "
+               "and you'll get the role + a DM here.")
+    await interaction.followup.send(msg, ephemeral=True)
+
+
+@links_group.command(name="recent", description="Last link / unlink events")
+async def links_recent(interaction: discord.Interaction) -> None:
+    bot: CraftStudioBot = links_group.bot  # type: ignore[attr-defined]
+    if not _is_admin(interaction):
+        await interaction.response.send_message("Only staff can use this.", ephemeral=True)
+        return
+    await interaction.response.defer(ephemeral=True)
+    rows = await bot.db._req("GET", "discord_link_events", params={
+        "select": "id,kind,discord_user_id,username,created_at,result,app_version",
+        "order": "id.desc", "limit": "12"}) or []
+    if not rows:
+        await interaction.followup.send("No events yet.", ephemeral=True)
+        return
+    lines = []
+    for r in rows:
+        icon = "🔗" if r.get("kind") == "link" else "🔓"
+        when = (r.get("created_at") or "")[:16].replace("T", " ")
+        res = (r.get("result") or "pending")[:60]
+        lines.append(f"{icon} `{when}` <@{r['discord_user_id']}> `{r.get('username') or '?'}` — {res}")
+    e = discord.Embed(title="Recent link events", description="\n".join(lines), color=EMBED_COLOR)
+    await interaction.followup.send(embed=e, ephemeral=True)
+
+
+@links_group.command(name="unlink", description="Staff: remove a member's Linked role and mark them unlinked")
+@app_commands.describe(user="Member to unlink")
+async def links_unlink(interaction: discord.Interaction, user: discord.Member) -> None:
+    bot: CraftStudioBot = links_group.bot  # type: ignore[attr-defined]
+    if not _is_admin(interaction):
+        await interaction.response.send_message("Only staff can use this.", ephemeral=True)
+        return
+    await interaction.response.defer(ephemeral=True)
+    removed = await bot.remove_role(user, f"/links unlink by {interaction.user}")
+    try:
+        await bot.db.update_link(user.id, {"unlinked_at": _now(), "role_given": False})
+    except Exception:
+        pass
+    await interaction.followup.send(
+        f"{user.mention}: role {'removed' if removed else 'was not present'}; marked as unlinked.", ephemeral=True)
+
+
+@links_group.command(name="setup", description="Staff: re-run auto setup (role, log channel, permission check)")
+async def links_setup(interaction: discord.Interaction) -> None:
+    bot: CraftStudioBot = links_group.bot  # type: ignore[attr-defined]
+    if not _is_admin(interaction):
+        await interaction.response.send_message("Only staff can use this.", ephemeral=True)
+        return
+    await interaction.response.defer(ephemeral=True, thinking=True)
+    await bot.auto_setup()
+    bot._check_permissions()
+    role = f"<@&{LINKED_ROLE_ID}>" if LINKED_ROLE_ID else "—"
+    ch = f"<#{LOG_CHANNEL_ID}>" if LOG_CHANNEL_ID else "—"
+    await interaction.followup.send(f"Role: {role} · Log channel: {ch} · Poll: every {POLL_SECONDS}s", ephemeral=True)
 
 
 @links_group.command(name="queue", description="Show pending link events (and process them now)")
