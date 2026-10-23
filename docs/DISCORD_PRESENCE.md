@@ -5,8 +5,9 @@ Package: `app_cs/src/main/java/com/craftstudio/cslauncher/discord/`
 ## How it reaches Discord
 * Official **Discord Social SDK** (`libs/discord_partner_sdk.aar`, `jni/discord_bridge.cpp`).
 * On Android (SDK 1.10+) the SDK publishes presence through the **installed Discord app's local
-  RPC service** – no account link / OAuth is required. Linking an account (`DiscordAuthManager`)
-  is optional and only personalises the card in the launcher.
+  RPC service** – plain Rich Presence, exactly like a desktop RPC client. No account link, no
+  OAuth, no login anywhere in the launcher. The only requirement is that the Discord app is
+  installed and signed in on the phone.
 * The presence has no options. `DiscordPresenceManager` composes it from what is running:
 
 | Scene | details | state | large image (hover text) | small image |
@@ -50,24 +51,14 @@ loader icon from `cslauncher-assets`, CS logo.
 
 ## UI
 `CSDiscordRpcSheet` = `SettingsPopup` with a custom view: delivery status strip, live preview card
-(mirrors the snapshot, ticking timer, scene chip, buttons) and the optional account row. Footer:
-Link/Unlink (stays open) + Done. Settings → Miscellaneous keeps the single on/off switch.
+(mirrors the snapshot, ticking timer, scene chip, buttons). Footer: Done. Settings → Miscellaneous
+has the on/off switch and a "Preview the Discord card" row that opens the sheet.
 
-## Account linking → community bot
-
-Linking requests the scope `identify` (the Social SDK token exchange rejects `guilds.join`, so the bot sends an invite button instead of auto-joining). After a successful link (and on unlink) the
-launcher inserts a row into the write-only Supabase table `discord_link_events`
-(`DiscordLinkNotifier`). The self-hosted bot in `server/discord-bot/` consumes those rows: it adds
-the member to the Craft Studio server with the OAuth token, gives the "Linked" role, sends a welcome
-DM, and then deletes the token from the row. See `server/discord-bot/README.md`.
-
-## Play sessions & launcher notices (linked players)
-
-* When the game process starts / exits, `DiscordLinkNotifier.playStarted/playEnded` insert
-  `play_start` / `play_end` rows into `launcher_events` (anon INSERT only) — **only if a Discord
-  account is linked**. Fields: profile, version, loader, mod count, duration, last scene, world,
-  saved server name/host (private/LAN addresses are dropped). The bot turns this into the
-  "Playing now" counter, `/launcher stats`, `/launcher servers`, `/links top` and personal playtime.
-* `CommunityNotice` fetches `site_settings.launcher_notice` (public read) at most every 4 h after the
-  update check and shows it once per notice id as a `SettingsPopup` (title, text, optional link
-  button, expiry, min/max app version). Staff publish it with `/launcher notice set` in Discord.
+## World / server detection
+`DiscordPresenceManager` tails the game log. `Connecting to host, port` → MULTIPLAYER (server name
++ icon resolved from `servers.dat`), `Preparing level "x"` → SINGLEPLAYER, LAN markers → LAN_HOST.
+Leaving a world is detected from explicit markers (`Stopping singleplayer server`, disconnect /
+connection-lost lines). `Stopping worker threads` is logged while *joining* too (old level torn
+down, server resource-pack reloads), so it only counts as "left the world" when the last world
+switch was more than 90 s ago — otherwise multiplayer presence vanished right after joining.
+Server icons (64×64) are upscaled nearest-neighbour to 256 px before upload so Discord keeps them.

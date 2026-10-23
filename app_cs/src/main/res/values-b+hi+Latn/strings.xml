@@ -738,8 +738,7 @@
     <string name="auth_select_section_signin">ISSE LOGIN KARO</string>
     <string name="auth_select_section_discord">EXTRAS</string>
     <string name="auth_select_discord">Discord Rich Presence</string>
-    <string name="auth_desc_discord">Dost live dekhein tum kya khel rahe ho. Preview &amp; optional account link.</string>
-    <string name="auth_discord_linked">%1$s ke roop mein linked · kholne ke liye tap karo</string>
+    <string name="auth_desc_discord">Dost live dekhein tum kya khel rahe ho. Card preview ke liye tap karo.</string>
     <string name="lp_search_hint">Dhoondo…</string>
     <string name="lp_empty">Kuch match nahi hua.</string>
     <string name="ll_eyebrow">OFFLINE ACCOUNT</string>
@@ -1266,18 +1265,9 @@ time set day</string>
     <string name="preference_category_discord">Discord</string>
     <string name="preference_discord_rpc_title">Discord game status</string>
     <string name="preference_discord_rpc_description">Tum kya khel rahe ho Discord profile par dikhao: home screen, launching, menu, world ya server — profile icon aur play time ke saath. Discord app ke through chalta hai, login ki zaroorat nahi.</string>
-    <string name="preference_discord_account_title">Rich Presence &amp; account</string>
-    <string name="preference_discord_account_logged_out">Live preview, status aur optional account link.</string>
-    <string name="preference_discord_account_logged_in">%1$s ke roop mein linked · live preview aur status.</string>
     <string name="cs_discord_rpc_title">Discord Rich Presence</string>
     <string name="cs_discord_rpc_sub">Dost live dekhein tum kya khel rahe ho. Kuch set karna nahi.</string>
     <string name="cs_discord_done">Ho gaya</string>
-    <string name="cs_discord_link">Discord link karo</string>
-    <string name="cs_discord_unlink">Unlink</string>
-    <string name="cs_discord_opening_auth">Discord khul raha hai…</string>
-    <string name="cs_discord_linked_toast">%1$s ke roop mein linked</string>
-    <string name="cs_discord_unlinked_toast">Discord account unlink ho gaya</string>
-    <string name="cs_discord_auth_failed">Discord link fail: %1$s</string>
     <string name="cs_discord_status_live">Discord par live hai</string>
     <string name="cs_discord_status_live_desc">Is phone ke Discord app ke through dikh raha hai — account link zaroori nahi</string>
     <string name="cs_discord_status_connecting">Discord app se connect ho raha hai…</string>
@@ -1297,13 +1287,7 @@ time set day</string>
     <string name="cs_discord_scene_singleplayer">SINGLEPLAYER</string>
     <string name="cs_discord_scene_lan">LAN WORLD</string>
     <string name="cs_discord_scene_multiplayer">MULTIPLAYER</string>
-    <string name="cs_discord_account_title">Discord account</string>
-    <string name="cs_discord_account_unlinked_desc">Optional · presence iske bina bhi chalti hai</string>
-    <string name="cs_discord_account_linked_desc">Linked · is phone ka access hatane ke liye Unlink dabao</string>
-    <string name="cs_discord_account_linked_pill">LINKED</string>
-    <string name="cs_discord_footnote">Card apne aap update hota hai: home screen, launching, main menu, singleplayer world, LAN world ya server — profile ke apne icon ke saath.</string>
-    <string name="cs_notice_default_title">Craft Studio ki taraf se message</string>
-    <string name="cs_notice_subtitle">Community notice</string>
-    <string name="cs_notice_open">Kholo</string>
-    <string name="cs_notice_dismiss">Hatao</string>
+    <string name="cs_discord_footnote">Card apne aap update hota hai: home screen, launching, main menu, singleplayer world, LAN world ya server — profile ke apne icon ke saath. Koi login nahi chahiye.</string>
+    <string name="preference_discord_preview_title">Discord card ka preview</string>
+    <string name="preference_discord_preview_desc">Jo dost dekhte hain wahi live dekho</string>
 </resources>

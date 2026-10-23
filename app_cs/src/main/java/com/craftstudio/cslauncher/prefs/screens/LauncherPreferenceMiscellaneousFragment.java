@@ -79,9 +79,8 @@ public class LauncherPreferenceMiscellaneousFragment extends LauncherPreferenceF
     }
 
     private void setupDiscordPreferences() {
-        Preference account = requirePreference("discordAccount");
-        updateDiscordAccountSummary();
-        account.setOnPreferenceClickListener(preference -> {
+        Preference preview = requirePreference("discordPreview");
+        preview.setOnPreferenceClickListener(preference -> {
             com.craftstudio.cslauncher.discord.CSDiscordRpcSheet.show(requireActivity());
             return true;
         });
@@ -92,19 +91,6 @@ public class LauncherPreferenceMiscellaneousFragment extends LauncherPreferenceF
                 com.craftstudio.cslauncher.discord.DiscordPresenceManager.getInstance(requireContext()).setEnabled(on);
                 return true;
             });
-        }
-    }
-
-    private void updateDiscordAccountSummary() {
-        if (getContext() == null) return;
-        Preference account = findPreference("discordAccount");
-        if (account == null) return;
-        com.craftstudio.cslauncher.discord.DiscordAccountStorage.DiscordProfile profile =
-                com.craftstudio.cslauncher.discord.DiscordAccountStorage.loadAccount(requireContext());
-        if (profile.isLinked) {
-            account.setSummary(getString(R.string.preference_discord_account_logged_in, "@" + profile.getEffectiveName()));
-        } else {
-            account.setSummary(getString(R.string.preference_discord_account_logged_out));
         }
     }
 
@@ -151,6 +137,5 @@ public class LauncherPreferenceMiscellaneousFragment extends LauncherPreferenceF
     @Override
     public void onResume() {
         super.onResume();
-        updateDiscordAccountSummary();
     }
 }

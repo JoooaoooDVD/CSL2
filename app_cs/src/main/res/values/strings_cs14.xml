@@ -17,7 +17,4 @@
     <string name="preference_category_discord">Discord</string>
     <string name="preference_discord_rpc_title">Discord game status</string>
     <string name="preference_discord_rpc_description">Show what you play on your Discord profile: home screen, launching, menu, world or server — with the profile icon and play time. Works through the Discord app, no login needed.</string>
-    <string name="preference_discord_account_title">Rich Presence &amp; account</string>
-    <string name="preference_discord_account_logged_out">Live preview, status and the optional account link.</string>
-    <string name="preference_discord_account_logged_in">Linked as %1$s · live preview and status.</string>
 </resources>

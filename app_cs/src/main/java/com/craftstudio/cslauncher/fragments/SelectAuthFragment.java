@@ -26,7 +26,7 @@ import com.craftstudio.cslauncher.utils.motion.Motion;
 
 /**
  * Add account: a banner, one clean card per sign-in method (Microsoft, Ely.by, Local) and a
- * "Discord Rich Presence" row that opens the presence preview / account link popup.
+ * "Discord Rich Presence" row that opens the presence preview popup.
  */
 public class SelectAuthFragment extends Fragment {
     public static final String TAG = "AUTH_SELECT_FRAGMENT";
@@ -158,13 +158,7 @@ public class SelectAuthFragment extends Fragment {
         if (root == null) return;
         TextView status = root.findViewById(R.id.auth_discord_status);
         Context context = root.getContext();
-        com.craftstudio.cslauncher.discord.DiscordAccountStorage.DiscordProfile profile =
-                com.craftstudio.cslauncher.discord.DiscordAccountStorage.loadAccount(context);
-        if (profile.isLinked) {
-            status.setText(getString(R.string.auth_discord_linked, "@" + profile.getEffectiveName()));
-        } else {
-            status.setText(R.string.auth_desc_discord);
-        }
+        status.setText(R.string.auth_desc_discord);
     }
 
     private void launchAuthFragment(Class<? extends  Fragment> fragmentClass, String fragmentTag) {

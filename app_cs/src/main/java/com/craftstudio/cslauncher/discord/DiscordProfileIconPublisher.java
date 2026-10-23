@@ -109,6 +109,37 @@ final class DiscordProfileIconPublisher {
         return publishPng(png);
     }
 
+    /**
+     * Server icons are 64x64; Discord renders external art at up to 512px and tiny images can be
+     * dropped or blurred. Re-encode small PNGs at ICON_SIZE with nearest-neighbour scaling so the
+     * pixel look stays crisp. Returns the input when it is already big enough or decoding fails.
+     */
+    @Nullable
+    static byte[] upscalePixelArt(@Nullable byte[] png) {
+        if (png == null) return null;
+        Bitmap source = null;
+        Bitmap scaled = null;
+        try {
+            source = android.graphics.BitmapFactory.decodeByteArray(png, 0, png.length);
+            if (source == null) return png;
+            if (source.getWidth() >= ICON_SIZE / 2 && source.getHeight() >= ICON_SIZE / 2) return png;
+            scaled = Bitmap.createBitmap(ICON_SIZE, ICON_SIZE, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(scaled);
+            android.graphics.Paint paint = new android.graphics.Paint();
+            paint.setFilterBitmap(false);
+            paint.setAntiAlias(false);
+            canvas.drawBitmap(source, null, new android.graphics.Rect(0, 0, ICON_SIZE, ICON_SIZE), paint);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            scaled.compress(Bitmap.CompressFormat.PNG, 100, out);
+            return out.toByteArray();
+        } catch (Throwable t) {
+            return png;
+        } finally {
+            if (scaled != null) scaled.recycle();
+            if (source != null) source.recycle();
+        }
+    }
+
     /** Blocking: publish any PNG (profile icon, server icon) and return its public URL */
     @Nullable
     synchronized String publishPng(@Nullable byte[] png) {

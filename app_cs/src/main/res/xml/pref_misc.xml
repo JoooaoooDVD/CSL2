@@ -80,10 +80,10 @@
             android:summary="@string/preference_discord_rpc_description"
             android:title="@string/preference_discord_rpc_title" />
         <Preference android:layout="@layout/item_setting_row"
-            android:icon="@drawable/ic_px_account_edit"
-            android:key="discordAccount"
-            android:summary="@string/preference_discord_account_logged_out"
-            android:title="@string/preference_discord_account_title"
+            android:icon="@drawable/ic_tool_discord_rpc"
+            android:key="discordPreview"
+            android:summary="@string/preference_discord_preview_desc"
+            android:title="@string/preference_discord_preview_title"
             android:widgetLayout="@layout/view_chevron" />
     </PreferenceCategory>
 

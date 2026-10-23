@@ -26,7 +26,7 @@ import java.util.Locale;
 /**
  * "Discord Rich Presence" popup: delivery status, a live preview of the Discord activity card
  * (mirrors exactly what {@link DiscordPresenceManager} publishes, even before any account is
- * linked) and the optional account link. There is nothing to configure.
+ * linked). There is nothing to configure and nothing to log in to.
  */
 public final class CSDiscordRpcSheet {
 
@@ -51,10 +51,6 @@ public final class CSDiscordRpcSheet {
         final TextView previewElapsed = content.findViewById(R.id.cs_discord_preview_elapsed);
         final TextView previewBtn1 = content.findViewById(R.id.cs_discord_preview_btn1);
         final TextView previewBtn2 = content.findViewById(R.id.cs_discord_preview_btn2);
-        final ImageView accountAvatar = content.findViewById(R.id.cs_discord_account_avatar);
-        final TextView accountName = content.findViewById(R.id.cs_discord_account_name);
-        final TextView accountStatus = content.findViewById(R.id.cs_discord_account_status);
-        final View accountPill = content.findViewById(R.id.cs_discord_account_pill);
 
         previewLarge.setClipToOutline(true);
         previewBtn1.setOnClickListener(v -> openUrl(context, DiscordPresenceManager.DISCORD_INVITE_URL));
@@ -127,64 +123,6 @@ public final class CSDiscordRpcSheet {
                 .customView(content)
                 .positive(R.string.cs_discord_done, null);
 
-        final Runnable[] bindAccount = new Runnable[1];
-        final SettingsPopup[] popupRef = {popup};
-
-        popup.neutral(context.getString(R.string.cs_discord_link), () -> {
-            DiscordAccountStorage.DiscordProfile profile = DiscordAccountStorage.loadAccount(context);
-            if (profile.isLinked) {
-                presence.getAuthManager().unlinkCurrentAccount();
-                Toast.makeText(context, R.string.cs_discord_unlinked_toast, Toast.LENGTH_SHORT).show();
-                bindAccount[0].run();
-                return;
-            }
-            Toast.makeText(context, R.string.cs_discord_opening_auth, Toast.LENGTH_SHORT).show();
-            presence.getAuthManager().startAuthorization(activity, new DiscordAuthManager.AuthCallback() {
-                @Override
-                public void onSuccess(String username, String userId, @Nullable String avatarUrl) {
-                    handler.post(() -> {
-                        if (closed[0]) return;
-                        Toast.makeText(context, context.getString(R.string.cs_discord_linked_toast, "@" + username), Toast.LENGTH_LONG).show();
-                        bindAccount[0].run();
-                    });
-                }
-
-                @Override
-                public void onError(String error) {
-                    handler.post(() -> {
-                        if (closed[0]) return;
-                        Toast.makeText(context, context.getString(R.string.cs_discord_auth_failed, error), Toast.LENGTH_SHORT).show();
-                    });
-                }
-            });
-        }, false);
-
-        bindAccount[0] = () -> {
-            DiscordAccountStorage.DiscordProfile profile = DiscordAccountStorage.loadAccount(context);
-            if (profile.isLinked) {
-                accountName.setText("@" + profile.getEffectiveName());
-                accountStatus.setText(R.string.cs_discord_account_linked_desc);
-                accountPill.setVisibility(View.VISIBLE);
-                accountAvatar.setPadding(0, 0, 0, 0);
-                if (profile.avatarUrl != null && !profile.avatarUrl.isEmpty()) {
-                    DiscordAvatarLoader.loadAvatar(context, profile.avatarUrl, accountAvatar);
-                } else {
-                    accountAvatar.setImageResource(R.drawable.ic_discord_mark);
-                    int pad = (int) (9 * context.getResources().getDisplayMetrics().density);
-                    accountAvatar.setPadding(pad, pad, pad, pad);
-                }
-                popupRef[0].setNeutralText(context.getString(R.string.cs_discord_unlink));
-            } else {
-                accountName.setText(R.string.cs_discord_account_title);
-                accountStatus.setText(R.string.cs_discord_account_unlinked_desc);
-                accountPill.setVisibility(View.GONE);
-                int pad = (int) (9 * context.getResources().getDisplayMetrics().density);
-                accountAvatar.setPadding(pad, pad, pad, pad);
-                accountAvatar.setImageResource(R.drawable.ic_discord_mark);
-                popupRef[0].setNeutralText(context.getString(R.string.cs_discord_link));
-            }
-        };
-
         final Runnable cleanup = () -> {
             closed[0] = true;
             presence.removeListener(listener);
@@ -195,14 +133,10 @@ public final class CSDiscordRpcSheet {
         popup.setOnDismissListener(d -> cleanup.run());
 
         popup.show();
-        bindAccount[0].run();
         presence.addListener(listener);
         presence.refreshPreview();
         handler.post(tick);
         handler.postDelayed(pollDelivery, 2000L);
-        presence.getAuthManager().refreshConnectedProfile(() -> handler.post(() -> {
-            if (!closed[0]) bindAccount[0].run();
-        }));
     }
 
     private static void bindDelivery(@NonNull Context context, @NonNull DiscordPresenceManager presence,

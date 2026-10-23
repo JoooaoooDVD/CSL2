@@ -40,7 +40,6 @@ import com.craftstudio.cslauncher.authenticator.BackgroundLogin;
 import com.craftstudio.cslauncher.authenticator.accounts.Accounts;
 import com.craftstudio.cslauncher.authenticator.accounts.Account;
 import com.craftstudio.cslauncher.authenticator.listener.LoginListener;
-import com.craftstudio.cslauncher.discord.DiscordAccountStorage;
 import com.craftstudio.cslauncher.extra.ExtraConstants;
 import com.craftstudio.cslauncher.extra.ExtraCore;
 import com.craftstudio.cslauncher.extra.ExtraListener;
@@ -394,12 +393,7 @@ public class AccountSpinner extends AppCompatSpinner implements LoginListener, A
             }
 
             textview.setText(account.username);
-            // Discord link badge: a connected Discord session on this device shows
-            // right after the name, with a small gap, in the pill and in the list
-            if (discordBadge != null) {
-                discordBadge.setVisibility(DiscordAccountStorage.loadAccount(getContext()).isLinked
-                        ? View.VISIBLE : View.GONE);
-            }
+            if (discordBadge != null) discordBadge.setVisibility(View.GONE);
             if (!isDropDown && view.getId() == R.id.account_compact_root) {
                 editButton.setVisibility(View.GONE);
                 Drawable chevron = ResourcesCompat.getDrawable(resources, R.drawable.ic_home_chevron_down, theme);

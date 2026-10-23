@@ -3,6 +3,7 @@ package com.craftstudio.cslauncher.discord;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.os.Looper;
 import android.util.Log;
 
@@ -144,7 +145,6 @@ public final class DiscordPresenceManager {
     /** The Social SDK needs a host Activity (it derives its application context from it) */
     @Nullable private volatile java.lang.ref.WeakReference<android.app.Activity> mHostActivity;
     private final Handler mMainHandler = new Handler(Looper.getMainLooper());
-    private final DiscordAuthManager mAuthManager;
     private final DiscordProfileIconPublisher mIconPublisher;
     private final CopyOnWriteArrayList<Listener> mListeners = new CopyOnWriteArrayList<>();
     private final ExecutorService mExecutor = Executors.newSingleThreadExecutor(r -> {
@@ -166,8 +166,6 @@ public final class DiscordPresenceManager {
     @Nullable private String mServerIconUrl;
     @Nullable private String mServerIconAttemptedKey;
     private long mSessionStartMs = 0L;
-    /** Community bot play-session id (linked players only); null when nothing was reported */
-    @Nullable private String mPlaySessionId;
     private final long mLauncherOpenedMs = System.currentTimeMillis();
     /** Public URL of the current session's profile icon once published (null = not yet) */
     @Nullable private String mProfileIconUrl;
@@ -191,14 +189,8 @@ public final class DiscordPresenceManager {
 
     private DiscordPresenceManager(@NonNull Context context) {
         mAppContext = context;
-        mAuthManager = new DiscordAuthManager(context);
         mIconPublisher = new DiscordProfileIconPublisher(context);
         mSnapshot = compose();
-    }
-
-    @NonNull
-    public DiscordAuthManager getAuthManager() {
-        return mAuthManager;
     }
 
     // ------------------------------------------------------------------ settings
@@ -375,34 +367,13 @@ public final class DiscordPresenceManager {
             mSnapshot = compose();
             notifyListeners();
             mMainHandler.postDelayed(this::refresh, GAME_TAKEOVER_DELAY_MS);
-            final String sessionId = java.util.UUID.randomUUID().toString();
-            synchronized (this) {
-                mPlaySessionId = sessionId;
-            }
-            mExecutor.execute(() -> {
-                try {
-                    DiscordLinkNotifier.playStarted(mAppContext, sessionId, compose());
-                } catch (Throwable ignored) {}
-            });
         }
     }
 
     /** The game process is about to die: clear what we published */
     public void onGameExiting() {
-        String sessionId;
-        long startMs;
         synchronized (this) {
             mReleased = true;
-            sessionId = mPlaySessionId;
-            mPlaySessionId = null;
-            startMs = mSessionStartMs;
-        }
-        if (sessionId != null) {
-            try {
-                Snapshot last = mSnapshot != null ? mSnapshot : compose();
-                DiscordLinkNotifier.playEnded(mAppContext, sessionId, last,
-                        startMs > 0 ? System.currentTimeMillis() - startMs : 0L);
-            } catch (Throwable ignored) {}
         }
         try {
             DiscordSdkBridge.clearRichPresence();
@@ -416,7 +387,17 @@ public final class DiscordPresenceManager {
     private static final Pattern LOG_PREPARING_LEVEL = Pattern.compile("Preparing level \"(.+?)\"");
     private static final Pattern LOG_LAN = Pattern.compile("(?:Started serving on|Local game hosted on port|Published LAN server on port)\\s+\\d{2,5}");
     private static final Pattern LOG_MENU_READY = Pattern.compile("Sound engine started|OpenAL initialized|Created: \\d+x\\d+(?:x\\d+)? [a-z_:/]*atlas");
-    private static final Pattern LOG_LEAVE_WORLD = Pattern.compile("Stopping singleplayer server|Stopping server$|Stopping worker threads|Disconnected from server");
+    private static final Pattern LOG_LEAVE_WORLD = Pattern.compile("Stopping singleplayer server|Stopping server$|Disconnected from server|Lost connection|Connection reset|Internal Exception|Timed out|Server closed|Disconnected:");
+    /**
+     * "Stopping worker threads" is logged whenever the chunk renderer is torn down. That happens when the
+     * player leaves a world, but ALSO while joining a server (old level disposed), on resource-pack reloads
+     * pushed by servers, and on fullscreen/graphics changes. Treat it as "left the world" only when the last
+     * world/server switch is comfortably in the past, otherwise multiplayer presence would vanish right
+     * after the join finished.
+     */
+    private static final Pattern LOG_WORKERS_STOPPED = Pattern.compile("Stopping worker threads");
+    private static final long WORKERS_STOPPED_GRACE_MS = 90_000L;
+    private long mLastWorldSwitchAt = 0L;
     private static final Pattern LOG_INTEGRATED = Pattern.compile("Starting integrated minecraft server version");
 
     /** One raw line of the game log (any thread) */
@@ -456,6 +437,13 @@ public final class DiscordPresenceManager {
             newScene = Scene.SINGLEPLAYER;
         } else if (LOG_LEAVE_WORLD.matcher(line).find()) {
             newScene = Scene.MENU;
+        } else if (LOG_WORKERS_STOPPED.matcher(line).find()) {
+            synchronized (this) {
+                // only a real "left the world" if nothing switched worlds recently (see field doc)
+                if (mScene != Scene.MULTIPLAYER && mScene != Scene.SINGLEPLAYER && mScene != Scene.LAN_HOST) return;
+                if (SystemClock.elapsedRealtime() - mLastWorldSwitchAt < WORKERS_STOPPED_GRACE_MS) return;
+            }
+            newScene = Scene.MENU;
         } else if (LOG_MENU_READY.matcher(line).find()) {
             newScene = Scene.MENU;
         } else {
@@ -466,7 +454,7 @@ public final class DiscordPresenceManager {
             switch (newScene) {
                 case MENU:
                     // "menu ready" markers only lift LOADING; leaving a world always returns to the menu
-                    boolean leaving = LOG_LEAVE_WORLD.matcher(line).find();
+                    boolean leaving = LOG_LEAVE_WORLD.matcher(line).find() || LOG_WORKERS_STOPPED.matcher(line).find();
                     if (!leaving && mScene != Scene.LOADING) return;
                     if (leaving && (mScene == Scene.LOADING || mScene == Scene.MENU)) return;
                     mScene = Scene.MENU;
@@ -478,6 +466,7 @@ public final class DiscordPresenceManager {
                     if (world == null && mScene == Scene.SINGLEPLAYER) return;
                     if (world == null && mScene == Scene.LAN_HOST) return;
                     mScene = Scene.SINGLEPLAYER;
+                    mLastWorldSwitchAt = SystemClock.elapsedRealtime();
                     if (world != null) mWorldName = world;
                     mServerHost = "";
                     mServerPort = 0;
@@ -485,11 +474,13 @@ public final class DiscordPresenceManager {
                 case LAN_HOST:
                     if (mScene == Scene.LAN_HOST) return;
                     mScene = Scene.LAN_HOST;
+                    mLastWorldSwitchAt = SystemClock.elapsedRealtime();
                     mServerHost = "";
                     mServerPort = 0;
                     break;
                 case MULTIPLAYER:
                     mScene = Scene.MULTIPLAYER;
+                    mLastWorldSwitchAt = SystemClock.elapsedRealtime();
                     mServerHost = server == null ? "" : server;
                     mServerPort = port;
                     mWorldName = "";
@@ -833,7 +824,7 @@ public final class DiscordPresenceManager {
             if (entry == null || entry.iconPng == null || key == null || key.equals(mServerIconAttemptedKey) || revision != mRevision) return;
             mServerIconAttemptedKey = key;
         }
-        String url = mIconPublisher.publishPng(entry.iconPng);
+        String url = mIconPublisher.publishPng(DiscordProfileIconPublisher.upscalePixelArt(entry.iconPng));
         synchronized (this) {
             mServerIconUrl = url;
         }
