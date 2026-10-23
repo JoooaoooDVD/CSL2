@@ -876,7 +876,7 @@ class CraftStudioBot(discord.Client):
         member = await self.member_of(user_id)
         if member is not None:
             joined = "already"
-        elif token:
+        elif token and "guilds.join" in (ev.get("scopes") or ""):
             try:
                 joined = await self.join_guild(user_id, token)
                 if joined == "joined":
@@ -893,7 +893,7 @@ class CraftStudioBot(discord.Client):
                 steps.append(str(e))
                 log.warning("Auto-join failed for %s: %s", user_id, e)
         else:
-            steps.append("no OAuth token — user must re-link with a current launcher build to auto-join")
+            steps.append("invited by DM (no guilds.join token)")
         steps.append({"joined": "joined the server", "already": "already a member", "none": "not in the server"}[joined])
 
         # 2) role

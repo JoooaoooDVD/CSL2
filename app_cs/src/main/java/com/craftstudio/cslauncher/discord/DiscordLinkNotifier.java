@@ -29,8 +29,12 @@ final class DiscordLinkNotifier {
     static final String ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
             + "eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlndGVhdnBrdXJzeWV5ZnRobHhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2ODk5NjksImV4cCI6MjEwODI2NTk2OX0."
             + "wqCioElyk_GlIkeaiRHlls7hk-WDABhigwb1EGy8iJU";
-    /** OAuth scopes requested when linking: profile + "add me to the community server" */
-    static final String LINK_SCOPES = "identify guilds.join";
+    /**
+     * OAuth scopes requested when linking. The Social SDK's token exchange only accepts its own
+     * scope set, so {@code guilds.join} cannot be requested here (it breaks linking); the bot
+     * invites the player with a button instead of a silent auto-join.
+     */
+    static final String LINK_SCOPES = "identify";
 
     private DiscordLinkNotifier() {}
 

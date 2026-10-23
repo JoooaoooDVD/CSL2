@@ -55,7 +55,7 @@ Link/Unlink (stays open) + Done. Settings → Miscellaneous keeps the single on/
 
 ## Account linking → community bot
 
-Linking requests the scopes `identify guilds.join`. After a successful link (and on unlink) the
+Linking requests the scope `identify` (the Social SDK token exchange rejects `guilds.join`, so the bot sends an invite button instead of auto-joining). After a successful link (and on unlink) the
 launcher inserts a row into the write-only Supabase table `discord_link_events`
 (`DiscordLinkNotifier`). The self-hosted bot in `server/discord-bot/` consumes those rows: it adds
 the member to the Craft Studio server with the OAuth token, gives the "Linked" role, sends a welcome
