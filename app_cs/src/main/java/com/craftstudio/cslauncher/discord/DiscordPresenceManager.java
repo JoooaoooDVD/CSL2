@@ -38,7 +38,7 @@ public final class DiscordPresenceManager {
 
     private static final String TAG = "DiscordPresence";
 
-    public static final String APPLICATION_ID = "1551939107549225000";
+    public static final String APPLICATION_ID = "1563136590275153960";
     public static final String APP_NAME = "CS Launcher Plus";
     /** Settings key of the single on/off switch (Settings → Miscellaneous → Discord) */
     public static final String PREF_ENABLED = "discordRpc";

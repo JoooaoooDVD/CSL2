@@ -54,7 +54,7 @@ sudo bash setup.sh
 ```
 
 `setup.sh` installs Python, the dependencies, asks for the **bot token** once (Developer Portal →
-Applications → *CS Launcher Plus* `1551939107549225000` → **Bot** → *Reset Token*; on the same page
+Applications → *CS Launcher Plus* `1563136590275153960` → **Bot** → *Reset Token*; on the same page
 turn ON **Server Members Intent**), verifies token + Supabase + server membership, and installs a
 systemd service (`cs-discord-bot`) that auto-starts on reboot.
 

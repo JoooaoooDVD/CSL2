@@ -37,7 +37,7 @@ TOKEN="${DISCORD_BOT_TOKEN:-}"
 CUR=$(grep -E '^DISCORD_BOT_TOKEN=' .env | cut -d= -f2- || true)
 if [ -z "$CUR" ] && [ -z "$TOKEN" ]; then
   echo
-  echo "  Discord Developer Portal -> Applications -> 1551939107549225000 (CS Launcher Plus)"
+  echo "  Discord Developer Portal -> Applications -> 1563136590275153960 (CRAFT STUDIO)"
   echo "  -> Bot -> Reset Token -> Copy.   (Also turn ON 'Server Members Intent' on that page.)"
   echo
   read -r -p "  Paste the bot token: " TOKEN
