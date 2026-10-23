@@ -188,10 +188,13 @@ public final class DiscordAuthManager {
                         sb.append(line);
                     }
                     org.json.JSONObject obj = new org.json.JSONObject(sb.toString());
-                    String id = obj.optString("id", null);
-                    String username = obj.optString("username", "Discord User");
-                    String globalName = obj.optString("global_name", username);
-                    String avatarHash = obj.optString("avatar", null);
+                    // Android's optString() turns JSON null into the text "null" - read defensively
+                    String id = jsonText(obj, "id");
+                    String username = jsonText(obj, "username");
+                    if (username == null || username.isEmpty()) username = "Discord User";
+                    String globalName = jsonText(obj, "global_name");
+                    if (globalName == null || globalName.trim().isEmpty()) globalName = username;
+                    String avatarHash = jsonText(obj, "avatar");
                     String avatarUrl = null;
                     if (id != null && avatarHash != null && !avatarHash.isEmpty() && !"null".equals(avatarHash)) {
                         String ext = avatarHash.startsWith("a_") ? "gif" : "png";
@@ -209,6 +212,15 @@ public final class DiscordAuthManager {
                 }
             }
         });
+    }
+
+    /** String field or null when missing / JSON null / literal "null" */
+    @Nullable
+    private static String jsonText(@NonNull org.json.JSONObject obj, @NonNull String key) {
+        if (!obj.has(key) || obj.isNull(key)) return null;
+        String value = obj.optString(key, null);
+        if (value == null || "null".equals(value)) return null;
+        return value;
     }
 
     /**

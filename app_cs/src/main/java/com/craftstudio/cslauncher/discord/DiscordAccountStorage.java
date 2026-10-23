@@ -41,6 +41,7 @@ public final class DiscordAccountStorage {
 
         @NonNull
         public String getEffectiveName() {
+            String displayName = clean(this.displayName), username = clean(this.username);
             if (displayName != null && !displayName.trim().isEmpty() && !"Discord User".equalsIgnoreCase(displayName.trim())) {
                 return displayName.trim();
             }
@@ -52,6 +53,14 @@ public final class DiscordAccountStorage {
             }
             return "Connected User";
         }
+    }
+
+    /** null for empty / literal "null" values (older builds could persist JSON null as text) */
+    @Nullable
+    static String clean(@Nullable String value) {
+        if (value == null) return null;
+        String v = value.trim();
+        return v.isEmpty() || "null".equalsIgnoreCase(v) ? null : v;
     }
 
     private DiscordAccountStorage() {}
@@ -131,7 +140,7 @@ public final class DiscordAccountStorage {
                 uName = dName;
             }
 
-            return new DiscordProfile(true, uId, uName, dName, avUrl);
+            return new DiscordProfile(true, clean(uId), clean(uName), clean(dName), clean(avUrl));
         }
 
         return new DiscordProfile(false, null, null, null, null);

@@ -429,9 +429,17 @@ class CraftStudioBot(discord.Client):
             except discord.HTTPException:
                 self._guild = None
         if self._guild is None:
-            log.error("The bot is NOT in the %s server yet. Open this link once, pick the server and click "
-                      "Authorize - the bot continues automatically:\n\n  %s\n", COMMUNITY_NAME, self.invite_url())
+            if not self._invite_shown:
+                self._invite_shown = True
+                log.error("The bot is NOT in the %s server (id %s) right now. Open this link once, pick the server "
+                          "and click Authorize - the bot checks again every minute and continues by itself:\n\n  %s\n",
+                          COMMUNITY_NAME, GUILD_ID, self.invite_url())
+                if not self.wait_for_guild.is_running():
+                    self.wait_for_guild.start()
             return
+        if self.wait_for_guild.is_running():
+            self.wait_for_guild.cancel()
+        self._invite_shown = False
         log.info("Server: %s (%s members)", self._guild.name, self._guild.member_count)
         if not self._ready_once:
             self._ready_once = True
@@ -456,6 +464,20 @@ class CraftStudioBot(discord.Client):
         self._check_permissions()
 
     _commands_synced = False
+    _invite_shown = False
+
+    @tasks.loop(minutes=1)
+    async def wait_for_guild(self) -> None:
+        """Silently re-check membership until the bot has been added, then finish setup."""
+        if self._guild is not None:
+            self.wait_for_guild.cancel()
+            return
+        try:
+            await self.fetch_guild(GUILD_ID)
+        except discord.HTTPException:
+            return
+        log.info("Bot is now in the server - finishing setup")
+        await self.on_ready()
 
     async def sync_commands(self) -> bool:
         if self._commands_synced:
@@ -476,6 +498,18 @@ class CraftStudioBot(discord.Client):
             return
         log.info("Bot was added to %s - finishing setup", guild.name)
         await self.on_ready()
+
+    async def on_guild_remove(self, guild: discord.Guild) -> None:
+        if guild.id == GUILD_ID:
+            log.error("The bot was REMOVED from %s. If you did not do this, a security/anti-raid bot kicked it - "
+                      "check Server Settings -> Audit Log and whitelist the bot. Re-add:\n\n  %s\n",
+                      guild.name, self.invite_url())
+            self._guild = None
+            self._ready_once = False
+            self._commands_synced = False
+            self._invite_shown = True
+            if not self.wait_for_guild.is_running():
+                self.wait_for_guild.start()
 
     def invite_url(self) -> str:
         app_id = self.user.id if self.user else "APP_ID"
