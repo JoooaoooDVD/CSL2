@@ -166,6 +166,8 @@ public final class DiscordPresenceManager {
     @Nullable private String mServerIconUrl;
     @Nullable private String mServerIconAttemptedKey;
     private long mSessionStartMs = 0L;
+    /** Community bot play-session id (linked players only); null when nothing was reported */
+    @Nullable private String mPlaySessionId;
     private final long mLauncherOpenedMs = System.currentTimeMillis();
     /** Public URL of the current session's profile icon once published (null = not yet) */
     @Nullable private String mProfileIconUrl;
@@ -373,13 +375,34 @@ public final class DiscordPresenceManager {
             mSnapshot = compose();
             notifyListeners();
             mMainHandler.postDelayed(this::refresh, GAME_TAKEOVER_DELAY_MS);
+            final String sessionId = java.util.UUID.randomUUID().toString();
+            synchronized (this) {
+                mPlaySessionId = sessionId;
+            }
+            mExecutor.execute(() -> {
+                try {
+                    DiscordLinkNotifier.playStarted(mAppContext, sessionId, compose());
+                } catch (Throwable ignored) {}
+            });
         }
     }
 
     /** The game process is about to die: clear what we published */
     public void onGameExiting() {
+        String sessionId;
+        long startMs;
         synchronized (this) {
             mReleased = true;
+            sessionId = mPlaySessionId;
+            mPlaySessionId = null;
+            startMs = mSessionStartMs;
+        }
+        if (sessionId != null) {
+            try {
+                Snapshot last = mSnapshot != null ? mSnapshot : compose();
+                DiscordLinkNotifier.playEnded(mAppContext, sessionId, last,
+                        startMs > 0 ? System.currentTimeMillis() - startMs : 0L);
+            } catch (Throwable ignored) {}
         }
         try {
             DiscordSdkBridge.clearRichPresence();

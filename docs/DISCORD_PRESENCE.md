@@ -60,3 +60,14 @@ launcher inserts a row into the write-only Supabase table `discord_link_events`
 (`DiscordLinkNotifier`). The self-hosted bot in `server/discord-bot/` consumes those rows: it adds
 the member to the Craft Studio server with the OAuth token, gives the "Linked" role, sends a welcome
 DM, and then deletes the token from the row. See `server/discord-bot/README.md`.
+
+## Play sessions & launcher notices (linked players)
+
+* When the game process starts / exits, `DiscordLinkNotifier.playStarted/playEnded` insert
+  `play_start` / `play_end` rows into `launcher_events` (anon INSERT only) — **only if a Discord
+  account is linked**. Fields: profile, version, loader, mod count, duration, last scene, world,
+  saved server name/host (private/LAN addresses are dropped). The bot turns this into the
+  "Playing now" counter, `/launcher stats`, `/launcher servers`, `/links top` and personal playtime.
+* `CommunityNotice` fetches `site_settings.launcher_notice` (public read) at most every 4 h after the
+  update check and shows it once per notice id as a `SettingsPopup` (title, text, optional link
+  button, expiry, min/max app version). Staff publish it with `/launcher notice set` in Discord.

@@ -1302,4 +1302,8 @@ time set day</string>
     <string name="cs_discord_account_linked_desc">Linked · is phone ka access hatane ke liye Unlink dabao</string>
     <string name="cs_discord_account_linked_pill">LINKED</string>
     <string name="cs_discord_footnote">Card apne aap update hota hai: home screen, launching, main menu, singleplayer world, LAN world ya server — profile ke apne icon ke saath.</string>
+    <string name="cs_notice_default_title">Craft Studio ki taraf se message</string>
+    <string name="cs_notice_subtitle">Community notice</string>
+    <string name="cs_notice_open">Kholo</string>
+    <string name="cs_notice_dismiss">Hatao</string>
 </resources>

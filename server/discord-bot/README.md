@@ -26,7 +26,8 @@ Slash commands (guild only): `/links stats`, `/links lookup @user`, `/links sync
 | **Anti-spam** | re-linking within 60 min doesn't re-send the DM |
 | **Members** | welcome embed for new members (system channel), instant role for linked players on join, role sync every 5 min, role flags cleared when someone leaves |
 | **Stats** | per-day counters (`discord_bot_stats`), 7-day bar chart, daily digest in the log channel, milestone posts (10 · 25 · 50 · 100 · …), bot status "Watching N linked players" |
-| **Commands** | `/links me` · `/links stats` · staff: `lookup`, `recent`, `sync`, `unlink`, `queue`, `setup`, `export` (CSV) · `/launcher download` / `faq [search]` / `features` / `links` / `presence` (live from the website CMS) · `/bot status` / `invite` / `preview-dm` · right-click user → *Launcher link info* |
+| **Launcher integration** | linked players' launchers report play sessions → **🎮 Playing now** counter, `/launcher stats` (versions, loaders, peak hour, who's online), `/launcher servers` (most played servers), personal playtime in `/links me`, `/links top` leaderboard · staff can push a **popup notice into every launcher** with `/launcher notice set` (title, text, link button, expiry, min version) |
+| **Commands** | `/links me` · `/links stats` · staff: `lookup`, `recent`, `sync`, `unlink`, `queue`, `setup`, `export` (CSV) · `/launcher download` / `faq [search]` / `features` / `links` / `presence` / `stats` / `servers` / `notice set|clear|show` (live from the website CMS) · `/bot status` / `invite` / `preview-dm` · right-click user → *Launcher link info* |
 
 ## How it works
 
@@ -70,7 +71,7 @@ systemctl restart cs-discord-bot     # restart
 
 Docker / Railway / Render: `Dockerfile` + `Procfile` are included; set the same variables as `.env`.
 
-Slash commands: `/links me` (anyone), `/links stats`, and for staff `/links lookup`, `/links recent`,
+Slash commands: `/links me`, `/links stats`, `/links top` (anyone), and for staff `/links lookup`, `/links recent`,
 `/links sync`, `/links unlink`, `/links queue`, `/links setup`.
 
 ## Testing

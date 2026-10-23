@@ -13,9 +13,13 @@ Also: zero-config auto setup (role, private log channel, stats channel), retries
 DM anti-spam, member welcome, periodic role sync (works even without the Members intent), daily
 digest, milestones, Supabase outage alerts, and a bunch of slash commands:
 
-  /links me|stats|lookup|recent|sync|unlink|queue|setup|export
-  /launcher download|faq|features|links|presence
+  /links me|stats|top|lookup|recent|sync|unlink|queue|setup|export
+  /launcher download|faq|features|links|presence|stats|servers|notice
   /bot status|invite|preview-dm
+
+Launcher integration (linked players only): the launcher reports play sessions
+(`launcher_events`) → "playing now" counter, favourite versions / servers, personal playtime,
+leaderboard. Staff can push a notice to every launcher with `/launcher notice set`.
   (user context menu) "Launcher link info"
 """
 
@@ -45,7 +49,7 @@ try:  # optional, lets you keep secrets in a .env file next to bot.py
 except Exception:  # pragma: no cover
     pass
 
-BOT_VERSION = "2.0.0"
+BOT_VERSION = "2.1.0"
 
 # =============================================================================== configuration
 
@@ -85,6 +89,9 @@ WELCOME_CHANNEL_ID = _env_int("WELCOME_CHANNEL_ID")  # 0 = server's system chann
 WELCOME_ENABLED = _env_bool("WELCOME_ENABLED", True)
 STATS_CHANNEL_ENABLED = _env_bool("STATS_CHANNEL", True)
 STATS_CHANNEL_ID = _env_int("STATS_CHANNEL_ID")
+PLAYING_CHANNEL_ID = _env_int("PLAYING_CHANNEL_ID")
+PLAYING_CHANNEL_ENABLED = _env_bool("PLAYING_CHANNEL", True)
+LOG_PLAY_SESSIONS = _env_bool("LOG_PLAY_SESSIONS", False)
 ADMIN_ROLE_ID = _env_int("ADMIN_ROLE_ID")
 POLL_SECONDS = max(3, _env_int("POLL_SECONDS", 5))
 DM_COOLDOWN_MIN = max(0, _env_int("DM_COOLDOWN_MINUTES", 60))
@@ -126,6 +133,7 @@ GUILD_ID = GUILD_ID or int(_STATE.get("guild_id") or 0)
 LINKED_ROLE_ID = LINKED_ROLE_ID or int(_STATE.get("linked_role_id") or 0)
 LOG_CHANNEL_ID = LOG_CHANNEL_ID or int(_STATE.get("log_channel_id") or 0)
 STATS_CHANNEL_ID = STATS_CHANNEL_ID or int(_STATE.get("stats_channel_id") or 0)
+PLAYING_CHANNEL_ID = PLAYING_CHANNEL_ID or int(_STATE.get("playing_channel_id") or 0)
 
 
 def _now() -> str:
@@ -278,6 +286,35 @@ class Supabase:
         since = (datetime.now(timezone.utc) - timedelta(days=days - 1)).strftime("%Y-%m-%d")
         return await self.req("GET", "discord_bot_stats", params={"day": f"gte.{since}", "order": "day.asc"}) or []
 
+    # play sessions (reported by the launcher for linked players) -------------
+    async def sessions(self, *, since_hours: Optional[int] = None, user_id: Optional[int | str] = None,
+                       limit: int = 5000) -> list[dict]:
+        params: dict[str, str] = {"order": "started_at.desc", "limit": str(limit)}
+        if since_hours:
+            params["started_at"] = f"gte.{(datetime.now(timezone.utc) - timedelta(hours=since_hours)).isoformat()}"
+        if user_id is not None:
+            params["discord_user_id"] = f"eq.{user_id}"
+        return await self.req("GET", "launcher_sessions", params=params) or []
+
+    async def playing_now(self) -> list[dict]:
+        """Sessions started in the last 12 h without an end event."""
+        rows = await self.req("GET", "launcher_sessions", params={
+            "ended_at": "is.null",
+            "started_at": f"gte.{(datetime.now(timezone.utc) - timedelta(hours=12)).isoformat()}",
+            "order": "started_at.desc", "limit": "500"}) or []
+        seen: set[str] = set()
+        out = []
+        for r in rows:  # one entry per player
+            if r["discord_user_id"] in seen:
+                continue
+            seen.add(r["discord_user_id"])
+            out.append(r)
+        return out
+
+    async def set_notice(self, value: dict) -> None:
+        await self.req("POST", "site_settings", json={"key": "launcher_notice", "value": value, "updated_at": _now()},
+                       prefer="resolution=merge-duplicates,return=minimal")
+
     # website CMS (read-only) -------------------------------------------------
     async def site_setting(self, key: str) -> dict:
         rows = await self.req("GET", "site_settings", params={"key": f"eq.{key}", "limit": "1"})
@@ -413,7 +450,7 @@ class CraftStudioBot(discord.Client):
             self.update_status.start()
             self.sync_roles.start()
             self.daily_digest.start()
-            if STATS_CHANNEL_ENABLED:
+            if STATS_CHANNEL_ENABLED or PLAYING_CHANNEL_ENABLED:
                 self.update_stats_channel.start()
             if not self.members_intent:
                 log.warning("Running WITHOUT Server Members Intent (Developer Portal -> Bot -> Server Members "
@@ -522,6 +559,33 @@ class CraftStudioBot(discord.Client):
                 if STATS_CHANNEL_ID:
                     _STATE["stats_channel_id"] = STATS_CHANNEL_ID
                     _save_state(_STATE)
+        await self._ensure_playing_channel()
+
+    async def _ensure_playing_channel(self) -> None:
+        global PLAYING_CHANNEL_ID
+        guild = self._guild
+        if guild is None or guild.me is None or not PLAYING_CHANNEL_ENABLED:
+            return
+        if PLAYING_CHANNEL_ID and guild.get_channel(PLAYING_CHANNEL_ID) is None:
+            PLAYING_CHANNEL_ID = 0
+        if PLAYING_CHANNEL_ID or not guild.me.guild_permissions.manage_channels:
+            return
+        existing = next((c for c in guild.voice_channels if c.name.startswith("🎮 Playing now:")), None)
+        if existing is not None:
+            PLAYING_CHANNEL_ID = existing.id
+        else:
+            try:
+                overwrites = {guild.default_role: discord.PermissionOverwrite(connect=False, view_channel=True),
+                              guild.me: discord.PermissionOverwrite(manage_channels=True, view_channel=True)}
+                vc = await guild.create_voice_channel("🎮 Playing now: …", overwrites=overwrites, position=1,
+                                                      reason=f"{LAUNCHER_NAME}: live players counter")
+                PLAYING_CHANNEL_ID = vc.id
+                log.info("Created playing-now channel (%s)", vc.id)
+            except discord.HTTPException as e:
+                log.warning("Could not create the playing-now channel: %s", e)
+        if PLAYING_CHANNEL_ID:
+            _STATE["playing_channel_id"] = PLAYING_CHANNEL_ID
+            _save_state(_STATE)
 
     def _check_permissions(self) -> list[str]:
         guild = self._guild
@@ -979,20 +1043,22 @@ class CraftStudioBot(discord.Client):
         await self.wait_until_ready()
         await asyncio.sleep(20)
 
-    @tasks.loop(minutes=30)
+    @tasks.loop(minutes=10)
     async def update_stats_channel(self) -> None:
-        if not STATS_CHANNEL_ID:
-            return
-        channel = self.get_channel(STATS_CHANNEL_ID)
-        if channel is None:
-            return
+        # Discord allows 2 channel renames / 10 min per channel - this loop matches that budget
         try:
-            linked = await self.db.count("discord_links", {"unlinked_at": "is.null"})
-            name = f"🔗 Linked: {linked:,}"
-            if channel.name != name:
-                await channel.edit(name=name, reason="linked counter")  # type: ignore[union-attr]
+            if STATS_CHANNEL_ID and (channel := self.get_channel(STATS_CHANNEL_ID)) is not None:
+                linked = await self.db.count("discord_links", {"unlinked_at": "is.null"})
+                name = f"🔗 Linked: {linked:,}"
+                if channel.name != name:
+                    await channel.edit(name=name, reason="linked counter")  # type: ignore[union-attr]
+            if PLAYING_CHANNEL_ID and (channel := self.get_channel(PLAYING_CHANNEL_ID)) is not None:
+                playing = len(await self.db.playing_now())
+                name = f"🎮 Playing now: {playing:,}"
+                if channel.name != name:
+                    await channel.edit(name=name, reason="players counter")  # type: ignore[union-attr]
         except Exception as e:
-            log.debug("stats channel: %s", e)
+            log.debug("counter channels: %s", e)
 
     @update_stats_channel.before_loop
     async def _stats_wait(self) -> None:
@@ -1035,10 +1101,93 @@ class CraftStudioBot(discord.Client):
         e.add_field(name="Links · 7 days", value=f"{s['links_week']:,}")
         e.add_field(name="Events today", value=f"{s['events_today']:,}")
         e.add_field(name="Queue / failed", value=f"{s['pending']} / {s['failed']}")
+        try:
+            e.add_field(name="Playing now", value=str(len(await self.db.playing_now())))
+        except Exception:
+            pass
         e.add_field(name="Links per day", value="\n".join(bars), inline=False)
         e.set_footer(text=f"bot v{BOT_VERSION} · up {uptime // 3600}h {uptime % 3600 // 60}m · "
                           f"{self.processed} processed · {self.failed} failed")
         return e
+
+
+# =============================================================================== play sessions
+
+
+def _fmt_dur(seconds: int | float | None) -> str:
+    s = int(seconds or 0)
+    if s < 60:
+        return f"{s}s"
+    if s < 3600:
+        return f"{s // 60}m"
+    return f"{s // 3600}h {s % 3600 // 60:02d}m"
+
+
+def _top(counter: dict[str, int], n: int = 5) -> list[tuple[str, int]]:
+    return sorted(counter.items(), key=lambda kv: -kv[1])[:n]
+
+
+def _bar(n: int, peak: int, width: int = 10) -> str:
+    return "█" * max(1, round(n / peak * width)) if peak else ""
+
+
+async def play_stats_embed(bot: "CraftStudioBot", hours: int = 168) -> discord.Embed:
+    rows = await bot.db.sessions(since_hours=hours)
+    now_playing = await bot.db.playing_now()
+    e = discord.Embed(title=f"{LAUNCHER_NAME} · Play stats · last {hours // 24 if hours >= 48 else hours}"
+                            f"{'d' if hours >= 48 else 'h'}", color=EMBED_COLOR, timestamp=datetime.now(timezone.utc))
+    if not rows:
+        e.description = ("No play sessions yet. Linked players' launchers report sessions automatically "
+                         "(current launcher build required).")
+        return e
+    players = {r["discord_user_id"] for r in rows}
+    total_s = sum(int(r.get("duration_s") or 0) for r in rows)
+    finished = [r for r in rows if r.get("duration_s")]
+    avg = total_s / len(finished) if finished else 0
+    versions: dict[str, int] = {}
+    loaders: dict[str, int] = {}
+    profiles: dict[str, int] = {}
+    scenes: dict[str, int] = {}
+    for r in rows:
+        versions[r.get("version") or "?"] = versions.get(r.get("version") or "?", 0) + 1
+        loaders[(r.get("loader") or "vanilla").capitalize()] = loaders.get((r.get("loader") or "vanilla").capitalize(), 0) + 1
+        profiles[r.get("profile") or "?"] = profiles.get(r.get("profile") or "?", 0) + 1
+        sc = r.get("last_scene")
+        if sc:
+            scenes[sc] = scenes.get(sc, 0) + 1
+    e.add_field(name="Playing now", value=f"**{len(now_playing)}**")
+    e.add_field(name="Sessions", value=f"{len(rows):,}")
+    e.add_field(name="Players", value=f"{len(players):,}")
+    e.add_field(name="Total playtime", value=_fmt_dur(total_s))
+    e.add_field(name="Avg session", value=_fmt_dur(avg))
+    busiest = {}
+    for r in rows:
+        try:
+            h = datetime.fromisoformat(r["started_at"].replace("Z", "+00:00")).astimezone(
+                timezone(timedelta(hours=5, minutes=30))).hour
+            busiest[h] = busiest.get(h, 0) + 1
+        except Exception:
+            pass
+    if busiest:
+        h = max(busiest, key=busiest.get)
+        e.add_field(name="Peak hour (IST)", value=f"{h:02d}:00–{(h + 1) % 24:02d}:00")
+    tv = _top(versions)
+    peak = tv[0][1] if tv else 1
+    e.add_field(name="Versions", value="\n".join(f"`{v:<8}` {_bar(n, peak)} {n}" for v, n in tv) or "–", inline=False)
+    tl = _top(loaders)
+    e.add_field(name="Loaders", value=" · ".join(f"**{l}** {n}" for l, n in tl) or "–", inline=False)
+    if scenes:
+        label = {"singleplayer": "Singleplayer", "multiplayer": "Multiplayer", "lan_host": "LAN", "menu": "Menu only",
+                 "loading": "Loading", "launching": "Launching", "home": "Home"}
+        e.add_field(name="How people play", value=" · ".join(f"{label.get(k, k)} {n}" for k, n in _top(scenes, 4)),
+                    inline=False)
+    if now_playing:
+        lines = [f"<@{r['discord_user_id']}> · {r.get('profile') or '?'} ({r.get('version') or '?'})"
+                 for r in now_playing[:8]]
+        e.add_field(name="Online right now", value="\n".join(lines) + (f"\n…and {len(now_playing) - 8} more" if len(now_playing) > 8 else ""),
+                    inline=False)
+    e.set_footer(text="Only players who linked Discord in the launcher are counted")
+    return e
 
 
 # =============================================================================== slash commands
@@ -1085,6 +1234,22 @@ def _link_embed(user: discord.abc.User, link: Optional[dict]) -> discord.Embed:
     return e
 
 
+async def _with_play_info(bot: "CraftStudioBot", user_id: int, e: discord.Embed) -> discord.Embed:
+    try:
+        mine = await bot.db.sessions(user_id=user_id, limit=300)
+    except Exception:
+        return e
+    if mine:
+        last = mine[0]
+        total = sum(int(r.get("duration_s") or 0) for r in mine)
+        where = last.get("server_name") or last.get("world") or ""
+        e.add_field(name="Playtime", value=f"{_fmt_dur(total)} · {len(mine)} sessions")
+        e.add_field(name="Last played", value=f"{last.get('profile') or '?'} ({last.get('version') or '?'})"
+                                             f"{' · ' + where if where else ''} {_fmt_ts(last.get('started_at'))}",
+                    inline=False)
+    return e
+
+
 @links_group.command(name="me", description="Is my Discord linked with the launcher?")
 async def links_me(interaction: discord.Interaction) -> None:
     bot: CraftStudioBot = links_group.bot  # type: ignore[attr-defined]
@@ -1099,10 +1264,51 @@ async def links_me(interaction: discord.Interaction) -> None:
                     msg += f" Gave you the **{LINKED_ROLE_NAME}** role."
             else:
                 msg += f" You have the **{LINKED_ROLE_NAME}** role."
+        try:
+            mine = await bot.db.sessions(user_id=interaction.user.id, limit=500)
+        except Exception:
+            mine = []
+        if mine:
+            total = sum(int(r.get("duration_s") or 0) for r in mine)
+            last = mine[0]
+            week = [r for r in mine if r["started_at"] >= (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()]
+            msg += (f"\n🎮 **{len(mine)}** sessions · **{_fmt_dur(total)}** total · "
+                    f"{_fmt_dur(sum(int(r.get('duration_s') or 0) for r in week))} this week\n"
+                    f"Last played: **{last.get('profile') or '?'}** ({last.get('version') or '?'}"
+                    f"{' · ' + last['loader'].capitalize() if last.get('loader') and last['loader'] != 'vanilla' else ''})"
+                    f" {_fmt_ts(last.get('started_at'))}")
     else:
         msg = (f"❌ Not linked. Open **{LAUNCHER_NAME} → Settings → Discord Rich Presence → Link** — "
                f"you'll get the **{LINKED_ROLE_NAME}** role and a DM here.")
     await interaction.followup.send(msg, embed=presence_help_embed() if not link else None, ephemeral=True)
+
+
+@links_group.command(name="top", description="Playtime leaderboard (linked players)")
+@app_commands.describe(period="Time window")
+@app_commands.choices(period=[app_commands.Choice(name="7 days", value=168), app_commands.Choice(name="30 days", value=720),
+                              app_commands.Choice(name="All time", value=0)])
+async def links_top(interaction: discord.Interaction, period: Optional[app_commands.Choice[int]] = None) -> None:
+    bot: CraftStudioBot = links_group.bot  # type: ignore[attr-defined]
+    await interaction.response.defer()
+    hours = period.value if period else 168
+    rows = await bot.db.sessions(since_hours=hours or None, limit=10000)
+    total: dict[str, int] = {}
+    count: dict[str, int] = {}
+    for r in rows:
+        uid = r["discord_user_id"]
+        total[uid] = total.get(uid, 0) + int(r.get("duration_s") or 0)
+        count[uid] = count.get(uid, 0) + 1
+    top = _top(total, 10)
+    e = discord.Embed(title=f"🏆 Playtime leaderboard · {period.name if period else '7 days'}", color=0xFEE75C)
+    if not top:
+        e.description = "No sessions yet."
+    else:
+        medals = ["🥇", "🥈", "🥉"]
+        e.description = "\n".join(
+            f"{medals[i] if i < 3 else f'`{i + 1:>2}.`'} <@{uid}> — **{_fmt_dur(sec)}** · {count[uid]} sessions"
+            for i, (uid, sec) in enumerate(top))
+    e.set_footer(text="Linked players only · reported by the launcher")
+    await interaction.followup.send(embed=e)
 
 
 @links_group.command(name="stats", description="How many players linked their Discord account")
@@ -1119,7 +1325,8 @@ async def links_lookup(interaction: discord.Interaction, user: discord.User) -> 
     if await _deny(interaction):
         return
     await interaction.response.defer(ephemeral=True)
-    await interaction.followup.send(embed=_link_embed(user, await bot.db.get_link(user.id)), ephemeral=True)
+    e = await _with_play_info(bot, user.id, _link_embed(user, await bot.db.get_link(user.id)))
+    await interaction.followup.send(embed=e, ephemeral=True)
 
 
 @links_group.command(name="recent", description="Staff: last link / unlink events")
@@ -1329,6 +1536,111 @@ async def launcher_presence(interaction: discord.Interaction) -> None:
     await interaction.response.send_message(embed=presence_help_embed(), ephemeral=True)
 
 
+@launcher_group.command(name="stats", description="Who is playing what (linked players)")
+@app_commands.describe(period="Time window")
+@app_commands.choices(period=[app_commands.Choice(name="24 hours", value=24), app_commands.Choice(name="7 days", value=168),
+                              app_commands.Choice(name="30 days", value=720)])
+async def launcher_stats(interaction: discord.Interaction, period: Optional[app_commands.Choice[int]] = None) -> None:
+    bot: CraftStudioBot = launcher_group.bot  # type: ignore[attr-defined]
+    await interaction.response.defer()
+    await interaction.followup.send(embed=await play_stats_embed(bot, period.value if period else 168))
+
+
+@launcher_group.command(name="servers", description="Most played servers (linked players, 30 days)")
+async def launcher_servers(interaction: discord.Interaction) -> None:
+    bot: CraftStudioBot = launcher_group.bot  # type: ignore[attr-defined]
+    await interaction.response.defer()
+    rows = await bot.db.sessions(since_hours=720, limit=10000)
+    by_server: dict[str, dict] = {}
+    for r in rows:
+        name = r.get("server_name")
+        if not name or name == "Private server":
+            continue
+        d = by_server.setdefault(name, {"sessions": 0, "players": set(), "time": 0, "host": r.get("server_host")})
+        d["sessions"] += 1
+        d["players"].add(r["discord_user_id"])
+        d["time"] += int(r.get("duration_s") or 0)
+    top = sorted(by_server.items(), key=lambda kv: (-len(kv[1]["players"]), -kv[1]["sessions"]))[:10]
+    e = discord.Embed(title="🌐 Most played servers · 30 days", color=EMBED_COLOR)
+    if not top:
+        e.description = "No multiplayer sessions recorded yet."
+    else:
+        e.description = "\n".join(
+            f"`{i + 1:>2}.` **{name}**" + (f" · `{d['host']}`" if d.get("host") else "") +
+            f" — {len(d['players'])} players · {d['sessions']} sessions · {_fmt_dur(d['time'])}"
+            for i, (name, d) in enumerate(top))
+    e.set_footer(text="Private / LAN addresses are never recorded")
+    await interaction.followup.send(embed=e)
+
+
+notice_group = app_commands.Group(name="notice", description="Staff: message shown inside every launcher",
+                                  parent=launcher_group)
+
+
+@notice_group.command(name="set", description="Staff: push a notice popup to all launchers (shown once per device)")
+@app_commands.describe(text="Message (plain text)", title="Popup title", link="Optional https:// link for the button",
+                       button="Button label (default: Open)", days="Auto-expire after N days (0 = never)",
+                       min_version="Only show on launcher versions >= this (e.g. 1.5.0)")
+async def notice_set(interaction: discord.Interaction, text: str, title: Optional[str] = None,
+                     link: Optional[str] = None, button: Optional[str] = None, days: Optional[int] = 7,
+                     min_version: Optional[str] = None) -> None:
+    bot: CraftStudioBot = launcher_group.bot  # type: ignore[attr-defined]
+    if await _deny(interaction):
+        return
+    if link and not link.startswith(("https://", "http://")):
+        await interaction.response.send_message("Link must start with https://", ephemeral=True)
+        return
+    await interaction.response.defer(ephemeral=True)
+    value = {
+        "id": str(int(time.time() * 1000)), "enabled": True, "title": (title or "").strip()[:60],
+        "text": text.strip()[:600], "link": (link or "").strip(), "button": (button or "").strip()[:24],
+        "min_app_version": (min_version or "").strip(),
+        "ends_at_ms": int((time.time() + days * 86400) * 1000) if days and days > 0 else 0,
+        "author": str(interaction.user), "created_at": _now(),
+    }
+    await bot.db.set_notice(value)
+    e = discord.Embed(title=value["title"] or "Message from Craft Studio", description=value["text"], color=EMBED_COLOR)
+    if value["link"]:
+        e.add_field(name=value["button"] or "Open", value=value["link"])
+    e.set_footer(text=f"Live · launchers check every ~4 h · expires {'in %d days' % days if days else 'never'}")
+    await interaction.followup.send("Notice is live. Preview:", embed=e, ephemeral=True)
+    await bot.log_embed(discord.Embed(title="📣 Launcher notice published", description=value["text"],
+                                      color=EMBED_COLOR).set_footer(text=f"by {interaction.user}"))
+
+
+@notice_group.command(name="clear", description="Staff: take the launcher notice down")
+async def notice_clear(interaction: discord.Interaction) -> None:
+    bot: CraftStudioBot = launcher_group.bot  # type: ignore[attr-defined]
+    if await _deny(interaction):
+        return
+    await interaction.response.defer(ephemeral=True)
+    current = await bot.db.site_setting("launcher_notice")
+    current["enabled"] = False
+    await bot.db.set_notice(current)
+    await interaction.followup.send("Notice disabled.", ephemeral=True)
+
+
+@notice_group.command(name="show", description="Staff: show the current launcher notice")
+async def notice_show(interaction: discord.Interaction) -> None:
+    bot: CraftStudioBot = launcher_group.bot  # type: ignore[attr-defined]
+    if await _deny(interaction):
+        return
+    await interaction.response.defer(ephemeral=True)
+    v = await bot.db.site_setting("launcher_notice")
+    if not v or not v.get("text"):
+        await interaction.followup.send("No notice set.", ephemeral=True)
+        return
+    e = discord.Embed(title=v.get("title") or "Message from Craft Studio", description=v.get("text"),
+                      color=EMBED_COLOR if v.get("enabled") else 0x9C9CA4)
+    e.add_field(name="Status", value="enabled" if v.get("enabled") else "disabled")
+    if v.get("link"):
+        e.add_field(name="Link", value=v["link"])
+    if v.get("ends_at_ms"):
+        e.add_field(name="Expires", value=f"<t:{int(v['ends_at_ms']) // 1000}:R>")
+    e.set_footer(text=f"by {v.get('author', '?')} · id {v.get('id', '?')}")
+    await interaction.followup.send(embed=e, ephemeral=True)
+
+
 # --- /bot ----------------------------------------------------------------------
 
 
@@ -1385,7 +1697,8 @@ async def link_info_ctx(interaction: discord.Interaction, user: discord.Member) 
     if await _deny(interaction):
         return
     await interaction.response.defer(ephemeral=True)
-    await interaction.followup.send(embed=_link_embed(user, await bot.db.get_link(user.id)), ephemeral=True)
+    e = await _with_play_info(bot, user.id, _link_embed(user, await bot.db.get_link(user.id)))
+    await interaction.followup.send(embed=e, ephemeral=True)
 
 
 # =============================================================================== main

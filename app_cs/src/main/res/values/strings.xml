@@ -1503,4 +1503,9 @@
     <string name="cs_discord_footnote">The card updates by itself: home screen, launching, main menu, singleplayer world, LAN world or server — with the profile’s own icon.</string>
     <string name="cs_tools_close_hint">Close</string>
     <string name="cs_badge_plus">PLUS</string>
+    <!-- Community notice pushed from the Discord bot -->
+    <string name="cs_notice_default_title">Message from Craft Studio</string>
+    <string name="cs_notice_subtitle">Community notice</string>
+    <string name="cs_notice_open">Open</string>
+    <string name="cs_notice_dismiss">Dismiss</string>
 </resources>

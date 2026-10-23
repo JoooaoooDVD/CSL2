@@ -316,6 +316,12 @@ public class LauncherActivity extends BaseActivity {
                 if (isFinishing() || isDestroyed()) return;
                 if (mStorageSetupDialog != null && mStorageSetupDialog.isShowing()) return;
                 com.craftstudio.cslauncher.update.UpdateManager.autoCheck(this);
+                // Team notice from Discord (throttled, once per notice, never blocks)
+                root.postDelayed(() -> {
+                    if (isFinishing() || isDestroyed()) return;
+                    if (mStorageSetupDialog != null && mStorageSetupDialog.isShowing()) return;
+                    com.craftstudio.cslauncher.discord.CommunityNotice.checkAndShow(this);
+                }, 2500L);
             }, 3200L);
         }
     }

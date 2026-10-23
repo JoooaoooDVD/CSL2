@@ -1295,6 +1295,10 @@ T = {
 "cs_discord_account_linked_desc": "Linked · is phone ka access hatane ke liye Unlink dabao",
 "cs_discord_account_linked_pill": "LINKED",
 "cs_discord_footnote": "Card apne aap update hota hai: home screen, launching, main menu, singleplayer world, LAN world ya server — profile ke apne icon ke saath.",
+"cs_notice_default_title": "Craft Studio ki taraf se message",
+"cs_notice_subtitle": "Community notice",
+"cs_notice_open": "Kholo",
+"cs_notice_dismiss": "Hatao",
 }
 
 TEMPLATE_SRC = ["strings.xml", "strings_resource_browser.xml", "strings_virtual_lan.xml", "strings_cs14.xml", "strings_cs15.xml", "strings_manager.xml",
