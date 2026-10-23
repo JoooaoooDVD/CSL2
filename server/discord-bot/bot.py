@@ -439,13 +439,7 @@ class CraftStudioBot(discord.Client):
             for group in (links_group, launcher_group, bot_group):
                 self.tree.add_command(group, guild=discord.Object(GUILD_ID))
             self.tree.add_command(link_info_ctx, guild=discord.Object(GUILD_ID))
-            try:
-                synced = await self.tree.sync(guild=discord.Object(GUILD_ID))
-                log.info("Slash commands synced (%d)", len(synced))
-            except discord.HTTPException as e:
-                log.warning("Slash command sync failed: %s\n  -> The bot was added WITHOUT the applications.commands "
-                            "scope. Open this link once more (no need to kick the bot) and click Authorize:\n\n  %s\n",
-                            e, self.invite_url())
+            await self.sync_commands()
             self.poll_events.start()
             self.update_status.start()
             self.sync_roles.start()
@@ -460,6 +454,21 @@ class CraftStudioBot(discord.Client):
                 description=f"v{BOT_VERSION} · polling every {POLL_SECONDS}s · members intent: "
                             f"{'on' if self.members_intent else 'off'}"))
         self._check_permissions()
+
+    _commands_synced = False
+
+    async def sync_commands(self) -> bool:
+        if self._commands_synced:
+            return True
+        try:
+            synced = await self.tree.sync(guild=discord.Object(GUILD_ID))
+            self._commands_synced = True
+            log.info("Slash commands synced (%d)", len(synced))
+        except discord.HTTPException as e:
+            log.warning("Slash command sync failed: %s\n  -> The bot was added WITHOUT the applications.commands "
+                        "scope. Open this link once more (no need to kick the bot) and click Authorize - the bot "
+                        "retries every 5 minutes:\n\n  %s\n", e, self.invite_url())
+        return self._commands_synced
 
     async def on_guild_join(self, guild: discord.Guild) -> None:
         if GUILD_ID and guild.id != GUILD_ID:
@@ -577,7 +586,7 @@ class CraftStudioBot(discord.Client):
             try:
                 overwrites = {guild.default_role: discord.PermissionOverwrite(connect=False, view_channel=True),
                               guild.me: discord.PermissionOverwrite(manage_channels=True, view_channel=True)}
-                vc = await guild.create_voice_channel("🎮 Playing now: …", overwrites=overwrites, position=1,
+                vc = await guild.create_voice_channel("🎮 Playing now: …", overwrites=overwrites,
                                                       reason=f"{LAUNCHER_NAME}: live players counter")
                 PLAYING_CHANNEL_ID = vc.id
                 log.info("Created playing-now channel (%s)", vc.id)
@@ -602,6 +611,14 @@ class CraftStudioBot(discord.Client):
             problems.append(f"role {LINKED_ROLE_ID} not found")
         elif role is not None and guild.me.top_role <= role:
             problems.append(f"bot's top role must be ABOVE '{role.name}' in the role list")
+        if LOG_CHANNEL_ID:
+            ch = guild.get_channel(LOG_CHANNEL_ID)
+            if ch is None:
+                problems.append(f"log channel {LOG_CHANNEL_ID} not visible to the bot (give the bot role View Channel there)")
+            elif not ch.permissions_for(guild.me).send_messages or not ch.permissions_for(guild.me).embed_links:
+                problems.append(f"bot cannot send embeds in #{ch.name} (needs Send Messages + Embed Links)")
+        if not self._commands_synced:
+            problems.append("slash commands not registered (re-authorize with the invite link)")
         if not self.members_intent:
             problems.append("Server Members Intent off (Developer Portal → Bot) — role-on-join delayed up to 5 min")
         if problems:
@@ -1018,6 +1035,10 @@ class CraftStudioBot(discord.Client):
     @tasks.loop(minutes=5)
     async def sync_roles(self) -> None:
         """Give the Linked role to linked players who are in the server but don't have it yet."""
+        if not self._commands_synced:
+            await self.sync_commands()
+        if not PLAYING_CHANNEL_ID and PLAYING_CHANNEL_ENABLED:
+            await self._ensure_playing_channel()
         if not LINKED_ROLE_ID:
             return
         try:
