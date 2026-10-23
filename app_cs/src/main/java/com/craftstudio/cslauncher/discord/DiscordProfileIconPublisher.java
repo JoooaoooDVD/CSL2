@@ -106,7 +106,15 @@ final class DiscordProfileIconPublisher {
         } finally {
             bitmap.recycle();
         }
-        if (png.length == 0 || png.length > 250_000) return null;
+        return publishPng(png);
+    }
+
+    /** Blocking: publish any PNG (profile icon, server icon) and return its public URL */
+    @Nullable
+    synchronized String publishPng(@Nullable byte[] png) {
+        if (png == null || png.length < 8 || png.length > 250_000) return null;
+        if ((png[0] & 0xff) != 0x89 || png[1] != 'P' || png[2] != 'N' || png[3] != 'G') return null;
+        loadCache();
         String sha = sha1(png);
         if (sha == null) return null;
         String cached = mUrlBySha.get(sha);

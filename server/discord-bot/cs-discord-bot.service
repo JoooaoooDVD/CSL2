@@ -1,0 +1,17 @@
+# /etc/systemd/system/cs-discord-bot.service
+[Unit]
+Description=Craft Studio Discord bot (CS Launcher Plus account links)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=csbot
+WorkingDirectory=/opt/cs-discord-bot
+EnvironmentFile=/opt/cs-discord-bot/.env
+ExecStart=/opt/cs-discord-bot/.venv/bin/python bot.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

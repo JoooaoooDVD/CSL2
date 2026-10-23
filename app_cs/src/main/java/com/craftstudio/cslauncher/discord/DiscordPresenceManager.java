@@ -93,6 +93,8 @@ public final class DiscordPresenceManager {
         public final int modCount;
         @NonNull public final String worldName;
         @NonNull public final String serverHost;
+        /** Name the player saved for the server (falls back to the host) */
+        @NonNull public final String serverName;
         public final long startMs;
         @NonNull public final String details;
         @NonNull public final String state;
@@ -103,7 +105,8 @@ public final class DiscordPresenceManager {
         public final int statusDisplayType;
 
         Snapshot(@NonNull Scene scene, @Nullable Instance instance, @NonNull String profileName, @NonNull String version,
-                 @NonNull String loader, int modCount, @NonNull String worldName, @NonNull String serverHost, long startMs,
+                 @NonNull String loader, int modCount, @NonNull String worldName, @NonNull String serverHost,
+                 @NonNull String serverName, long startMs,
                  @NonNull String details, @NonNull String state, @NonNull String largeImageUrl, @NonNull String largeText,
                  @Nullable String smallImageUrl, @Nullable String smallText, int statusDisplayType) {
             this.scene = scene;
@@ -114,6 +117,7 @@ public final class DiscordPresenceManager {
             this.modCount = modCount;
             this.worldName = worldName;
             this.serverHost = serverHost;
+            this.serverName = serverName;
             this.startMs = startMs;
             this.details = details;
             this.state = state;
@@ -155,6 +159,12 @@ public final class DiscordPresenceManager {
     @NonNull private String mSessionVersion = "";
     @NonNull private String mWorldName = "";
     @NonNull private String mServerHost = "";
+    private int mServerPort = 0;
+    /** Saved-server entry (name + icon) for the current multiplayer session, resolved lazily */
+    @Nullable private MinecraftServerList.Entry mServerEntry;
+    @Nullable private String mServerEntryKey;
+    @Nullable private String mServerIconUrl;
+    @Nullable private String mServerIconAttemptedKey;
     private long mSessionStartMs = 0L;
     private final long mLauncherOpenedMs = System.currentTimeMillis();
     /** Public URL of the current session's profile icon once published (null = not yet) */
@@ -292,6 +302,7 @@ public final class DiscordPresenceManager {
             mSessionVersion = "";
             mWorldName = "";
             mServerHost = "";
+            mServerPort = 0;
             mSessionStartMs = 0L;
             mReleased = false;
         }
@@ -307,6 +318,7 @@ public final class DiscordPresenceManager {
             mSessionVersion = versionId == null ? "" : versionId;
             mWorldName = "";
             mServerHost = "";
+            mServerPort = 0;
             mSessionStartMs = System.currentTimeMillis();
             mReleased = false;
         }
@@ -346,6 +358,7 @@ public final class DiscordPresenceManager {
                 mSessionVersion = versionId == null ? "" : versionId;
                 mWorldName = "";
                 mServerHost = "";
+                mServerPort = 0;
                 mSessionStartMs = System.currentTimeMillis();
                 mReleased = false;
             }
@@ -405,10 +418,12 @@ public final class DiscordPresenceManager {
         Scene newScene = null;
         String world = null;
         String server = null;
+        int port = 0;
         Matcher m;
         if ((m = LOG_CONNECTING.matcher(line)).find()) {
             newScene = Scene.MULTIPLAYER;
             server = m.group(1);
+            try { port = Integer.parseInt(m.group(2)); } catch (NumberFormatException ignored) {}
         } else if ((m = LOG_PREPARING_LEVEL.matcher(line)).find()) {
             newScene = Scene.SINGLEPLAYER;
             world = m.group(1);
@@ -434,6 +449,7 @@ public final class DiscordPresenceManager {
                     mScene = Scene.MENU;
                     mWorldName = "";
                     mServerHost = "";
+                    mServerPort = 0;
                     break;
                 case SINGLEPLAYER:
                     if (world == null && mScene == Scene.SINGLEPLAYER) return;
@@ -441,15 +457,18 @@ public final class DiscordPresenceManager {
                     mScene = Scene.SINGLEPLAYER;
                     if (world != null) mWorldName = world;
                     mServerHost = "";
+                    mServerPort = 0;
                     break;
                 case LAN_HOST:
                     if (mScene == Scene.LAN_HOST) return;
                     mScene = Scene.LAN_HOST;
                     mServerHost = "";
+                    mServerPort = 0;
                     break;
                 case MULTIPLAYER:
                     mScene = Scene.MULTIPLAYER;
                     mServerHost = server == null ? "" : server;
+                    mServerPort = port;
                     mWorldName = "";
                     break;
                 default:
@@ -562,6 +581,7 @@ public final class DiscordPresenceManager {
         Scene scene;
         Instance instance;
         String versionId, world, server, iconUrl, iconKey;
+        int serverPort;
         long startMs;
         synchronized (this) {
             scene = mScene;
@@ -569,6 +589,7 @@ public final class DiscordPresenceManager {
             versionId = mSessionVersion;
             world = mWorldName;
             server = mServerHost;
+            serverPort = mServerPort;
             startMs = mSessionStartMs;
             iconUrl = mProfileIconUrl;
             iconKey = mProfileIconKey;
@@ -590,13 +611,31 @@ public final class DiscordPresenceManager {
         if (!loader.isEmpty()) stack.append(stack.length() > 0 ? " · " : "").append(loaderLabel(loader));
         if (mods > 0) stack.append(stack.length() > 0 ? " · " : "").append(plural(mods, "mod", "mods"));
         String stackText = stack.length() == 0 ? "Minecraft" : stack.toString();
+        // Short form for the second line of the card: "1.21.4 · Fabric · 42 mods"
+        StringBuilder shortStackBuilder = new StringBuilder();
+        if (!version.isEmpty()) shortStackBuilder.append(version);
+        if (!loader.isEmpty()) shortStackBuilder.append(shortStackBuilder.length() > 0 ? " · " : "").append(loaderLabel(loader));
+        if (mods > 0) shortStackBuilder.append(shortStackBuilder.length() > 0 ? " · " : "").append(plural(mods, "mod", "mods"));
+        String shortStack = shortStackBuilder.length() == 0 ? "Minecraft" : fit(shortStackBuilder.toString(), 32);
+
+        // Multiplayer: the saved server name + icon (servers.dat) when the player saved it
+        MinecraftServerList.Entry serverEntry = null;
+        String serverIcon = null;
+        if (scene == Scene.MULTIPLAYER && !server.isEmpty()) {
+            serverEntry = resolveServerEntry(instance, server, serverPort);
+            synchronized (this) {
+                serverIcon = mServerIconUrl;
+            }
+        }
+        String serverName = serverEntry != null && !serverEntry.name.isEmpty() ? serverEntry.name
+                : (looksLikePrivateAddress(server) ? "Private server" : server);
 
         String details, state, largeImage, largeText, smallImage, smallText;
         int display;
         switch (scene) {
             case HOME: {
-                details = "On the home screen";
-                state = instance != null ? "Selected: " + profile + (version.isEmpty() ? "" : " · " + version) : "Picking a profile";
+                details = "Home screen";
+                state = instance != null ? "Profile: " + fit(profile, 26) : "Picking a profile";
                 largeImage = LAUNCHER_ICON_URL;
                 largeText = APP_NAME + " · Minecraft Java on Android";
                 smallImage = null;
@@ -606,8 +645,8 @@ public final class DiscordPresenceManager {
                 break;
             }
             case LAUNCHING: {
-                details = "Launching " + profile;
-                state = stackText;
+                details = fit("Launching " + profile, 32);
+                state = shortStack;
                 largeImage = profileIcon;
                 largeText = profile + " · " + stackText;
                 smallImage = LAUNCHER_ICON_URL;
@@ -616,8 +655,8 @@ public final class DiscordPresenceManager {
                 break;
             }
             case LOADING: {
-                details = "Playing " + profile;
-                state = "Loading the game · " + stackText;
+                details = fit(profile, 32);
+                state = "Loading…";
                 largeImage = profileIcon;
                 largeText = profile + " · " + stackText;
                 smallImage = LAUNCHER_ICON_URL;
@@ -626,8 +665,8 @@ public final class DiscordPresenceManager {
                 break;
             }
             case MENU: {
-                details = "Playing " + profile;
-                state = "In the main menu · " + stackText;
+                details = fit(profile, 32);
+                state = "Main menu";
                 largeImage = profileIcon;
                 largeText = profile + " · " + stackText;
                 smallImage = LAUNCHER_ICON_URL;
@@ -636,8 +675,8 @@ public final class DiscordPresenceManager {
                 break;
             }
             case SINGLEPLAYER: {
-                details = "Playing " + profile;
-                state = world.isEmpty() ? "Singleplayer · " + stackText : "Singleplayer: " + world;
+                details = fit(profile, 32);
+                state = world.isEmpty() ? "Singleplayer" : fit("World: " + world, 32);
                 largeImage = profileIcon;
                 largeText = profile + " · " + stackText;
                 smallImage = loaderIcon;
@@ -646,8 +685,8 @@ public final class DiscordPresenceManager {
                 break;
             }
             case LAN_HOST: {
-                details = "Playing " + profile;
-                state = world.isEmpty() ? "Hosting a LAN world" : "Hosting LAN world: " + world;
+                details = fit(profile, 32);
+                state = world.isEmpty() ? "Hosting a LAN world" : fit("LAN world: " + world, 32);
                 largeImage = profileIcon;
                 largeText = profile + " · " + stackText;
                 smallImage = loaderIcon;
@@ -657,19 +696,49 @@ public final class DiscordPresenceManager {
             }
             case MULTIPLAYER:
             default: {
-                details = "Playing " + profile;
-                state = server.isEmpty() || looksLikePrivateAddress(server) ? "Multiplayer · online server" : "Multiplayer: " + server;
-                largeImage = profileIcon;
-                largeText = profile + " · " + stackText;
-                smallImage = loaderIcon;
-                smallText = loaderLabel(loader) + (version.isEmpty() ? "" : " " + version);
+                details = fit(serverName, 32);
+                state = fit("Multiplayer · " + profile, 32);
+                largeImage = serverIcon != null ? serverIcon : profileIcon;
+                largeText = serverIcon != null
+                        ? serverName + (looksLikePrivateAddress(server) ? "" : " · " + server)
+                        : profile + " · " + stackText;
+                smallImage = serverIcon != null ? profileIcon : loaderIcon;
+                smallText = serverIcon != null ? profile + " · " + stackText
+                        : loaderLabel(loader) + (version.isEmpty() ? "" : " " + version);
                 display = DiscordSdkBridge.DISPLAY_DETAILS;
                 break;
             }
         }
-        return new Snapshot(scene, instance, profile, version, loader, mods, world, server, startMs,
+        return new Snapshot(scene, instance, profile, version, loader, mods, world, server, serverName, startMs,
                 clamp(details), clamp(state), largeImage, clamp(largeText), smallImage,
                 smallText == null ? null : clamp(smallText), display);
+    }
+
+    /** Cut a line so it fits the Discord mobile card without wrapping */
+    @NonNull
+    private static String fit(@NonNull String text, int max) {
+        text = text.trim();
+        if (text.length() <= max) return text;
+        return text.substring(0, max - 1).trim() + "…";
+    }
+
+    /** servers.dat lookup, cached per host:port for the session */
+    @Nullable
+    private MinecraftServerList.Entry resolveServerEntry(@Nullable Instance instance, @NonNull String host, int port) {
+        String key = host.toLowerCase(Locale.ROOT) + ":" + port;
+        synchronized (this) {
+            if (key.equals(mServerEntryKey)) return mServerEntry;
+        }
+        MinecraftServerList.Entry entry = null;
+        try {
+            entry = MinecraftServerList.find(instance == null ? null : instance.getGameDirectory(), host, port);
+        } catch (Throwable ignored) {}
+        synchronized (this) {
+            mServerEntryKey = key;
+            mServerEntry = entry;
+            if (!key.equals(mServerIconAttemptedKey)) mServerIconUrl = null;
+        }
+        return entry;
     }
 
     // ------------------------------------------------------------------ publishing
@@ -686,6 +755,7 @@ public final class DiscordPresenceManager {
             notifyListeners();
             publish(snapshot, revision);
             publishProfileIconIfNeeded(snapshot, revision);
+            publishServerIconIfNeeded(snapshot, revision);
         });
     }
 
@@ -725,6 +795,24 @@ public final class DiscordPresenceManager {
         synchronized (this) {
             mProfileIconUrl = url;
             mProfileIconKey = url == null ? null : key;
+        }
+        if (url != null) refresh();
+    }
+
+    /** Multiplayer: publish the saved server's icon once, then refresh so it replaces the profile art */
+    private void publishServerIconIfNeeded(@NonNull Snapshot snapshot, int revision) {
+        if (snapshot.scene != Scene.MULTIPLAYER || snapshot.serverHost.isEmpty()) return;
+        MinecraftServerList.Entry entry;
+        String key;
+        synchronized (this) {
+            entry = mServerEntry;
+            key = mServerEntryKey;
+            if (entry == null || entry.iconPng == null || key == null || key.equals(mServerIconAttemptedKey) || revision != mRevision) return;
+            mServerIconAttemptedKey = key;
+        }
+        String url = mIconPublisher.publishPng(entry.iconPng);
+        synchronized (this) {
+            mServerIconUrl = url;
         }
         if (url != null) refresh();
     }

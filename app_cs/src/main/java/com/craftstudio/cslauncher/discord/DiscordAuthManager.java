@@ -53,7 +53,7 @@ public final class DiscordAuthManager {
             }
         }, 60000);
 
-        DiscordSdkBridge.authorize(clientId, "identify", new DiscordSdkBridge.NativeAuthCallback() {
+        DiscordSdkBridge.authorize(clientId, DiscordLinkNotifier.LINK_SCOPES, new DiscordSdkBridge.NativeAuthCallback() {
             @Override
             public void onSuccess(String code, String redirectUri, String verifier) {
                 Log.i(TAG, "Official Client::Authorize completed with code: " + (code != null ? "[REDACTED]" : "null")
@@ -150,6 +150,8 @@ public final class DiscordAuthManager {
         String finalId = (userId != null && !userId.trim().isEmpty()) ? userId.trim() : "0";
 
         DiscordAccountStorage.saveAccount(mContext, finalId, username, finalName, avatarUrl, accessToken);
+        // Community bot: welcome DM, auto-join of the Craft Studio server and the "Linked" role
+        DiscordLinkNotifier.linked(mContext, finalId, username, finalName, avatarUrl, accessToken);
 
         mMainHandler.post(() -> {
             if (callback != null) callback.onSuccess(finalName, finalId, avatarUrl);
@@ -233,6 +235,10 @@ public final class DiscordAuthManager {
      */
     public void unlinkCurrentAccount() {
         try {
+            DiscordAccountStorage.DiscordProfile previous = DiscordAccountStorage.loadAccount(mContext);
+            if (previous.isLinked && previous.userId != null) {
+                DiscordLinkNotifier.unlinked(mContext, previous.userId, previous.username);
+            }
             DiscordAccountStorage.clearAccount(mContext);
             // Rich Presence remains active via unauthenticated Android RPC
             DiscordPresenceManager.getInstance(mContext).refresh();
