@@ -66,6 +66,9 @@ jobs:
       - name: Build Virtual LAN VPN bridge (hev-socks5-tunnel)
         run: bash scripts/build_hev_tunnel.sh
 
+      - name: Unit tests (crash auto-fix engine)
+        run: gradle :app_cs:testFullDebugUnitTest
+
       - name: Build Debug .apk
         run: |
           gradle :app_cs:assembleFullDebug

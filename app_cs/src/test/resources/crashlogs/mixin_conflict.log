@@ -1,0 +1,6 @@
+[12:00:01] [main/INFO]: Loading Minecraft 1.21.1 with Fabric Loader 0.16.5
+[12:00:03] [main/INFO]: Compatibility level set to JAVA_21
+[12:00:11] [Render thread/ERROR]: Mixin apply for mod entityculling failed entityculling.mixins.json:MixinWorldRenderer from mod entityculling -> net.minecraft.class_761: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException Critical injection failure: @Inject annotation on onRenderEntity could not find any targets matching 'method_22977' in net.minecraft.class_761. [PREINJECT Applicator Phase -> entityculling.mixins.json:MixinWorldRenderer from mod entityculling -> Prepare Injections ->  -> handler$zzh000$entityculling$onRenderEntity(Lnet/minecraft/class_1297;)V -> Parse]
+org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Critical injection failure
+	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.validateTargets(InjectionInfo.java:656)
+[12:00:11] [Render thread/FATAL]: Mixin apply failed entityculling.mixins.json:MixinWorldRenderer

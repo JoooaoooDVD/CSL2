@@ -1429,8 +1429,8 @@
     <string name="awt_move_window">Move window</string>
     <!-- Game crash page -->
     <string name="gc_eyebrow">GAME STOPPED</string>
-    <string name="gc_title_crash">Minecraft crashed</string>
-    <string name="gc_title_exit">Minecraft closed with an error</string>
+    <string name="gc_title_crash">Minecraft Crashed</string>
+    <string name="gc_title_exit">Minecraft Crashed</string>
     <string name="gc_meta_signal">Stopped by the system (signal)</string>
     <string name="gc_meta_code_fmt">Exit code %1$d</string>
     <string name="gc_dx_eyebrow">WHAT WE FOUND</string>
@@ -1438,7 +1438,7 @@
     <string name="gc_copy_log">Copy log</string>
     <string name="gc_play_again">Play again</string>
     <string name="gc_back_launcher">Back to launcher</string>
-    <string name="gc_share_report_fmt">Share crash report \u00b7 %1$s</string>
+    <string name="gc_share_report_fmt">View crash report \u00b7 %1$s</string>
     <string name="gc_share_failed">Couldn\'t do that</string>
     <string name="gc_copied">Log copied</string>
     <string name="gc_footer">Share logs uploads latestlog.txt to mclo.gs or sends the file \u2014 paste the link on our Discord and we\'ll help.</string>
@@ -1508,4 +1508,96 @@
     <!-- Discord presence preview row -->
     <string name="preference_discord_preview_title">Preview the Discord card</string>
     <string name="preference_discord_preview_desc">See exactly what your friends see, live</string>
+    <!-- Crash auto fix -->
+    <string name="gc_subtitle">We analyzed the game logs and found a possible problem.</string>
+    <string name="gc_subtitle_analyzing">Analyzing the game logs\u2026</string>
+    <string name="gc_subtitle_unknown">We analyzed the game logs but could not pin down the cause.</string>
+    <string name="gc_af_eyebrow">AUTO FIX</string>
+    <string name="gc_af_confidence_fmt">Confidence %1$d%%</string>
+    <string name="gc_af_component_fmt">Suspected component: %1$s</string>
+    <string name="gc_af_plan_title">What Auto Fix will change</string>
+    <string name="gc_af_plan_none">Nothing can be changed safely for this crash. Use the advice above, then retry.</string>
+    <string name="gc_af_plan_filtered">The remaining fix for this crash already failed earlier, so it will not be repeated.</string>
+    <string name="gc_af_plan_budget">Auto Fix was already tried %1$d times for this exact crash. Please share the logs so we can look at it.</string>
+    <string name="gc_af_btn_fix">AUTO FIX</string>
+    <string name="gc_af_btn_report">VIEW CRASH REPORT</string>
+    <string name="gc_af_btn_details">VIEW DETAILS</string>
+    <string name="gc_af_btn_details_hide">HIDE DETAILS</string>
+    <string name="gc_af_btn_retry">RETRY LAUNCH</string>
+    <string name="gc_af_btn_undo">Undo last Auto Fix</string>
+    <string name="gc_af_no_report">The game did not write a crash report for this crash. The log on the right has the details.</string>
+    <string name="gc_af_confirm_title">Apply this fix?</string>
+    <string name="gc_af_confirm_msg">%1$s\n\nA backup is made first and you can undo it from this screen.</string>
+    <string name="gc_af_confirm_ok">Apply</string>
+    <string name="gc_af_stage_analyzing">Checking the profile\u2026</string>
+    <string name="gc_af_stage_backup">Creating backup\u2026</string>
+    <string name="gc_af_stage_applying">Applying: %1$s</string>
+    <string name="gc_af_stage_verifying">Verifying: %1$s</string>
+    <string name="gc_af_stage_rollback">Something failed \u2014 restoring the backup\u2026</string>
+    <string name="gc_af_result_fixed">Fixed and verified. Press RETRY LAUNCH to start the game.</string>
+    <string name="gc_af_result_no_change">Everything checked is already in order \u2014 nothing was changed. Try RETRY LAUNCH; if it crashes again, share the logs.</string>
+    <string name="gc_af_result_failed">Could not apply the fix: %1$s\nAll changes were rolled back.</string>
+    <string name="gc_af_result_rollback_incomplete">The fix failed and the rollback hit problems (%1$s). Check the backup folder .autofix/backups in the profile.</string>
+    <string name="gc_af_result_skipped">Auto Fix did not run: %1$s</string>
+    <string name="gc_af_undo_done">Last Auto Fix reverted.</string>
+    <string name="gc_af_undo_failed">Could not revert: %1$s</string>
+    <string name="gc_af_step_ok">\u2713 %1$s</string>
+    <string name="gc_af_step_noop">\u2013 %1$s (already fine)</string>
+    <string name="gc_af_step_failed">\u2717 %1$s \u2014 %2$s</string>
+    <string name="gc_af_details_title">ANALYSIS DETAILS</string>
+    <string name="gc_af_details_history">Repair history for this profile</string>
+    <string name="gc_af_details_history_none">No repairs yet.</string>
+    <string name="gc_af_busy">Auto Fix is already running.</string>
+
+    <string name="gc_af_cat_java_runtime_error">Java runtime error</string>
+    <string name="gc_af_cat_out_of_memory">Out of memory</string>
+    <string name="gc_af_cat_mod_conflict">Mod conflict</string>
+    <string name="gc_af_cat_missing_dependency">Missing mod dependency</string>
+    <string name="gc_af_cat_incompatible_mod_version">Incompatible mod version</string>
+    <string name="gc_af_cat_corrupted_configuration">Corrupted configuration</string>
+    <string name="gc_af_cat_corrupted_library">Corrupted game files</string>
+    <string name="gc_af_cat_invalid_jvm_argument">Invalid JVM argument</string>
+    <string name="gc_af_cat_graphics_initialization_error">Graphics initialization error</string>
+    <string name="gc_af_cat_shader_error">Shader error</string>
+    <string name="gc_af_cat_resource_pack_error">Resource pack error</string>
+    <string name="gc_af_cat_native_library_error">Native library error</string>
+    <string name="gc_af_cat_disk_or_storage_error">Storage error</string>
+    <string name="gc_af_cat_network_download_error">Download / network error</string>
+    <string name="gc_af_cat_unknown_error">Unknown error</string>
+
+    <string name="gc_af_why_java_runtime_error">The selected Java runtime cannot run this game or mod \u2014 usually the mod needs a newer Java, or a mod calls code that does not exist in this game version.</string>
+    <string name="gc_af_why_out_of_memory">The game needed more memory than it was allowed, or the system reclaimed memory from it.</string>
+    <string name="gc_af_why_mod_conflict">A mod could not patch the game (Mixin failure), is installed twice, or clashes with another mod.</string>
+    <string name="gc_af_why_missing_dependency">A mod needs another library mod that is not installed in this profile.</string>
+    <string name="gc_af_why_incompatible_mod_version">A mod was built for a different Minecraft or loader version than this profile uses.</string>
+    <string name="gc_af_why_corrupted_configuration">A mod\'s configuration file is malformed, so the mod crashes while reading it.</string>
+    <string name="gc_af_why_corrupted_library">A game library or the client jar is incomplete or corrupt, so Java cannot read it.</string>
+    <string name="gc_af_why_invalid_jvm_argument">A custom JVM argument is not accepted by this Java version, so the game never started.</string>
+    <string name="gc_af_why_graphics_initialization_error">The renderer could not create a graphics context on this device.</string>
+    <string name="gc_af_why_shader_error">A shader pack failed to compile or crashed the renderer.</string>
+    <string name="gc_af_why_resource_pack_error">An enabled resource pack could not be loaded.</string>
+    <string name="gc_af_why_native_library_error">A native (C/C++) library crashed or could not be loaded; the Java side has no stack trace for it.</string>
+    <string name="gc_af_why_disk_or_storage_error">The game could not write its files \u2014 the storage is full or not writable.</string>
+    <string name="gc_af_why_network_download_error">Required game files could not be downloaded.</string>
+    <string name="gc_af_why_unknown_error">The log does not match a known pattern.</string>
+
+    <string name="gc_dx_config_advice">Auto Fix moves the broken file to a backup so the mod recreates it with defaults. Your other settings stay untouched.</string>
+    <string name="gc_dx_jvmarg_advice">Auto Fix removes only the rejected option from the profile\'s custom JVM arguments; everything else is kept.</string>
+    <string name="gc_dx_shader_advice">Auto Fix turns shaders off in Iris / OptiFine (the pack stays on disk). Then pick a lighter pack or a different renderer.</string>
+    <string name="gc_dx_rp_advice">Auto Fix disables the pack in options.txt (the file stays in resourcepacks/). Make sure the pack matches this Minecraft version.</string>
+    <string name="gc_dx_disk_advice">Free up storage on the device and make sure the launcher has storage permission, then retry. Nothing is changed automatically.</string>
+
+    <string name="gc_af_step_disable_mod">Disable mod %1$s (renamed to .disabled, not deleted)</string>
+    <string name="gc_af_step_enable_mod">Re-enable mod %1$s</string>
+    <string name="gc_af_step_install_dependency">Install missing dependency %1$s from Modrinth (checksum verified)</string>
+    <string name="gc_af_step_verify_libraries">Verify game libraries against their checksums and re-download corrupt ones on the next launch</string>
+    <string name="gc_af_step_prune_jvm_args">Remove the rejected JVM option %1$s</string>
+    <string name="gc_af_step_adjust_memory">Set a device-safe memory allocation for this profile</string>
+    <string name="gc_af_step_fallback_renderer">Switch this profile to the most compatible renderer (gl4es)</string>
+    <string name="gc_af_step_select_runtime">Switch this profile to an installed Java %1$s runtime</string>
+    <string name="gc_af_step_disable_shaders">Turn shaders off in the shader mod\'s config</string>
+    <string name="gc_af_step_disable_resource_pack">Disable resource pack %1$s in options.txt</string>
+    <string name="gc_af_step_disable_resource_pack_all">Disable all external resource packs in options.txt</string>
+    <string name="gc_af_step_reset_config">Move config/%1$s to the backup so it is regenerated</string>
+    <string name="gc_af_step_check_network">Check the connection to Mojang servers (the next launch resumes the download)</string>
 </resources>

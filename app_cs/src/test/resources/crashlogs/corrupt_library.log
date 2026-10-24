@@ -1,0 +1,6 @@
+Info: Launching with runtime jre-21
+Error: Could not find or load main class net.fabricmc.loader.impl.launch.knot.KnotClient
+Caused by: java.lang.ClassNotFoundException: net.fabricmc.loader.impl.launch.knot.KnotClient
+java.util.zip.ZipException: zip END header not found
+	at java.util.zip.ZipFile$Source.findEND(ZipFile.java:1572)
+Opening /storage/emulated/0/games/PojavLauncher/.minecraft/libraries/net/fabricmc/fabric-loader/0.16.5/fabric-loader-0.16.5.jar

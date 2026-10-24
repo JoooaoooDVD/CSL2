@@ -1,0 +1,3 @@
+[12:00:01] [main/INFO]: Loading Minecraft 1.21.1
+Exception in thread "Render thread" java.lang.UnsatisfiedLinkError: dlopen failed: library "libgl4es_114.so" not found
+	at java.base/java.lang.Runtime.load0(Runtime.java:755)

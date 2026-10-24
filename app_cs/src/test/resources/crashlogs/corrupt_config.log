@@ -1,0 +1,5 @@
+[12:00:01] [main/INFO]: Loading Minecraft 1.21.1 with Fabric Loader 0.16.5
+[12:00:05] [main/ERROR]: Failed to load config file config/sodium-extra.json
+com.google.gson.JsonSyntaxException: com.google.gson.stream.MalformedJsonException: Unterminated object at line 12 column 5 path $.extras
+	at com.google.gson.Gson.fromJson(Gson.java:1224)
+[12:00:05] [main/FATAL]: Failed to start the minecraft server

@@ -1,0 +1,5 @@
+Info: Total RAM on device: 5831 Mb
+Info: Custom Java arguments: -XX:+UseZGCFoo -Dfml.earlyprogresswindow=false
+Unrecognized VM option 'UseZGCFoo'
+Error: Could not create the Java Virtual Machine.
+Error: A fatal exception has occurred. Program will exit.

@@ -69,10 +69,20 @@
             </LinearLayout>
 
             <TextView
-                android:id="@+id/gc_meta"
+                android:id="@+id/gc_subtitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
+                android:lineSpacingExtra="2dp"
+                android:text="@string/gc_subtitle_analyzing"
+                android:textColor="@color/hm_text"
+                android:textSize="13.5sp" />
+
+            <TextView
+                android:id="@+id/gc_meta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
                 android:textColor="@color/hm_text_dim"
                 android:textSize="12.5sp"
                 tools:text="Exit code 1 · Survival · 1.21.4 · Fabric" />
@@ -129,6 +139,233 @@
                     android:textColor="#FFFFB4B4"
                     android:textSize="10.5sp"
                     tools:text="java.lang.OutOfMemoryError: Java heap space" />
+            </LinearLayout>
+
+            <!-- Auto fix -->
+            <LinearLayout
+                android:id="@+id/gc_af_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_pp_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:fontFamily="sans-serif-medium"
+                        android:letterSpacing="0.14"
+                        android:text="@string/gc_af_eyebrow"
+                        android:textColor="@color/hm_accent"
+                        android:textSize="10sp" />
+
+                    <TextView
+                        android:id="@+id/gc_af_confidence"
+                        android:layout_width="wrap_content"
+                        android:layout_height="22dp"
+                        android:background="@drawable/bg_gc_chip"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:paddingStart="9dp"
+                        android:paddingEnd="9dp"
+                        android:textColor="@color/hm_text"
+                        android:textSize="10.5sp"
+                        android:visibility="gone"
+                        tools:text="Confidence 92%"
+                        tools:visibility="visible" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/gc_af_component"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:fontFamily="monospace"
+                    android:textColor="#FFFFB4B4"
+                    android:textSize="11.5sp"
+                    android:visibility="gone"
+                    tools:text="Suspected component: sodium-extra"
+                    tools:visibility="visible" />
+
+                <TextView
+                    android:id="@+id/gc_af_plan_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="@string/gc_af_plan_title"
+                    android:textColor="@color/hm_text"
+                    android:textSize="12.5sp" />
+
+                <TextView
+                    android:id="@+id/gc_af_plan"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:lineSpacingExtra="3dp"
+                    android:textColor="@color/hm_text_dim"
+                    android:textSize="12sp"
+                    tools:text="\u2022 Disable mod sodium-extra (renamed to .disabled, not deleted)" />
+
+                <ProgressBar
+                    android:id="@+id/gc_af_progress"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="4dp"
+                    android:layout_marginTop="10dp"
+                    android:indeterminate="true"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+                <TextView
+                    android:id="@+id/gc_af_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:lineSpacingExtra="2dp"
+                    android:textColor="@color/hm_text"
+                    android:textSize="12.5sp"
+                    android:visibility="gone"
+                    tools:text="Applying: sodium-extra-0.5.jar \u2192 .disabled"
+                    tools:visibility="visible" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/gc_af_fix"
+                        android:layout_width="0dp"
+                        android:layout_height="44dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_gc_btn_primary"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:letterSpacing="0.06"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
+                        android:text="@string/gc_af_btn_fix"
+                        android:textColor="@color/hm_backdrop_bottom"
+                        android:textSize="12.5sp" />
+
+                    <TextView
+                        android:id="@+id/gc_af_retry"
+                        android:layout_width="0dp"
+                        android:layout_height="44dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_gc_btn_ghost"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:letterSpacing="0.06"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
+                        android:text="@string/gc_af_btn_retry"
+                        android:textColor="@color/hm_text"
+                        android:textSize="12.5sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/gc_af_report"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_gc_btn_ghost"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:letterSpacing="0.06"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
+                        android:text="@string/gc_af_btn_report"
+                        android:textColor="@color/hm_text"
+                        android:textSize="11.5sp" />
+
+                    <TextView
+                        android:id="@+id/gc_af_details"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_gc_btn_ghost"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:letterSpacing="0.06"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
+                        android:text="@string/gc_af_btn_details"
+                        android:textColor="@color/hm_text"
+                        android:textSize="11.5sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/gc_af_undo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="4dp"
+                    android:text="@string/gc_af_btn_undo"
+                    android:textColor="@color/hm_accent"
+                    android:textSize="12sp"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+                <LinearLayout
+                    android:id="@+id/gc_af_details_pane"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_gc_log"
+                    android:orientation="vertical"
+                    android:padding="10dp"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif-medium"
+                        android:letterSpacing="0.14"
+                        android:text="@string/gc_af_details_title"
+                        android:textColor="@color/hm_accent"
+                        android:textSize="10sp" />
+
+                    <TextView
+                        android:id="@+id/gc_af_details_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:fontFamily="monospace"
+                        android:textColor="#FFD5D8DF"
+                        android:textIsSelectable="true"
+                        android:textSize="10.5sp"
+                        tools:text="category: MOD_CONFLICT" />
+                </LinearLayout>
             </LinearLayout>
 
             <!-- Actions -->

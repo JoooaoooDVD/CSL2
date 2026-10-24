@@ -1,0 +1,9 @@
+[12:00:01] [main/INFO]: Loading Minecraft 1.21.1 with Fabric Loader 0.16.5
+[12:00:02] [main/ERROR]: Incompatible mods found!
+net.fabricmc.loader.impl.FormattedException: Mod resolution encountered an incompatible mod set!
+A potential solution has been determined, this may resolve your problem:
+	 - Install fabric-api, any version.
+Unmet dependency listing:
+	 - Mod 'Sodium Extra' (sodium-extra) 0.5.7+mc1.21 requires any version of fabric-api, which is missing!
+	 - Mod 'Reese's Sodium Options' (reeses-sodium-options) 1.7.2 requires version 0.5.8 or later of sodium, which is missing!
+	at net.fabricmc.loader.impl.FabricLoaderImpl.load(FabricLoaderImpl.java:198)

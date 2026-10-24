@@ -1,0 +1,5 @@
+Info: Launching 1.21.1
+Info: Downloading https://piston-data.mojang.com/v1/objects/abc/client.jar
+java.net.UnknownHostException: Unable to resolve host "piston-data.mojang.com": No address associated with hostname
+	at java.net.Inet6AddressImpl.lookupHostAddr(Native Method)
+Error: Failed to download client.jar

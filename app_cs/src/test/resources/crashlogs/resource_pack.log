@@ -1,0 +1,5 @@
+[12:00:01] [main/INFO]: Loading Minecraft 1.21.1
+[12:00:15] [Render thread/ERROR]: Failed to load resource pack file/Faithful-32x.zip
+java.util.zip.ZipException: invalid entry CRC (expected 0x1 but got 0x2)
+	at net.minecraft.class_3258.method_14405(class_3258.java:109)
+[12:00:15] [Render thread/FATAL]: Reported exception thrown! Failed to reload resources

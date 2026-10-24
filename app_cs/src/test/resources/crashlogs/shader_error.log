@@ -1,0 +1,6 @@
+[12:00:01] [main/INFO]: Loading Minecraft 1.21.1 with Fabric Loader 0.16.5
+[12:00:20] [Render thread/INFO]: [Iris] Loading shaderpack ComplementaryReimagined_r5.2.zip
+[12:00:25] [Render thread/ERROR]: [Iris] Failed to compile shader program gbuffers_terrain
+net.irisshaders.iris.gl.shader.ShaderCompileException: composite1.fsh: 0:412: S0001: Type mismatch in arithmetic operation between 'vec3' and 'vec4'
+	at net.irisshaders.iris.gl.shader.GlShader.compileShader(GlShader.java:95)
+[12:00:25] [Render thread/FATAL]: Reported exception thrown!

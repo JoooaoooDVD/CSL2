@@ -1,0 +1,5 @@
+[12:00:01] [main/INFO]: ModLauncher running: args [--username, Player, --accessToken, ❄❄❄❄❄❄❄❄]
+[12:00:09] [main/ERROR]: Missing or unsupported mandatory dependencies:
+	Mod ID: 'geckolib', Requested by: 'alexsmobs', Expected range: '[4.4,)', Actual version: '[MISSING]'
+	Mod ID: 'citadel', Requested by: 'alexsmobs', Expected range: '[2.5,)', Actual version: '[MISSING]'
+[12:00:09] [main/FATAL]: Crash report saved to ./crash-reports/crash-2025-01-01_12.00.09-fml.txt

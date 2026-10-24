@@ -1,0 +1,9 @@
+[12:00:01] [main/INFO]: Loading Minecraft 1.21.4 with Fabric Loader 0.16.9
+[12:00:08] [Render thread/INFO]: Setting user: Player123
+[12:00:20] [Render thread/INFO]: Backend library: LWJGL version 3.3.3-snapshot
+[12:01:40] [Server thread/ERROR]: Encountered an unexpected exception
+java.lang.OutOfMemoryError: Java heap space
+	at net.minecraft.class_2818.<init>(class_2818.java:88)
+	at net.minecraft.class_3215.method_14136(class_3215.java:201)
+[12:01:41] [Render thread/FATAL]: Reported exception thrown!
+net.minecraft.class_148: Exception ticking world

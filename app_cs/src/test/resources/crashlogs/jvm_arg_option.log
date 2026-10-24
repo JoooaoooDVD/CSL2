@@ -1,0 +1,4 @@
+Info: Launching with runtime jre-17
+Unrecognized option: -Xfoo
+Error: Could not create the Java Virtual Machine.
+Error: A fatal exception has occurred. Program will exit.

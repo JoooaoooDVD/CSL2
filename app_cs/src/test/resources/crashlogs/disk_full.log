@@ -1,0 +1,4 @@
+[12:00:01] [main/INFO]: Loading Minecraft 1.21.1
+[12:00:30] [Server thread/ERROR]: Failed to save chunk [0, 0]
+java.io.IOException: No space left on device
+	at java.base/java.io.RandomAccessFile.writeBytes(Native Method)

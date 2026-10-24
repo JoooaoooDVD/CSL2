@@ -1,0 +1,5 @@
+[12:00:01] [main/INFO]: Loading Minecraft 1.21.1
+[12:00:09] [Render thread/ERROR]: GLFW error 65543: GLX: Failed to create context: GLXBadFBConfig
+[12:00:09] [Render thread/ERROR]: GLFW error 65542: WGL: The driver does not appear to support OpenGL
+java.lang.IllegalStateException: Failed to create OpenGL context
+	at org.lwjgl.glfw.GLFW.glfwCreateWindow(GLFW.java:1930)
