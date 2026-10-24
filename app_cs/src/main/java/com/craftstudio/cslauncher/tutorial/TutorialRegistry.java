@@ -288,9 +288,9 @@ public final class TutorialRegistry {
         // ── Worlds ───────────────────────────────────────────────────────────────────
         list.add(new TutorialDefinition.Builder(WORLDS, R.string.tut_wd_title, R.string.tut_wd_summary, R.string.tut_wd_desc)
                 .icon(R.drawable.ic_px_image).category(Category.CONTENT).availableWhen(HAS_PROFILE)
-                .step(step("intro", R.string.tut_wd_intro_t, R.string.tut_wd_intro_b).on(WORLDS))
-                .step(step("list", R.string.tut_wd_list_t, R.string.tut_wd_list_b).on(WORLDS))
-                .step(step("safety", R.string.tut_wd_safety_t, R.string.tut_wd_safety_b).on(WORLDS))
+                .step(step("intro", R.string.tut_wd_intro_t, R.string.tut_wd_intro_b).on(TutorialScreen.WORLDS))
+                .step(step("list", R.string.tut_wd_list_t, R.string.tut_wd_list_b).on(TutorialScreen.WORLDS))
+                .step(step("safety", R.string.tut_wd_safety_t, R.string.tut_wd_safety_b).on(TutorialScreen.WORLDS))
                 .build());
 
         // ── Settings tour ────────────────────────────────────────────────────────────
@@ -320,7 +320,7 @@ public final class TutorialRegistry {
                 .step(step("sustained", R.string.tut_perf_sus_t, R.string.tut_perf_sus_b).on(SETTINGS_VIDEO).targetPref("sustainedPerformance").optional())
                 .step(step("vsync", R.string.tut_perf_vsync_t, R.string.tut_perf_vsync_b).on(SETTINGS_VIDEO).targetPref("force_vsync").optional())
                 .step(step("profile", R.string.tut_perf_profile_t, R.string.tut_perf_profile_b).on(PROFILE_EDITOR).target(R.id.pe_row_jvm).when(HAS_PROFILE))
-                .step(step("logs", R.string.tut_perf_logs_t, R.string.tut_perf_logs_b).on(LOGS).target(R.id.logs_text))
+                .step(step("logs", R.string.tut_perf_logs_t, R.string.tut_perf_logs_b).on(TutorialScreen.LOGS).target(R.id.logs_text))
                 .step(step("retry", R.string.tut_perf_retry_t, R.string.tut_perf_retry_b).on(HOME).target(R.id.play_button))
                 .build());
 
@@ -342,10 +342,10 @@ public final class TutorialRegistry {
                 .icon(R.drawable.ic_px_console).category(Category.TOOLS)
                 .step(step("open", R.string.tut_log_open_t, R.string.tut_log_open_b).instruction(R.string.tut_log_open_i)
                         .on(HOME).target(R.id.nav_logs).waitScreen(LogsFragment.class))
-                .step(step("text", R.string.tut_log_text_t, R.string.tut_log_text_b).on(LOGS).target(R.id.logs_text))
-                .step(step("reload", R.string.tut_log_reload_t, R.string.tut_log_reload_b).on(LOGS).target(R.id.logs_reload_button))
-                .step(step("share", R.string.tut_log_share_t, R.string.tut_log_share_b).on(LOGS).target(R.id.logs_share_button))
-                .step(step("crash", R.string.tut_log_crash_t, R.string.tut_log_crash_b).on(LOGS))
+                .step(step("text", R.string.tut_log_text_t, R.string.tut_log_text_b).on(TutorialScreen.LOGS).target(R.id.logs_text))
+                .step(step("reload", R.string.tut_log_reload_t, R.string.tut_log_reload_b).on(TutorialScreen.LOGS).target(R.id.logs_reload_button))
+                .step(step("share", R.string.tut_log_share_t, R.string.tut_log_share_b).on(TutorialScreen.LOGS).target(R.id.logs_share_button))
+                .step(step("crash", R.string.tut_log_crash_t, R.string.tut_log_crash_b).on(TutorialScreen.LOGS))
                 .build());
 
         // ── Virtual LAN multiplayer ──────────────────────────────────────────────────
@@ -353,12 +353,12 @@ public final class TutorialRegistry {
                 .icon(R.drawable.ic_px_zap).category(Category.TOOLS)
                 .step(step("open", R.string.tut_mp_open_t, R.string.tut_mp_open_b).instruction(R.string.tut_mp_open_i)
                         .on(HOME).target(R.id.nav_multiplayer).waitScreen(VirtualLanFragment.class))
-                .step(step("beta", R.string.tut_mp_beta_t, R.string.tut_mp_beta_b).on(MULTIPLAYER).target(R.id.vl_beta_card).optional())
-                .step(step("create", R.string.tut_mp_create_t, R.string.tut_mp_create_b).on(MULTIPLAYER).target(R.id.vl_action_create).optional())
-                .step(step("join", R.string.tut_mp_join_t, R.string.tut_mp_join_b).on(MULTIPLAYER).target(R.id.vl_join_box).optional())
-                .step(step("recent", R.string.tut_mp_recent_t, R.string.tut_mp_recent_b).on(MULTIPLAYER).target(R.id.vl_recent_card).optional())
-                .step(step("ingame", R.string.tut_mp_ingame_t, R.string.tut_mp_ingame_b).on(MULTIPLAYER))
-                .step(step("logs", R.string.tut_mp_logs_t, R.string.tut_mp_logs_b).on(MULTIPLAYER).target(R.id.vl_send_logs).optional())
+                .step(step("beta", R.string.tut_mp_beta_t, R.string.tut_mp_beta_b).on(TutorialScreen.MULTIPLAYER).target(R.id.vl_beta_card).optional())
+                .step(step("create", R.string.tut_mp_create_t, R.string.tut_mp_create_b).on(TutorialScreen.MULTIPLAYER).target(R.id.vl_action_create).optional())
+                .step(step("join", R.string.tut_mp_join_t, R.string.tut_mp_join_b).on(TutorialScreen.MULTIPLAYER).target(R.id.vl_join_box).optional())
+                .step(step("recent", R.string.tut_mp_recent_t, R.string.tut_mp_recent_b).on(TutorialScreen.MULTIPLAYER).target(R.id.vl_recent_card).optional())
+                .step(step("ingame", R.string.tut_mp_ingame_t, R.string.tut_mp_ingame_b).on(TutorialScreen.MULTIPLAYER))
+                .step(step("logs", R.string.tut_mp_logs_t, R.string.tut_mp_logs_b).on(TutorialScreen.MULTIPLAYER).target(R.id.vl_send_logs).optional())
                 .build());
 
         // ── Discord Rich Presence ────────────────────────────────────────────────────

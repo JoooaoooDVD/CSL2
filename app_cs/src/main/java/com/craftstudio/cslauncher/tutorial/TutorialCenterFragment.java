@@ -255,7 +255,7 @@ public class TutorialCenterFragment extends Fragment {
                 .message(R.string.tut_center_reset_message)
                 .positive(R.string.tut_center_reset_confirm, () -> {
                     TutorialManager.getInstance().cancel();
-                    TutorialState.resetProgress(context);
+                    TutorialState.resetProgress(context, TutorialRegistry.allIds());
                     Toast.makeText(context, R.string.tut_center_reset_done, Toast.LENGTH_SHORT).show();
                     refresh();
                 })
