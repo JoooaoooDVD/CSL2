@@ -82,63 +82,17 @@ public class TutorialCenterFragment extends Fragment {
             });
         });
 
-        EditText search = view.findViewById(R.id.tc_search);
-        View clear = view.findViewById(R.id.tc_search_clear);
-        search.addTextChangedListener(new TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
-            @Override
-            public void afterTextChanged(Editable s) {
-                mQuery = s.toString().trim().toLowerCase(Locale.ROOT);
-                clear.setVisibility(mQuery.isEmpty() ? View.GONE : View.VISIBLE);
-                refresh();
-            }
-        });
-        clear.setOnClickListener(v -> search.setText(""));
-
-        buildFilters();
+        // Five guides only: no search box, no filter chips
+        View search = view.findViewById(R.id.tc_search);
+        if (search != null && search.getParent() instanceof View) ((View) search.getParent()).setVisibility(View.GONE);
+        if (mFilters != null && mFilters.getParent() instanceof View) ((View) mFilters.getParent()).setVisibility(View.GONE);
+        else if (mFilters != null) mFilters.setVisibility(View.GONE);
     }
 
     @Override
     public void onResume() {
         super.onResume();
         refresh();
-    }
-
-    // ───────────────────────────── filters ─────────────────────────────
-
-    private void buildFilters() {
-        mFilters.removeAllViews();
-        addFilter(Filter.ALL, R.string.tut_center_filter_all);
-        addFilter(Filter.RECOMMENDED, R.string.tut_center_filter_recommended);
-        addFilter(Filter.BEGINNER, R.string.tut_center_filter_beginner);
-        addFilter(Filter.TODO, R.string.tut_center_filter_todo);
-        addFilter(Filter.DONE, R.string.tut_center_filter_done);
-        addFilter(Filter.BASICS, R.string.tut_category_basics);
-        addFilter(Filter.PLAY, R.string.tut_category_play);
-        addFilter(Filter.CONTENT, R.string.tut_category_content);
-        addFilter(Filter.SETTINGS, R.string.tut_category_settings);
-        addFilter(Filter.TOOLS, R.string.tut_category_tools);
-        updateFilterChips();
-    }
-
-    private void addFilter(@NonNull Filter filter, @StringRes int label) {
-        TextView chip = (TextView) LayoutInflater.from(requireContext()).inflate(R.layout.tutorial_filter_chip, mFilters, false);
-        chip.setText(label);
-        chip.setTag(filter);
-        chip.setOnClickListener(v -> {
-            mFilter = filter;
-            updateFilterChips();
-            refresh();
-        });
-        mFilters.addView(chip);
-    }
-
-    private void updateFilterChips() {
-        for (int i = 0; i < mFilters.getChildCount(); i++) {
-            View chip = mFilters.getChildAt(i);
-            chip.setSelected(chip.getTag() == mFilter);
-        }
     }
 
     private boolean matches(@NonNull TutorialDefinition def, @NonNull Context context) {
@@ -206,8 +160,12 @@ public class TutorialCenterFragment extends Fragment {
         });
     }
 
-    private void replayAll() {
-        closeAndRun(() -> TutorialManager.getInstance().startSequence(TutorialRegistry.allIds(), false));
+    /** The first-launch tour again, without the welcome card */
+    private void replayTour() {
+        FragmentActivity activity = getActivity();
+        if (!(activity instanceof LauncherActivity)) return;
+        LauncherActivity launcher = (LauncherActivity) activity;
+        closeAndRun(() -> FirstLaunchSetup.restart(launcher));
     }
 
     /** Leaves this screen, then runs the action once the launcher home is back on top */
@@ -222,26 +180,14 @@ public class TutorialCenterFragment extends Fragment {
         Context context = anchor.getContext();
         CharSequence[] entries = {
                 getString(R.string.tut_center_replay_all),
-                getString(R.string.tut_center_restart_setup),
-                getString(R.string.tut_center_reset),
-                getString(TutorialState.showTips(context) ? R.string.tut_center_tips_off : R.string.tut_center_tips_on),
-                getString(TutorialState.isInteractive(context) ? R.string.tut_center_mode_guided : R.string.tut_center_mode_interactive)
+                getString(R.string.tut_center_reset)
         };
         new SettingsPopup(context)
                 .title(R.string.tut_center_more)
                 .singleChoice(entries, -1, which -> {
                     switch (which) {
-                        case 0: replayAll(); break;
-                        case 1: confirmRestartSetup(); break;
-                        case 2: confirmReset(); break;
-                        case 3:
-                            TutorialState.setShowTips(context, !TutorialState.showTips(context));
-                            break;
-                        case 4:
-                            TutorialState.setInteractive(context, !TutorialState.isInteractive(context));
-                            Toast.makeText(context, TutorialState.isInteractive(context)
-                                    ? R.string.tut_opt_interactive_t : R.string.tut_opt_guided_t, Toast.LENGTH_SHORT).show();
-                            break;
+                        case 0: replayTour(); break;
+                        case 1: confirmReset(); break;
                         default: break;
                     }
                 })
@@ -258,22 +204,6 @@ public class TutorialCenterFragment extends Fragment {
                     TutorialState.resetProgress(context, TutorialRegistry.allIds());
                     Toast.makeText(context, R.string.tut_center_reset_done, Toast.LENGTH_SHORT).show();
                     refresh();
-                })
-                .negative(R.string.pe_cancel, null)
-                .show();
-    }
-
-    private void confirmRestartSetup() {
-        Context context = requireContext();
-        new SettingsPopup(context)
-                .title(R.string.tut_center_restart_setup)
-                .message(R.string.tut_center_restart_message)
-                .positive(R.string.tut_center_restart_confirm, () -> {
-                    FragmentActivity activity = getActivity();
-                    if (!(activity instanceof LauncherActivity)) return;
-                    LauncherActivity launcher = (LauncherActivity) activity;
-                    Tools.backToMainMenu(launcher);
-                    launcher.getWindow().getDecorView().postDelayed(() -> FirstLaunchSetup.restart(launcher), 320L);
                 })
                 .negative(R.string.pe_cancel, null)
                 .show();

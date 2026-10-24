@@ -37,15 +37,19 @@ import java.util.List;
  *   <li>{@code fullscreen} — dimmed launcher + centred card (blocking until dismissed)</li>
  *   <li>{@code card} — a small card sliding in from the right edge of the home screen</li>
  * </ul>
- * At most one of each per launcher start; the fullscreen one goes first. Waits politely while
- * first-launch dialogs or the tutorial are on screen, and gives up quietly if the activity is gone.
+ * Checked on every launcher start and resume (fetch throttled to once a minute); the fullscreen
+ * one goes first. Waits while first-launch dialogs or a guide are on screen and shows as soon as
+ * they are gone; gives up quietly if the activity is gone. Per-item "shown" bookkeeping lives in
+ * {@link NotifyStore}, so an item never shows twice even across checks.
  */
 public final class AnnouncementController {
     public interface BusyCheck { boolean isBusy(); }
 
     private static final long CARD_AUTO_HIDE_MS = 18_000L;
-    private static final int WAIT_TRIES = 40; // × 1.5 s
-    private static boolean sShownThisProcess;
+    private static final int WAIT_TRIES = 400; // × 1.5 s = 10 min of waiting for the UI to be free
+    private static final long MIN_CHECK_INTERVAL_MS = 60_000L;
+    private static long sLastCheck;
+    private static boolean sActive;
 
     private final WeakReference<Activity> mActivity;
     private final BusyCheck mBusy;
@@ -59,14 +63,26 @@ public final class AnnouncementController {
         mBusy = busy;
     }
 
-    /** Fetches and shows pending announcements once per process (call from the launcher's onCreate) */
+    /** Fetches and shows pending announcements (call from the launcher's onCreate and onResume) */
     public static void showWhenIdle(@NonNull Activity activity, @NonNull BusyCheck busy) {
-        if (sShownThisProcess) return;
-        sShownThisProcess = true;
+        long now = System.currentTimeMillis();
+        if (sActive || now - sLastCheck < MIN_CHECK_INTERVAL_MS) return;
+        sLastCheck = now;
+        sActive = true;
         final AnnouncementController c = new AnnouncementController(activity, busy);
-        Thread t = new Thread(c::load, "cs-announcements");
+        Thread t = new Thread(() -> {
+            try {
+                c.load();
+            } finally {
+                if (c.mFull == null && c.mCard == null) sActive = false; // nothing queued for the UI thread
+            }
+        }, "cs-announcements");
         t.setDaemon(true);
         t.start();
+    }
+
+    private void done() {
+        sActive = false;
     }
 
     private void load() {
@@ -107,9 +123,14 @@ public final class AnnouncementController {
 
     private void tryShow() {
         Activity a = mActivity.get();
-        if (a == null || a.isFinishing() || a.isDestroyed()) return;
+        if (a == null || a.isFinishing() || a.isDestroyed()) {
+            sLastCheck = 0L; // the next activity checks again right away
+            done();
+            return;
+        }
         if (mBusy.isBusy()) {
             if (++mTries < WAIT_TRIES) mMain.postDelayed(this::tryShow, 1500L);
+            else { sLastCheck = 0L; done(); }
             return;
         }
         if (mFull != null) {
@@ -120,6 +141,8 @@ public final class AnnouncementController {
             JSONObject c = mCard;
             mCard = null;
             showCard(a, c, mCardImage);
+        } else {
+            done();
         }
     }
 
@@ -164,7 +187,7 @@ public final class AnnouncementController {
         });
         View card = d.findViewById(R.id.ann_card);
         card.setAlpha(0f); card.setScaleX(0.92f); card.setScaleY(0.92f); card.setTranslationY(dp(a, 18));
-        try { d.show(); } catch (Throwable t) { return; }
+        try { d.show(); } catch (Throwable t) { done(); return; }
         NotifyStore.markShown(a, id);
         report(a, id, "shown");
         card.animate().alpha(1f).scaleX(1f).scaleY(1f).translationY(0f).setDuration(380)
@@ -176,7 +199,7 @@ public final class AnnouncementController {
     private void showCard(final Activity a, final JSONObject r, @Nullable Bitmap image) {
         final String id = r.optString("id", "");
         final ViewGroup content = a.findViewById(android.R.id.content);
-        if (content == null) return;
+        if (content == null) { done(); return; }
         final View card = a.getLayoutInflater().inflate(R.layout.announcement_card, content, false);
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         lp.gravity = Gravity.TOP | Gravity.END;
@@ -210,6 +233,7 @@ public final class AnnouncementController {
         content.addView(card);
         NotifyStore.markShown(a, id);
         report(a, id, "shown");
+        done(); // the card lives on its own from here
         card.animate().translationX(0f).alpha(1f).setDuration(420).setInterpolator(new OvershootInterpolator(0.8f)).start();
         if (dismissible) mMain.postDelayed(autoHide[0], CARD_AUTO_HIDE_MS);
     }

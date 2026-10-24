@@ -21,7 +21,7 @@ import java.util.List;
 public final class TutorialState {
     private static final String FILE = "cs_tutorial";
     /** Bumped when the stored format changes; older data is dropped instead of misread */
-    private static final int SCHEMA = 1;
+    private static final int SCHEMA = 2;
 
     private static final String KEY_SCHEMA = "schema";
     private static final String KEY_ONBOARDING_STARTED = "onboarding_started";
@@ -84,6 +84,13 @@ public final class TutorialState {
 
     public static void setOnboardingStarted(@NonNull Context c) {
         prefs(c).edit().putBoolean(KEY_ONBOARDING_STARTED, true).apply();
+    }
+
+    /** Counts how often the welcome card was shown without a choice; returns the new count */
+    public static int bumpWelcomeShown(@NonNull Context c) {
+        int n = prefs(c).getInt("welcome_shown", 0) + 1;
+        prefs(c).edit().putInt("welcome_shown", n).apply();
+        return n;
     }
 
     public static void setOnboardingDone(@NonNull Context c, boolean skipped) {
@@ -265,6 +272,7 @@ public final class TutorialState {
                 .putBoolean(KEY_ONBOARDING_SKIPPED, false)
                 .putBoolean(KEY_ONBOARDING_STARTED, false)
                 .putInt(KEY_SETUP_PAGE, 0)
+                .putInt("welcome_shown", 0)
                 .apply();
     }
 }

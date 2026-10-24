@@ -468,6 +468,13 @@ public class LauncherActivity extends BaseActivity {
         InstanceInstaller.postInstallCheck(this);
         if (mStorageSetupDialog != null) mStorageSetupDialog.onHostResumed();
         com.craftstudio.cslauncher.discord.DiscordPresenceManager.getInstance(this).setLauncherIdle(this);
+        // New announcements / notifications published while the launcher was in the background
+        if (com.craftstudio.cslauncher.about.WelcomePolicy.isAccepted()) {
+            try {
+                com.craftstudio.cslauncher.notify.NotificationSync.runAsync(this);
+                com.craftstudio.cslauncher.notify.AnnouncementController.showWhenIdle(this, this::isOnboardingBusy);
+            } catch (Throwable ignored) {}
+        }
     }
 
     @Override

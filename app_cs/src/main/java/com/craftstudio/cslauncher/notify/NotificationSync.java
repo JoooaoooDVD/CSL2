@@ -32,7 +32,7 @@ public final class NotificationSync {
     public static final String EXTRA_URL = "cs_notify_url";
     public static final String EXTRA_KIND = "cs_notify_kind";
     public static final String EXTRA_ID = "cs_notify_id";
-    private static final long MIN_INTERVAL_MS = 10 * 60 * 1000L; // app-start sync is throttled
+    private static final long MIN_INTERVAL_MS = 60 * 1000L; // foreground sync is throttled to once a minute
     private static final int MAX_PER_SYNC = 3;
 
     private NotificationSync() {}

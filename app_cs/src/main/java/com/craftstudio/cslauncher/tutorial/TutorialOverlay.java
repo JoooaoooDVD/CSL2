@@ -29,9 +29,8 @@ import com.craftstudio.cslauncher.utils.motion.Motion;
  * shows the tooltip card next to it. It is a plain child of {@code android.R.id.content}, so
  * dialogs (separate windows) stay on top of it and system bars are handled by the activity.
  * <p>
- * Touch policy: touches inside the cutout fall through to the real control (the overlay returns
- * false, so the view below receives the full gesture untouched); the card handles its own
- * buttons; everything else is swallowed. Geometry follows the target through the view tree
+ * Touch policy: the card handles its own buttons; every other touch is swallowed, so the launcher
+ * cannot change under a running guide (pass-through exists for completeness but is unused). Geometry follows the target through the view tree
  * observer (layout / scroll), reading one {@code getLocationInWindow} - no hierarchy scans.
  */
 final class TutorialOverlay extends FrameLayout {
@@ -71,6 +70,10 @@ final class TutorialOverlay extends FrameLayout {
     @Nullable private ValueAnimator mPulse;
     private float mPulseAlpha = 1f;
     private int mLostTicks;
+    private boolean mAnimateNextMove;
+    @Nullable private ValueAnimator mCutoutAnim;
+    private final RectF mAnimFrom = new RectF();
+    private final RectF mAnimTo = new RectF();
 
     private final ViewTreeObserver.OnGlobalLayoutListener mLayoutListener = this::syncGeometry;
     private final ViewTreeObserver.OnScrollChangedListener mScrollListener = this::syncGeometry;
@@ -141,7 +144,29 @@ final class TutorialOverlay extends FrameLayout {
         if (progress >= 0f) mProgress.setProgress(Math.round(Math.max(0f, Math.min(1f, progress)) * 1000f));
         mCard.setContentDescription(title + ". " + body + (hasInstruction ? ". " + instruction : ""));
         announceForAccessibility(mCard.getContentDescription());
+        mCard.setVisibility(VISIBLE);
+        animateCardIn();
         requestLayout();
+    }
+
+    /** Between screens: keep the dim, drop the cutout, hide the card until the next setContent */
+    void showTransition() {
+        mTarget = null;
+        mPassThrough = false;
+        startPulse(false);
+        mCard.animate().cancel();
+        mCard.setVisibility(INVISIBLE);
+        if (mCutoutAnim != null) { mCutoutAnim.cancel(); mCutoutAnim = null; }
+        mHasCutout = false;
+        mAnimateNextMove = false;
+        invalidate();
+    }
+
+    /** First appearance of the overlay */
+    void fadeIn() {
+        if (!AnimationManager.isEnabled(getContext(), AnimationManager.TYPE_DIALOGS)) return;
+        setAlpha(0f);
+        animate().alpha(1f).setDuration(Motion.MEDIUM).setInterpolator(Motion.ENTER).start();
     }
 
     /**
@@ -155,8 +180,8 @@ final class TutorialOverlay extends FrameLayout {
         boolean pulse = passThrough && target != null;
         mPulseDot.setVisibility(pulse ? VISIBLE : GONE);
         startPulse(pulse);
+        mAnimateNextMove = mHasCutout && target != null;
         syncGeometry();
-        animateCardIn();
     }
 
     /** Hidden while a dialog opened from the target is up; geometry keeps following */
@@ -164,10 +189,7 @@ final class TutorialOverlay extends FrameLayout {
         if (mSuspended == suspended) return;
         mSuspended = suspended;
         setVisibility(suspended ? INVISIBLE : VISIBLE);
-        if (!suspended) {
-            syncGeometry();
-            animateCardIn();
-        }
+        if (!suspended) syncGeometry();
     }
 
     boolean isSuspended() {
@@ -207,6 +229,7 @@ final class TutorialOverlay extends FrameLayout {
             observer.removeOnScrollChangedListener(mScrollListener);
         }
         startPulse(false);
+        if (mCutoutAnim != null) { mCutoutAnim.cancel(); mCutoutAnim = null; }
         mTarget = null;
         mCallbacks = null;
         super.onDetachedFromWindow();
@@ -238,13 +261,50 @@ final class TutorialOverlay extends FrameLayout {
             getLocationInWindow(mLoc);
             float l = tx - mLoc[0] - mCutoutPadding;
             float t = ty - mLoc[1] - mCutoutPadding;
-            mCutout.set(l, t, l + target.getWidth() + 2 * mCutoutPadding, t + target.getHeight() + 2 * mCutoutPadding);
+            mAnimTo.set(l, t, l + target.getWidth() + 2 * mCutoutPadding, t + target.getHeight() + 2 * mCutoutPadding);
             mHasCutout = true;
+            if (mCutoutAnim != null && mCutoutAnim.isRunning()) {
+                // A layout pass during the move: the animation keeps going towards the new end rect
+                placeCard();
+                return;
+            }
+            if (mAnimateNextMove && hadCutout && !before.equals(mAnimTo)
+                    && AnimationManager.isEnabled(getContext(), AnimationManager.TYPE_CONTENT)) {
+                mAnimateNextMove = false;
+                mAnimFrom.set(before);
+                ValueAnimator anim = ValueAnimator.ofFloat(0f, 1f);
+                anim.setDuration(Motion.MEDIUM);
+                anim.setInterpolator(Motion.STANDARD);
+                anim.addUpdateListener(a -> {
+                    float f = (float) a.getAnimatedValue();
+                    mCutout.set(lerp(mAnimFrom.left, mAnimTo.left, f), lerp(mAnimFrom.top, mAnimTo.top, f),
+                            lerp(mAnimFrom.right, mAnimTo.right, f), lerp(mAnimFrom.bottom, mAnimTo.bottom, f));
+                    invalidate();
+                });
+                anim.addListener(new android.animation.AnimatorListenerAdapter() {
+                    @Override public void onAnimationEnd(android.animation.Animator animation) {
+                        mCutoutAnim = null;
+                        mCutout.set(mAnimTo);
+                        placeCard();
+                        invalidate();
+                    }
+                });
+                mCutoutAnim = anim;
+                anim.start();
+                placeCard();
+                return;
+            }
+            mAnimateNextMove = false;
+            mCutout.set(mAnimTo);
         }
         if (hadCutout != mHasCutout || !before.equals(mCutout)) {
             placeCard();
             invalidate();
         }
+    }
+
+    private static float lerp(float a, float b, float f) {
+        return a + (b - a) * f;
     }
 
     private void placeCard() {
@@ -266,23 +326,24 @@ final class TutorialOverlay extends FrameLayout {
             x = (w - cw) / 2;
             y = (h - ch) / 2;
         } else {
-            int spaceBelow = h - Math.round(mCutout.bottom) - margin;
-            int spaceAbove = Math.round(mCutout.top) - margin;
-            int spaceRight = w - Math.round(mCutout.right) - margin;
-            int spaceLeft = Math.round(mCutout.left) - margin;
-            int cx = Math.round(mCutout.centerX());
-            int cy = Math.round(mCutout.centerY());
+            RectF r = mCutoutAnim != null ? mAnimTo : mCutout;
+            int spaceBelow = h - Math.round(r.bottom) - margin;
+            int spaceAbove = Math.round(r.top) - margin;
+            int spaceRight = w - Math.round(r.right) - margin;
+            int spaceLeft = Math.round(r.left) - margin;
+            int cx = Math.round(r.centerX());
+            int cy = Math.round(r.centerY());
             if (spaceBelow >= ch + gap) {
-                y = Math.round(mCutout.bottom) + gap;
+                y = Math.round(r.bottom) + gap;
                 x = clamp(cx - cw / 2, margin, w - margin - cw);
             } else if (spaceAbove >= ch + gap) {
-                y = Math.round(mCutout.top) - gap - ch;
+                y = Math.round(r.top) - gap - ch;
                 x = clamp(cx - cw / 2, margin, w - margin - cw);
             } else if (spaceRight >= cw + gap) {
-                x = Math.round(mCutout.right) + gap;
+                x = Math.round(r.right) + gap;
                 y = clamp(cy - ch / 2, margin, h - margin - ch);
             } else if (spaceLeft >= cw + gap) {
-                x = Math.round(mCutout.left) - gap - cw;
+                x = Math.round(r.left) - gap - cw;
                 y = clamp(cy - ch / 2, margin, h - margin - ch);
             } else {
                 // Nothing fits cleanly (huge target): use the side with more room, overlapping as little as possible

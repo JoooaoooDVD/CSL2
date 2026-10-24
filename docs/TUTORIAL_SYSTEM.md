@@ -1,21 +1,21 @@
-# Onboarding & interactive tutorial system
+# Tutorial system (v2 — simplified)
 
 Package: `app_cs/src/main/java/com/craftstudio/cslauncher/tutorial/`
 
-| Class | Role |
-|---|---|
-| `TutorialState` | Persistence (`cs_tutorial` SharedPreferences): onboarding started/done/skipped, wizard page, setup mode (quick/complete), interaction mode (interactive/guided), tips flag, per-module completion + progress, saved active run (tutorial, step, sequence) for resume. `resetProgress()` only clears this file – launcher settings are never touched. |
-| `TutorialEvents` | Tiny static event bus. Real UI code emits `PROFILE_PICKER_OPENED/CLOSED`, `APPEARANCE_DIALOG_*`, `VERSION_DIALOG_*`, `MANAGE_CHOOSER_*`, `ACCOUNT_MENU_OPENED`, `GAME_LAUNCHING`, `PROFILE_SAVED`; fragment resumes emit `screen(Class)`. |
-| `TutorialStep` / `TutorialDefinition` | Data model (builder). A step has screen, target (view id or preference key), optional instruction, completion rule (`NEXT`, `TAP_TARGET`, `EVENT`, `SCREEN`, `PREF_CHANGED`), optional resume event (dialog closed), `essential`/`optional`, `when(Condition)`. |
-| `TutorialScreen` | Knows how to detect and open every screen (home, profile editor, browse, worlds, multiplayer, logs, settings hub + each settings page) using the real navigation code. |
-| `TutorialTargets` | Target lookup: view ids inside the activity, preference rows inside `PreferenceFragmentCompat` (scrolls them into view). |
-| `TutorialOverlay` | Full-window overlay: dims everything, cuts a rounded spotlight around the target, draws the pulse ring, positions the tooltip card (`tutorial_tooltip.xml`) with eyebrow/step counter, title, description, instruction, progress bar and Back / Skip step / Next / Close. Touches inside the spotlight pass through to the real control; outside taps are swallowed. |
-| `TutorialManager` | Engine (singleton bound to `LauncherActivity` in `onStart`/`onStop`). Phases: NAVIGATING (opens the step's screen, retries ~4.5 s) → LOCATING (finds target, retries ~2.4 s) → SHOWING → WAITING_RESUME (a dialog the user opened is on top) → FALLBACK (clear message + Retry / Skip). Interactive steps wait for the matching event/screen/pref change; guided mode just shows the hint and lets Next advance. Handles activity recreation (theme change) by rebuilding the current step. Never clicks, launches, downloads or deletes anything itself. |
-| `TutorialRegistry` | The 16 modules built only from features that exist in this code base (home, accounts, profiles, appearance, versions, play, browser, manager, worlds, settings, performance, controls, logs, multiplayer, discord, tools). `onboardingSequence(complete)` returns the Quick (4 modules) or Complete (15 modules) wizard sequence. |
-| `FirstLaunchSetup` | First-launch wizard pages (`tutorial_setup.xml` + `tutorial_page_*.xml`): Welcome → Preferences → Appearance (real `theme_mode` pref) → tour → Completion summary (theme, profile, account, modules; "Launch Minecraft" only when a profile with a version and an account exist). Page index is persisted; Skip/Explore end it for good. |
-| `ContextualHelp` | Top-bar `?` button: popup with the current screen's module description + Start tutorial / All tutorials. Non-blocking hint chips (`tutorial_hint.xml`) the first time a screen with a tutorial is opened, and a "resume" chip after an interrupted tour. |
-| `TutorialCenterFragment` | Settings → Miscellaneous → Tutorials. Search, filters (recommended, beginner, completed, not completed, categories), status pills with progress, Start/Continue/Resume/Replay, overflow: replay all, restart setup, reset progress (confirmed), tips on/off, interactive/guided. |
+## What it does
+* **First launch:** one welcome card (`FirstLaunchSetup`, layout `tutorial_setup` + `tutorial_page_welcome`)
+  with *Take the tour* / *Skip*. Either button marks onboarding done (`TutorialState`, prefs `cs_tutorial`,
+  schema 2) — the card never returns on its own. Three unanswered appearances (crash / force stop) also mark it done.
+* **Guides (5, guided only):** `home` (launcher tour, 10 stops on the home screen), `profiles`,
+  `look` (Minecraft Appearance: Vanilla Experience vs CS Custom Experience), `content`, `settings`.
+  Defined in `TutorialRegistry`; every target is a real view id, every text describes shipped behaviour.
+* **Engine (`TutorialManager`):** navigate (launcher's own calls, polled until the fragment is resumed) →
+  locate (bounded retries, scroll into view) → spotlight (`TutorialOverlay`). The overlay swallows all touches
+  outside its card; Back asks "Stop the tour?". Failures end in Retry / Skip, never a stuck overlay.
+  Activity recreation re-attaches and rebuilds the current step.
+* **Tutorials screen (`TutorialCenterFragment`):** Settings → Miscellaneous → Tutorials. Start / Continue / Replay
+  per guide, Resume banner for a paused run, More → *Replay the launcher tour* / *Reset progress*
+  (touches only `cs_tutorial` prefs).
+* **"?" button (`ContextualHelp`):** offers the guide for the current screen or the Tutorials screen. No automatic tips.
 
-Strings are generated by `tools/gen_tutorial_strings.py` → `res/values/strings_tutorial.xml` (the script fails if any referenced `tut_*` key is missing). Hinglish for the wizard/engine/center lives in `tools/hinglish.py`; module texts fall back to English.
-
-Known limits: the Controls editor (`CustomControlsActivity`) and the game itself are separate activities, so those steps explain instead of highlighting; the Worlds module runs only when a profile exists; Virtual LAN steps are explanation-only (never connects).
+Strings: `res/values/strings_tutorial.xml` (+ Hinglish subset in `values-b+hi+Latn`).

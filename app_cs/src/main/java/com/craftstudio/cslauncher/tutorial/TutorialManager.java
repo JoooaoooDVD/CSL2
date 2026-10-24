@@ -1,11 +1,8 @@
 package com.craftstudio.cslauncher.tutorial;
 
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.SystemClock;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -16,12 +13,9 @@ import android.widget.Toast;
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 
 import com.craftstudio.cslauncher.LauncherActivity;
 import com.craftstudio.cslauncher.R;
-import com.craftstudio.cslauncher.prefs.LauncherPreferences;
 import com.craftstudio.cslauncher.prefs.SettingsPopup;
 import com.craftstudio.cslauncher.utils.motion.Motion;
 
@@ -29,30 +23,27 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The tutorial engine. One instance per process; it binds to the visible {@link LauncherActivity}
- * ({@link #attach}/{@link #detach} from onStart/onStop) and survives recreation: the current
- * module/step live here and in {@link TutorialState}, the overlay is rebuilt on the new activity.
+ * The guide engine. One instance per process, bound to the visible {@link LauncherActivity}
+ * (onStart/onStop). A guide is a list of steps; running a step means: make sure its screen is
+ * open (launcher navigation, polled until the fragment is resumed), find the target view
+ * (bounded retries, scrolled into view), then spotlight it with the explanation card.
  * <p>
- * Running a step = make sure the required screen is open (real navigation, polled until the
- * fragment is resumed) → find the real target view (bounded retries) → show the spotlight →
- * wait for the completion (Next, a tap on the control, a launcher event, a screen or a
- * preference change) → persist progress → next step. Every failure path ends in a card with
- * Retry / Skip / Exit, never in a stuck overlay: the launcher stays usable at all times.
+ * Guided only: the overlay swallows every touch outside its card, so the launcher cannot change
+ * under the guide; Next / Back / Close are the only controls. Every failure ends in a Retry /
+ * Skip card, never in a stuck overlay. Back pauses the guide (resumable from the Tutorials screen).
  */
-public final class TutorialManager implements TutorialEvents.Listener, TutorialOverlay.Callbacks {
+public final class TutorialManager implements TutorialOverlay.Callbacks {
     private static final long TICK_MS = 150L;
-    private static final int NAVIGATION_TICKS = 30;   // 4.5 s
-    private static final int TARGET_TICKS = 16;       // 2.4 s
-    private static final int NAVIGATE_EVERY = 5;      // re-issue the navigation every 750 ms
+    private static final int NAVIGATION_TICKS = 34;   // ~5 s
+    private static final int TARGET_TICKS = 20;       // ~3 s
+    private static final int NAVIGATE_EVERY = 6;      // re-issue the navigation every ~900 ms
 
     public interface SequenceListener {
-        /** The whole sequence finished (every module completed or skipped) */
         void onSequenceFinished(boolean onboarding);
-        /** The user exited the sequence (resumable) */
         void onSequencePaused(boolean onboarding);
     }
 
-    private enum Phase { IDLE, NAVIGATING, LOCATING, SHOWING, WAITING_RESUME, FALLBACK }
+    private enum Phase { IDLE, NAVIGATING, LOCATING, SHOWING, FALLBACK }
 
     private static TutorialManager sInstance;
 
@@ -63,59 +54,23 @@ public final class TutorialManager implements TutorialEvents.Listener, TutorialO
     }
 
     private final Handler mHandler = new Handler(Looper.getMainLooper());
-
     @Nullable private LauncherActivity mActivity;
     @Nullable private TutorialOverlay mOverlay;
-    @Nullable private TutorialWindowCallback mWindowCallback;
+    @Nullable private BackCallback mWindowCallback;
     @Nullable private SequenceListener mSequenceListener;
 
-    // run state
     @Nullable private TutorialDefinition mDefinition;
     private int mStepIndex;
     private List<String> mSequence = new ArrayList<>();
     private int mSequenceIndex;
     private boolean mOnboarding;
-    private boolean mInteractive;
     private Phase mPhase = Phase.IDLE;
     private int mTicks;
     private int mDirection = 1;
-    @Nullable private View mTargetView;
-    private boolean mStepCompleted;
+    private int mRelocates;
     private boolean mFallbackUnavailable;
-    private long mShownAt;
     @Nullable private SettingsPopup mExitPopup;
-
     private final Runnable mTick = this::tick;
-    private boolean mDialogSeen;
-    /** Armed when a tap hid the overlay for a dialog: if the dialog never showed up, come back */
-    private final Runnable mResumeSafety = () -> {
-        if (mPhase == Phase.WAITING_RESUME && !mDialogSeen) {
-            mPhase = Phase.SHOWING;
-            if (mOverlay != null) mOverlay.setSuspended(false);
-        }
-    };
-
-    private final FragmentManager.FragmentLifecycleCallbacks mFragmentCallbacks = new FragmentManager.FragmentLifecycleCallbacks() {
-        @Override
-        public void onFragmentResumed(@NonNull FragmentManager fm, @NonNull Fragment f) {
-            TutorialEvents.screen(f.getClass());
-            final LauncherActivity activity = mActivity;
-            if (activity == null || isRunning()) return;
-            final String name = f.getClass().getSimpleName();
-            mHandler.postDelayed(() -> {
-                if (mActivity == activity && !isRunning() && f.isResumed()) ContextualHelp.onScreenShown(activity, name);
-            }, 900L);
-        }
-    };
-
-    private final SharedPreferences.OnSharedPreferenceChangeListener mPrefListener = (prefs, key) -> {
-        if (key == null) return;
-        TutorialStep step = currentStep();
-        if (step != null && step.completion == TutorialStep.Completion.PREF_CHANGED && key.equals(step.event)
-                && (mPhase == Phase.SHOWING || mPhase == Phase.WAITING_RESUME)) {
-            completeStep(400L);
-        }
-    };
 
     private TutorialManager() {}
 
@@ -126,17 +81,10 @@ public final class TutorialManager implements TutorialEvents.Listener, TutorialO
         if (mActivity == activity) return;
         if (mActivity != null) detach(mActivity);
         mActivity = activity;
-        activity.getSupportFragmentManager().registerFragmentLifecycleCallbacks(mFragmentCallbacks, true);
-        TutorialEvents.addListener(this);
-        try {
-            LauncherPreferences.DEFAULT_PREF.registerOnSharedPreferenceChangeListener(mPrefListener);
-        } catch (Throwable ignored) {
-        }
-        FirstLaunchSetup.onActivityAttached(activity);
         if (mDefinition != null && mPhase != Phase.IDLE) {
-            // Recreated (theme change, configuration): rebuild the current step on the new activity
+            // Recreated activity (theme / configuration): rebuild the current step on it
             mHandler.removeCallbacks(mTick);
-            mHandler.postDelayed(() -> { if (mActivity == activity) beginStep(); }, 650L);
+            mHandler.postDelayed(() -> { if (mActivity == activity) beginStep(); }, 700L);
         }
     }
 
@@ -144,26 +92,15 @@ public final class TutorialManager implements TutorialEvents.Listener, TutorialO
     public void detach(@NonNull LauncherActivity activity) {
         if (mActivity != activity) return;
         mHandler.removeCallbacks(mTick);
-        removeOverlay();
+        removeOverlay(false);
         uninstallWindowCallback();
-        try {
-            activity.getSupportFragmentManager().unregisterFragmentLifecycleCallbacks(mFragmentCallbacks);
-        } catch (Throwable ignored) {
-        }
-        TutorialEvents.removeListener(this);
-        try {
-            LauncherPreferences.DEFAULT_PREF.unregisterOnSharedPreferenceChangeListener(mPrefListener);
-        } catch (Throwable ignored) {
-        }
         if (mExitPopup != null) {
             try { mExitPopup.dismiss(); } catch (Throwable ignored) {}
             mExitPopup = null;
         }
-        mTargetView = null;
         mActivity = null;
     }
 
-    /** The bound activity, if any */
     @Nullable
     public LauncherActivity activity() {
         return mActivity;
@@ -173,18 +110,12 @@ public final class TutorialManager implements TutorialEvents.Listener, TutorialO
         return mDefinition != null && mPhase != Phase.IDLE;
     }
 
-    @Nullable
-    public String runningTutorialId() {
-        return isRunning() && mDefinition != null ? mDefinition.id : null;
-    }
-
     public void setSequenceListener(@Nullable SequenceListener listener) {
         mSequenceListener = listener;
     }
 
     // ───────────────────────────── starting ─────────────────────────────
 
-    /** Starts (or restarts from the first step) a single tutorial */
     @MainThread
     public boolean start(@NonNull String tutorialId) {
         List<String> seq = new ArrayList<>();
@@ -192,19 +123,17 @@ public final class TutorialManager implements TutorialEvents.Listener, TutorialO
         return startSequence(seq, false);
     }
 
-    /** Runs the modules one after the other; unavailable modules are skipped */
     @MainThread
     public boolean startSequence(@NonNull List<String> tutorialIds, boolean onboarding) {
-        LauncherActivity activity = mActivity;
-        if (activity == null) return false;
+        if (mActivity == null) return false;
+        if (isRunning()) cancel();
         mSequence = new ArrayList<>(tutorialIds);
         mSequenceIndex = -1;
         mOnboarding = onboarding;
-        mInteractive = TutorialState.isInteractive(activity);
         return nextInSequence(0);
     }
 
-    /** Resumes the interrupted run saved in {@link TutorialState}, if any */
+    /** Resumes the paused run saved in {@link TutorialState}, if any */
     @MainThread
     public boolean resumeSaved() {
         LauncherActivity activity = mActivity;
@@ -212,17 +141,16 @@ public final class TutorialManager implements TutorialEvents.Listener, TutorialO
         TutorialState.ActiveRun run = TutorialState.getActiveRun(activity);
         if (run == null) return false;
         TutorialDefinition def = TutorialRegistry.get(run.tutorialId);
-        if (def == null) {
+        if (def == null || def.steps().isEmpty()) {
             TutorialState.clearActiveRun(activity);
             return false;
         }
-        mSequence = run.sequence.isEmpty() ? new ArrayList<>() : new ArrayList<>(run.sequence);
-        if (mSequence.isEmpty()) mSequence.add(def.id);
-        mSequenceIndex = Math.min(run.sequenceIndex, mSequence.size() - 1);
-        mOnboarding = run.onboarding;
-        mInteractive = TutorialState.isInteractive(activity);
+        mSequence = new ArrayList<>();
+        mSequence.add(def.id);
+        mSequenceIndex = 0;
+        mOnboarding = false;
         mDefinition = def;
-        mStepIndex = Math.min(run.step, Math.max(0, def.steps().size() - 1));
+        mStepIndex = Math.max(0, Math.min(run.step, def.steps().size() - 1));
         mDirection = 1;
         TutorialState.setActivePaused(activity, false);
         beginStep();
@@ -254,44 +182,41 @@ public final class TutorialManager implements TutorialEvents.Listener, TutorialO
     private void finishSequence() {
         LauncherActivity activity = mActivity;
         boolean onboarding = mOnboarding;
-        clearRun();
+        clearRun(true);
         if (activity != null) TutorialState.clearActiveRun(activity);
         if (mSequenceListener != null) mSequenceListener.onSequenceFinished(onboarding);
     }
 
-    private void clearRun() {
+    private void clearRun(boolean animateOut) {
         mHandler.removeCallbacks(mTick);
-        mHandler.removeCallbacks(mResumeSafety);
-        removeOverlay();
+        removeOverlay(animateOut);
         uninstallWindowCallback();
         mDefinition = null;
         mStepIndex = 0;
         mPhase = Phase.IDLE;
-        mTargetView = null;
-        mStepCompleted = false;
     }
 
     // ───────────────────────────── pausing / exiting ─────────────────────────────
 
-    /** Exit for now, keeping the position (Tutorial Center → Resume) */
+    /** Stop for now; the position is kept so the Tutorials screen can offer Resume */
     @MainThread
     public void pause() {
         LauncherActivity activity = mActivity;
         if (mDefinition == null) return;
         if (activity != null) {
-            TutorialState.setActiveRun(activity, mDefinition.id, mStepIndex, mSequence, mSequenceIndex, mOnboarding);
+            TutorialState.setActiveRun(activity, mDefinition.id, mStepIndex, mSequence, mSequenceIndex, false);
             TutorialState.setActivePaused(activity, true);
         }
         boolean onboarding = mOnboarding;
-        clearRun();
+        clearRun(true);
         if (mSequenceListener != null) mSequenceListener.onSequencePaused(onboarding);
     }
 
-    /** Drops the run completely (nothing to resume) */
+    /** Drops the run completely */
     @MainThread
     public void cancel() {
         LauncherActivity activity = mActivity;
-        clearRun();
+        clearRun(true);
         if (activity != null) TutorialState.clearActiveRun(activity);
     }
 
@@ -326,13 +251,10 @@ public final class TutorialManager implements TutorialEvents.Listener, TutorialO
         TutorialDefinition def = mDefinition;
         if (activity == null || def == null) return;
         mHandler.removeCallbacks(mTick);
-        mHandler.removeCallbacks(mResumeSafety);
-        mStepCompleted = false;
-        mTargetView = null;
+        mRelocates = 0;
         mFallbackUnavailable = false;
-
-        // Skip steps whose runtime condition is not met (in the direction we are moving)
         List<TutorialStep> steps = def.steps();
+        // Skip steps whose condition is not met, in the direction we are moving
         while (mStepIndex >= 0 && mStepIndex < steps.size()) {
             TutorialStep s = steps.get(mStepIndex);
             boolean ok;
@@ -354,11 +276,12 @@ public final class TutorialManager implements TutorialEvents.Listener, TutorialO
             completeModule();
             return;
         }
-        TutorialState.setActiveRun(activity, def.id, mStepIndex, mSequence, mSequenceIndex, mOnboarding);
+        TutorialState.setActiveRun(activity, def.id, mStepIndex, mSequence, mSequenceIndex, false);
         TutorialState.setActivePaused(activity, false);
         TutorialState.setProgress(activity, def.id, mStepIndex);
         installWindowCallback();
-
+        TutorialOverlay overlay = ensureOverlay(activity);
+        if (overlay == null) return;
         TutorialStep step = steps.get(mStepIndex);
         if (step.screen != TutorialScreen.ANY && !step.screen.isAvailable(activity)) {
             showFallback(true);
@@ -367,12 +290,11 @@ public final class TutorialManager implements TutorialEvents.Listener, TutorialO
         mTicks = 0;
         if (step.screen == TutorialScreen.ANY || step.screen.isOn(activity)) {
             mPhase = Phase.LOCATING;
-            // A hidden overlay while the screen settles avoids a flash of the previous card
-            if (mOverlay != null) mOverlay.setSuspended(true);
             tick();
         } else {
+            // Screen change ahead: keep the dim, hide the card, navigate with the launcher's own calls
             mPhase = Phase.NAVIGATING;
-            if (mOverlay != null) mOverlay.setSuspended(true);
+            overlay.showTransition();
             if (!step.screen.navigate(activity)) {
                 showFallback(true);
                 return;
@@ -384,13 +306,13 @@ public final class TutorialManager implements TutorialEvents.Listener, TutorialO
     private void tick() {
         LauncherActivity activity = mActivity;
         TutorialStep step = currentStep();
-        if (activity == null || step == null || activity.isFinishing()) return;
+        if (activity == null || step == null || activity.isFinishing() || activity.isDestroyed()) return;
         mTicks++;
         if (mPhase == Phase.NAVIGATING) {
             if (step.screen.isOn(activity)) {
                 mPhase = Phase.LOCATING;
                 mTicks = 0;
-                mHandler.postDelayed(mTick, 250L); // let the entrance transition settle
+                mHandler.postDelayed(mTick, 320L); // let the entrance transition settle
                 return;
             }
             if (mTicks > NAVIGATION_TICKS) {
@@ -408,20 +330,17 @@ public final class TutorialManager implements TutorialEvents.Listener, TutorialO
             }
             View target = TutorialTargets.resolve(activity, step);
             if (target != null) {
-                if (TutorialTargets.visibleFraction(target) < 0.85f && mTicks < TARGET_TICKS - 2) {
+                if (TutorialTargets.visibleFraction(target) < 0.9f && mTicks < TARGET_TICKS - 3) {
                     TutorialTargets.scrollIntoView(target);
-                    mHandler.postDelayed(mTick, 200L);
+                    mHandler.postDelayed(mTick, 220L);
                     return;
                 }
                 present(target);
                 return;
             }
             if (mTicks > TARGET_TICKS) {
-                if (step.optional) {
-                    advance();
-                } else {
-                    showFallback(false);
-                }
+                if (step.optional) advance();
+                else showFallback(false);
                 return;
             }
             mHandler.postDelayed(mTick, TICK_MS);
@@ -436,27 +355,16 @@ public final class TutorialManager implements TutorialEvents.Listener, TutorialO
         TutorialOverlay overlay = ensureOverlay(activity);
         if (overlay == null) return;
         mPhase = Phase.SHOWING;
-        mTargetView = target;
-        mShownAt = SystemClock.elapsedRealtime();
-        boolean interactive = step.isInteractive(mInteractive) && target != null;
         int total = def.steps().size();
         String eyebrow = activity.getString(R.string.tut_step_counter, mStepIndex + 1, total, activity.getString(def.title));
-        CharSequence instruction = step.instruction != 0 ? activity.getText(step.instruction) : null;
-        if (!interactive && step.completion != TutorialStep.Completion.NEXT) {
-            // Guided mode: the real interaction is optional, Next moves on
-            instruction = instruction == null ? null : activity.getString(R.string.tut_guided_hint, instruction);
-        }
         boolean last = mStepIndex >= total - 1 && mSequenceIndex >= mSequence.size() - 1;
-        CharSequence next = interactive ? null : activity.getText(last ? R.string.tut_done : R.string.tut_next);
-        CharSequence skip = interactive ? activity.getText(R.string.tut_skip_step) : null;
-        overlay.setSuspended(false);
-        overlay.setContent(eyebrow, activity.getText(step.title), activity.getText(step.body), instruction,
-                mStepIndex > 0, next, skip, total <= 1 ? -1f : (mStepIndex + 1) / (float) total);
-        // The spotlighted control always stays usable, also in guided mode
-        overlay.setTarget(target, target != null);
+        overlay.setContent(eyebrow, activity.getText(step.title), activity.getText(step.body), null,
+                mStepIndex > 0, activity.getText(last ? R.string.tut_done : R.string.tut_next), null,
+                total <= 1 ? -1f : (mStepIndex + 1) / (float) total);
+        overlay.setTarget(target, false);
     }
 
-    /** Something is missing: offer Retry / Skip / Exit instead of hanging */
+    /** Something is missing: Retry / Skip instead of hanging */
     private void showFallback(boolean screenProblem) {
         LauncherActivity activity = mActivity;
         TutorialDefinition def = mDefinition;
@@ -470,34 +378,22 @@ public final class TutorialManager implements TutorialEvents.Listener, TutorialO
         if (overlay == null) return;
         mPhase = Phase.FALLBACK;
         mFallbackUnavailable = screenProblem && !step.screen.isAvailable(activity);
-        mTargetView = null;
         int bodyRes = mFallbackUnavailable ? R.string.tut_fallback_unavailable
                 : screenProblem ? R.string.tut_fallback_navigation : R.string.tut_fallback_target;
         String eyebrow = activity.getString(R.string.tut_step_counter, mStepIndex + 1, def.steps().size(), activity.getString(def.title));
-        overlay.setSuspended(false);
-        overlay.setContent(eyebrow, activity.getText(step.title), activity.getString(bodyRes, activity.getString(step.title)),
-                null, mStepIndex > 0, activity.getText(mFallbackUnavailable ? R.string.tut_skip_step : R.string.tut_retry),
+        overlay.setContent(eyebrow, activity.getText(step.title), activity.getText(bodyRes), null, mStepIndex > 0,
+                activity.getText(mFallbackUnavailable ? R.string.tut_skip_step : R.string.tut_retry),
                 mFallbackUnavailable ? null : activity.getText(R.string.tut_skip_step), -1f);
         overlay.setTarget(null, false);
     }
 
-    /** The step's requirement was met: move on (after a short delay so the UI reaction is visible) */
-    private void completeStep(long delay) {
-        if (mStepCompleted) return;
-        mStepCompleted = true;
-        mHandler.removeCallbacks(mTick);
-        mHandler.postDelayed(this::advance, delay);
-    }
-
     private void advance() {
         if (mDefinition == null) return;
+        mHandler.removeCallbacks(mTick);
         mDirection = 1;
         mStepIndex++;
-        if (mStepIndex >= mDefinition.steps().size()) {
-            completeModule();
-        } else {
-            beginStep();
-        }
+        if (mStepIndex >= mDefinition.steps().size()) completeModule();
+        else beginStep();
     }
 
     private void completeModule() {
@@ -508,8 +404,9 @@ public final class TutorialManager implements TutorialEvents.Listener, TutorialO
         if (mSequenceIndex + 1 < mSequence.size()) {
             nextInSequence(mSequenceIndex + 1);
         } else {
+            boolean onboarding = mOnboarding;
             finishSequence();
-            if (activity != null && !mOnboarding) {
+            if (activity != null && !onboarding) {
                 Toast.makeText(activity, activity.getString(R.string.tut_module_done_toast, activity.getString(def.title)), Toast.LENGTH_SHORT).show();
             }
         }
@@ -522,143 +419,52 @@ public final class TutorialManager implements TutorialEvents.Listener, TutorialO
         if (mPhase == Phase.FALLBACK) {
             if (mFallbackUnavailable) advance();
             else beginStep(); // retry
-            return;
-        }
-        if (mPhase == Phase.SHOWING) {
-            TutorialStep step = currentStep();
-            if (step != null && step.isInteractive(mInteractive) && mTargetView != null) return; // Next hidden anyway
-            completeStep(0L);
+        } else if (mPhase == Phase.SHOWING) {
+            advance();
         }
     }
 
     @Override
     public void onBack() {
-        if (mDefinition == null) return;
+        if (mDefinition == null || mPhase == Phase.NAVIGATING) return;
         mHandler.removeCallbacks(mTick);
         mDirection = -1;
         if (mStepIndex > 0) {
             mStepIndex--;
-            beginStep();
-        } else if (mSequenceIndex > 0) {
-            // Previous module, its last step
-            for (int i = mSequenceIndex - 1; i >= 0; i--) {
-                TutorialDefinition def = TutorialRegistry.get(mSequence.get(i));
-                if (def != null && !def.steps().isEmpty() && mActivity != null && def.isAvailable(mActivity)) {
-                    mSequenceIndex = i;
-                    mDefinition = def;
-                    mStepIndex = def.steps().size() - 1;
-                    beginStep();
-                    return;
-                }
-            }
-            mDirection = 1;
-            beginStep();
         } else {
             mDirection = 1;
-            beginStep();
         }
+        beginStep();
     }
 
     @Override
     public void onSkipStep() {
-        if (mDefinition == null) return;
-        mHandler.removeCallbacks(mTick);
+        if (mDefinition == null || mPhase == Phase.NAVIGATING) return;
         advance();
     }
 
     @Override
     public void onClose() {
+        if (mPhase == Phase.IDLE) return;
         confirmExit();
     }
 
     @Override
     public void onTargetLost() {
-        // The control disappeared (screen changed under us): locate it again, with the usual bounds
-        if (mPhase != Phase.SHOWING || mStepCompleted) return;
-        beginStep();
-    }
-
-    // ───────────────────────────── launcher events ─────────────────────────────
-
-    @Override
-    public void onTutorialEvent(@NonNull String event) {
-        TutorialStep step = currentStep();
-        if (step == null || mDefinition == null) return;
-        if (mPhase == Phase.WAITING_RESUME) {
-            // Waiting for the dialog opened from the target to close
-            if (event.equals(step.event)) mDialogSeen = true;
-            if (event.equals(step.resumeEvent) || event.startsWith(TutorialEvents.SCREEN_PREFIX)) {
-                mHandler.removeCallbacks(mResumeSafety);
-                if (mOverlay != null) mOverlay.setSuspended(false);
-                completeStep(350L);
-            }
+        // The view went away (layout change): look it up again, once; then the Retry card
+        if (mPhase != Phase.SHOWING) return;
+        if (++mRelocates > 2) {
+            showFallback(false);
             return;
         }
-        if (mPhase != Phase.SHOWING || mStepCompleted) return;
-        boolean matches = false;
-        switch (step.completion) {
-            case EVENT:
-                matches = event.equals(step.event);
-                break;
-            case SCREEN:
-                matches = event.equals(TutorialEvents.SCREEN_PREFIX + step.event);
-                break;
-            case TAP_TARGET:
-                // A tap that opened a dialog instrumented with events also counts
-                matches = step.resumeEvent == null && event.equals(step.event);
-                break;
-            default:
-                break;
-        }
-        if (!matches) return;
-        if (step.resumeEvent != null) {
-            mPhase = Phase.WAITING_RESUME;
-            mDialogSeen = true;
-            mHandler.removeCallbacks(mResumeSafety);
-            if (mOverlay != null) mOverlay.setSuspended(true);
-        } else {
-            completeStep(step.completion == TutorialStep.Completion.SCREEN ? 450L : 300L);
-        }
+        mPhase = Phase.LOCATING;
+        mTicks = 0;
+        mHandler.removeCallbacks(mTick);
+        mHandler.postDelayed(mTick, 250L);
     }
 
-    /** Called by the window callback when the user tapped inside the cutout */
-    private void onTargetTapped() {
-        TutorialStep step = currentStep();
-        if (step == null || mPhase != Phase.SHOWING || mStepCompleted) return;
-        if (SystemClock.elapsedRealtime() - mShownAt < 250L) return; // ignore the tap that opened the step
-        switch (step.completion) {
-            case TAP_TARGET:
-                if (step.resumeEvent != null) {
-                    // A dialog is about to open: hide, come back when it closes
-                    mPhase = Phase.WAITING_RESUME;
-                    mDialogSeen = true;
-                    if (mOverlay != null) mOverlay.setSuspended(true);
-                } else {
-                    completeStep(350L);
-                }
-                break;
-            case EVENT:
-            case SCREEN:
-            case PREF_CHANGED:
-                // The tap happened, the real state change (or a dialog) follows; hide so the control's
-                // own UI (spinner popups, pickers) is not covered. Events bring us back.
-                if (step.resumeEvent != null && mOverlay != null) {
-                    mPhase = Phase.WAITING_RESUME;
-                    mDialogSeen = false;
-                    mOverlay.setSuspended(true);
-                    mHandler.removeCallbacks(mResumeSafety);
-                    mHandler.postDelayed(mResumeSafety, 1500L);
-                }
-                break;
-            default:
-                break;
-        }
-    }
-
-    /** Back while the overlay is visible pauses the tutorial instead of popping screens under it */
     private boolean onBackKey() {
-        if (mOverlay == null || mOverlay.isSuspended() || mPhase == Phase.IDLE) return false;
-        if (mPhase == Phase.WAITING_RESUME) return false;
+        if (mOverlay == null || mPhase == Phase.IDLE) return false;
         confirmExit();
         return true;
     }
@@ -667,31 +473,31 @@ public final class TutorialManager implements TutorialEvents.Listener, TutorialO
 
     @Nullable
     private TutorialOverlay ensureOverlay(@NonNull LauncherActivity activity) {
-        if (mOverlay != null && mOverlay.isAttachedToWindow()) {
-            // Always keep it on top of whatever the launcher added to the content view meanwhile
-            ViewGroup parent = (ViewGroup) mOverlay.getParent();
-            if (parent != null && parent.getChildAt(parent.getChildCount() - 1) != mOverlay) {
-                mOverlay.bringToFront();
-            }
-            return mOverlay;
+        TutorialOverlay overlay = mOverlay;
+        if (overlay != null && overlay.isAttachedToWindow() && overlay.getContext() == activity) {
+            ViewGroup parent = (ViewGroup) overlay.getParent();
+            if (parent != null && parent.getChildAt(parent.getChildCount() - 1) != overlay) overlay.bringToFront();
+            return overlay;
         }
+        if (overlay != null) removeOverlay(false);
         ViewGroup content = activity.findViewById(android.R.id.content);
         if (content == null) return null;
-        TutorialOverlay overlay = new TutorialOverlay(activity);
+        overlay = new TutorialOverlay(activity);
         overlay.setCallbacks(this);
         content.addView(overlay, TutorialOverlay.fullSize());
+        overlay.fadeIn();
         mOverlay = overlay;
         return overlay;
     }
 
-    private void removeOverlay() {
-        TutorialOverlay overlay = mOverlay;
+    private void removeOverlay(boolean animate) {
+        final TutorialOverlay overlay = mOverlay;
         mOverlay = null;
         if (overlay == null) return;
         overlay.setCallbacks(null);
-        ViewGroup parent = (ViewGroup) overlay.getParent();
+        final ViewGroup parent = overlay.getParent() instanceof ViewGroup ? (ViewGroup) overlay.getParent() : null;
         if (parent == null) return;
-        if (Motion.content(overlay)) {
+        if (animate && Motion.content(overlay)) {
             overlay.animate().alpha(0f).setDuration(Motion.SHORT).withEndAction(() -> parent.removeView(overlay)).start();
         } else {
             parent.removeView(overlay);
@@ -703,13 +509,13 @@ public final class TutorialManager implements TutorialEvents.Listener, TutorialO
         if (activity == null || mWindowCallback != null) return;
         Window window = activity.getWindow();
         Window.Callback original = window.getCallback();
-        if (original == null || original instanceof TutorialWindowCallback) return;
-        mWindowCallback = new TutorialWindowCallback(original);
+        if (original == null || original instanceof BackCallback) return;
+        mWindowCallback = new BackCallback(original);
         window.setCallback(mWindowCallback);
     }
 
     private void uninstallWindowCallback() {
-        TutorialWindowCallback callback = mWindowCallback;
+        BackCallback callback = mWindowCallback;
         mWindowCallback = null;
         if (callback == null) return;
         callback.active = false;
@@ -719,57 +525,26 @@ public final class TutorialManager implements TutorialEvents.Listener, TutorialO
         if (window.getCallback() == callback) window.setCallback(callback.wrapped);
     }
 
-    /**
-     * Sees every touch before the decor view does: detects taps inside the cutout (the overlay lets
-     * them through, so it cannot observe them itself) and turns Back into "pause tutorial".
-     */
-    private final class TutorialWindowCallback implements Window.Callback {
+    /** Turns the Back key into "stop the guide?" while the overlay is up; everything else passes through */
+    private final class BackCallback implements Window.Callback {
         final Window.Callback wrapped;
         boolean active = true;
-        private final Rect mCutout = new Rect();
-        private boolean mDownInside;
-        private float mDownX, mDownY;
 
-        TutorialWindowCallback(Window.Callback wrapped) {
+        BackCallback(Window.Callback wrapped) {
             this.wrapped = wrapped;
         }
 
         @Override
-        public boolean dispatchTouchEvent(MotionEvent event) {
-            if (active && mOverlay != null && !mOverlay.isSuspended()) {
-                int action = event.getActionMasked();
-                if (action == MotionEvent.ACTION_DOWN) {
-                    mOverlay.getCutoutInWindow(mCutout);
-                    mDownInside = !mCutout.isEmpty() && mCutout.contains((int) event.getX(), (int) event.getY());
-                    mDownX = event.getX();
-                    mDownY = event.getY();
-                } else if (action == MotionEvent.ACTION_UP && mDownInside) {
-                    mDownInside = false;
-                    float slop = 24f * mActivity.getResources().getDisplayMetrics().density;
-                    if (Math.abs(event.getX() - mDownX) < slop && Math.abs(event.getY() - mDownY) < slop
-                            && mCutout.contains((int) event.getX(), (int) event.getY())) {
-                        mHandler.post(TutorialManager.this::onTargetTapped);
-                    }
-                } else if (action == MotionEvent.ACTION_CANCEL) {
-                    mDownInside = false;
-                }
-            }
-            return wrapped.dispatchTouchEvent(event);
-        }
-
-        @Override
         public boolean dispatchKeyEvent(KeyEvent event) {
-            if (active && event.getKeyCode() == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP
-                    && !event.isCanceled() && onBackKey()) {
+            if (active && event.getKeyCode() == KeyEvent.KEYCODE_BACK && mOverlay != null && mPhase != Phase.IDLE
+                    && (mExitPopup == null || !mExitPopup.isShowing())) {
+                if (event.getAction() == KeyEvent.ACTION_UP && !event.isCanceled()) onBackKey();
                 return true;
-            }
-            if (active && event.getKeyCode() == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN
-                    && mOverlay != null && !mOverlay.isSuspended() && mPhase != Phase.IDLE && mPhase != Phase.WAITING_RESUME) {
-                return true; // swallow the DOWN too, so the launcher does not pop a screen on UP
             }
             return wrapped.dispatchKeyEvent(event);
         }
 
+        @Override public boolean dispatchTouchEvent(MotionEvent event) { return wrapped.dispatchTouchEvent(event); }
         @Override public boolean dispatchKeyShortcutEvent(KeyEvent event) { return wrapped.dispatchKeyShortcutEvent(event); }
         @Override public boolean dispatchTrackballEvent(MotionEvent event) { return wrapped.dispatchTrackballEvent(event); }
         @Override public boolean dispatchGenericMotionEvent(MotionEvent event) { return wrapped.dispatchGenericMotionEvent(event); }
@@ -795,9 +570,7 @@ public final class TutorialManager implements TutorialEvents.Listener, TutorialO
         @Override public void onPointerCaptureChanged(boolean hasCapture) { wrapped.onPointerCaptureChanged(hasCapture); }
     }
 
-    // ───────────────────────────── helpers for other components ─────────────────────────────
-
-    /** Tutorial that explains the screen currently visible, for contextual help */
+    /** Guide that explains the screen currently visible (the "?" button) */
     @Nullable
     public String tutorialForCurrentScreen() {
         LauncherActivity activity = mActivity;
