@@ -116,7 +116,8 @@ public enum TutorialScreen {
                 return menu != null && !menu.isRightPaneActive() && rightPaneIs(activity, null);
             }
             case PROFILE_EDITOR:
-                return top instanceof InstanceEditorFragment && top.isResumed();
+                // Opens in the right pane of the two-pane home (Tools.swapFragment), full screen otherwise
+                return (top instanceof InstanceEditorFragment && top.isResumed()) || rightPaneIs(activity, InstanceEditorFragment.class);
             case BROWSE:
                 return (top instanceof ModsSearchFragment && top.isResumed()) || rightPaneIs(activity, ModsSearchFragment.class);
             case WORLDS:
@@ -135,6 +136,11 @@ public enum TutorialScreen {
                 return host != null && host.isResumed() && cat != null && cat.getName().equals(host.getCurrentScreenClass());
             }
         }
+    }
+
+    /** The pane already holds (or is in the middle of opening) a screen of this class */
+    private static boolean paneHas(@NonNull FragmentActivity activity, @NonNull Class<?> cls) {
+        return cls.isInstance(rightPane(activity));
     }
 
     /** @param cls null = the right pane shows its home content (or nothing above it) */
@@ -176,10 +182,16 @@ public enum TutorialScreen {
             }
             if (this == PROFILE_EDITOR) {
                 if (!isAvailable(activity)) return false;
-                if (!(top(activity) instanceof InstanceEditorFragment)) {
+                if (top(activity) instanceof InstanceEditorFragment) return true;
+                Fragment pane = rightPane(activity);
+                if (pane instanceof InstanceEditorFragment) return true; // opening / already open in the pane
+                MainMenuFragment menu = mainMenu(activity);
+                if (menu == null || menu.getView() == null) {
                     goHome(activity);
-                    Tools.swapFragment(activity, InstanceEditorFragment.class, InstanceEditorFragment.TAG, null);
+                    return true; // retried once the main menu is back
                 }
+                // Same call the pencil button uses (right pane in the two-pane home)
+                Tools.swapFragment(activity, InstanceEditorFragment.class, InstanceEditorFragment.TAG, null);
                 return true;
             }
             // Main menu destinations: the home has to be the top screen first
@@ -190,16 +202,16 @@ public enum TutorialScreen {
             }
             switch (this) {
                 case BROWSE:
-                    if (!rightPaneIs(activity, ModsSearchFragment.class)) menu.showContentPicker(false);
+                    if (!paneHas(activity, ModsSearchFragment.class)) menu.showContentPicker(false);
                     return true;
                 case WORLDS:
-                    if (!rightPaneIs(activity, ManageWorldsFragment.class)) menu.openPane(ManageWorldsFragment.class, ManageWorldsFragment.TAG, null);
+                    if (!paneHas(activity, ManageWorldsFragment.class)) menu.openPane(ManageWorldsFragment.class, ManageWorldsFragment.TAG, null);
                     return true;
                 case MULTIPLAYER:
-                    if (!rightPaneIs(activity, VirtualLanFragment.class)) menu.navigate(R.id.nav_multiplayer);
+                    if (!paneHas(activity, VirtualLanFragment.class)) menu.navigate(R.id.nav_multiplayer);
                     return true;
                 case LOGS:
-                    if (!rightPaneIs(activity, LogsFragment.class)) menu.navigate(R.id.nav_logs);
+                    if (!paneHas(activity, LogsFragment.class)) menu.navigate(R.id.nav_logs);
                     return true;
                 default:
                     return false;

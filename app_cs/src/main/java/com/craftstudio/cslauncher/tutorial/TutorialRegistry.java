@@ -96,7 +96,7 @@ public final class TutorialRegistry {
     @NonNull
     public static String tutorialForScreen(@NonNull FragmentActivity activity) {
         Fragment top = activity.getSupportFragmentManager().findFragmentById(R.id.container_fragment);
-        if (top instanceof InstanceEditorFragment) return PROFILES;
+        if (top instanceof InstanceEditorFragment || TutorialScreen.PROFILE_EDITOR.isOn(activity)) return PROFILES;
         if (top instanceof SettingsHostFragment) {
             String screen = ((SettingsHostFragment) top).getCurrentScreenClass();
             if (screen != null && (screen.endsWith("JavaFragment") || screen.endsWith("VideoFragment"))) return PERFORMANCE;

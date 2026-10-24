@@ -406,7 +406,7 @@ public final class VirtualLanSession {
         if (mTunnel.isAlive()) return true;
         Integer exit = mTunnel.exitCode();
         if (mEngineRestarts >= MAX_ENGINE_RESTARTS) {
-            fail(Reason.ENGINE_CRASHED, exit != null ? "exit " + exit : "");
+            fail(Reason.ENGINE_CRASHED, engineDeathDetail(exit));
             return false;
         }
         mEngineRestarts++;
@@ -417,6 +417,35 @@ public final class VirtualLanSession {
         if (!mState.phase.isBusy()) setPhase(Phase.RECONNECTING);
         mForwardsAdded = false;
         return startEngine(config);
+    }
+
+    /** Exit code + the last meaningful engine line, so the failure page says what actually happened */
+    private String engineDeathDetail(@Nullable Integer exit) {
+        StringBuilder sb = new StringBuilder();
+        if (exit != null) {
+            sb.append("exit ").append(exit);
+            if (exit == 137 || exit == 9 || exit == 143) sb.append(" \u2013 killed by the system");
+            else if (exit == 134 || exit == 139 || exit == 132) sb.append(" \u2013 engine crashed");
+            else if (exit == 1 || exit == 2) sb.append(" \u2013 engine rejected its configuration");
+        }
+        String last = null;
+        List<String> log = mTunnel.recentLog();
+        for (int i = log.size() - 1; i >= 0 && i >= log.size() - 40; i--) {
+            String line = log.get(i);
+            String lower = line.toLowerCase(java.util.Locale.ROOT);
+            if (lower.contains("error") || lower.contains("panic") || lower.contains("fatal") || lower.contains("failed")
+                    || lower.contains("invalid") || lower.contains("denied") || lower.contains("not found")) {
+                last = line.trim();
+                break;
+            }
+        }
+        if (last == null && !log.isEmpty()) last = log.get(log.size() - 1).trim();
+        if (last != null && !last.isEmpty()) {
+            if (last.length() > 220) last = last.substring(0, 220) + "\u2026";
+            if (sb.length() > 0) sb.append('\n');
+            sb.append(last);
+        }
+        return sb.toString();
     }
 
     // ───────────────────────────── host ─────────────────────────────

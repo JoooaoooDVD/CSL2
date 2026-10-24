@@ -922,8 +922,8 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
     private String reasonText(VirtualLanState s) {
         switch (s.reason) {
             case UNSUPPORTED_DEVICE: return mContext.getString(R.string.vlan_unsupported);
-            case ENGINE_FAILED: return mContext.getString(R.string.vlan_reason_engine_failed);
-            case ENGINE_CRASHED: return mContext.getString(R.string.vlan_reason_engine_crashed);
+            case ENGINE_FAILED: return mContext.getString(R.string.vlan_reason_engine_failed) + (s.detail.isEmpty() ? "" : "\n" + s.detail);
+            case ENGINE_CRASHED: return mContext.getString(R.string.vlan_reason_engine_crashed) + (s.detail.isEmpty() ? "" : "\n" + s.detail);
             case NO_NETWORK: return mContext.getString(R.string.vlan_reason_no_network);
             case NO_RELAY_REACHABLE: return mContext.getString(R.string.vlan_reason_no_relay);
             case RELAY_LOST: return mContext.getString(R.string.vlan_reason_relay_lost);
