@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Full-screen in-app announcement: dimmed launcher behind, centred card -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/ann_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/hm_scrim"
+    android:clickable="true"
+    android:focusable="true">
+
+    <LinearLayout
+        android:id="@+id/ann_card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="12dp"
+        android:orientation="vertical"
+        android:background="@drawable/bg_ann_card"
+        android:padding="18dp"
+        android:elevation="14dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <View
+                android:id="@+id/ann_dot"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/bg_ann_accent_dot" />
+
+            <TextView
+                android:id="@+id/ann_eyebrow"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="@font/noto_sans_bold"
+                android:letterSpacing="0.18"
+                android:text="@string/ann_eyebrow"
+                android:textAllCaps="true"
+                android:textColor="@color/hm_accent"
+                android:textSize="10.5sp" />
+
+            <ImageButton
+                android:id="@+id/ann_close"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:background="@drawable/bg_ann_ghost"
+                android:contentDescription="@string/ann_dismiss"
+                android:padding="8dp"
+                android:src="@drawable/ic_close"
+                android:tint="@color/hm_text_dim" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal"
+            android:baselineAligned="false">
+
+            <ImageView
+                android:id="@+id/ann_image"
+                android:layout_width="0dp"
+                android:layout_height="150dp"
+                android:layout_weight="0.9"
+                android:layout_marginEnd="16dp"
+                android:background="@drawable/bg_ann_image"
+                android:scaleType="centerCrop"
+                android:visibility="gone"
+                android:contentDescription="@null" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.4"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/ann_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/noto_sans_bold"
+                    android:textColor="@color/hm_text"
+                    android:textSize="19sp"
+                    android:lineSpacingExtra="1dp" />
+
+                <TextView
+                    android:id="@+id/ann_body"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:maxLines="7"
+                    android:scrollbars="vertical"
+                    android:fadeScrollbars="true"
+                    android:textColor="@color/hm_text_dim"
+                    android:textSize="13.5sp"
+                    android:lineSpacingExtra="3dp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="end|center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/ann_secondary"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginEnd="10dp"
+                android:background="@drawable/bg_ann_ghost"
+                android:gravity="center"
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp"
+                android:text="@string/ann_dismiss"
+                android:textColor="@color/hm_text"
+                android:fontFamily="@font/noto_sans_bold"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/ann_primary"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_ann_primary"
+                android:gravity="center"
+                android:paddingStart="22dp"
+                android:paddingEnd="22dp"
+                android:text="@string/ann_got_it"
+                android:textColor="@color/hm_dialog"
+                android:fontFamily="@font/noto_sans_bold"
+                android:textSize="13sp" />
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Side-card announcement: slides in from the right edge over the home screen, non-blocking -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/ann_card"
+    android:layout_width="300dp"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_ann_card"
+    android:padding="14dp"
+    android:elevation="12dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <View
+            android:id="@+id/ann_dot"
+            android:layout_width="7dp"
+            android:layout_height="7dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/bg_ann_accent_dot" />
+
+        <TextView
+            android:id="@+id/ann_eyebrow"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:fontFamily="@font/noto_sans_bold"
+            android:letterSpacing="0.18"
+            android:text="@string/ann_eyebrow"
+            android:textAllCaps="true"
+            android:textColor="@color/hm_accent"
+            android:textSize="10sp" />
+
+        <ImageButton
+            android:id="@+id/ann_close"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:background="@drawable/bg_ann_ghost"
+            android:contentDescription="@string/ann_dismiss"
+            android:padding="7dp"
+            android:src="@drawable/ic_close"
+            android:tint="@color/hm_text_dim" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        android:baselineAligned="false">
+
+        <ImageView
+            android:id="@+id/ann_image"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/bg_ann_image"
+            android:scaleType="centerCrop"
+            android:visibility="gone"
+            android:contentDescription="@null" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/ann_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/noto_sans_bold"
+                android:maxLines="2"
+                android:ellipsize="end"
+                android:textColor="@color/hm_text"
+                android:textSize="14.5sp" />
+
+            <TextView
+                android:id="@+id/ann_body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:maxLines="4"
+                android:ellipsize="end"
+                android:textColor="@color/hm_text_dim"
+                android:textSize="12.5sp"
+                android:lineSpacingExtra="2dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/ann_primary"
+        android:layout_width="wrap_content"
+        android:layout_height="34dp"
+        android:layout_gravity="end"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_ann_primary"
+        android:gravity="center"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:text="@string/ann_got_it"
+        android:textColor="@color/hm_dialog"
+        android:fontFamily="@font/noto_sans_bold"
+        android:textSize="12.5sp" />
+</LinearLayout>

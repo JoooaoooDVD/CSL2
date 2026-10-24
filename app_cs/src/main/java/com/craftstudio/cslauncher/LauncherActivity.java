@@ -325,12 +325,34 @@ public class LauncherActivity extends BaseActivity {
                 com.craftstudio.cslauncher.update.UpdateManager.autoCheck(this);
             }, 3200L);
         }
+
+        // Announcements + notifications published from the admin panel (quiet, best effort)
+        if (com.craftstudio.cslauncher.about.WelcomePolicy.isAccepted()) {
+            com.craftstudio.cslauncher.notify.NotificationSync.ensureChannels(this);
+            com.craftstudio.cslauncher.notify.NotifyJobService.schedule(this);
+            com.craftstudio.cslauncher.notify.NotificationSync.runAsync(this);
+            com.craftstudio.cslauncher.notify.AnnouncementController.showWhenIdle(this, this::isOnboardingBusy);
+            View root = findViewById(android.R.id.content);
+            if (root != null) root.postDelayed(() -> {
+                if (!isFinishing() && !isDestroyed())
+                    com.craftstudio.cslauncher.notify.NotificationSync.handleIntent(this, getIntent());
+            }, 800L);
+        }
+    }
+
+    /** True while a first-launch dialog or the tutorial owns the screen (announcements wait) */
+    private boolean isOnboardingBusy() {
+        if (mStorageSetupDialog != null && mStorageSetupDialog.isShowing()) return true;
+        if (!com.craftstudio.cslauncher.about.WelcomePolicy.isAccepted() || !StorageRoot.isSetupDone(this)) return true;
+        if (com.craftstudio.cslauncher.tutorial.FirstLaunchSetup.isPending(this)) return true;
+        return com.craftstudio.cslauncher.tutorial.TutorialManager.getInstance().isRunning();
     }
 
     @Override
     protected void onNewIntent(android.content.Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
+        if (com.craftstudio.cslauncher.notify.NotificationSync.handleIntent(this, intent)) return;
         if (com.craftstudio.cslauncher.utils.ProfileShortcuts.profileFrom(intent) != null) {
             if (!com.craftstudio.cslauncher.about.WelcomePolicy.isAccepted() || !StorageRoot.isSetupDone(this)) return;
             handleProfileShortcut(intent);

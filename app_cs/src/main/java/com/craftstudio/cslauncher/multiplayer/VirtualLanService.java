@@ -290,6 +290,49 @@ public final class VirtualLanService extends Service {
         Bundle data = VirtualLanStateBundler.toBundle(mState);
         for (Messenger client : new ArrayList<>(mClients)) send(client, MSG_STATE, data);
         updateNotification();
+        notifyNewPlayers();
+    }
+
+    private long mLastJoinSeq = -1;
+
+    /** Host side: a heads-up notification each time a friend enters the room (also while in-game) */
+    private void notifyNewPlayers() {
+        VirtualLanState s = mState;
+        if (s == null || !s.isHost() || !s.isActive()) { if (s == null || !s.isActive()) mLastJoinSeq = -1; return; }
+        for (VirtualLanState.Event e : s.events) {
+            if (e.seq <= mLastJoinSeq) continue;
+            mLastJoinSeq = e.seq;
+            if (e.type != VirtualLanState.Event.Type.PLAYER_JOINED) continue;
+            // skip events that happened before this service instance saw the session (restore/reconnect)
+            if (System.currentTimeMillis() - e.time > 20_000L) continue;
+            postJoinNotification(e.arg, s.members.size() + 1); // guests + host
+        }
+    }
+
+    private void postJoinNotification(String name, int members) {
+        try {
+            com.craftstudio.cslauncher.notify.NotificationSync.ensureChannels(this);
+            if (name == null || name.trim().isEmpty()) name = "A player";
+            Intent open = new Intent(this, LauncherActivity.class).setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            PendingIntent openPending = PendingIntent.getActivity(this, NotificationUtils.PENDINGINTENT_CODE_VIRTUAL_LAN_OPEN, open,
+                    PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+            String body = members <= 2 ? getString(R.string.notify_lan_joined_body_one, name)
+                    : getString(R.string.notify_lan_joined_body, members);
+            Notification n = new NotificationCompat.Builder(this, "cs_virtual_lan_players")
+                    .setSmallIcon(R.drawable.notif_icon)
+                    .setContentTitle(getString(R.string.notify_lan_joined_title, name))
+                    .setContentText(body)
+                    .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
+                    .setContentIntent(openPending)
+                    .setAutoCancel(true)
+                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setDefaults(Notification.DEFAULT_ALL)
+                    .setCategory(NotificationCompat.CATEGORY_SOCIAL)
+                    .setTimeoutAfter(60_000L)
+                    .build();
+            androidx.core.app.NotificationManagerCompat.from(this).notify(NotificationUtils.NOTIFICATION_ID_VIRTUAL_LAN_JOIN, n);
+        } catch (Throwable ignored) {
+        }
     }
 
     // ───────────────────────────── session control ─────────────────────────────

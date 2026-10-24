@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- In-app announcements + push-style notifications (Supabase backed) -->
+    <string name="ann_eyebrow">Announcement</string>
+    <string name="ann_dismiss">Dismiss</string>
+    <string name="ann_got_it">Got it</string>
+    <string name="ann_open">Open</string>
+    <string name="notify_channel_name">Announcements &amp; updates</string>
+    <string name="notify_channel_desc">News, events and new launcher versions from CRAFT STUDIO</string>
+    <string name="notify_lan_channel_name">Virtual LAN players</string>
+    <string name="notify_lan_channel_desc">Tells you when a friend joins your Virtual LAN room</string>
+    <string name="notify_update_action">Update now</string>
+    <string name="notify_lan_joined_title">%1$s joined your room</string>
+    <string name="notify_lan_joined_body">%1$d players are now in your Virtual LAN room</string>
+    <string name="notify_lan_joined_body_one">You and %1$s are connected. Open the world to LAN and play!</string>
+</resources>
