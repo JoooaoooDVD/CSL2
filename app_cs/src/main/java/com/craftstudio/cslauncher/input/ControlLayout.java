@@ -496,15 +496,40 @@ public class ControlLayout extends FrameLayout {
 	}
 
 	public void updateLoadedFileName(String path) {
-		path = path.replace(Tools.CTRLMAP_PATH, ".");
-		path = path.substring(0, path.length() - 5);
+		if (path == null) { mLayoutFileName = ""; return; }
+		String ctrl = Tools.CTRLMAP_PATH;
+		if (path.startsWith(ctrl + "/")) {
+			// Inside the controlmap folder: keep sub-folders ("./pack/layout")
+			path = "." + path.substring(ctrl.length());
+		} else {
+			// Imported / opened from somewhere else (Downloads, a file manager...): only the name,
+			// otherwise the save dialog would try to write controlmap/<absolute path>.json
+			path = new java.io.File(path).getName();
+		}
+		if (path.toLowerCase(java.util.Locale.ROOT).endsWith(".json")) path = path.substring(0, path.length() - 5);
 		mLayoutFileName = path;
 	}
 
+	/** Turns whatever the user typed into a safe path inside the controlmap folder */
+	private static String safeLayoutName(String name) {
+		name = name == null ? "" : name.trim();
+		if (name.toLowerCase(java.util.Locale.ROOT).endsWith(".json")) name = name.substring(0, name.length() - 5);
+		if (name.startsWith("./")) name = name.substring(2);
+		// Absolute paths or escapes out of the folder: keep the file name only
+		if (name.startsWith("/") || name.contains("..") || name.contains(":")) name = new java.io.File(name).getName();
+		name = name.replaceAll("[\\\\?*<>|\"]", "_").trim();
+		if (name.isEmpty()) name = "layout";
+		return name;
+	}
+
 	public String saveToDirectory(String name) throws Exception{
-		String jsonPath = Tools.CTRLMAP_PATH + "/" + name + ".json";
-		saveLayout(jsonPath);
-		return jsonPath;
+		java.io.File target = new java.io.File(Tools.CTRLMAP_PATH, safeLayoutName(name) + ".json");
+		java.io.File parent = target.getParentFile();
+		if (parent != null && !parent.isDirectory() && !parent.mkdirs()) {
+			throw new java.io.IOException("Cannot create " + parent);
+		}
+		saveLayout(target.getAbsolutePath());
+		return target.getAbsolutePath();
 	}
 
 	class OnClickExitListener implements View.OnClickListener {
