@@ -48,7 +48,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:letterSpacing="0.32"
-                android:text="@string/brand_tagline_home"
+                android:text="@string/brand_by_studio"
                 android:textColor="?attr/colorOnSurfaceVariant"
                 android:textSize="7sp" />
         </LinearLayout>

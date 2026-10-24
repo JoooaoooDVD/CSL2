@@ -226,11 +226,39 @@ public class AccountSpinner extends AppCompatSpinner implements LoginListener, A
 
     @Override
     public boolean performClick() {
-        // The account menu (dropdown) opened: lets the tutorial engine verify the interactive step
-        boolean handled = super.performClick();
+        // Our own account menu instead of the stock dropdown
+        if (mPicker != null && mPicker.isShowing()) return true;
+        java.util.List<Account> accounts = new java.util.ArrayList<>();
+        for (int i = 1; i < mAdapter.getCount(); i++) {
+            Account a = mAdapter.getItem(i);
+            if (a != null) accounts.add(a);
+        }
+        int selected = accounts.indexOf(getSelectedItem());
+        mPicker = new AccountPickerDialog(getContext(), accounts, selected, new AccountPickerDialog.Callback() {
+            @Override public void onAccountPicked(@NonNull Account account) {
+                Accounts.setCurrent(account);
+                refreshAccount(account);
+                reload();
+            }
+            @Override public void onSkinEditor(@NonNull Account account) { openSkinEditor(account); }
+            @Override public void onDelete(@NonNull Account account) {
+                Accounts.delete(account);
+                reload();
+            }
+            @Override public void onAddAccount() { createAccount(); }
+        });
+        mPicker.setOnDismissListener(d -> mPicker = null);
+        try {
+            mPicker.show();
+        } catch (Throwable t) {
+            mPicker = null;
+            return super.performClick();
+        }
         com.craftstudio.cslauncher.tutorial.TutorialEvents.emit(com.craftstudio.cslauncher.tutorial.TutorialEvents.ACCOUNT_MENU_OPENED);
-        return handled;
+        return true;
     }
+
+    @Nullable private AccountPickerDialog mPicker;
 
     @Override
     protected void onDraw(@NonNull Canvas canvas) {

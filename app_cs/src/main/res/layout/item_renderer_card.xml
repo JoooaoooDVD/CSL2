@@ -15,18 +15,15 @@
     android:paddingEnd="14dp"
     android:paddingBottom="11dp">
 
-    <TextView
+    <!-- Renderer artwork, rounded in code -->
+    <ImageView
         android:id="@+id/rc_badge"
-        android:layout_width="52dp"
-        android:layout_height="46dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:background="@drawable/bg_pp_icon_tile"
-        android:fontFamily="@font/noto_sans_bold"
-        android:gravity="center"
-        android:includeFontPadding="false"
-        android:letterSpacing="0.05"
-        android:maxLines="1"
-        android:textColor="@color/hm_text"
-        android:textSize="10.5sp" />
+        android:contentDescription="@null"
+        android:scaleType="centerCrop"
+        android:src="@drawable/rp_icon_auto" />
 
     <LinearLayout
         android:layout_width="0dp"

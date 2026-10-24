@@ -11,6 +11,7 @@
     <string name="brand_tagline">Your Minecraft. Your way.</string>
     <!-- Home screen -->
     <string name="brand_tagline_home">PLAY BEYOND LIMITS</string>
+    <string name="brand_by_studio">BY CRAFT STUDIO</string>
     <string name="home_nav_home">Home</string>
     <string name="home_nav_browser">Browser Resources</string>
     <string name="home_nav_manager">Manager</string>
@@ -373,6 +374,18 @@
     <string name="folder_fragment_select">Select folder</string>
     <string name="main_login_done">Login done</string>
     <string name="main_add_account">Add account</string>
+    <string name="ap_eyebrow">ACCOUNT</string>
+    <string name="ap_title">Accounts</string>
+    <string name="ap_subtitle">Tap an account to play with it. Microsoft accounts can edit skins and capes here.</string>
+    <string name="ap_active">Active</string>
+    <string name="ap_empty">No account yet. Add a Microsoft account, or play offline with a username.</string>
+    <string name="ap_skin">Skin &amp; cape</string>
+    <string name="ap_type_microsoft">Microsoft account</string>
+    <string name="ap_type_local">Offline · local account</string>
+    <string name="ap_type_elyby">Ely.by account</string>
+    <string name="ap_count_one">1 account</string>
+    <string name="ap_count_many">%1$d accounts</string>
+    <string name="ap_delete_title">Remove %1$s?</string>
     <string name="tasks_ongoing">Tasks are in progress, please wait</string>
     <string name="no_saved_accounts">No saved accounts</string>
     <string name="mc_download_failed">Failed to download the game! This could be due to bad network connection, incorrectly placed files, etc..</string>

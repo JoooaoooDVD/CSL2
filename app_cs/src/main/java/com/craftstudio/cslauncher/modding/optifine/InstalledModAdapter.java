@@ -109,6 +109,35 @@ public class InstalledModAdapter extends RecyclerView.Adapter<InstalledModAdapte
     // the jar on every rebind. An empty string means "looked, found nothing
     // embedded," so we stop retrying and just keep using the filename fallback.
     private final java.util.Map<String, String> mModNameCache = new java.util.HashMap<>();
+    private final java.util.Map<String, String[]> mModMetaCache = new java.util.HashMap<>();
+
+    /** Second line (version · size · file) and the optional description line */
+    private static void bindMeta(@NonNull View row, @NonNull ModEntry entry) {
+        TextView version = row.findViewById(R.id.installed_mod_version);
+        TextView desc = row.findViewById(R.id.installed_mod_desc);
+        if (version != null) {
+            StringBuilder sb = new StringBuilder();
+            if (entry.metaVersion != null) sb.append(entry.metaVersion.startsWith("v") || entry.metaVersion.startsWith("V") ? "" : "v").append(entry.metaVersion).append("  ·  ");
+            long len = entry.file.length();
+            if (len > 0) sb.append(formatSize(len)).append("  ·  ");
+            sb.append(entry.file.getName());
+            version.setText(sb);
+        }
+        if (desc != null) {
+            if (entry.metaDesc != null) {
+                desc.setText(entry.metaDesc);
+                desc.setVisibility(View.VISIBLE);
+            } else {
+                desc.setVisibility(View.GONE);
+            }
+        }
+    }
+
+    private static String formatSize(long bytes) {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) return String.format(java.util.Locale.US, "%.0f KB", bytes / 1024f);
+        return String.format(java.util.Locale.US, "%.1f MB", bytes / (1024f * 1024f));
+    }
     // Jars currently being read for their embedded name, to avoid kicking off
     // a duplicate extraction if a rebind lands mid-resolution.
     private final java.util.Set<String> mModNameResolving = new java.util.HashSet<>();
@@ -725,6 +754,7 @@ public class InstalledModAdapter extends RecyclerView.Adapter<InstalledModAdapte
                     String oldPath = oldFile.getAbsolutePath();
                     mIconCache.remove(oldPath);
                     mModNameCache.remove(oldPath);
+                    mModMetaCache.remove(oldPath);
                     mIconCheckedNoResult.remove(oldPath);
                     mIconResolving.remove(oldPath);
                     mModNameResolving.remove(oldPath);
@@ -1003,7 +1033,12 @@ public class InstalledModAdapter extends RecyclerView.Adapter<InstalledModAdapte
                 }
             }
 
-            version.setText(entry.file.getName());
+            String[] cachedMeta = mModMetaCache.get(path);
+            if (cachedMeta != null) {
+                entry.metaVersion = cachedMeta[1];
+                entry.metaDesc = cachedMeta[2];
+            }
+            bindMeta(itemView, entry);
 
             icon.setTag(path);
 
@@ -1106,6 +1141,9 @@ public class InstalledModAdapter extends RecyclerView.Adapter<InstalledModAdapte
         // the cleaned-up file name in either case. This NEVER renames the
         // actual .jar on disk; it only changes what's shown in the list.
         @Nullable String metaName;
+        /** Version / one-line description from the jar or pack metadata (null when absent) */
+        @Nullable String metaVersion;
+        @Nullable String metaDesc;
 
         ModEntry(File f) {
             this.file    = f;
@@ -1214,14 +1252,21 @@ public class InstalledModAdapter extends RecyclerView.Adapter<InstalledModAdapte
         final File jarFile = entry.file;
 
         CSLauncherApplication.sExecutorService.execute(() -> {
-            String resolved = extractModName(jarFile);
+            final String[] meta = extractModMeta(jarFile);
+            final String resolved = meta[0];
             mMainHandler.post(() -> {
                 mModNameCache.put(path, resolved != null ? resolved : "");
+                mModMetaCache.put(path, meta);
                 mModNameResolving.remove(path);
                 entry.metaName = resolved;
+                entry.metaVersion = meta[1];
+                entry.metaDesc = meta[2];
                 TextView tv = nameRef.get();
                 if (tv != null && expectedTag.equals(tv.getTag())) {
                     tv.setText(entry.displayName());
+                    View row = (View) tv.getParent();
+                    while (row != null && row.findViewById(R.id.installed_mod_version) == null && row.getParent() instanceof View) row = (View) row.getParent();
+                    if (row != null) bindMeta(row, entry);
                 }
             });
         });
@@ -1356,15 +1401,54 @@ public class InstalledModAdapter extends RecyclerView.Adapter<InstalledModAdapte
      */
     @Nullable
     private static String extractModName(File jarFile) {
+        return extractModMeta(jarFile)[0];
+    }
+
+    private static String jsonText(JsonObject o, String key) {
+        try {
+            if (!o.has(key) || o.get(key).isJsonNull()) return null;
+            JsonElement e = o.get(key);
+            if (e.isJsonPrimitive()) return e.getAsString().trim();
+            if (e.isJsonObject() && e.getAsJsonObject().has("text")) return e.getAsJsonObject().get("text").getAsString().trim();
+            if (e.isJsonArray()) {
+                StringBuilder sb = new StringBuilder();
+                for (JsonElement part : e.getAsJsonArray()) {
+                    if (part.isJsonPrimitive()) sb.append(part.getAsString());
+                    else if (part.isJsonObject() && part.getAsJsonObject().has("text")) sb.append(part.getAsJsonObject().get("text").getAsString());
+                }
+                return sb.toString().trim();
+            }
+        } catch (Exception ignored) {}
+        return null;
+    }
+
+    /** Strips Minecraft § colour codes and collapses whitespace for one-line display */
+    private static String cleanText(@Nullable String s) {
+        if (s == null) return null;
+        s = s.replaceAll("§.", "").replaceAll("\\s+", " ").trim();
+        return s.isEmpty() ? null : s;
+    }
+
+    private static String nonEmpty(@Nullable String s) {
+        return s == null || s.trim().isEmpty() ? null : s.trim();
+    }
+
+    /**
+     * Reads {name, version, description} out of a mod jar (fabric/quilt/forge/neoforge/legacy)
+     * or a resource / shader pack (pack.mcmeta). Any slot may be null. Local only, never writes.
+     */
+    @NonNull
+    private static String[] extractModMeta(File jarFile) {
+        String[] out = new String[3];
         try (ZipFile zip = new ZipFile(jarFile)) {
             String content = readEntry(zip, "fabric.mod.json");
             if (content != null) {
                 try {
                     JsonObject obj = JsonParser.parseString(content).getAsJsonObject();
-                    if (obj.has("name") && !obj.get("name").isJsonNull()) {
-                        String name = obj.get("name").getAsString().trim();
-                        if (!name.isEmpty()) return name;
-                    }
+                    out[0] = nonEmpty(jsonText(obj, "name"));
+                    out[1] = nonEmpty(jsonText(obj, "version"));
+                    out[2] = cleanText(jsonText(obj, "description"));
+                    if (out[0] != null) return out;
                 } catch (Exception ignored) {}
             }
             content = readEntry(zip, "quilt.mod.json");
@@ -1372,39 +1456,54 @@ public class InstalledModAdapter extends RecyclerView.Adapter<InstalledModAdapte
                 try {
                     JsonObject root = JsonParser.parseString(content).getAsJsonObject();
                     JsonObject ql = root.has("quilt_loader") ? root.getAsJsonObject("quilt_loader") : null;
-                    if (ql != null && ql.has("metadata")) {
-                        JsonObject meta = ql.getAsJsonObject("metadata");
-                        if (meta.has("name") && !meta.get("name").isJsonNull()) {
-                            String name = meta.get("name").getAsString().trim();
-                            if (!name.isEmpty()) return name;
+                    if (ql != null) {
+                        out[1] = nonEmpty(jsonText(ql, "version"));
+                        if (ql.has("metadata")) {
+                            JsonObject meta = ql.getAsJsonObject("metadata");
+                            out[0] = nonEmpty(jsonText(meta, "name"));
+                            out[2] = cleanText(jsonText(meta, "description"));
                         }
+                        if (out[0] != null) return out;
                     }
                 } catch (Exception ignored) {}
             }
             content = readEntry(zip, "mcmod.info");
             if (content != null) {
                 try {
-                    JsonArray arr = JsonParser.parseString(content).getAsJsonArray();
-                    if (arr.size() > 0 && arr.get(0).isJsonObject()) {
+                    JsonElement parsed = JsonParser.parseString(content);
+                    JsonArray arr = parsed.isJsonArray() ? parsed.getAsJsonArray()
+                            : parsed.getAsJsonObject().getAsJsonArray("modList");
+                    if (arr != null && arr.size() > 0 && arr.get(0).isJsonObject()) {
                         JsonObject mod = arr.get(0).getAsJsonObject();
-                        if (mod.has("name") && !mod.get("name").isJsonNull()) {
-                            String name = mod.get("name").getAsString().trim();
-                            if (!name.isEmpty()) return name;
-                        }
+                        out[0] = nonEmpty(jsonText(mod, "name"));
+                        out[1] = nonEmpty(jsonText(mod, "version"));
+                        out[2] = cleanText(jsonText(mod, "description"));
+                        if (out[0] != null) return out;
                     }
                 } catch (Exception ignored) {}
             }
             for (String toml : new String[]{"META-INF/neoforge.mods.toml", "META-INF/mods.toml"}) {
                 content = readEntry(zip, toml);
                 if (content != null) {
-                    String displayName = tomlStringField(content, "displayName");
-                    if (displayName != null && !displayName.isEmpty()) return displayName.trim();
+                    out[0] = nonEmpty(tomlStringField(content, "displayName"));
+                    String v = nonEmpty(tomlStringField(content, "version"));
+                    if (v != null && !v.contains("${")) out[1] = v; // "${file.jarVersion}" placeholders are useless
+                    out[2] = cleanText(tomlStringField(content, "description"));
+                    if (out[0] != null) return out;
                 }
             }
+            // Resource / shader packs
+            content = readEntry(zip, "pack.mcmeta");
+            if (content != null) {
+                try {
+                    JsonObject pack = JsonParser.parseString(content).getAsJsonObject().getAsJsonObject("pack");
+                    if (pack != null) out[2] = cleanText(jsonText(pack, "description"));
+                } catch (Exception ignored) {}
+            }
         } catch (Exception e) {
-            Log.w(TAG, "Failed to read mod name from JAR: " + jarFile.getName() + " — " + e.getMessage());
+            Log.w(TAG, "Failed to read metadata from " + jarFile.getName() + " — " + e.getMessage());
         }
-        return null;
+        return out;
     }
 
     @Nullable

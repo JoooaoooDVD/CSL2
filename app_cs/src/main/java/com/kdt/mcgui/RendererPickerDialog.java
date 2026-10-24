@@ -67,14 +67,14 @@ public class RendererPickerDialog extends CSPopupDialog {
 
         if (mDefaultLabel != null) {
             boolean selected = mSelected < 0 || mSelected >= mIds.size();
-            addCard(inflater, list, "AUTO", mDefaultLabel, ctx.getString(R.string.rp_default_desc),
+            addCard(inflater, list, R.drawable.rp_icon_auto, mDefaultLabel, ctx.getString(R.string.rp_default_desc),
                     null, null, 0, selected, mIds.size());
         }
         for (int i = 0; i < mIds.size(); i++) {
             String id = mIds.get(i);
             Info info = infoFor(id);
             String name = i < mNames.size() ? shortName(mNames.get(i)) : id;
-            addCard(inflater, list, info.badge, name, ctx.getString(info.desc),
+            addCard(inflater, list, info.icon, name, ctx.getString(info.desc),
                     ctx.getString(info.versions), info.tag == 0 ? null : ctx.getString(info.tag), info.tagStyle,
                     i == mSelected, i);
         }
@@ -84,10 +84,18 @@ public class RendererPickerDialog extends CSPopupDialog {
         Motion.fadeIn(findViewById(R.id.rp_footer), 320L, 260L);
     }
 
-    private void addCard(LayoutInflater inflater, ViewGroup list, String badge, String name, String desc,
+    private void addCard(LayoutInflater inflater, ViewGroup list, int icon, String name, String desc,
                          @Nullable String versions, @Nullable String tag, int tagStyle, boolean selected, int index) {
         View row = inflater.inflate(R.layout.item_renderer_card, list, false);
-        ((TextView) row.findViewById(R.id.rc_badge)).setText(badge);
+        android.widget.ImageView art = row.findViewById(R.id.rc_badge);
+        art.setImageResource(icon);
+        final float radius = 12f * getContext().getResources().getDisplayMetrics().density;
+        art.setOutlineProvider(new android.view.ViewOutlineProvider() {
+            @Override public void getOutline(View v, android.graphics.Outline o) {
+                o.setRoundRect(0, 0, v.getWidth(), v.getHeight(), radius);
+            }
+        });
+        art.setClipToOutline(true);
         ((TextView) row.findViewById(R.id.rc_name)).setText(name);
         ((TextView) row.findViewById(R.id.rc_desc)).setText(desc);
         TextView versionsView = row.findViewById(R.id.rc_versions);
@@ -145,33 +153,33 @@ public class RendererPickerDialog extends CSPopupDialog {
     private static final int TAG_GOOD = 0, TAG_WARN = 1, TAG_NEUTRAL = 2;
 
     private static final class Info {
-        final String badge; final int desc, versions, tag, tagStyle;
-        Info(String badge, int desc, int versions, int tag, int tagStyle) {
-            this.badge = badge; this.desc = desc; this.versions = versions; this.tag = tag; this.tagStyle = tagStyle;
+        final int icon; final int desc, versions, tag, tagStyle;
+        Info(int icon, int desc, int versions, int tag, int tagStyle) {
+            this.icon = icon; this.desc = desc; this.versions = versions; this.tag = tag; this.tagStyle = tagStyle;
         }
     }
 
     private static Info infoFor(String id) {
         switch (id) {
             case "opengles2":
-                return new Info("GL ES 2", R.string.rp_desc_gl4es, R.string.rp_ver_upto_1214, R.string.rp_tag_recommended, TAG_GOOD);
+                return new Info(R.drawable.rp_icon_gl4es, R.string.rp_desc_gl4es, R.string.rp_ver_upto_1214, R.string.rp_tag_recommended, TAG_GOOD);
             case "opengles3_ltw":
-                return new Info("GL ES 3", R.string.rp_desc_ltw, R.string.rp_ver_117_plus, R.string.rp_tag_fast, TAG_GOOD);
+                return new Info(R.drawable.rp_icon_ltw, R.string.rp_desc_ltw, R.string.rp_ver_117_plus, R.string.rp_tag_fast, TAG_GOOD);
             case "vulkan_zink":
-                return new Info("VULKAN", R.string.rp_desc_zink, R.string.rp_ver_all, R.string.rp_tag_shaders, TAG_NEUTRAL);
+                return new Info(R.drawable.rp_icon_zink, R.string.rp_desc_zink, R.string.rp_ver_all, R.string.rp_tag_shaders, TAG_NEUTRAL);
             case "vulkan_legacyzink":
-                return new Info("VULKAN", R.string.rp_desc_legacy_zink, R.string.rp_ver_all, R.string.rp_tag_slow, TAG_WARN);
+                return new Info(R.drawable.rp_icon_legacyzink, R.string.rp_desc_legacy_zink, R.string.rp_ver_all, R.string.rp_tag_slow, TAG_WARN);
             case "freedreno_kgsl":
-                return new Info("ADRENO", R.string.rp_desc_freedreno, R.string.rp_ver_all, R.string.rp_tag_shaders, TAG_NEUTRAL);
+                return new Info(R.drawable.rp_icon_freedreno, R.string.rp_desc_freedreno, R.string.rp_ver_all, R.string.rp_tag_shaders, TAG_NEUTRAL);
             case "mesa_desktop":
             case "mesa_desktop_ext":
-                return new Info("MESA", R.string.rp_desc_mesa, R.string.rp_ver_all, R.string.rp_tag_experimental, TAG_WARN);
+                return new Info(R.drawable.rp_icon_mesa, R.string.rp_desc_mesa, R.string.rp_ver_all, R.string.rp_tag_experimental, TAG_WARN);
             case "opengles_mobileglues":
-                return new Info("GL ES", R.string.rp_desc_mobileglues, R.string.rp_ver_117_plus, 0, TAG_GOOD);
+                return new Info(R.drawable.rp_icon_mobileglues, R.string.rp_desc_mobileglues, R.string.rp_ver_117_plus, 0, TAG_GOOD);
             case "opengles_sfpew":
-                return new Info("GL ES", R.string.rp_desc_sfpew, R.string.rp_ver_all, 0, TAG_GOOD);
+                return new Info(R.drawable.rp_icon_sfpew, R.string.rp_desc_sfpew, R.string.rp_ver_all, 0, TAG_GOOD);
             default:
-                return new Info("GL", R.string.rp_desc_generic, R.string.rp_ver_all, 0, TAG_GOOD);
+                return new Info(R.drawable.rp_icon_gl4es, R.string.rp_desc_generic, R.string.rp_ver_all, 0, TAG_GOOD);
         }
     }
 }
