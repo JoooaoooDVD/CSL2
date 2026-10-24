@@ -166,6 +166,7 @@ public class LauncherActivity extends BaseActivity {
         JVersionList.Version mcVersion = MoJsonExtras.getListedVersion(normalizedVersionId);
         com.craftstudio.cslauncher.discord.DiscordPresenceManager.getInstance(this).setMinecraftLaunching(this, selectedInstance, normalizedVersionId);
         com.craftstudio.cslauncher.progresskeeper.ProgressKeeper.markLaunching();
+        com.craftstudio.cslauncher.tutorial.TutorialEvents.emit(com.craftstudio.cslauncher.tutorial.TutorialEvents.GAME_LAUNCHING);
         new MoJsonDownloader().start(
                 this.getAssets(),
                 mcVersion,
@@ -238,6 +239,8 @@ public class LauncherActivity extends BaseActivity {
         ProgressKeeper.addTaskCountListener((mProgressServiceKeeper = new ProgressServiceKeeper(this)));
 
         mSettingsButton.setOnClickListener(mSettingButtonListener);
+        View helpButton = findViewById(R.id.help_button);
+        if (helpButton != null) helpButton.setOnClickListener(v -> com.craftstudio.cslauncher.tutorial.ContextualHelp.onHelpPressed(this));
         ProgressKeeper.addTaskCountListener(mProgressLayout);
         ExtraCore.addExtraListener(ExtraConstants.BACK_PREFERENCE, mBackPreferenceListener);
         ExtraCore.addExtraListener(ExtraConstants.SELECT_AUTH_METHOD, mSelectAuthMethod);
@@ -305,6 +308,10 @@ public class LauncherActivity extends BaseActivity {
             StorageRoot.markSetupDone(this);
         } else if (shortcutProfile != null && savedInstanceState == null) {
             handleProfileShortcut(getIntent());
+        } else if (com.craftstudio.cslauncher.tutorial.FirstLaunchSetup.isPending(this)) {
+            // First-time setup / interrupted tour (after the intro on a cold start, right away on a recreate)
+            View root = findViewById(android.R.id.content);
+            if (root != null) root.postDelayed(this::showFirstLaunchSetup, savedInstanceState == null ? 1400L : 0L);
         } else if (com.kdt.mcgui.DiscordInviteDialog.isDue(this)) {
             // Setup already done (e.g. we just restarted into the custom folder): scheduled community invite
             View root = findViewById(android.R.id.content);
@@ -375,6 +382,13 @@ public class LauncherActivity extends BaseActivity {
         super.onActivityResult(requestCode, resultCode, data);
     }
 
+    private void showFirstLaunchSetup() {
+        if (isFinishing() || isDestroyed()) return;
+        if (!com.craftstudio.cslauncher.about.WelcomePolicy.isAccepted() || !StorageRoot.isSetupDone(this)) return;
+        if (mStorageSetupDialog != null && mStorageSetupDialog.isShowing()) return;
+        com.craftstudio.cslauncher.tutorial.FirstLaunchSetup.showIfNeeded(this);
+    }
+
     private void showDiscordInvite() {
         if (isFinishing() || isDestroyed()) return;
         if (!com.craftstudio.cslauncher.about.WelcomePolicy.isAccepted() || !StorageRoot.isSetupDone(this)) return;
@@ -417,7 +431,8 @@ public class LauncherActivity extends BaseActivity {
             mStorageSetupDialog = null;
             if (StorageRoot.isSetupDone(this)) {
                 View root = findViewById(android.R.id.content);
-                if (root != null) root.postDelayed(this::showDiscordInvite, 450L);
+                if (root != null) root.postDelayed(com.craftstudio.cslauncher.tutorial.FirstLaunchSetup.isPending(this)
+                        ? this::showFirstLaunchSetup : this::showDiscordInvite, 450L);
             }
         });
         mStorageSetupDialog.show();
@@ -442,6 +457,7 @@ public class LauncherActivity extends BaseActivity {
     @Override
     protected void onStop() {
         super.onStop();
+        com.craftstudio.cslauncher.tutorial.TutorialManager.getInstance().detach(this);
         // Not visible any more (game taking over, or another app): hand the Discord presence back
         com.craftstudio.cslauncher.discord.DiscordPresenceManager.getInstance(this).releaseFromLauncher();
     }
@@ -451,6 +467,7 @@ public class LauncherActivity extends BaseActivity {
         super.onStart();
         getSupportFragmentManager().registerFragmentLifecycleCallbacks(mFragmentCallbackListener, true);
         AnimationManager.installFragmentTransitions(this);
+        com.craftstudio.cslauncher.tutorial.TutorialManager.getInstance().attach(this);
     }
 
     @Override

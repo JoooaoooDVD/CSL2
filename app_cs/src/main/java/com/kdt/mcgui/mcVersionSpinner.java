@@ -189,8 +189,12 @@ public class mcVersionSpinner extends ExtendedTextView {
                 if (item instanceof InstanceAdapterExtra) performExtraAction((InstanceAdapterExtra) item);
             }
         });
-        mPickerDialog.setOnDismissListener(d -> mPickerDialog = null);
+        mPickerDialog.setOnDismissListener(d -> {
+            mPickerDialog = null;
+            com.craftstudio.cslauncher.tutorial.TutorialEvents.emit(com.craftstudio.cslauncher.tutorial.TutorialEvents.PROFILE_PICKER_CLOSED);
+        });
         mPickerDialog.show();
+        com.craftstudio.cslauncher.tutorial.TutorialEvents.emit(com.craftstudio.cslauncher.tutorial.TutorialEvents.PROFILE_PICKER_OPENED);
     }
 
     private void performExtraAction(InstanceAdapterExtra extra) {

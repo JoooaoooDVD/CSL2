@@ -521,12 +521,15 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
     }
 
     private void showAppearanceDialog() {
-        new com.kdt.mcgui.AppearancePickerDialog(requireContext(), mAppearance, mAppearanceParts, (mode, parts) -> {
+        com.kdt.mcgui.AppearancePickerDialog dialog = new com.kdt.mcgui.AppearancePickerDialog(requireContext(), mAppearance, mAppearanceParts, (mode, parts) -> {
             if (mode == mAppearance && parts.equals(mAppearanceParts)) return;
             mAppearance = mode;
             mAppearanceParts = parts;
             if (mAppearanceValue != null) ProfileEditorMotion.valueChanged(mAppearanceValue, appearanceLabel());
-        }).show();
+        });
+        dialog.setOnDismissListener(d -> com.craftstudio.cslauncher.tutorial.TutorialEvents.emit(com.craftstudio.cslauncher.tutorial.TutorialEvents.APPEARANCE_DIALOG_CLOSED));
+        dialog.show();
+        com.craftstudio.cslauncher.tutorial.TutorialEvents.emit(com.craftstudio.cslauncher.tutorial.TutorialEvents.APPEARANCE_DIALOG_OPENED);
     }
 
     private String appearanceLabel() {
@@ -854,6 +857,7 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
             mSavedAppearance = mAppearance;
             mSavedAppearanceParts = newParts;
             applyAppearanceAfterSave(mInstance, appearanceChanged);
+            com.craftstudio.cslauncher.tutorial.TutorialEvents.emit(com.craftstudio.cslauncher.tutorial.TutorialEvents.PROFILE_SAVED);
             return true;
         } catch (Exception e) {
             Tools.showErrorRemote(e);

@@ -145,7 +145,7 @@ public class MainMenuFragment extends Fragment {
      */
     private void showManageChooser() {
         if (getContext() == null) return;
-        new com.kdt.mcgui.ManageChooserDialog(requireContext(), new com.kdt.mcgui.ManageChooserDialog.Callback() {
+        com.kdt.mcgui.ManageChooserDialog dialog = new com.kdt.mcgui.ManageChooserDialog(requireContext(), new com.kdt.mcgui.ManageChooserDialog.Callback() {
             @Override
             public void onTypeChosen(@NonNull ContentType type) {
                 if (getView() != null) onContentTypeChosen(true, type);
@@ -167,7 +167,10 @@ public class MainMenuFragment extends Fragment {
                                     Toast.LENGTH_SHORT).show();
                         });
             }
-        }).show();
+        });
+        dialog.setOnDismissListener(d -> com.craftstudio.cslauncher.tutorial.TutorialEvents.emit(com.craftstudio.cslauncher.tutorial.TutorialEvents.MANAGE_CHOOSER_CLOSED));
+        dialog.show();
+        com.craftstudio.cslauncher.tutorial.TutorialEvents.emit(com.craftstudio.cslauncher.tutorial.TutorialEvents.MANAGE_CHOOSER_OPENED);
     }
 
     /**

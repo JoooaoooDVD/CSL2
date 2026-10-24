@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Setup page 4: completion summary -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/tut_status_done"
+            android:contentDescription="@null"
+            android:padding="9dp"
+            android:src="@drawable/ic_tut_check" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/noto_sans_bold"
+                android:text="@string/tut_done_heading"
+                android:textColor="#F2F5FA"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/tut_done_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#9C9CA4"
+                android:textSize="12.5sp"
+                tools:text="You completed 4 of 4 modules." />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:background="@drawable/tut_card_bg"
+        android:orientation="vertical"
+        android:padding="4dp">
+
+        <include layout="@layout/tutorial_feature_row" android:id="@+id/tut_done_theme" />
+        <include layout="@layout/tutorial_feature_row" android:id="@+id/tut_done_profile" />
+        <include layout="@layout/tutorial_feature_row" android:id="@+id/tut_done_account" />
+        <include layout="@layout/tutorial_feature_row" android:id="@+id/tut_done_modules" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tut_done_hint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="@string/tut_done_hint"
+        android:textColor="#9C9CA4"
+        android:textSize="11.5sp" />
+</LinearLayout>

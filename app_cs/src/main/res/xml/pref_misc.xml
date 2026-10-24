@@ -112,6 +112,15 @@
             android:widgetLayout="@layout/view_chevron" />
     </PreferenceCategory>
 
+    <PreferenceCategory android:layout="@layout/item_settings_section" android:title="@string/tut_pref_category">
+        <Preference android:layout="@layout/item_setting_row"
+            android:key="tutorialCenter"
+            android:icon="@drawable/ic_px_book"
+            android:title="@string/tut_pref_title"
+            android:summary="@string/tut_pref_summary"
+            android:widgetLayout="@layout/view_chevron" />
+    </PreferenceCategory>
+
     <PreferenceCategory android:layout="@layout/item_settings_section" android:title="@string/preference_category_about">
         <Preference android:layout="@layout/item_setting_row"
             android:key="aboutBrand"

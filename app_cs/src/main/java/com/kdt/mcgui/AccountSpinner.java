@@ -225,6 +225,14 @@ public class AccountSpinner extends AppCompatSpinner implements LoginListener, A
     }
 
     @Override
+    public boolean performClick() {
+        // The account menu (dropdown) opened: lets the tutorial engine verify the interactive step
+        boolean handled = super.performClick();
+        com.craftstudio.cslauncher.tutorial.TutorialEvents.emit(com.craftstudio.cslauncher.tutorial.TutorialEvents.ACCOUNT_MENU_OPENED);
+        return handled;
+    }
+
+    @Override
     protected void onDraw(@NonNull Canvas canvas) {
         super.onDraw(canvas);
         // Login progress line: only while a login runs (or failed), not as a permanent underline

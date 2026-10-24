@@ -30,6 +30,8 @@ public class VersionSelectorDialog {
         AnimationManager.applyListAnimation(expandableListView);
         builder.setView(expandableListView);
         AlertDialog dialog = builder.show();
+        dialog.setOnDismissListener(d -> com.craftstudio.cslauncher.tutorial.TutorialEvents.emit(com.craftstudio.cslauncher.tutorial.TutorialEvents.VERSION_DIALOG_CLOSED));
+        com.craftstudio.cslauncher.tutorial.TutorialEvents.emit(com.craftstudio.cslauncher.tutorial.TutorialEvents.VERSION_DIALOG_OPENED);
         // Shared dialog content entrance (engine), layered under the themed window animation
         CSAnimationEngine.animateDialogContentView(expandableListView);
 

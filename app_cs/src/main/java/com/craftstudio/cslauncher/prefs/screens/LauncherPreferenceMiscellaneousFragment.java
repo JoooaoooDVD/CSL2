@@ -64,6 +64,11 @@ public class LauncherPreferenceMiscellaneousFragment extends LauncherPreferenceF
         setupMicrophoneRequestPreference();
         setupDiscordPreferences();
         setupUpdatePreference();
+        requirePreference("tutorialCenter").setOnPreferenceClickListener(preference -> {
+            androidx.fragment.app.FragmentActivity activity = getActivity();
+            if (activity != null) com.craftstudio.cslauncher.tutorial.TutorialCenterFragment.open(activity);
+            return true;
+        });
         updateVisibility();
     }
 
