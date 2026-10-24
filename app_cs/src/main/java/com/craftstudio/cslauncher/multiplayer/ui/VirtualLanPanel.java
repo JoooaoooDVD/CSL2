@@ -499,10 +499,28 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
 
     // ───────────────────────────── client callbacks ─────────────────────────────
 
+    /** Last failed / ended state and the engine output, kept so diagnostics still say what happened after Back */
+    @Nullable private VirtualLanState mLastFinal;
+    @NonNull private List<String> mEngineLog = new ArrayList<>();
+
+    @Override
+    public void onEngineLog(@NonNull List<String> lines) {
+        if (!lines.isEmpty()) mEngineLog = new ArrayList<>(lines);
+    }
+
+    @Override
+    public void onServiceConnected() {
+        mClient.requestLog();
+    }
+
     @Override
     public void onState(@NonNull VirtualLanState state) {
         VirtualLanState previous = mLast;
         mLast = state;
+        if (state.phase == VirtualLanState.Phase.FAILED || state.phase == VirtualLanState.Phase.ENDED) {
+            mLastFinal = state;
+            mClient.requestLog();
+        }
         if (!state.sessionCode.isEmpty() && (state.isActive() || state.phase == VirtualLanState.Phase.ENDED)) {
             mRepo.remember(state);
         }
@@ -531,11 +549,6 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
             // IDLE: only move home when we were not just asked to start something
             if (mScreen == Screen.SESSION && !mPendingCreate && mPendingJoinCode == null) showScreen(Screen.HOME, true);
         }
-    }
-
-    @Override
-    public void onServiceConnected() {
-        // nothing: the service pushes its state on register
     }
 
     // ───────────────────────────── screens ─────────────────────────────
@@ -1078,6 +1091,20 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
         b.append("detail=").append(s.detail).append('\n');
         b.append("stages:\n");
         for (String line : s.stages) b.append("  ").append(line).append('\n');
+        VirtualLanState last = mLastFinal;
+        if (last != null && last != s && s.phase == VirtualLanState.Phase.IDLE) {
+            b.append("\n---- last session (").append(last.role).append(' ').append(last.phase).append(" reason=").append(last.reason).append(") ----\n");
+            b.append("detail=").append(last.detail).append('\n');
+            b.append("relays=").append(last.relayNodesConnected).append(' ').append(last.relayNames)
+                    .append(" vip=").append(last.localVip).append(" engine=").append(last.engineVersion).append('\n');
+            b.append("stages:\n");
+            for (String line : last.stages) b.append("  ").append(line).append('\n');
+        }
+        if (!mEngineLog.isEmpty()) {
+            b.append("\n---- engine output (tail) ----\n");
+            int from = Math.max(0, mEngineLog.size() - 80);
+            for (int i = from; i < mEngineLog.size(); i++) b.append("  ").append(mEngineLog.get(i)).append('\n');
+        }
         return b.toString();
     }
 
