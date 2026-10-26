@@ -215,6 +215,15 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         }
         mGridLayout = new GridLayoutManager(requireContext(), 3);
         mGrid.setLayoutManager(mGridLayout);
+        mGrid.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override public void onScrolled(@NonNull RecyclerView rv, int dx, int dy) {
+                if (mFeatured == null) return;
+                // Hide the featured card while browsing, bring it back once the grid is at the top
+                boolean atTop = !rv.canScrollVertically(-1);
+                if (atTop) mFeatured.setCollapsed(false);
+                else if (dy > 0) mFeatured.setCollapsed(true);
+            }
+        });
         mGrid.setAdapter(mAdapter);
         mGrid.setItemAnimator(null);
         mGrid.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
@@ -452,7 +461,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         styleSourceOption(mSourceCurseforge, R.id.library_source_curseforge_title, R.id.library_source_curseforge_desc,
                 R.id.library_source_curseforge_check, R.id.library_source_curseforge_logo,
                 R.color.lib_src_curseforge, curseforge, userAction);
-        if (userAction && mGrid != null) mGrid.scrollToPosition(0);
+        if (userAction && mGrid != null) { mGrid.scrollToPosition(0); if (mFeatured != null) mFeatured.setCollapsed(false); }
     }
 
     private void styleSourceOption(View option, int titleId, int descId, int checkId, int logoId,
@@ -717,7 +726,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         updateAdapterContext();
         InstalledContentIndex cached = mIndexCache.get(type);
         mAdapter.setInstalledIndex(cached != null ? cached : InstalledContentIndex.empty(type));
-        if (userAction && mGrid != null) mGrid.scrollToPosition(0);
+        if (userAction && mGrid != null) { mGrid.scrollToPosition(0); if (mFeatured != null) mFeatured.setCollapsed(false); }
     }
 
     /** Mods and modpacks are picked per loader; packs and shaders are not */
@@ -885,7 +894,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         LibraryMotion.dimGrid(mGrid, false);
         updateAdapterContext();
         mAdapter.setItems(mItems, true);
-        if (mGrid != null) mGrid.scrollToPosition(0);
+        if (mGrid != null) { mGrid.scrollToPosition(0); if (mFeatured != null) mFeatured.setCollapsed(false); }
         if (mSearchFailed) showMessage(R.drawable.ic_lib_warning, R.string.lib_error, true);
         else if (mItems.isEmpty()) showMessage(R.drawable.ic_lib_search, R.string.lib_no_results, false);
         else showContent();
@@ -926,6 +935,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         mGrid.setVisibility(View.VISIBLE);
         mAdapter.showSkeleton(Math.max(6, mGridLayout.getSpanCount() * 3));
         mGrid.scrollToPosition(0);
+        if (mFeatured != null) mFeatured.setCollapsed(false);
         mProgress.setVisibility(View.INVISIBLE);
     }
 

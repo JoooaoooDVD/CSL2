@@ -79,6 +79,10 @@ public final class BaseOptimiseCard {
     private State mState = State.LOADING;
     private boolean mInstalling;
     private boolean mEnabled = true;
+    /** Collapsed while the grid is scrolled away from the top */
+    private boolean mCollapsed = false;
+    private int mExpandedHeight = 0;
+    @Nullable private android.animation.ValueAnimator mCollapseAnimator;
     private AnimatedImageReceiver mReceiver;
 
     public BaseOptimiseCard(@NonNull View root, @NonNull ModIconCache iconCache, @NonNull String curseforgeKey, @NonNull Host host) {
@@ -124,16 +128,84 @@ public final class BaseOptimiseCard {
         if (mEnabled == enabled) return;
         mEnabled = enabled;
         if (enabled) {
+            mCollapsed = false;
+            resetHeight();
             if (mRoot.getVisibility() != View.VISIBLE) {
                 mRoot.setVisibility(View.VISIBLE);
                 Motion.riseIn(mRoot, 0L, 10f);
             }
         } else {
+            cancelCollapse();
             mRoot.setVisibility(View.GONE);
         }
     }
 
+    /**
+     * Auto-hide while the user scrolls down the grid, come back when the grid is at the top.
+     * Height is animated so the grid slides up smoothly instead of jumping.
+     */
+    public void setCollapsed(boolean collapsed) {
+        if (!mEnabled || mCollapsed == collapsed || mRoot.getVisibility() != View.VISIBLE) return;
+        mCollapsed = collapsed;
+        cancelCollapse();
+        int current = mRoot.getHeight();
+        if (collapsed && current > 0) mExpandedHeight = current;
+        if (mExpandedHeight <= 0) {
+            mRoot.measure(View.MeasureSpec.makeMeasureSpec(((View) mRoot.getParent()).getWidth(), View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+            mExpandedHeight = mRoot.getMeasuredHeight();
+        }
+        int target = collapsed ? 0 : mExpandedHeight;
+        if (!Motion.content(mRoot) || mExpandedHeight <= 0) {
+            applyHeight(target);
+            mRoot.setAlpha(collapsed ? 0f : 1f);
+            if (!collapsed) resetHeight();
+            return;
+        }
+        android.animation.ValueAnimator animator = android.animation.ValueAnimator.ofInt(current, target);
+        animator.setDuration(collapsed ? Motion.SHORT : Motion.MEDIUM);
+        animator.setInterpolator(collapsed ? Motion.EXIT : Motion.ENTER);
+        animator.addUpdateListener(a -> {
+            int h = (Integer) a.getAnimatedValue();
+            applyHeight(h);
+            mRoot.setAlpha(mExpandedHeight == 0 ? 1f : Math.min(1f, h / (float) mExpandedHeight));
+        });
+        animator.addListener(new android.animation.AnimatorListenerAdapter() {
+            @Override public void onAnimationEnd(android.animation.Animator animation) {
+                mCollapseAnimator = null;
+                if (!mCollapsed) resetHeight();
+            }
+        });
+        mCollapseAnimator = animator;
+        animator.start();
+    }
+
+    private void applyHeight(int height) {
+        android.view.ViewGroup.LayoutParams lp = mRoot.getLayoutParams();
+        if (lp == null) return;
+        lp.height = height;
+        mRoot.setLayoutParams(lp);
+    }
+
+    /** Back to wrap_content so content changes (status line, tags) still resize the card */
+    private void resetHeight() {
+        android.view.ViewGroup.LayoutParams lp = mRoot.getLayoutParams();
+        if (lp != null && lp.height != android.view.ViewGroup.LayoutParams.WRAP_CONTENT) {
+            lp.height = android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
+            mRoot.setLayoutParams(lp);
+        }
+        mRoot.setAlpha(1f);
+    }
+
+    private void cancelCollapse() {
+        if (mCollapseAnimator != null) {
+            mCollapseAnimator.cancel();
+            mCollapseAnimator = null;
+        }
+    }
+
     public void destroy() {
+        cancelCollapse();
         if (mReceiver != null) {
             mIconCache.cancelImage(mReceiver);
             mReceiver = null;
