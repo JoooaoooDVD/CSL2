@@ -351,11 +351,38 @@ public class MainMenuFragment extends Fragment {
                     com.craftstudio.cslauncher.multiplayer.ui.VirtualLanFragment.TAG, null);
         } else if (navId == R.id.nav_logs) {
             openPane(LogsFragment.class, LogsFragment.TAG, null);
+        } else if (navId == R.id.nav_playtime) {
+            openPane(PlayTimeFragment.class, PlayTimeFragment.TAG, null);
+        } else if (navId == R.id.nav_skins) {
+            // Skin manager: full screen editor of the current account, the dock keeps its tab
+            openSkinManager();
+            return true;
         } else {
             return false;
         }
         setActiveNav(navId);
         return true;
+    }
+
+    /** Skins + capes of the selected account (local or Microsoft) */
+    private void openSkinManager() {
+        if (getActivity() == null) return;
+        com.craftstudio.cslauncher.authenticator.accounts.Account account =
+                com.craftstudio.cslauncher.authenticator.accounts.Accounts.getCurrent();
+        if (account == null || account.mSaveLocation == null) {
+            android.widget.Toast.makeText(requireContext(), R.string.pt_no_account, android.widget.Toast.LENGTH_SHORT).show();
+            com.craftstudio.cslauncher.extra.ExtraCore.setValue(com.craftstudio.cslauncher.extra.ExtraConstants.SELECT_AUTH_METHOD, true);
+            return;
+        }
+        if (com.craftstudio.cslauncher.progresskeeper.ProgressKeeper.hasProgressKey(com.kdt.mcgui.ProgressLayout.AUTHENTICATE)) {
+            android.widget.Toast.makeText(requireContext(), R.string.tasks_ongoing, android.widget.Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (getParentFragmentManager().isStateSaved()) return;
+        Bundle args = new Bundle();
+        args.putString(com.craftstudio.cslauncher.skins.SkinEditorFragment.ARG_ACCOUNT_FILE, account.mSaveLocation.getName());
+        Tools.swapFragmentFullScreen(requireActivity(), com.craftstudio.cslauncher.skins.SkinEditorFragment.class,
+                com.craftstudio.cslauncher.skins.SkinEditorFragment.TAG, args);
     }
 
     /** Opens the game directory of the selected instance (overflow menu) */
@@ -379,6 +406,7 @@ public class MainMenuFragment extends Fragment {
         }
         String top = manager.getBackStackEntryAt(count - 1).getName();
         if (LogsFragment.TAG.equals(top)) setActiveNav(R.id.nav_logs);
+        else if (PlayTimeFragment.TAG.equals(top)) setActiveNav(R.id.nav_playtime);
         else if (com.craftstudio.cslauncher.multiplayer.ui.VirtualLanFragment.TAG.equals(top)) setActiveNav(R.id.nav_multiplayer);
         else if (top != null && (top.startsWith(ModsSearchFragment.TAG) || ModInstallFragment.TAG.equals(top)))
             setActiveNav(R.id.mod_store_button);

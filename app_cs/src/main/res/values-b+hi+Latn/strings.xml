@@ -1435,4 +1435,43 @@ time set day</string>
     <string name="lib_base_opt_incompatible">%1$s %2$s ke liye abhi available nahi</string>
     <string name="lib_base_opt_offline">Load nahi hua. Retry ke liye tap karo.</string>
     <string name="lib_base_opt_busy">Ek download already chal raha hai. Pehle use poora hone do.</string>
+    <string name="pt_just_now">abhi abhi</string>
+    <plurals name="pt_ago_seconds"><item quantity="one">%d second pehle</item><item quantity="other">%d second pehle</item></plurals>
+    <plurals name="pt_ago_minutes"><item quantity="one">%d minute pehle</item><item quantity="other">%d minute pehle</item></plurals>
+    <plurals name="pt_ago_hours"><item quantity="one">%d ghante pehle</item><item quantity="other">%d ghante pehle</item></plurals>
+    <plurals name="pt_ago_days"><item quantity="one">%d din pehle</item><item quantity="other">%d din pehle</item></plurals>
+    <plurals name="pt_ago_months"><item quantity="one">%d mahine pehle</item><item quantity="other">%d mahine pehle</item></plurals>
+    <plurals name="pt_ago_years"><item quantity="one">%d saal pehle</item><item quantity="other">%d saal pehle</item></plurals>
+    <plurals name="pt_days"><item quantity="one">%d din</item><item quantity="other">%d din</item></plurals>
+    <plurals name="pt_hours"><item quantity="one">%d ghanta</item><item quantity="other">%d ghante</item></plurals>
+    <plurals name="pt_minutes"><item quantity="one">%d minute</item><item quantity="other">%d minute</item></plurals>
+    <plurals name="pt_seconds"><item quantity="one">%d second</item><item quantity="other">%d second</item></plurals>
+    <plurals name="pt_sessions_count"><item quantity="one">%d session</item><item quantity="other">%d sessions</item></plurals>
+    <string name="pt_home_last_played">Last khela %1$s</string>
+    <string name="pt_home_never_played">Abhi tak nahi khela</string>
+    <string name="pt_home_playing_now">Abhi chal raha hai</string>
+    <string name="home_nav_skins">Skins</string>
+    <string name="home_nav_playtime">Play Time</string>
+    <string name="pt_no_account">Skins manage karne ke liye pehle account add karo</string>
+    <string name="pt_title">Play Time</string>
+    <string name="pt_subtitle">Kitna aur kya khela, sab yahan</string>
+    <string name="pt_total_label">Total play time</string>
+    <string name="pt_stat_today">Aaj</string>
+    <string name="pt_stat_week">Pichle 7 din</string>
+    <string name="pt_stat_sessions">Sessions</string>
+    <string name="pt_stat_average">Avg. session</string>
+    <string name="pt_stat_longest">Sabse lamba session</string>
+    <string name="pt_stat_since">Khel rahe ho since</string>
+    <string name="pt_stat_last">Last khela</string>
+    <string name="pt_live_banner">Minecraft abhi chal raha hai · %1$s · %2$s</string>
+    <string name="pt_section_profiles">Profile ke hisaab se</string>
+    <string name="pt_section_recent">Recent sessions</string>
+    <string name="pt_profile_line">%1$s · %2$s · total ka %3$s</string>
+    <string name="pt_profile_last">Last khela %1$s · sabse lamba %2$s</string>
+    <string name="pt_session_line">%1$s · %2$s</string>
+    <string name="pt_session_live">Chal raha hai</string>
+    <string name="pt_empty_title">Abhi koi play time nahi</string>
+    <string name="pt_empty_desc">PLAY dabao aur tumhare sessions yahan dikhenge: total time, har profile ka time, aaj, is hafte aur har ek session.</string>
+    <string name="pt_never">Kabhi nahi</string>
+    <string name="pt_show_more">Aur dikhao</string>
 </resources>

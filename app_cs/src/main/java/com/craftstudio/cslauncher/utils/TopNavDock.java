@@ -22,7 +22,7 @@ public final class TopNavDock {
     /** The dock buttons, in order */
     public static final int[] ITEM_IDS = {
             R.id.nav_home, R.id.mod_store_button, R.id.open_files_button,
-            R.id.nav_multiplayer, R.id.nav_controls, R.id.nav_logs};
+            R.id.nav_multiplayer, R.id.nav_skins, R.id.nav_playtime, R.id.nav_controls, R.id.nav_logs};
 
     private static final float INACTIVE_ALPHA = 0.55f;
 

@@ -353,6 +353,8 @@ public class GameRunner {
         try {
             // Discord status while this game process lives (follows the game log from here on)
             com.craftstudio.cslauncher.discord.DiscordPresenceManager.getInstance(activity).onGameProcessStarted(activity, instance, versionId);
+            // Play time: the session starts with the JVM and ends when it returns (or the process dies)
+            com.craftstudio.cslauncher.stats.PlayTimeTracker.beginSession(instance, versionId);
             JavaRunner.nativeSetupExit(activity);
             JavaRunner.startJvm(runtime, javaArgList, launchClassPath, mainClass, launchArgs);
         }catch (VMLoadException e) {
@@ -363,6 +365,7 @@ public class GameRunner {
                 return;
             }
         } finally {
+            com.craftstudio.cslauncher.stats.PlayTimeTracker.endSession();
             com.craftstudio.cslauncher.discord.DiscordPresenceManager.getInstance(activity).onGameExiting();
         }
 

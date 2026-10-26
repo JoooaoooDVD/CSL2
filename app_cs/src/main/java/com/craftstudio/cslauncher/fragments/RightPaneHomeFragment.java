@@ -89,6 +89,10 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
     private View mProfileTile;
     private ImageView mProfileIcon;
     private TextView mProfileName, mProfileDetail;
+    /** "Last played 3 hours ago" under the profile name; refreshed on a timer while visible */
+    private TextView mProfileLastPlayed;
+    private final android.os.Handler mLastPlayedHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Runnable mLastPlayedTick = this::refreshLastPlayed;
     /* Incremented to drop the result of a decode that is not needed anymore */
     private int mLoadId;
     /** Key of the artwork currently shown on the banner (path + mtime), null before the first load */
@@ -197,6 +201,7 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         mProfileIcon = view.findViewById(R.id.home_profile_icon);
         mProfileName = view.findViewById(R.id.home_profile_name);
         mProfileDetail = view.findViewById(R.id.home_profile_detail);
+        mProfileLastPlayed = view.findViewById(R.id.home_profile_last_played);
         card.setClipToOutline(true);
         mProfileTile.setClipToOutline(true);
         card.setOnClickListener(v -> HomeMotion.profileTapped(chevron, () -> {
@@ -207,6 +212,7 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         // Every selection change (also a reload after the app comes back) re-mirrors the card
         mVersionSpinner.setSelectionListener(() -> {
             mirrorSpinner(true);
+            refreshLastPlayed();
             // The banner artwork belongs to the selected profile: swap it right away
             loadBackground();
         });
@@ -306,6 +312,7 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         if (mVideo != null) mVideo.resumePlayback();
         setImageAnimation(true);
         refreshVersionInfo();
+        refreshLastPlayed();
     }
 
     @Override
@@ -317,6 +324,51 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         if (progressLayout != null) progressLayout.setHiddenByHost(false);
         if (mVideo != null) mVideo.pausePlayback();
         setImageAnimation(false);
+        mLastPlayedHandler.removeCallbacks(mLastPlayedTick);
+    }
+
+    /**
+     * "Last played 3 hours ago" for the selected profile. Reads the play time file off the UI
+     * thread, then schedules the next refresh (every second while under a minute, slower later).
+     */
+    private void refreshLastPlayed() {
+        mLastPlayedHandler.removeCallbacks(mLastPlayedTick);
+        final TextView label = mProfileLastPlayed;
+        if (label == null || !isResumed()) return;
+        final String key = com.craftstudio.cslauncher.instances.Instances.getSelectedInstanceKey();
+        if (key == null) {
+            label.setText("");
+            return;
+        }
+        com.craftstudio.cslauncher.CSLauncherApplication.sExecutorService.execute(() -> {
+            com.craftstudio.cslauncher.stats.PlayTimeTracker.Summary summary = com.craftstudio.cslauncher.stats.PlayTimeTracker.summary();
+            long last = 0L;
+            for (com.craftstudio.cslauncher.stats.PlayTimeTracker.ProfileStats p : summary.profiles) {
+                if (key.equals(p.profileKey)) { last = p.lastPlayed; break; }
+            }
+            boolean live = summary.liveSession != null && key.equals(summary.liveSession.profileKey);
+            final long lastPlayed = last;
+            final boolean playingNow = live;
+            Tools.runOnUiThread(() -> {
+                if (mProfileLastPlayed == null || !isResumed()) return;
+                if (!key.equals(com.craftstudio.cslauncher.instances.Instances.getSelectedInstanceKey())) return;
+                String text;
+                long next;
+                if (playingNow) {
+                    text = getString(R.string.pt_home_playing_now);
+                    next = 5_000L;
+                } else if (lastPlayed <= 0L) {
+                    text = getString(R.string.pt_home_never_played);
+                    next = 30_000L;
+                } else {
+                    text = getString(R.string.pt_home_last_played,
+                            com.craftstudio.cslauncher.stats.PlayTimeTracker.formatAgo(requireContext(), lastPlayed));
+                    next = com.craftstudio.cslauncher.stats.PlayTimeTracker.refreshIntervalFor(lastPlayed);
+                }
+                if (!android.text.TextUtils.equals(mProfileLastPlayed.getText(), text)) mProfileLastPlayed.setText(text);
+                mLastPlayedHandler.postDelayed(mLastPlayedTick, next);
+            });
+        });
     }
 
     // ─── Download state on the PLAY button ──────────────────────────────────

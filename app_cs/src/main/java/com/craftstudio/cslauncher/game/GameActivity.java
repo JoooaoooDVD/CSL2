@@ -418,6 +418,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
     @Override
     protected void onDestroy() {
         if (isFinishing()) {
+            com.craftstudio.cslauncher.stats.PlayTimeTracker.endSession();
             com.craftstudio.cslauncher.discord.DiscordPresenceManager.getInstance(this).onGameExiting();
         }
         super.onDestroy();

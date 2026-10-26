@@ -1622,4 +1622,44 @@
     <string name="lib_base_opt_incompatible">Not available for %1$s %2$s yet</string>
     <string name="lib_base_opt_offline">Could not load. Tap to retry.</string>
     <string name="lib_base_opt_busy">Another download is running. Wait for it to finish.</string>
+    <!-- Play time / last played -->
+    <string name="pt_just_now">just now</string>
+    <plurals name="pt_ago_seconds"><item quantity="one">%d second ago</item><item quantity="other">%d seconds ago</item></plurals>
+    <plurals name="pt_ago_minutes"><item quantity="one">%d minute ago</item><item quantity="other">%d minutes ago</item></plurals>
+    <plurals name="pt_ago_hours"><item quantity="one">%d hour ago</item><item quantity="other">%d hours ago</item></plurals>
+    <plurals name="pt_ago_days"><item quantity="one">%d day ago</item><item quantity="other">%d days ago</item></plurals>
+    <plurals name="pt_ago_months"><item quantity="one">%d month ago</item><item quantity="other">%d months ago</item></plurals>
+    <plurals name="pt_ago_years"><item quantity="one">%d year ago</item><item quantity="other">%d years ago</item></plurals>
+    <plurals name="pt_days"><item quantity="one">%d day</item><item quantity="other">%d days</item></plurals>
+    <plurals name="pt_hours"><item quantity="one">%d hour</item><item quantity="other">%d hours</item></plurals>
+    <plurals name="pt_minutes"><item quantity="one">%d minute</item><item quantity="other">%d minutes</item></plurals>
+    <plurals name="pt_seconds"><item quantity="one">%d second</item><item quantity="other">%d seconds</item></plurals>
+    <plurals name="pt_sessions_count"><item quantity="one">%d session</item><item quantity="other">%d sessions</item></plurals>
+    <string name="pt_home_last_played">Last played %1$s</string>
+    <string name="pt_home_never_played">Not played yet</string>
+    <string name="pt_home_playing_now">Playing now</string>
+    <string name="home_nav_skins">Skins</string>
+    <string name="home_nav_playtime">Play Time</string>
+    <string name="pt_no_account">Add an account first to manage skins</string>
+    <string name="pt_title">Play Time</string>
+    <string name="pt_subtitle">How much and what you have played</string>
+    <string name="pt_total_label">Total play time</string>
+    <string name="pt_stat_today">Today</string>
+    <string name="pt_stat_week">Last 7 days</string>
+    <string name="pt_stat_sessions">Sessions</string>
+    <string name="pt_stat_average">Avg. session</string>
+    <string name="pt_stat_longest">Longest session</string>
+    <string name="pt_stat_since">Playing since</string>
+    <string name="pt_stat_last">Last played</string>
+    <string name="pt_live_banner">Minecraft is running right now · %1$s · %2$s</string>
+    <string name="pt_section_profiles">By profile</string>
+    <string name="pt_section_recent">Recent sessions</string>
+    <string name="pt_profile_line">%1$s · %2$s · %3$s of total</string>
+    <string name="pt_profile_last">Last played %1$s · longest %2$s</string>
+    <string name="pt_session_line">%1$s · %2$s</string>
+    <string name="pt_session_live">In progress</string>
+    <string name="pt_empty_title">No play time yet</string>
+    <string name="pt_empty_desc">Press PLAY and your sessions will show up here: total time, per-profile time, today, this week and every session.</string>
+    <string name="pt_never">Never</string>
+    <string name="pt_show_more">Show more</string>
 </resources>
