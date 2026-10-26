@@ -134,8 +134,6 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
     private View mTabIndicator, mTypeTabsFrame, mToolbar, mSearchBox, mSortChevron, mImportButton;
     // Modrinth / CurseForge source switcher
     private View mSourceFrame, mSourceIndicator, mSourceModrinth, mSourceCurseforge;
-    /** BASE OPTIMISE MOD card above the grid (Mods tab only, needs CurseForge) */
-    @Nullable private com.craftstudio.cslauncher.modding.modpacks.BaseOptimiseCard mFeatured;
     private static final String PREF_LIBRARY_SOURCE = "libraryContentSource";
 
     private final ActivityResultLauncher<String> mImportLauncher = registerForActivityResult(
@@ -203,27 +201,8 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         if (!mInitialized) resolveProfile();
 
         mAdapter = new LibraryCardAdapter(mIconCache, this);
-        View featuredRoot = view.findViewById(R.id.library_featured);
-        if (featuredRoot != null && mCurseforgeKey != null) {
-            mFeatured = new com.craftstudio.cslauncher.modding.modpacks.BaseOptimiseCard(featuredRoot, mIconCache, mCurseforgeKey,
-                    new com.craftstudio.cslauncher.modding.modpacks.BaseOptimiseCard.Host() {
-                        @Override public void onOpenDetails(@NonNull ModItem item) { openInstallScreen(item); }
-                        @Override public void onInstalledChanged() { refreshInstalled(); }
-                    });
-            mFeatured.setProfile(mProfileVersion, mProfileLoader);
-            mFeatured.setEnabled(false);
-        }
         mGridLayout = new GridLayoutManager(requireContext(), 3);
         mGrid.setLayoutManager(mGridLayout);
-        mGrid.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override public void onScrolled(@NonNull RecyclerView rv, int dx, int dy) {
-                if (mFeatured == null) return;
-                // Hide the featured card while browsing, bring it back once the grid is at the top
-                boolean atTop = !rv.canScrollVertically(-1);
-                if (atTop) mFeatured.setCollapsed(false);
-                else if (dy > 0) mFeatured.setCollapsed(true);
-            }
-        });
         mGrid.setAdapter(mAdapter);
         mGrid.setItemAnimator(null);
         mGrid.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
@@ -262,10 +241,6 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         }
         InstalledContentIndex cached = mIndexCache.get(mFilters.contentType);
         if (cached != null) mAdapter.setInstalledIndex(cached);
-        if (mFeatured != null) {
-            InstalledContentIndex mods = mIndexCache.get(ContentType.MOD);
-            if (mods != null) mFeatured.setInstalledIndex(mods);
-        }
         refreshInstalled();
 
         mLastTaskCount = ProgressKeeper.getTaskCount();
@@ -279,10 +254,6 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
     public void onDestroyView() {
         super.onDestroyView();
         ProgressKeeper.removeTaskCountListener(mTaskCountListener);
-        if (mFeatured != null) {
-            mFeatured.destroy();
-            mFeatured = null;
-        }
         mTitle = mSubtitle = mContextPill = mTabMods = mTabResourcePacks = mTabShaders = mTabWorlds = mStateText = null;
         mSourceFrame = mSourceIndicator = mSourceModrinth = mSourceCurseforge = null;
         mSearchInput = null;
@@ -461,7 +432,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         styleSourceOption(mSourceCurseforge, R.id.library_source_curseforge_title, R.id.library_source_curseforge_desc,
                 R.id.library_source_curseforge_check, R.id.library_source_curseforge_logo,
                 R.color.lib_src_curseforge, curseforge, userAction);
-        if (userAction && mGrid != null) { mGrid.scrollToPosition(0); if (mFeatured != null) mFeatured.setCollapsed(false); }
+        if (userAction && mGrid != null) mGrid.scrollToPosition(0);
     }
 
     private void styleSourceOption(View option, int titleId, int descId, int checkId, int logoId,
@@ -634,7 +605,6 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         mFilters.contentType = type;
         mFilters.modLoader = usesLoader(type) ? mPreferredLoader : "";
         if (userAction) mFilters.category = "";
-        if (mFeatured != null) mFeatured.setEnabled(type == ContentType.MOD);
 
         if (type == ContentType.DATAPACK) {
             // World data pack browser: no type tabs, the world name is the context
@@ -726,7 +696,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         updateAdapterContext();
         InstalledContentIndex cached = mIndexCache.get(type);
         mAdapter.setInstalledIndex(cached != null ? cached : InstalledContentIndex.empty(type));
-        if (userAction && mGrid != null) { mGrid.scrollToPosition(0); if (mFeatured != null) mFeatured.setCollapsed(false); }
+        if (userAction && mGrid != null) mGrid.scrollToPosition(0);
     }
 
     /** Mods and modpacks are picked per loader; packs and shaders are not */
@@ -873,12 +843,18 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
             LibraryMotion.dimGrid(mGrid, true);
         }
 
+        final boolean pinRecommended = !isModpackMode()
+                && com.craftstudio.cslauncher.modding.modpacks.RecommendedMods.applies(query, null);
+        final String curseforgeKey = mCurseforgeKey;
         mSearchTask = sLibraryExecutor.submit(() -> {
             SearchResult result = mApi.searchMod(query, null);
+            // Thorium (BASE OPTIMISE MOD) pinned as the first card of the Mods tab
+            if (pinRecommended) result = com.craftstudio.cslauncher.modding.modpacks.RecommendedMods.decorate(result, curseforgeKey);
+            final SearchResult page = result;
             Tools.runOnUiThread(() -> {
                 if (generation != mSearchGeneration) return;
                 mSearchTask = null;
-                onFirstPage(result);
+                onFirstPage(page);
             });
         });
     }
@@ -894,7 +870,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         LibraryMotion.dimGrid(mGrid, false);
         updateAdapterContext();
         mAdapter.setItems(mItems, true);
-        if (mGrid != null) { mGrid.scrollToPosition(0); if (mFeatured != null) mFeatured.setCollapsed(false); }
+        if (mGrid != null) mGrid.scrollToPosition(0);
         if (mSearchFailed) showMessage(R.drawable.ic_lib_warning, R.string.lib_error, true);
         else if (mItems.isEmpty()) showMessage(R.drawable.ic_lib_search, R.string.lib_no_results, false);
         else showContent();
@@ -935,7 +911,6 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
         mGrid.setVisibility(View.VISIBLE);
         mAdapter.showSkeleton(Math.max(6, mGridLayout.getSpanCount() * 3));
         mGrid.scrollToPosition(0);
-        if (mFeatured != null) mFeatured.setCollapsed(false);
         mProgress.setVisibility(View.INVISIBLE);
     }
 
@@ -973,7 +948,6 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
             InstalledContentIndex index = InstalledContentIndex.build(type, version, loader, key);
             Tools.runOnUiThread(() -> {
                 mIndexCache.put(type, index);
-                if (type == ContentType.MOD && mFeatured != null) mFeatured.setInstalledIndex(index);
                 if (generation != mIndexGeneration || mAdapter == null || type != mFilters.contentType) return;
                 mAdapter.setInstalledIndex(index);
             });

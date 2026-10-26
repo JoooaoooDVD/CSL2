@@ -1423,18 +1423,6 @@ time set day</string>
     <string name="fabric_api_already">Fabric API pehle se mods folder me thi</string>
     <string name="fabric_api_not_available">%1$s ke liye abhi Fabric API build nahi hai. Baad me Mod Browser se install karo.</string>
     <string name="fabric_api_failed">Fabric API download fail: %1$s. Profile ban gaya hai, Mod Browser se install kar lo.</string>
-    <string name="lib_base_opt_eyebrow">BASE OPTIMISE MOD</string>
-    <string name="lib_base_opt_hint">Pehla recommended mod: phone pe smooth FPS</string>
-    <string name="lib_base_opt_loading">Versions check ho rahe hain…</string>
-    <string name="lib_base_opt_install">Install</string>
-    <string name="lib_base_opt_installing">Install ho raha hai…</string>
-    <string name="lib_base_opt_installed">Installed</string>
-    <string name="lib_base_opt_update">Update</string>
-    <string name="lib_base_opt_for">%1$s · %2$s</string>
-    <string name="lib_base_opt_no_loader">Fabric profile chahiye. Install karne ke liye Fabric profile select karo.</string>
-    <string name="lib_base_opt_incompatible">%1$s %2$s ke liye abhi available nahi</string>
-    <string name="lib_base_opt_offline">Load nahi hua. Retry ke liye tap karo.</string>
-    <string name="lib_base_opt_busy">Ek download already chal raha hai. Pehle use poora hone do.</string>
     <string name="pt_just_now">abhi abhi</string>
     <plurals name="pt_ago_seconds"><item quantity="one">%d second pehle</item><item quantity="other">%d second pehle</item></plurals>
     <plurals name="pt_ago_minutes"><item quantity="one">%d minute pehle</item><item quantity="other">%d minute pehle</item></plurals>
@@ -1474,4 +1462,5 @@ time set day</string>
     <string name="pt_empty_desc">PLAY dabao aur tumhare sessions yahan dikhenge: total time, har profile ka time, aaj, is hafte aur har ek session.</string>
     <string name="pt_never">Kabhi nahi</string>
     <string name="pt_show_more">Aur dikhao</string>
+    <string name="lib_recommended_badge">RECOMMENDED · Zaroori hai</string>
 </resources>

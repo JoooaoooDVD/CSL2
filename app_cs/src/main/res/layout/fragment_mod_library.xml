@@ -494,11 +494,6 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
 
-            <!-- BASE OPTIMISE MOD, pinned above the grid on the Mods tab -->
-            <include
-                android:id="@+id/library_featured"
-                layout="@layout/view_library_featured" />
-
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/library_grid"
                 android:layout_width="match_parent"

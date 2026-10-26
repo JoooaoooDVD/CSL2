@@ -89,8 +89,10 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
     private View mProfileTile;
     private ImageView mProfileIcon;
     private TextView mProfileName, mProfileDetail;
-    /** "Last played 3 hours ago" under the profile name; refreshed on a timer while visible */
-    private TextView mProfileLastPlayed;
+    /** "Last played 3 hours ago": appended to the version line of the card (the card is only a
+     *  few lines tall on phones, a fourth line did not fit); refreshed on a timer while visible */
+    private CharSequence mProfileDetailBase = "";
+    private String mLastPlayedText = "";
     private final android.os.Handler mLastPlayedHandler = new android.os.Handler(android.os.Looper.getMainLooper());
     private final Runnable mLastPlayedTick = this::refreshLastPlayed;
     /* Incremented to drop the result of a decode that is not needed anymore */
@@ -201,7 +203,6 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         mProfileIcon = view.findViewById(R.id.home_profile_icon);
         mProfileName = view.findViewById(R.id.home_profile_name);
         mProfileDetail = view.findViewById(R.id.home_profile_detail);
-        mProfileLastPlayed = view.findViewById(R.id.home_profile_last_played);
         card.setClipToOutline(true);
         mProfileTile.setClipToOutline(true);
         card.setOnClickListener(v -> HomeMotion.profileTapped(chevron, () -> {
@@ -331,13 +332,25 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
      * "Last played 3 hours ago" for the selected profile. Reads the play time file off the UI
      * thread, then schedules the next refresh (every second while under a minute, slower later).
      */
+    /** Version line + last played, e.g. "1.21.11 • Fabric · Last played 3 hours ago" */
+    private void applyProfileDetail(boolean animate) {
+        if (mProfileDetail == null) return;
+        CharSequence line;
+        if (mProfileDetailBase.length() == 0) line = mLastPlayedText;
+        else if (mLastPlayedText.isEmpty()) line = mProfileDetailBase;
+        else line = mProfileDetailBase + " · " + mLastPlayedText;
+        if (android.text.TextUtils.equals(mProfileDetail.getText(), line)) return;
+        if (animate && mProfileDetail.length() > 0) Motion.swapText(mProfileDetail, line);
+        else mProfileDetail.setText(line);
+    }
+
     private void refreshLastPlayed() {
         mLastPlayedHandler.removeCallbacks(mLastPlayedTick);
-        final TextView label = mProfileLastPlayed;
-        if (label == null || !isResumed()) return;
+        if (mProfileDetail == null || !isResumed()) return;
         final String key = com.craftstudio.cslauncher.instances.Instances.getSelectedInstanceKey();
         if (key == null) {
-            label.setText("");
+            mLastPlayedText = "";
+            applyProfileDetail(false);
             return;
         }
         com.craftstudio.cslauncher.CSLauncherApplication.sExecutorService.execute(() -> {
@@ -350,7 +363,7 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
             final long lastPlayed = last;
             final boolean playingNow = live;
             Tools.runOnUiThread(() -> {
-                if (mProfileLastPlayed == null || !isResumed()) return;
+                if (mProfileDetail == null || !isResumed()) return;
                 if (!key.equals(com.craftstudio.cslauncher.instances.Instances.getSelectedInstanceKey())) return;
                 String text;
                 long next;
@@ -365,7 +378,9 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
                             com.craftstudio.cslauncher.stats.PlayTimeTracker.formatAgo(requireContext(), lastPlayed));
                     next = com.craftstudio.cslauncher.stats.PlayTimeTracker.refreshIntervalFor(lastPlayed);
                 }
-                if (!android.text.TextUtils.equals(mProfileLastPlayed.getText(), text)) mProfileLastPlayed.setText(text);
+                mLastPlayedText = text;
+                // Timer ticks must not re-run the swap animation every second
+                applyProfileDetail(false);
                 mLastPlayedHandler.postDelayed(mLastPlayedTick, next);
             });
         });
@@ -710,9 +725,8 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
 
         // Selected profile card: "26.3 • Fabric" under the profile name
         if (mProfileDetail != null) {
-            CharSequence line = instance != null ? detail : "";
-            if (mProfileDetail.length() > 0) Motion.swapText(mProfileDetail, line);
-            else mProfileDetail.setText(line);
+            mProfileDetailBase = instance != null ? detail : "";
+            applyProfileDetail(true);
         }
 
         // The banner pill carries the same info so it is readable at a glance from the home screen

@@ -12,6 +12,8 @@ public class ModItem extends ModSource {
     public boolean isRestricted;
     /** Direct website URL for the mod page (used for CF restricted mods) */
     public String websiteUrl;
+    /** Pinned to the top of the Mods tab with a green "Recommended" badge (not serialized) */
+    public transient boolean recommended;
 
     /** Project slug, used to match manually installed jars by their mod id */
     public String slug;

@@ -217,6 +217,7 @@ public class LibraryCardAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     public class CardHolder extends RecyclerView.ViewHolder {
         private final ImageView mIcon;
+        @Nullable private final TextView mRecommended;
         private final ImageView mCompatIcon;
         private final TextView mCompatText;
         private final TextView mCompatRange;
@@ -243,6 +244,7 @@ public class LibraryCardAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             mTagVersion = view.findViewById(R.id.card_tag_version);
             mAction = view.findViewById(R.id.card_action);
             mSourceBadge = view.findViewById(R.id.card_source_badge);
+            mRecommended = view.findViewById(R.id.card_recommended);
             CSAnimationEngine.attachPressFeedback(mAction);
 
             view.setOnClickListener(v -> {
@@ -276,6 +278,7 @@ public class LibraryCardAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             mTitle.setText(item.title);
             mDescription.setText(item.description);
             bindSourceBadge(context, item.apiSource);
+            if (mRecommended != null) mRecommended.setVisibility(item.recommended ? View.VISIBLE : View.GONE);
 
             mIcon.setImageDrawable(null);
             mIcon.animate().cancel();

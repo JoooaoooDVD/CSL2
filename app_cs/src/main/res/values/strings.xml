@@ -1610,18 +1610,6 @@
     <string name="fabric_api_not_available">No Fabric API build for %1$s yet. Install it later from the Mod Browser.</string>
     <string name="fabric_api_failed">Fabric API download failed: %1$s. The profile was created, install it from the Mod Browser.</string>
     <!-- Base optimise mod (featured card at the top of the Mod Browser) -->
-    <string name="lib_base_opt_eyebrow">BASE OPTIMISE MOD</string>
-    <string name="lib_base_opt_hint">Recommended first mod: smoother FPS on phones</string>
-    <string name="lib_base_opt_loading">Checking versions…</string>
-    <string name="lib_base_opt_install">Install</string>
-    <string name="lib_base_opt_installing">Installing…</string>
-    <string name="lib_base_opt_installed">Installed</string>
-    <string name="lib_base_opt_update">Update</string>
-    <string name="lib_base_opt_for">%1$s · %2$s</string>
-    <string name="lib_base_opt_no_loader">Needs a Fabric profile. Select a Fabric profile to install.</string>
-    <string name="lib_base_opt_incompatible">Not available for %1$s %2$s yet</string>
-    <string name="lib_base_opt_offline">Could not load. Tap to retry.</string>
-    <string name="lib_base_opt_busy">Another download is running. Wait for it to finish.</string>
     <!-- Play time / last played -->
     <string name="pt_just_now">just now</string>
     <plurals name="pt_ago_seconds"><item quantity="one">%d second ago</item><item quantity="other">%d seconds ago</item></plurals>
@@ -1662,4 +1650,5 @@
     <string name="pt_empty_desc">Press PLAY and your sessions will show up here: total time, per-profile time, today, this week and every session.</string>
     <string name="pt_never">Never</string>
     <string name="pt_show_more">Show more</string>
+    <string name="lib_recommended_badge">RECOMMENDED · Highly required</string>
 </resources>
