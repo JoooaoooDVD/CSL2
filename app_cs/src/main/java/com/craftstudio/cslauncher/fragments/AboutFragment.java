@@ -227,7 +227,7 @@ public class AboutFragment extends Fragment {
                 if (top < limit - child.getHeight() * 0.25f) {
                     child.animate().alpha(1f).translationY(0f).setStartDelay(delay)
                             .setDuration(Motion.MEDIUM + 80)
-                            .setInterpolator(new android.view.animation.DecelerateInterpolator(1.8f)).start();
+                            .setInterpolator(Motion.ENTER).start();
                     delay += 55L;
                     it.remove();
                 }

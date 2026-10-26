@@ -5,7 +5,6 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
@@ -68,7 +67,7 @@ public final class VirtualLanPopup implements VirtualLanPanel.Host {
         mSheet.setScaleX(0.96f);
         mSheet.setScaleY(0.96f);
         mSheet.setAlpha(0f);
-        mRoot.animate().alpha(1f).setDuration(180).setInterpolator(new DecelerateInterpolator()).start();
+        mRoot.animate().alpha(1f).setDuration(180).setInterpolator(Motion.STANDARD).start();
         mSheet.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(240).setInterpolator(Motion.ENTER).start();
     }
 

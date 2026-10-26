@@ -7,15 +7,12 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Looper;
 import android.transition.Fade;
-import android.transition.Slide;
 import android.transition.Transition;
 import android.transition.TransitionSet;
-import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.AccelerateInterpolator;
 import android.view.animation.AnimationUtils;
-import android.view.animation.DecelerateInterpolator;
+import android.view.animation.Interpolator;
 import android.view.animation.LayoutAnimationController;
 import android.widget.PopupWindow;
 import android.widget.ImageView;
@@ -25,6 +22,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.craftstudio.cslauncher.R;
+import com.craftstudio.cslauncher.utils.motion.Motion;
 
 /**
  * CSAnimationEngine - the single, lightweight animation engine of CS Launcher Plus.
@@ -53,15 +51,26 @@ import com.craftstudio.cslauncher.R;
 public final class CSAnimationEngine {
 
     /** Restore timing of the shared press animator (res/animator/cs_press_scale.xml) */
-    public static final long DURATION_PRESS = 150L;
+    public static final long DURATION_PRESS = 220L;
     /** Shortest transition: value refresh, quick fades */
-    public static final long DURATION_FAST = 150L;
+    public static final long DURATION_FAST = 140L;
     /** Standard transition: list/screen entrances, dialog content */
-    public static final long DURATION_NORMAL = 190L;
+    public static final long DURATION_NORMAL = 260L;
     /** Quick-settings value pulse - deliberately snappier than a transition */
-    public static final long DURATION_VALUE_PULSE = 130L;
+    public static final long DURATION_VALUE_PULSE = 160L;
 
-    private static final float SMALL_RISE_DP = 7f;
+    /** Material 3 emphasized decelerate - entrances */
+    private static final Interpolator ENTER = Motion.ENTER;
+    /** Material 3 emphasized accelerate - exits */
+    private static final Interpolator EXIT = Motion.EXIT;
+    /** Material 3 standard easing - in-place changes */
+    private static final Interpolator STANDARD = Motion.STANDARD;
+
+    /** Screen transitions move a short fixed distance instead of a full screen width:
+     *  less pixel travel per frame = smoother on low-end phones, and it reads as "depth". */
+    private static final float SCREEN_SHIFT_DP = 28f;
+    private static final float POPUP_RISE_DP = 14f;
+    private static final float SMALL_RISE_DP = 6f;
 
     private CSAnimationEngine() {}
 
@@ -111,17 +120,30 @@ public final class CSAnimationEngine {
             popup.setExitTransition(null);
             return null;
         }
-        TransitionSet set = new TransitionSet();
-        set.setOrdering(TransitionSet.ORDERING_TOGETHER);
-        Slide slide = new Slide(Gravity.BOTTOM);
-        slide.setDuration(DURATION_NORMAL);
-        Fade fade = new Fade(Fade.IN);
-        fade.setDuration(DURATION_FAST);
-        set.addTransition(slide);
-        set.addTransition(fade);
-        popup.setEnterTransition(set);
-        popup.setExitTransition(set);
-        return set;
+        float rise = POPUP_RISE_DP * context.getResources().getDisplayMetrics().density;
+        TransitionSet enter = new TransitionSet();
+        enter.setOrdering(TransitionSet.ORDERING_TOGETHER);
+        ShortSlide slideIn = new ShortSlide(0f, rise);
+        slideIn.setDuration(DURATION_NORMAL);
+        slideIn.setInterpolator(ENTER);
+        Fade fadeIn = new Fade(Fade.IN);
+        fadeIn.setDuration(DURATION_FAST);
+        fadeIn.setInterpolator(STANDARD);
+        enter.addTransition(slideIn);
+        enter.addTransition(fadeIn);
+        TransitionSet exit = new TransitionSet();
+        exit.setOrdering(TransitionSet.ORDERING_TOGETHER);
+        ShortSlide slideOut = new ShortSlide(0f, rise * 0.6f);
+        slideOut.setDuration(DURATION_FAST);
+        slideOut.setInterpolator(EXIT);
+        Fade fadeOut = new Fade(Fade.OUT);
+        fadeOut.setDuration(DURATION_FAST);
+        fadeOut.setInterpolator(EXIT);
+        exit.addTransition(slideOut);
+        exit.addTransition(fadeOut);
+        popup.setEnterTransition(enter);
+        popup.setExitTransition(exit);
+        return enter;
     }
 
     // ─── Dialog entrance (content-level, runs with the themed window animation) ─
@@ -144,22 +166,24 @@ public final class CSAnimationEngine {
                 .alpha(1f)
                 .translationY(0f)
                 .setDuration(DURATION_NORMAL)
-                .setInterpolator(new DecelerateInterpolator(1.5f))
+                .setInterpolator(ENTER)
                 .setListener(null)
                 .start();
     }
 
     // ─── Navigation transitions (fragment screens) ─────────────────────────────
 
-    /** Forward: the new screen slides in from the end edge with a fade */
+    /** Forward: the new screen comes in from the end edge over a short distance with a fade */
     @NonNull
     public static androidx.transition.Transition makeFragmentForwardEnter() {
         androidx.transition.TransitionSet set = new androidx.transition.TransitionSet();
         set.setOrdering(androidx.transition.TransitionSet.ORDERING_TOGETHER);
-        androidx.transition.Slide slide = new androidx.transition.Slide(Gravity.END);
-        slide.setDuration(DURATION_NORMAL);
+        ShortSlideX slide = new ShortSlideX(SCREEN_SHIFT_DP);
+        slide.setDuration(DURATION_NORMAL + 40L);
+        slide.setInterpolator(ENTER);
         androidx.transition.Fade fade = new androidx.transition.Fade(androidx.transition.Fade.IN);
-        fade.setDuration(DURATION_FAST);
+        fade.setDuration(DURATION_FAST + 40L);
+        fade.setInterpolator(STANDARD);
         set.addTransition(slide);
         set.addTransition(fade);
         return set;
@@ -169,30 +193,115 @@ public final class CSAnimationEngine {
     @NonNull
     public static androidx.transition.Transition makeFragmentForwardExit() {
         androidx.transition.Fade fade = new androidx.transition.Fade(androidx.transition.Fade.OUT);
-        fade.setDuration(130L);
+        fade.setDuration(110L);
+        fade.setInterpolator(EXIT);
         return fade;
     }
 
-    /** Back: the screen underneath reappears with a quick fade */
+    /** Back: the screen underneath reappears with a soft fade */
     @NonNull
     public static androidx.transition.Transition makeFragmentBackEnter() {
         androidx.transition.Fade fade = new androidx.transition.Fade(androidx.transition.Fade.IN);
-        fade.setDuration(160L);
+        fade.setDuration(DURATION_FAST + 60L);
+        fade.setInterpolator(STANDARD);
         return fade;
     }
 
-    /** Back: the top screen slides back out to the end edge */
+    /** Back: the top screen slips back toward the end edge and fades */
     @NonNull
     public static androidx.transition.Transition makeFragmentBackExit() {
         androidx.transition.TransitionSet set = new androidx.transition.TransitionSet();
         set.setOrdering(androidx.transition.TransitionSet.ORDERING_TOGETHER);
-        androidx.transition.Slide slide = new androidx.transition.Slide(Gravity.END);
-        slide.setDuration(170L);
+        ShortSlideX slide = new ShortSlideX(SCREEN_SHIFT_DP * 0.7f);
+        slide.setDuration(180L);
+        slide.setInterpolator(EXIT);
         androidx.transition.Fade fade = new androidx.transition.Fade(androidx.transition.Fade.OUT);
         fade.setDuration(DURATION_FAST);
+        fade.setInterpolator(EXIT);
         set.addTransition(slide);
         set.addTransition(fade);
         return set;
+    }
+
+    /**
+     * Fragment visibility transition that moves a view a short, fixed distance along X
+     * (RTL aware) instead of a full screen width like {@code Slide}. Translation only -
+     * GPU-composited, no layout pass, and the view always ends at translationX = 0.
+     */
+    private static final class ShortSlideX extends androidx.transition.Visibility {
+        private final float mShiftDp;
+
+        ShortSlideX(float shiftDp) { mShiftDp = shiftDp; }
+
+        private float shift(@NonNull View view) {
+            float px = mShiftDp * view.getResources().getDisplayMetrics().density;
+            boolean rtl = androidx.core.view.ViewCompat.getLayoutDirection(view) == androidx.core.view.ViewCompat.LAYOUT_DIRECTION_RTL;
+            return rtl ? -px : px;
+        }
+
+        @Override
+        public android.animation.Animator onAppear(ViewGroup sceneRoot, View view,
+                androidx.transition.TransitionValues startValues, androidx.transition.TransitionValues endValues) {
+            if (view == null) return null;
+            float from = shift(view);
+            view.setTranslationX(from);
+            android.animation.ObjectAnimator a = android.animation.ObjectAnimator.ofFloat(view, View.TRANSLATION_X, from, 0f);
+            a.addListener(new android.animation.AnimatorListenerAdapter() {
+                @Override public void onAnimationEnd(android.animation.Animator animation) { view.setTranslationX(0f); }
+            });
+            return a;
+        }
+
+        @Override
+        public android.animation.Animator onDisappear(ViewGroup sceneRoot, View view,
+                androidx.transition.TransitionValues startValues, androidx.transition.TransitionValues endValues) {
+            if (view == null) return null;
+            float to = shift(view);
+            android.animation.ObjectAnimator a = android.animation.ObjectAnimator.ofFloat(view, View.TRANSLATION_X, 0f, to);
+            a.addListener(new android.animation.AnimatorListenerAdapter() {
+                @Override public void onAnimationEnd(android.animation.Animator animation) { view.setTranslationX(0f); }
+            });
+            return a;
+        }
+    }
+
+    /** Framework-transition twin of {@link ShortSlideX} for popup windows (fixed pixel offsets). */
+    private static final class ShortSlide extends android.transition.Visibility {
+        private final float mDx, mDy;
+
+        ShortSlide(float dx, float dy) { mDx = dx; mDy = dy; }
+
+        @Override
+        public android.animation.Animator onAppear(ViewGroup sceneRoot, View view,
+                android.transition.TransitionValues startValues, android.transition.TransitionValues endValues) {
+            if (view == null) return null;
+            view.setTranslationX(mDx);
+            view.setTranslationY(mDy);
+            android.animation.ObjectAnimator a = android.animation.ObjectAnimator.ofPropertyValuesHolder(view,
+                    android.animation.PropertyValuesHolder.ofFloat(View.TRANSLATION_X, mDx, 0f),
+                    android.animation.PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, mDy, 0f));
+            a.addListener(new android.animation.AnimatorListenerAdapter() {
+                @Override public void onAnimationEnd(android.animation.Animator animation) {
+                    view.setTranslationX(0f); view.setTranslationY(0f);
+                }
+            });
+            return a;
+        }
+
+        @Override
+        public android.animation.Animator onDisappear(ViewGroup sceneRoot, View view,
+                android.transition.TransitionValues startValues, android.transition.TransitionValues endValues) {
+            if (view == null) return null;
+            android.animation.ObjectAnimator a = android.animation.ObjectAnimator.ofPropertyValuesHolder(view,
+                    android.animation.PropertyValuesHolder.ofFloat(View.TRANSLATION_X, 0f, mDx),
+                    android.animation.PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, 0f, mDy));
+            a.addListener(new android.animation.AnimatorListenerAdapter() {
+                @Override public void onAnimationEnd(android.animation.Animator animation) {
+                    view.setTranslationX(0f); view.setTranslationY(0f);
+                }
+            });
+            return a;
+        }
     }
 
     // ─── Theme / window transitions ────────────────────────────────────────────
@@ -269,7 +378,7 @@ public final class CSAnimationEngine {
         if (parent == null) return;
         Context context = parent.getContext();
         if (context == null || !enabled(context, AnimationManager.TYPE_CONTENT)) return;
-        float offset = 12f * parent.getResources().getDisplayMetrics().density;
+        float offset = 10f * parent.getResources().getDisplayMetrics().density;
         int shown = 0;
         for (int i = 0; i < parent.getChildCount(); i++) {
             View child = parent.getChildAt(i);
@@ -280,9 +389,9 @@ public final class CSAnimationEngine {
             child.animate()
                     .alpha(1f)
                     .translationX(0f)
-                    .setStartDelay(Math.min(shown, 14) * 22L)
+                    .setStartDelay(Math.min(shown, 12) * 20L)
                     .setDuration(DURATION_NORMAL)
-                    .setInterpolator(new DecelerateInterpolator(1.4f))
+                    .setInterpolator(ENTER)
                     .start();
             shown++;
         }
@@ -307,7 +416,7 @@ public final class CSAnimationEngine {
         target.animate()
                 .alpha(1f)
                 .setDuration(DURATION_VALUE_PULSE)
-                .setInterpolator(new DecelerateInterpolator(1.5f))
+                .setInterpolator(STANDARD)
                 .setListener(null)
                 .start();
     }
@@ -329,7 +438,7 @@ public final class CSAnimationEngine {
         view.animate()
                 .alpha(1f)
                 .setDuration(DURATION_FAST)
-                .setInterpolator(new DecelerateInterpolator(1.4f))
+                .setInterpolator(STANDARD)
                 .setListener(null)
                 .start();
     }
@@ -348,7 +457,7 @@ public final class CSAnimationEngine {
         target.animate()
                 .alpha(1f)
                 .setDuration(DURATION_FAST)
-                .setInterpolator(new DecelerateInterpolator(1.4f))
+                .setInterpolator(STANDARD)
                 .setListener(null)
                 .start();
     }
@@ -372,7 +481,7 @@ public final class CSAnimationEngine {
         view.animate()
                 .alpha(0f)
                 .setDuration(DURATION_FAST)
-                .setInterpolator(new AccelerateInterpolator(1.2f))
+                .setInterpolator(EXIT)
                 .withEndAction(() -> {
                     view.setVisibility(View.GONE);
                     view.setAlpha(1f);

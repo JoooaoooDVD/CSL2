@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- List/grid row enter: slides in from the right (matches the horizontal launcher) + fade. -->
+<!-- List/grid row enter: short rise from below + fade, emphasized-decelerate landing. -->
 <set xmlns:android="http://schemas.android.com/apk/res/android"
     android:shareInterpolator="false">
     <translate
-        android:fromXDelta="5%p"
-        android:toXDelta="0"
-        android:duration="160"
-        android:interpolator="@android:anim/decelerate_interpolator" />
+        android:fromYDelta="6%p"
+        android:toYDelta="0"
+        android:duration="220"
+        android:interpolator="@interpolator/cs_emphasized_decelerate" />
     <alpha
         android:fromAlpha="0.0"
         android:toAlpha="1.0"
         android:duration="160"
-        android:interpolator="@android:anim/decelerate_interpolator" />
+        android:interpolator="@interpolator/cs_standard" />
 </set>

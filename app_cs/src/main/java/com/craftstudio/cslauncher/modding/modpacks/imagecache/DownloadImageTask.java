@@ -33,6 +33,8 @@ class DownloadImageTask implements Runnable {
         try {
             IconCacheJanitor.waitForJanitorToFinish();
             DownloadUtils.downloadFile(mParentTask.imageUrl, mParentTask.cacheFile);
+            // Animated icons (GIF / animated WebP) are kept byte-for-byte: re-encoding would freeze them
+            if (AnimatedIcons.mayBeAnimated(mParentTask.cacheFile)) return true;
             Bitmap bitmap = BitmapFactory.decodeFile(mParentTask.cacheFile.getAbsolutePath());
             if(bitmap == null) return false;
             int bitmapWidth = bitmap.getWidth(), bitmapHeight = bitmap.getHeight();

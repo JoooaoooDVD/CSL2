@@ -59,7 +59,7 @@ public final class VirtualLanClient {
             if (mState.isActive()) {
                 mState = mState.buildUpon().phase(VirtualLanState.Phase.ENDED)
                         .reason(VirtualLanState.Reason.GAME_CLOSED, "").build();
-                mListener.onState(mState);
+                try { mListener.onState(mState); } catch (Throwable t) { android.util.Log.e("VirtualLanClient", "listener failed", t); }
             }
         }
     };
@@ -168,16 +168,22 @@ public final class VirtualLanClient {
     }
 
     private boolean handle(Message msg) {
-        if (msg.what == VirtualLanService.MSG_STATE) {
-            Bundle data = msg.getData();
-            data.setClassLoader(getClass().getClassLoader());
-            mState = VirtualLanStateBundler.fromBundle(data);
-            mListener.onState(mState);
-            return true;
-        }
-        if (msg.what == VirtualLanService.MSG_LOG) {
-            ArrayList<String> lines = msg.getData().getStringArrayList(VirtualLanService.KEY_LOG);
-            mListener.onEngineLog(lines != null ? lines : new ArrayList<String>());
+        try {
+            if (msg.what == VirtualLanService.MSG_STATE) {
+                Bundle data = msg.getData();
+                data.setClassLoader(getClass().getClassLoader());
+                mState = VirtualLanStateBundler.fromBundle(data);
+                mListener.onState(mState);
+                return true;
+            }
+            if (msg.what == VirtualLanService.MSG_LOG) {
+                ArrayList<String> lines = msg.getData().getStringArrayList(VirtualLanService.KEY_LOG);
+                mListener.onEngineLog(lines != null ? lines : new ArrayList<String>());
+                return true;
+            }
+        } catch (Throwable t) {
+            // A malformed message from the :game process must not crash the launcher UI
+            android.util.Log.e("VirtualLanClient", "message " + msg.what + " failed", t);
             return true;
         }
         return false;

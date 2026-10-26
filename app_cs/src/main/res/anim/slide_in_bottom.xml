@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<set xmlns:android="http://schemas.android.com/apk/res/android" android:interpolator="@android:interpolator/fast_out_slow_in">
- <translate android:duration="280" android:fromYDelta="100%" android:toYDelta="0" />
- <alpha android:duration="180" android:fromAlpha="0.65" android:toAlpha="1" />
+<!-- Bottom sheet style entrance: emphasized-decelerate rise with a fade. -->
+<set xmlns:android="http://schemas.android.com/apk/res/android" android:shareInterpolator="false">
+    <translate android:duration="320" android:fromYDelta="40%" android:toYDelta="0"
+        android:interpolator="@interpolator/cs_emphasized_decelerate" />
+    <alpha android:duration="160" android:fromAlpha="0.0" android:toAlpha="1"
+        android:interpolator="@interpolator/cs_standard" />
 </set>

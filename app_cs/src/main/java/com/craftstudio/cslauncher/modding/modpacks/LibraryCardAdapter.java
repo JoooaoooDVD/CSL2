@@ -284,7 +284,8 @@ public class LibraryCardAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             mIcon.setScaleY(1f);
             final long boundAt = android.os.SystemClock.uptimeMillis();
             final float radius = context.getResources().getDisplayMetrics().density * 8f;
-            mReceiver = new ImageReceiver() {
+            com.craftstudio.cslauncher.modding.modpacks.imagecache.AnimatedIcons.reset(mIcon);
+            mReceiver = new com.craftstudio.cslauncher.modding.modpacks.imagecache.AnimatedImageReceiver() {
                 @Override
                 public void onImageAvailable(Bitmap image) {
                     if (mReceiver != this || image == null) return;
@@ -293,6 +294,13 @@ public class LibraryCardAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                     drawable.setFilterBitmap(image.getWidth() >= 64);
                     mIcon.setImageDrawable(drawable);
                     // Cached icons show instantly, downloaded ones pop in
+                    if (android.os.SystemClock.uptimeMillis() - boundAt > 120) LibraryMotion.iconLoaded(mIcon);
+                }
+
+                @Override
+                public void onAnimatedImageAvailable(@NonNull android.graphics.drawable.Drawable d) {
+                    if (mReceiver != this) return;
+                    com.craftstudio.cslauncher.modding.modpacks.imagecache.AnimatedIcons.show(mIcon, d, radius);
                     if (android.os.SystemClock.uptimeMillis() - boundAt > 120) LibraryMotion.iconLoaded(mIcon);
                 }
             };

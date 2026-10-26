@@ -13,7 +13,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewOutlineProvider;
 import android.view.Window;
-import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -213,7 +212,7 @@ public final class AnnouncementController {
         final Runnable hide = () -> {
             mMain.removeCallbacks(autoHide[0]);
             card.animate().translationX(card.getWidth() + m).alpha(0f).setDuration(260)
-                    .setInterpolator(new DecelerateInterpolator())
+                    .setInterpolator(com.craftstudio.cslauncher.utils.motion.Motion.EXIT)
                     .withEndAction(() -> content.removeView(card)).start();
         };
         autoHide[0] = () -> { if (card.getParent() != null) hide.run(); };

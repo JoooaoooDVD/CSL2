@@ -31,6 +31,16 @@ public class ReadFromDiskTask implements Runnable {
         }
         if(cacheFile.canRead()) {
             IconCacheJanitor.waitForJanitorToFinish();
+            if (imageReceiver instanceof AnimatedImageReceiver && AnimatedIcons.mayBeAnimated(cacheFile)) {
+                final android.graphics.drawable.Drawable animated = AnimatedIcons.decode(cacheFile);
+                if (animated != null) {
+                    Tools.runOnUiThread(() -> {
+                        if (taskCancelled()) return;
+                        ((AnimatedImageReceiver) imageReceiver).onAnimatedImageAvailable(animated);
+                    });
+                    return;
+                }
+            }
             Bitmap bitmap = BitmapFactory.decodeFile(cacheFile.getAbsolutePath());
             if(bitmap != null) {
                 Tools.runOnUiThread(()->{

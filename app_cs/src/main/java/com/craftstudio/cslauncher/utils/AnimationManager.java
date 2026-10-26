@@ -10,8 +10,6 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -185,7 +183,7 @@ public final class AnimationManager {
         title.setAlpha(0f); title.setTranslationY(14f * d);
         version.setAlpha(0f);
 
-        final android.view.animation.Interpolator out = new DecelerateInterpolator(2.2f);
+        final android.view.animation.Interpolator out = com.craftstudio.cslauncher.utils.motion.Motion.ENTER;
         final android.view.animation.Interpolator soft = new android.view.animation.OvershootInterpolator(1.1f);
 
         // 1. logo rises, halo blooms
@@ -219,9 +217,9 @@ public final class AnimationManager {
         overlay.postDelayed(() -> {
             breathe.cancel();
             group.animate().alpha(0f).scaleX(1.05f).scaleY(1.05f).translationY(-12f * d)
-                    .setDuration(380L).setInterpolator(new AccelerateInterpolator(1.3f)).start();
+                    .setDuration(380L).setInterpolator(com.craftstudio.cslauncher.utils.motion.Motion.EXIT).start();
             overlay.animate().alpha(0f).setStartDelay(120L).setDuration(420L)
-                    .setInterpolator(new AccelerateInterpolator())
+                    .setInterpolator(com.craftstudio.cslauncher.utils.motion.Motion.EXIT)
                     .withEndAction(() -> root.removeView(overlay)).start();
         }, holdUntil);
     }

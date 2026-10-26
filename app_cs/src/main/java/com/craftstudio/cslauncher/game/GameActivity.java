@@ -661,7 +661,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         if (pill != null) {
             pill.animate().alpha(0f).translationY(14f * getResources().getDisplayMetrics().density)
                     .setStartDelay(220L).setDuration(320L)
-                    .setInterpolator(new android.view.animation.AccelerateInterpolator()).start();
+                    .setInterpolator(com.craftstudio.cslauncher.utils.motion.Motion.EXIT).start();
         }
         rocket.launch(() -> screen.animate().alpha(0f).setDuration(220).withEndAction(remove).start());
         // Safety net: never leave the layer around if the burst somehow stalls
@@ -716,7 +716,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
             pill.setAlpha(0f);
             pill.setTranslationY(18f * getResources().getDisplayMetrics().density);
             pill.animate().alpha(1f).translationY(0f).setDuration(360L)
-                    .setInterpolator(new android.view.animation.DecelerateInterpolator(1.8f)).start();
+                    .setInterpolator(com.craftstudio.cslauncher.utils.motion.Motion.ENTER).start();
         }
         final View warning = mLoadingScreen.findViewById(R.id.main_loading_screen_warning);
         if (warning != null) {

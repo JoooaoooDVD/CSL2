@@ -330,8 +330,13 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
         mCopy.setOnClickListener(v -> copy(mLast.sessionCode, R.string.vlan_copied_code));
         mShare.setOnClickListener(v -> shareInvite());
         mEnd.setOnClickListener(v -> {
-            mClient.endSession();
             mEnd.setEnabled(false);
+            try {
+                mClient.endSession();
+            } catch (Throwable t) {
+                android.util.Log.e("VirtualLanPanel", "end request failed", t);
+                mEnd.setEnabled(true);
+            }
         });
         mJoinWorld.setOnClickListener(v -> onJoinWorld());
         mCopyAddress.setOnClickListener(v -> copy(mCopyAddress.getText().toString(), R.string.vlan_copied_address));
@@ -515,6 +520,26 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
 
     @Override
     public void onState(@NonNull VirtualLanState state) {
+        // A state update must never take the launcher down: a bad reason/string/animation on
+        // the end path used to surface as a fatal crash right after pressing Disconnect.
+        try {
+            onStateInternal(state);
+        } catch (Throwable t) {
+            android.util.Log.e("VirtualLanPanel", "state render failed (" + state.phase + ")", t);
+            try {
+                if (state.phase == VirtualLanState.Phase.FAILED || state.phase == VirtualLanState.Phase.ENDED) {
+                    mScreen = Screen.RESULT;
+                    mHome.setVisibility(View.GONE);
+                    mSession.setVisibility(View.GONE);
+                    mResult.setVisibility(View.VISIBLE);
+                    mResultTitle.setText(R.string.vlan_result_ended);
+                    mResultRetry.setVisibility(View.VISIBLE);
+                }
+            } catch (Throwable ignored) {}
+        }
+    }
+
+    private void onStateInternal(@NonNull VirtualLanState state) {
         VirtualLanState previous = mLast;
         mLast = state;
         if (state.phase == VirtualLanState.Phase.FAILED || state.phase == VirtualLanState.Phase.ENDED) {
@@ -540,7 +565,9 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
                 Instance instance = Instances.loadSelectedInstance();
                 if (instance != null) {
                     File dir = instance.getGameDirectory();
-                    CSLauncherApplication.sExecutorService.execute(() -> ServersDat.remove(dir));
+                    CSLauncherApplication.sExecutorService.execute(() -> {
+                        try { ServersDat.remove(dir); } catch (Throwable ignored) {}
+                    });
                 }
             }
             renderResult(state);

@@ -1,24 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    CS spring press feedback for buttons and menu rows.
-    Fast squash on press (90ms) + soft overshoot restore (220ms).
-    Only scale properties are animated - GPU-composited, zero layout cost.
+    CS press feedback for buttons and menu rows.
+    Quick 96% squash on press, emphasized-decelerate release. Scale only - GPU-composited.
 -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_pressed="true">
         <set>
             <objectAnimator
                 android:propertyName="scaleX"
-                android:valueTo="0.955"
+                android:valueTo="0.96"
                 android:valueType="floatType"
-                android:duration="64"
-                android:interpolator="@android:anim/accelerate_interpolator" />
+                android:duration="80"
+                android:interpolator="@interpolator/cs_standard" />
             <objectAnimator
                 android:propertyName="scaleY"
-                android:valueTo="0.955"
+                android:valueTo="0.96"
                 android:valueType="floatType"
-                android:duration="64"
-                android:interpolator="@android:anim/accelerate_interpolator" />
+                android:duration="80"
+                android:interpolator="@interpolator/cs_standard" />
         </set>
     </item>
     <item>
@@ -27,14 +26,14 @@
                 android:propertyName="scaleX"
                 android:valueTo="1.0"
                 android:valueType="floatType"
-                android:duration="150"
-                android:interpolator="@anim/cs_overshoot" />
+                android:duration="220"
+                android:interpolator="@interpolator/cs_emphasized_decelerate" />
             <objectAnimator
                 android:propertyName="scaleY"
                 android:valueTo="1.0"
                 android:valueType="floatType"
-                android:duration="150"
-                android:interpolator="@anim/cs_overshoot" />
+                android:duration="220"
+                android:interpolator="@interpolator/cs_emphasized_decelerate" />
         </set>
     </item>
 </selector>

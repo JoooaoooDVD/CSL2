@@ -81,7 +81,8 @@ public final class ServersDat {
                 }
             }
             if (changed) Nbt.writeUncompressed(new Nbt.Root("", root), file);
-        } catch (IOException ignored) {
+        } catch (Exception ignored) {
+            // corrupt / foreign servers.dat: leave it alone, never crash the launcher over it
         }
     }
 }

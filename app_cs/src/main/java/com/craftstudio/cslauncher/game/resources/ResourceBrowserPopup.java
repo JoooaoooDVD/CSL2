@@ -11,7 +11,6 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.DecelerateInterpolator;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
@@ -208,9 +207,9 @@ public final class ResourceBrowserPopup implements ResourceInstallManager.Listen
         mSheet.setScaleX(0.94f);
         mSheet.setScaleY(0.94f);
         mSheet.setAlpha(0f);
-        mRoot.animate().alpha(1f).setDuration(180).setInterpolator(new DecelerateInterpolator()).start();
+        mRoot.animate().alpha(1f).setDuration(180).setInterpolator(com.craftstudio.cslauncher.utils.motion.Motion.STANDARD).start();
         mSheet.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(240)
-                .setInterpolator(new DecelerateInterpolator(1.6f)).start();
+                .setInterpolator(com.craftstudio.cslauncher.utils.motion.Motion.ENTER).start();
         mRoot.requestFocus();
     }
 
@@ -560,7 +559,7 @@ public final class ResourceBrowserPopup implements ResourceInstallManager.Listen
         mConfirmRoot.animate().alpha(1f).setDuration(140).start();
         View card = mConfirmRoot.findViewById(R.id.rb_confirm_card);
         card.setScaleX(0.95f); card.setScaleY(0.95f);
-        card.animate().scaleX(1f).scaleY(1f).setDuration(180).setInterpolator(new DecelerateInterpolator()).start();
+        card.animate().scaleX(1f).scaleY(1f).setDuration(180).setInterpolator(com.craftstudio.cslauncher.utils.motion.Motion.ENTER).start();
     }
 
     private void resolveConfirm(boolean replace) {

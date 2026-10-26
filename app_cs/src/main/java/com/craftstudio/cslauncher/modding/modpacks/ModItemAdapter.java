@@ -280,12 +280,26 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
             mModItem = item;
             // here the previous reference to the image receiver will disappear
-            mImageReceiver = bm->{
-                mImageReceiver = null;
-                mThumbnailBitmap = bm;
-                RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(mIconView.getResources(), bm);
-                drawable.setCornerRadius(mCornerDimensionCache * bm.getHeight());
-                mIconView.setImageDrawable(drawable);
+            com.craftstudio.cslauncher.modding.modpacks.imagecache.AnimatedIcons.reset(mIconView);
+            mImageReceiver = new com.craftstudio.cslauncher.modding.modpacks.imagecache.AnimatedImageReceiver() {
+                @Override
+                public void onImageAvailable(Bitmap bm) {
+                    if (mImageReceiver != this) return;
+                    mImageReceiver = null;
+                    mThumbnailBitmap = bm;
+                    RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(mIconView.getResources(), bm);
+                    drawable.setCornerRadius(mCornerDimensionCache * bm.getHeight());
+                    mIconView.setImageDrawable(drawable);
+                }
+
+                @Override
+                public void onAnimatedImageAvailable(@NonNull android.graphics.drawable.Drawable d) {
+                    if (mImageReceiver != this) return;
+                    mImageReceiver = null;
+                    mThumbnailBitmap = null;
+                    com.craftstudio.cslauncher.modding.modpacks.imagecache.AnimatedIcons.show(mIconView, d,
+                            mCornerDimensionCache * Math.max(1, d.getIntrinsicHeight()));
+                }
             };
             mIconCache.getImage(mImageReceiver, mModItem.getIconCacheTag(), mModItem.imageUrl);
             mSourceView.setImageResource(getSourceDrawable(item.apiSource));

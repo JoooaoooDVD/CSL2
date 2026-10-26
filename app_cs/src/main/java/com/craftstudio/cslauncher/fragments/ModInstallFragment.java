@@ -363,13 +363,19 @@ public class ModInstallFragment extends Fragment {
         ImageView icon = view.findViewById(R.id.install_icon);
         icon.setImageResource(iconPlaceholder());
         float radius = 14 * getResources().getDisplayMetrics().density;
-        mIconCache.getImage(new ImageReceiver() {
+        mIconCache.getImage(new com.craftstudio.cslauncher.modding.modpacks.imagecache.AnimatedImageReceiver() {
             @Override
             public void onImageAvailable(Bitmap image) {
                 if (getView() == null || image == null) return;
                 RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getResources(), image);
                 drawable.setCornerRadius(radius);
                 icon.setImageDrawable(drawable);
+            }
+
+            @Override
+            public void onAnimatedImageAvailable(@NonNull android.graphics.drawable.Drawable d) {
+                if (getView() == null) return;
+                com.craftstudio.cslauncher.modding.modpacks.imagecache.AnimatedIcons.show(icon, d, radius);
             }
         }, mItem.getIconCacheTag(), mItem.imageUrl);
     }
@@ -1172,13 +1178,19 @@ public class ModInstallFragment extends Fragment {
         if (TextUtils.isEmpty(iconUrl)) return;
         float radius = 8 * getResources().getDisplayMetrics().density;
         ImageView icon = row.icon;
-        row.receiver = new ImageReceiver() {
+        row.receiver = new com.craftstudio.cslauncher.modding.modpacks.imagecache.AnimatedImageReceiver() {
             @Override
             public void onImageAvailable(Bitmap image) {
                 if (getView() == null || image == null || row.receiver != this) return;
                 RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getResources(), image);
                 drawable.setCornerRadius(radius);
                 icon.setImageDrawable(drawable);
+            }
+
+            @Override
+            public void onAnimatedImageAvailable(@NonNull android.graphics.drawable.Drawable d) {
+                if (getView() == null || row.receiver != this) return;
+                com.craftstudio.cslauncher.modding.modpacks.imagecache.AnimatedIcons.show(icon, d, radius);
             }
         };
         mIconCache.getImage(row.receiver, mItem.apiSource + "_" + row.projectId, iconUrl);

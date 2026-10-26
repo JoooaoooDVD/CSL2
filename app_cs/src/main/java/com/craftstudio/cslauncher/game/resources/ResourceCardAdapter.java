@@ -362,11 +362,21 @@ public final class ResourceCardAdapter extends RecyclerView.Adapter<RecyclerView
             if (item.imageUrl == null || item.imageUrl.isEmpty()) return;
             final String tag = item.getIconCacheTag();
             iconTag = tag;
-            receiver = new ImageReceiver() {
+            com.craftstudio.cslauncher.modding.modpacks.imagecache.AnimatedIcons.reset(icon);
+            receiver = new com.craftstudio.cslauncher.modding.modpacks.imagecache.AnimatedImageReceiver() {
                 @Override
                 public void onImageAvailable(Bitmap image) {
                     if (image == null || !tag.equals(iconTag)) return;
                     icon.setImageBitmap(image);
+                    icon.setAlpha(0f);
+                    icon.animate().alpha(1f).setDuration(160).start();
+                    iconPlaceholder.setVisibility(View.GONE);
+                }
+
+                @Override
+                public void onAnimatedImageAvailable(@NonNull android.graphics.drawable.Drawable d) {
+                    if (!tag.equals(iconTag)) return;
+                    com.craftstudio.cslauncher.modding.modpacks.imagecache.AnimatedIcons.show(icon, d, 0f);
                     icon.setAlpha(0f);
                     icon.animate().alpha(1f).setDuration(160).start();
                     iconPlaceholder.setVisibility(View.GONE);

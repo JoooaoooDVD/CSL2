@@ -225,6 +225,16 @@ public final class VirtualLanService extends Service {
     // ───────────────────────────── messages ─────────────────────────────
 
     private boolean handleMessage(Message msg) {
+        try {
+            return handleMessageInternal(msg);
+        } catch (Throwable t) {
+            // Never let a UI command (end / kick / log) take the game process down with it
+            Log.e(TAG, "command " + msg.what + " failed", t);
+            return true;
+        }
+    }
+
+    private boolean handleMessageInternal(Message msg) {
         switch (msg.what) {
             case MSG_REGISTER:
                 if (msg.replyTo != null && !mClients.contains(msg.replyTo)) mClients.add(msg.replyTo);
@@ -374,14 +384,14 @@ public final class VirtualLanService extends Service {
                 mMain.post(() -> {
                     VirtualLanSession current = ref[0];
                     if (current == null || mSession != current) return;
-                    mLastLog = current.engineLog();
+                    try { mLastLog = current.engineLog(); } catch (Throwable ignored) {}
                     mSession = null;
                     if (sActive == current) sActive = null;
                     mState = finalState;
-                    LogTap.removeSink(mLogSink);
-                    releaseNetworkWatch();
-                    stopForegroundCompat();
-                    broadcast();
+                    try { LogTap.removeSink(mLogSink); } catch (Throwable ignored) {}
+                    try { releaseNetworkWatch(); } catch (Throwable ignored) {}
+                    try { stopForegroundCompat(); } catch (Throwable ignored) {}
+                    try { broadcast(); } catch (Throwable t) { Log.e(TAG, "final broadcast failed", t); }
                     if (mClients.isEmpty()) stopSelf();
                 });
             }

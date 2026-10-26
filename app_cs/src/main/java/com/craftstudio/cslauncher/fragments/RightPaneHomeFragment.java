@@ -376,7 +376,7 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
             if (container != null && Motion.content(container)) {
                 container.animate().cancel();
                 container.animate().scaleX(1.025f).scaleY(1.025f).setDuration(140)
-                        .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                        .setInterpolator(com.craftstudio.cslauncher.utils.motion.Motion.STANDARD)
                         .withEndAction(() -> container.animate().scaleX(1f).scaleY(1f).setDuration(260)
                                 .setInterpolator(new android.view.animation.OvershootInterpolator(2f)).start())
                         .start();
@@ -388,7 +388,7 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
     /** Dark face, light text, pulsing badge, looping sweep and a growing fill */
     private void enterDownloadSkin() {
         if (mDlBg == null) return;
-        android.view.animation.Interpolator ease = new android.view.animation.DecelerateInterpolator(1.6f);
+        android.view.animation.Interpolator ease = com.craftstudio.cslauncher.utils.motion.Motion.ENTER;
         for (View v : new View[]{mDlBg, mDlFill, mDlSweep}) {
             v.setVisibility(View.VISIBLE);
         }
@@ -499,7 +499,7 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         if (mPlayIcon != null) {
             mPlayIcon.animate().cancel();
             mPlayIcon.animate().translationY(-7f * d).scaleX(1.18f).scaleY(1.18f).setDuration(130)
-                    .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                    .setInterpolator(com.craftstudio.cslauncher.utils.motion.Motion.STANDARD)
                     .withEndAction(() -> mPlayIcon.animate().translationY(0f).scaleX(1f).scaleY(1f).setDuration(380)
                             .setInterpolator(new android.view.animation.OvershootInterpolator(2.2f)).start())
                     .start();
@@ -542,7 +542,7 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         }
         mDlFillAnimator = android.animation.ValueAnimator.ofFloat(mDlFillFraction, target);
         mDlFillAnimator.setDuration(380);
-        mDlFillAnimator.setInterpolator(new android.view.animation.DecelerateInterpolator());
+        mDlFillAnimator.setInterpolator(com.craftstudio.cslauncher.utils.motion.Motion.STANDARD);
         mDlFillAnimator.addUpdateListener(a -> {
             mDlFillFraction = (float) a.getAnimatedValue();
             applyFillFraction();
@@ -600,7 +600,7 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
             if (mPctAnimator != null) mPctAnimator.cancel();
             mPctAnimator = android.animation.ValueAnimator.ofInt(mShownPercent, mAggregateProgress);
             mPctAnimator.setDuration(Math.min(600L, 120L + 25L * Math.abs(mAggregateProgress - mShownPercent)));
-            mPctAnimator.setInterpolator(new android.view.animation.DecelerateInterpolator());
+            mPctAnimator.setInterpolator(com.craftstudio.cslauncher.utils.motion.Motion.STANDARD);
             mPctAnimator.addUpdateListener(a -> {
                 mShownPercent = (int) a.getAnimatedValue();
                 if (mPlaySubtitle != null) mPlaySubtitle.setText(mShownPercent + "%");

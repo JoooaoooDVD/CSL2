@@ -89,6 +89,8 @@ public class InstalledModAdapter extends RecyclerView.Adapter<InstalledModAdapte
     // from the jar (and blanking the ImageView) every time the row is rebound, e.g.
     // during an update check which calls notifyItemChanged/notifyDataSetChanged.
     private final java.util.Map<String, Bitmap> mIconCache = new java.util.HashMap<>();
+    /** Animated (GIF / WebP) remote icons, kept as ready drawables so rebinding never re-decodes */
+    private final java.util.Map<String, android.graphics.drawable.Drawable> mAnimatedIcons = new java.util.HashMap<>();
     // Marks jars where local extraction found nothing AND the remote lookup (Modrinth/
     // CurseForge) also found nothing — these permanently show the placeholder glyph.
     private final java.util.Set<String> mIconCheckedNoResult = new java.util.HashSet<>();
@@ -753,6 +755,7 @@ public class InstalledModAdapter extends RecyclerView.Adapter<InstalledModAdapte
                     // path so the icon/name get freshly re-resolved for the new jar.
                     String oldPath = oldFile.getAbsolutePath();
                     mIconCache.remove(oldPath);
+                    mAnimatedIcons.remove(oldPath);
                     mModNameCache.remove(oldPath);
                     mModMetaCache.remove(oldPath);
                     mIconCheckedNoResult.remove(oldPath);
@@ -1043,8 +1046,12 @@ public class InstalledModAdapter extends RecyclerView.Adapter<InstalledModAdapte
             icon.setTag(path);
 
             // Cache hit — apply immediately, no flash, no re-read from disk
+            com.craftstudio.cslauncher.modding.modpacks.imagecache.AnimatedIcons.reset(icon);
             Bitmap cached = mIconCache.get(path);
-            if (cached != null) {
+            android.graphics.drawable.Drawable animated = mAnimatedIcons.get(path);
+            if (animated != null) {
+                com.craftstudio.cslauncher.modding.modpacks.imagecache.AnimatedIcons.show(icon, animated, 0f);
+            } else if (cached != null) {
                 icon.setImageBitmap(cached);
             } else if (mIconCheckedNoResult.contains(path)) {
                 // Already exhausted local extraction AND remote lookup for this jar —
@@ -1212,13 +1219,28 @@ public class InstalledModAdapter extends RecyclerView.Adapter<InstalledModAdapte
             // Fetch (and disk-cache) the remote icon via the existing ModIconCache,
             // tagged by the mod's file path so different mods don't collide.
             String tag = "installed_" + path.hashCode();
-            mRemoteIconCache.getImage(bitmap -> {
-                if (bitmap != null) {
-                    cacheAndApply(path, bitmap, expectedTag, iconRef);
-                } else {
+            mRemoteIconCache.getImage(new com.craftstudio.cslauncher.modding.modpacks.imagecache.AnimatedImageReceiver() {
+                @Override
+                public void onImageAvailable(Bitmap bitmap) {
+                    if (bitmap != null) {
+                        cacheAndApply(path, bitmap, expectedTag, iconRef);
+                    } else {
+                        mMainHandler.post(() -> {
+                            mIconCheckedNoResult.add(path);
+                            mIconResolving.remove(path);
+                        });
+                    }
+                }
+
+                @Override
+                public void onAnimatedImageAvailable(@NonNull android.graphics.drawable.Drawable drawable) {
                     mMainHandler.post(() -> {
-                        mIconCheckedNoResult.add(path);
+                        mAnimatedIcons.put(path, drawable);
                         mIconResolving.remove(path);
+                        ImageView iv = iconRef.get();
+                        if (iv != null && expectedTag.equals(iv.getTag())) {
+                            com.craftstudio.cslauncher.modding.modpacks.imagecache.AnimatedIcons.show(iv, drawable, 0f);
+                        }
                     });
                 }
             }, tag, remoteUrl);

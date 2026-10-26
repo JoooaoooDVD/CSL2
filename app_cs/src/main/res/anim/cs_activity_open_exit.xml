@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Activity open: the screen behind drifts left with a tiny dim, a light parallax depth cue. -->
+<!-- Activity open: the screen behind drifts slightly left and dims - a light depth cue. -->
 <set xmlns:android="http://schemas.android.com/apk/res/android"
     android:shareInterpolator="false">
     <translate
         android:fromXDelta="0"
-        android:toXDelta="-3%p"
-        android:duration="250"
-        android:interpolator="@android:anim/decelerate_interpolator" />
+        android:toXDelta="-2%p"
+        android:duration="300"
+        android:interpolator="@interpolator/cs_emphasized_decelerate" />
     <alpha
         android:fromAlpha="1.0"
-        android:toAlpha="0.88"
-        android:duration="200"
-        android:interpolator="@android:anim/decelerate_interpolator" />
+        android:toAlpha="0.9"
+        android:duration="180"
+        android:interpolator="@interpolator/cs_standard" />
 </set>

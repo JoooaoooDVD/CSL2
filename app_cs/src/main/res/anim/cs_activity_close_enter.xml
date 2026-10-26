@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Activity close: the screen behind slides back from its parallax offset. -->
+<!-- Activity close: the screen behind settles back from its parallax offset. -->
 <set xmlns:android="http://schemas.android.com/apk/res/android"
     android:shareInterpolator="false">
     <translate
-        android:fromXDelta="-3%p"
+        android:fromXDelta="-2%p"
         android:toXDelta="0"
-        android:duration="240"
-        android:interpolator="@android:anim/decelerate_interpolator" />
+        android:duration="260"
+        android:interpolator="@interpolator/cs_emphasized_decelerate" />
     <alpha
-        android:fromAlpha="0.88"
+        android:fromAlpha="0.9"
         android:toAlpha="1.0"
-        android:duration="190"
-        android:interpolator="@android:anim/decelerate_interpolator" />
+        android:duration="160"
+        android:interpolator="@interpolator/cs_standard" />
 </set>
