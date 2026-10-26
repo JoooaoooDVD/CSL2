@@ -1415,4 +1415,24 @@ time set day</string>
     <string name="gc_af_step_disable_resource_pack_all">options.txt me saare external resource packs disable karo</string>
     <string name="gc_af_step_reset_config">config/%1$s ko backup me bhejo taaki dobara ban jaye</string>
     <string name="gc_af_step_check_network">Mojang servers se connection check karo (agla launch download resume karega)</string>
+    <string name="fabric_api_toggle_title">Fabric API</string>
+    <string name="fabric_api_toggle_desc">Matching Fabric API automatically download hoke is profile ke mods folder me install hogi. Zyadatar Fabric mods ko iski zaroorat hoti hai.</string>
+    <string name="fabric_api_toggle_desc_off">Fabric API install nahi hogi. Baad me Mod Browser se add kar sakte ho.</string>
+    <string name="fabric_api_resolving">%1$s ke liye Fabric API dhoondh rahe hain…</string>
+    <string name="fabric_api_installed">%1$s ke liye Fabric API install ho gayi</string>
+    <string name="fabric_api_already">Fabric API pehle se mods folder me thi</string>
+    <string name="fabric_api_not_available">%1$s ke liye abhi Fabric API build nahi hai. Baad me Mod Browser se install karo.</string>
+    <string name="fabric_api_failed">Fabric API download fail: %1$s. Profile ban gaya hai, Mod Browser se install kar lo.</string>
+    <string name="lib_base_opt_eyebrow">BASE OPTIMISE MOD</string>
+    <string name="lib_base_opt_hint">Pehla recommended mod: phone pe smooth FPS</string>
+    <string name="lib_base_opt_loading">Versions check ho rahe hain…</string>
+    <string name="lib_base_opt_install">Install</string>
+    <string name="lib_base_opt_installing">Install ho raha hai…</string>
+    <string name="lib_base_opt_installed">Installed</string>
+    <string name="lib_base_opt_update">Update</string>
+    <string name="lib_base_opt_for">%1$s · %2$s</string>
+    <string name="lib_base_opt_no_loader">Fabric profile chahiye. Install karne ke liye Fabric profile select karo.</string>
+    <string name="lib_base_opt_incompatible">%1$s %2$s ke liye abhi available nahi</string>
+    <string name="lib_base_opt_offline">Load nahi hua. Retry ke liye tap karo.</string>
+    <string name="lib_base_opt_busy">Ek download already chal raha hai. Pehle use poora hone do.</string>
 </resources>

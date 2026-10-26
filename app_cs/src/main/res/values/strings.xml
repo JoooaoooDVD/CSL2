@@ -1600,4 +1600,26 @@
     <string name="gc_af_step_disable_resource_pack_all">Disable all external resource packs in options.txt</string>
     <string name="gc_af_step_reset_config">Move config/%1$s to the backup so it is regenerated</string>
     <string name="gc_af_step_check_network">Check the connection to Mojang servers (the next launch resumes the download)</string>
+    <!-- Fabric API auto-install -->
+    <string name="fabric_api_toggle_title">Fabric API</string>
+    <string name="fabric_api_toggle_desc">Auto-download the matching Fabric API into this profile\'s mods folder. Most Fabric mods need it.</string>
+    <string name="fabric_api_toggle_desc_off">Fabric API will not be installed. You can add it later from the Mod Browser.</string>
+    <string name="fabric_api_resolving">Finding Fabric API for %1$s…</string>
+    <string name="fabric_api_installed">Fabric API installed for %1$s</string>
+    <string name="fabric_api_already">Fabric API was already in the mods folder</string>
+    <string name="fabric_api_not_available">No Fabric API build for %1$s yet. Install it later from the Mod Browser.</string>
+    <string name="fabric_api_failed">Fabric API download failed: %1$s. The profile was created, install it from the Mod Browser.</string>
+    <!-- Base optimise mod (featured card at the top of the Mod Browser) -->
+    <string name="lib_base_opt_eyebrow">BASE OPTIMISE MOD</string>
+    <string name="lib_base_opt_hint">Recommended first mod: smoother FPS on phones</string>
+    <string name="lib_base_opt_loading">Checking versions…</string>
+    <string name="lib_base_opt_install">Install</string>
+    <string name="lib_base_opt_installing">Installing…</string>
+    <string name="lib_base_opt_installed">Installed</string>
+    <string name="lib_base_opt_update">Update</string>
+    <string name="lib_base_opt_for">%1$s · %2$s</string>
+    <string name="lib_base_opt_no_loader">Needs a Fabric profile. Select a Fabric profile to install.</string>
+    <string name="lib_base_opt_incompatible">Not available for %1$s %2$s yet</string>
+    <string name="lib_base_opt_offline">Could not load. Tap to retry.</string>
+    <string name="lib_base_opt_busy">Another download is running. Wait for it to finish.</string>
 </resources>

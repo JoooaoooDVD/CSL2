@@ -59,94 +59,10 @@ public final class ContentInstaller {
             File target = null;
             Exception failure = null;
             try {
-                String url = detail.versionUrls[versionIndex];
-                if (url == null || url.isEmpty()) throw new IOException("No download URL available for this version");
-
-                File dir = InstalledContentIndex.contentDir(type);
-                if (!dir.exists() && !dir.mkdirs()) throw new IOException("Unable to create " + dir);
-
-                String fileName = null;
-                if (detail.versionFileNames != null && versionIndex < detail.versionFileNames.length) {
-                    fileName = detail.versionFileNames[versionIndex];
-                }
-                if (fileName == null || fileName.isEmpty()) fileName = fileNameFromUrl(url);
-                if (!fileName.endsWith(type.fileExtension)) fileName += type.fileExtension;
-                target = new File(dir, sanitize(fileName));
-
-                File temp = new File(dir, target.getName() + ".part");
-                final String displayName = target.getName();
-                long expectedSize = detail.versionFileSizes != null && versionIndex < detail.versionFileSizes.length
-                        ? detail.versionFileSizes[versionIndex] : -1;
-                try {
-                    ProgressLayout.setProgress(ProgressLayout.INSTALL_MODPACK, 0, R.string.mcl_launch_downloading, displayName);
-                    final long[] lastReport = {0};
-                    DownloadUtils.downloadFileMonitored(url, temp, null, (curr, max) -> {
-                        long now = System.currentTimeMillis();
-                        if (now - lastReport[0] < 100) return;
-                        lastReport[0] = now;
-                        if (max > 0) {
-                            ProgressLayout.setProgress(ProgressLayout.INSTALL_MODPACK, (int) (curr * 100L / max),
-                                    R.string.mcl_launch_downloading_progress, displayName, curr / ONE_MB, max / ONE_MB);
-                        } else {
-                            ProgressLayout.setProgress(ProgressLayout.INSTALL_MODPACK, 0, R.string.mcl_launch_downloading, displayName);
-                        }
-                    });
-                    // Validate before anything is marked installed: size (when known), then archive structure
-                    if (!temp.isFile() || temp.length() == 0) throw new IOException("Download produced an empty file");
-                    if (expectedSize > 0 && temp.length() != expectedSize) {
-                        throw new IOException("Incomplete download: got " + temp.length() + " of " + expectedSize + " bytes");
-                    }
-                    String sha1 = detail.versionHashes != null && versionIndex < detail.versionHashes.length ? detail.versionHashes[versionIndex] : null;
-                    if (sha1 != null && !sha1.isEmpty()) {
-                        String actual = InstalledContentIndex.sha1(temp);
-                        if (actual != null && !actual.equalsIgnoreCase(sha1)) throw new IOException("Checksum mismatch, the download is corrupted");
-                    }
-                    validateArchive(temp, type);
-                } catch (Exception e) {
-                    if (temp.exists() && !temp.delete()) Log.w(TAG, "Could not remove partial download " + temp);
-                    throw e;
-                }
-                if (target.exists() && !target.delete()) Log.w(TAG, "Could not replace " + target);
-                if (!temp.renameTo(target)) {
-                    if (temp.exists() && !temp.delete()) Log.w(TAG, "Could not remove partial download " + temp);
-                    throw new IOException("Unable to move the download into place");
-                }
-
-                if (type == ContentType.WORLD) {
-                    // A world zip becomes a folder in saves/; the zip itself is not kept
-                    ProgressLayout.setProgress(ProgressLayout.INSTALL_MODPACK, 90, R.string.lib_installing);
-                    File worldDir;
-                    try {
-                        worldDir = extractWorld(target, dir, detail.title);
-                    } finally {
-                        if (target.exists() && !target.delete()) Log.w(TAG, "Could not remove the world archive " + target);
-                    }
-                    target = worldDir;
-                }
-
-                if (oldFilePath != null) {
-                    File old = new File(oldFilePath);
-                    if (old.exists() && !old.getAbsolutePath().equals(target.getAbsolutePath()) && !old.delete()) {
-                        Log.w(TAG, "Could not remove the previous file " + old);
-                    }
-                }
-
-                for (Dependency dependency : dependencies) {
-                    if (dependency == null || dependency.projectId == null) continue;
-                    try {
-                        if (dependency.apiSource == Constants.SOURCE_CURSEFORGE) {
-                            installCurseforgeDependency(dependency.projectId, mcVersion, loader, curseforgeKey);
-                        } else {
-                            installModrinthDependency(dependency.projectId, type, mcVersion, loader);
-                        }
-                    } catch (Exception e) {
-                        Log.w(TAG, "Dependency " + dependency.projectId + " failed: " + e.getMessage());
-                    }
-                }
+                target = installBlocking(detail, versionIndex, type, dependencies, oldFilePath, mcVersion, loader, curseforgeKey, null);
             } catch (Exception e) {
                 failure = e;
-                Log.w(TAG, "Install of " + detail.title + " (" + type + ") failed during "
-                        + (target == null ? "setup" : "download/validation") + ": " + e.getMessage());
+                Log.w(TAG, "Install of " + detail.title + " (" + type + ") failed: " + e.getMessage());
             } finally {
                 ProgressLayout.clearProgress(ProgressLayout.INSTALL_MODPACK);
             }
@@ -154,6 +70,108 @@ public final class ContentInstaller {
             final Exception error = failure;
             Tools.runOnUiThread(() -> callback.onFinished(installed, error));
         });
+    }
+
+    /**
+     * Synchronous core of {@link #install}: downloads to a .part file, validates size / SHA-1 /
+     * archive structure, moves it into place, removes the previous file and installs the
+     * chosen dependencies. Reports on {@link ProgressLayout#INSTALL_MODPACK} but does not
+     * clear it. Call from a worker thread.
+     *
+     * @param targetDir folder to install into, or null for the selected profile's folder of {@code type}
+     * @return the installed file (or world folder)
+     */
+    @NonNull
+    public static File installBlocking(@NonNull ModDetail detail, int versionIndex, @NonNull ContentType type,
+                                       @NonNull List<Dependency> dependencies, @Nullable String oldFilePath,
+                                       @Nullable String mcVersion, @Nullable String loader,
+                                       @Nullable String curseforgeKey, @Nullable File targetDir) throws Exception {
+        File target;
+        String url = detail.versionUrls[versionIndex];
+        if (url == null || url.isEmpty()) throw new IOException("No download URL available for this version");
+
+        File dir = targetDir != null ? targetDir : InstalledContentIndex.contentDir(type);
+        if (!dir.exists() && !dir.mkdirs()) throw new IOException("Unable to create " + dir);
+
+        String fileName = null;
+        if (detail.versionFileNames != null && versionIndex < detail.versionFileNames.length) {
+            fileName = detail.versionFileNames[versionIndex];
+        }
+        if (fileName == null || fileName.isEmpty()) fileName = fileNameFromUrl(url);
+        if (!fileName.endsWith(type.fileExtension)) fileName += type.fileExtension;
+        target = new File(dir, sanitize(fileName));
+
+        File temp = new File(dir, target.getName() + ".part");
+        final String displayName = target.getName();
+        long expectedSize = detail.versionFileSizes != null && versionIndex < detail.versionFileSizes.length
+                ? detail.versionFileSizes[versionIndex] : -1;
+        try {
+            ProgressLayout.setProgress(ProgressLayout.INSTALL_MODPACK, 0, R.string.mcl_launch_downloading, displayName);
+            final long[] lastReport = {0};
+            DownloadUtils.downloadFileMonitored(url, temp, null, (curr, max) -> {
+                long now = System.currentTimeMillis();
+                if (now - lastReport[0] < 100) return;
+                lastReport[0] = now;
+                if (max > 0) {
+                    ProgressLayout.setProgress(ProgressLayout.INSTALL_MODPACK, (int) (curr * 100L / max),
+                            R.string.mcl_launch_downloading_progress, displayName, curr / ONE_MB, max / ONE_MB);
+                } else {
+                    ProgressLayout.setProgress(ProgressLayout.INSTALL_MODPACK, 0, R.string.mcl_launch_downloading, displayName);
+                }
+            });
+            // Validate before anything is marked installed: size (when known), then archive structure
+            if (!temp.isFile() || temp.length() == 0) throw new IOException("Download produced an empty file");
+            if (expectedSize > 0 && temp.length() != expectedSize) {
+                throw new IOException("Incomplete download: got " + temp.length() + " of " + expectedSize + " bytes");
+            }
+            String sha1 = detail.versionHashes != null && versionIndex < detail.versionHashes.length ? detail.versionHashes[versionIndex] : null;
+            if (sha1 != null && !sha1.isEmpty()) {
+                String actual = InstalledContentIndex.sha1(temp);
+                if (actual != null && !actual.equalsIgnoreCase(sha1)) throw new IOException("Checksum mismatch, the download is corrupted");
+            }
+            validateArchive(temp, type);
+        } catch (Exception e) {
+            if (temp.exists() && !temp.delete()) Log.w(TAG, "Could not remove partial download " + temp);
+            throw e;
+        }
+        if (target.exists() && !target.delete()) Log.w(TAG, "Could not replace " + target);
+        if (!temp.renameTo(target)) {
+            if (temp.exists() && !temp.delete()) Log.w(TAG, "Could not remove partial download " + temp);
+            throw new IOException("Unable to move the download into place");
+        }
+
+        if (type == ContentType.WORLD) {
+            // A world zip becomes a folder in saves/; the zip itself is not kept
+            ProgressLayout.setProgress(ProgressLayout.INSTALL_MODPACK, 90, R.string.lib_installing);
+            File worldDir;
+            try {
+                worldDir = extractWorld(target, dir, detail.title);
+            } finally {
+                if (target.exists() && !target.delete()) Log.w(TAG, "Could not remove the world archive " + target);
+            }
+            target = worldDir;
+        }
+
+        if (oldFilePath != null) {
+            File old = new File(oldFilePath);
+            if (old.exists() && !old.getAbsolutePath().equals(target.getAbsolutePath()) && !old.delete()) {
+                Log.w(TAG, "Could not remove the previous file " + old);
+            }
+        }
+
+        for (Dependency dependency : dependencies) {
+            if (dependency == null || dependency.projectId == null) continue;
+            try {
+                if (dependency.apiSource == Constants.SOURCE_CURSEFORGE) {
+                    installCurseforgeDependency(dependency.projectId, mcVersion, loader, curseforgeKey);
+                } else {
+                    installModrinthDependency(dependency.projectId, type, mcVersion, loader);
+                }
+            } catch (Exception e) {
+                Log.w(TAG, "Dependency " + dependency.projectId + " failed: " + e.getMessage());
+            }
+        }
+        return target;
     }
 
     private static final double ONE_MB = 1024d * 1024d;

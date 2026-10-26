@@ -142,6 +142,37 @@ public class CurseforgeApi implements ModpackApi{
 
     }
 
+    /**
+     * Fetches one project by its numeric id with the same metadata a search hit carries
+     * (slug, author, downloads, loaders, versions, latest file indexes). Null when the API
+     * fails or the project does not exist.
+     */
+    @Nullable
+    public ModItem getMod(@NonNull String modId) {
+        JsonObject response = mApiHandler.get(String.format("mods/%s", modId), JsonObject.class);
+        JsonObject data = GsonJsonUtils.getJsonObjectSafe(response, "data");
+        if (data == null || !data.has("id")) return null;
+        JsonElement allowModDistribution = data.get("allowModDistribution");
+        boolean restricted = allowModDistribution != null && !allowModDistribution.isJsonNull() && !allowModDistribution.getAsBoolean();
+        JsonObject logo = GsonJsonUtils.getJsonObjectSafe(data, "logo");
+        String thumbnailUrl = logo != null ? GsonJsonUtils.getStringSafe(logo, "thumbnailUrl") : null;
+        if (thumbnailUrl == null && logo != null) thumbnailUrl = GsonJsonUtils.getStringSafe(logo, "url");
+        String name = GsonJsonUtils.getStringSafe(data, "name");
+        String summary = GsonJsonUtils.getStringSafe(data, "summary");
+        ModItem item = new ModItem(Constants.SOURCE_CURSEFORGE, false, data.get("id").getAsString(),
+                name == null ? "" : name, summary == null ? "" : summary, thumbnailUrl == null ? "" : thumbnailUrl);
+        item.isRestricted = restricted;
+        JsonObject links = GsonJsonUtils.getJsonObjectSafe(data, "links");
+        String website = links != null ? GsonJsonUtils.getStringSafe(links, "websiteUrl") : null;
+        if (website == null) {
+            String slug = GsonJsonUtils.getStringSafe(data, "slug");
+            website = "https://www.curseforge.com/minecraft/mc-mods/" + (slug != null ? slug : item.id);
+        }
+        item.websiteUrl = website;
+        fillSearchMeta(item, data);
+        return item;
+    }
+
     /** Maps the shared sort constants to CurseForge's ModsSearchSortField values */
     private static int sortFieldFor(String sort) {
         if(sort == null) return CURSEFORGE_SORT_RELEVANCY;

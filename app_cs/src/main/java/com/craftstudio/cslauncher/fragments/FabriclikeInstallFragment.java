@@ -27,7 +27,9 @@ import com.craftstudio.cslauncher.modding.fabric.FabriclikeUtils;
 import com.craftstudio.cslauncher.modding.fabric.FabricVersion;
 import com.craftstudio.cslauncher.modding.ModloaderDownloadListener;
 import com.craftstudio.cslauncher.modding.ModloaderListenerProxy;
+import com.craftstudio.cslauncher.modding.modpacks.FabricApiInstaller;
 import com.craftstudio.cslauncher.modding.modpacks.SelfReferencingFuture;
+import com.craftstudio.cslauncher.prefs.LauncherPreferences;
 import com.craftstudio.cslauncher.progresskeeper.ProgressKeeper;
 import com.craftstudio.cslauncher.utils.CSAnimationEngine;
 
@@ -51,6 +53,11 @@ public abstract class FabriclikeInstallFragment extends Fragment implements Modl
     private Button mStartButton;
     private View mRetryView;
     private CheckBox mOnlyStableCheckbox;
+    /** Fabric API auto-install toggle, only shown for the real Fabric loader */
+    private View mFabricApiRow;
+    private com.google.android.material.materialswitch.MaterialSwitch mFabricApiSwitch;
+    private TextView mFabricApiSubtitle;
+    private volatile boolean mInstallFabricApi;
     protected FabriclikeInstallFragment(FabriclikeUtils mFabriclikeUtils, String mFragmentTag) {
         super(R.layout.fragment_fabric_install);
         this.mFabriclikeUtils = mFabriclikeUtils;
@@ -60,7 +67,10 @@ public abstract class FabriclikeInstallFragment extends Fragment implements Modl
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
+        mAppContext = context.getApplicationContext();
     }
+
+    private Context mAppContext;
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -78,6 +88,27 @@ public abstract class FabriclikeInstallFragment extends Fragment implements Modl
         mOnlyStableCheckbox = view.findViewById(R.id.fabric_installer_only_stable_checkbox);
         mOnlyStableCheckbox.setOnCheckedChangeListener(this);
         view.findViewById(R.id.fabric_installer_retry_button).setOnClickListener(this::onClickRetry);
+        mFabricApiRow = view.findViewById(R.id.fabric_installer_api_row);
+        mFabricApiSwitch = view.findViewById(R.id.fabric_installer_api_switch);
+        mFabricApiSubtitle = view.findViewById(R.id.fabric_installer_api_subtitle);
+        if (supportsFabricApi()) {
+            mFabricApiRow.setVisibility(View.VISIBLE);
+            boolean enabled = FabricApiInstaller.isAutoInstallEnabled();
+            mFabricApiSwitch.setChecked(enabled);
+            mInstallFabricApi = enabled;
+            mFabricApiSubtitle.setText(enabled ? R.string.fabric_api_toggle_desc : R.string.fabric_api_toggle_desc_off);
+            mFabricApiSwitch.setOnCheckedChangeListener((button, checked) -> {
+                mInstallFabricApi = checked;
+                FabricApiInstaller.setAutoInstallEnabled(checked);
+                mFabricApiSubtitle.setText(checked ? R.string.fabric_api_toggle_desc : R.string.fabric_api_toggle_desc_off);
+            });
+            // Tapping anywhere on the row flips the switch (easier on phones)
+            mFabricApiRow.setOnClickListener(v -> mFabricApiSwitch.toggle());
+            CSAnimationEngine.attachPressFeedback(mFabricApiRow);
+        } else {
+            mFabricApiRow.setVisibility(View.GONE);
+            mInstallFabricApi = false;
+        }
         ((TextView)view.findViewById(R.id.fabric_installer_label_loader_ver)).setText(getString(R.string.fabric_dl_loader_version, mFabriclikeUtils.getName()));
         ModloaderListenerProxy proxy = getListenerProxy();
         if(proxy != null) {
@@ -110,22 +141,57 @@ public abstract class FabriclikeInstallFragment extends Fragment implements Modl
         CSLauncherApplication.sExecutorService.execute(this::performInstallation);
     }
 
+    /** Fabric API is a Fabric-loader library; Quilt ships its own (QFAPI) and Legacy Fabric has none */
+    private boolean supportsFabricApi() {
+        return mFabriclikeUtils == FabriclikeUtils.FABRIC_UTILS;
+    }
+
     private void performInstallation() {
         try {
-            String versionId = mFabriclikeUtils.install(mSelectedGameVersion, mSelectedLoaderVersion);
+            final String gameVersion = mSelectedGameVersion;
+            String versionId = mFabriclikeUtils.install(gameVersion, mSelectedLoaderVersion);
             if(versionId == null) {
                 getListenerProxy().onDataNotAvailable();
                 return;
             }
-            Instances.createInstance((i)->{
+            com.craftstudio.cslauncher.instances.Instance instance = Instances.createInstance((i)->{
                 i.name = mFabriclikeUtils.getName();
                 i.icon = mFabriclikeUtils.getIconName();
                 i.versionId = versionId;
             }, versionId);
+            if (mInstallFabricApi && supportsFabricApi() && gameVersion != null) {
+                installFabricApi(instance, gameVersion);
+            }
             getListenerProxy().onDownloadFinished(null);
         }catch (IOException e) {
             Tools.showErrorRemote(e);
         }
+    }
+
+    /**
+     * Downloads the matching Fabric API into the new profile. Runs on the install executor,
+     * never fails the profile creation: problems are reported as a toast and the user can
+     * add Fabric API from the Mod Browser later.
+     */
+    private void installFabricApi(com.craftstudio.cslauncher.instances.Instance instance, String gameVersion) {
+        final Context appContext = mAppContext;
+        if (appContext == null) return;
+        String message;
+        try {
+            String key = LauncherPreferences.PREF_DISABLE_CURSEFORGE_API ? null : LauncherPreferences.resolveCurseforgeApiKey(appContext);
+            FabricApiInstaller.Result result = FabricApiInstaller.install(appContext, instance, gameVersion, key);
+            switch (result) {
+                case INSTALLED: message = appContext.getString(R.string.fabric_api_installed, gameVersion); break;
+                case ALREADY_PRESENT: message = appContext.getString(R.string.fabric_api_already); break;
+                default: message = appContext.getString(R.string.fabric_api_not_available, gameVersion); break;
+            }
+        } catch (Exception e) {
+            Log.w("FabricApi", "auto-install failed", e);
+            String why = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
+            message = appContext.getString(R.string.fabric_api_failed, why);
+        }
+        final String text = message;
+        Tools.runOnUiThread(() -> Toast.makeText(appContext, text, Toast.LENGTH_LONG).show());
     }
 
     @SuppressWarnings("unused")
