@@ -27,7 +27,11 @@ public class JREUtils {
                 try {
                     if (logcatPb == null) {
                         // No filtering by tag anymore as that relied on incorrect log levels set in log.h
-                        logcatPb = new ProcessBuilder().command("logcat", /* "-G", "1mb", */ "-v", "brief", "-s", "jrelog", "LIBGL", "NativeInput").redirectErrorStream(true);
+                        // "*:F": FATAL lines from every tag of this uid - ART aborts ("JNI DETECTED ERROR
+                        // IN APPLICATION", "Thread suspension timed out") and libc "Fatal signal" lines -
+                        // so a silent process death leaves its reason in latestlog.txt whenever the log
+                        // thread still gets to run.
+                        logcatPb = new ProcessBuilder().command("logcat", /* "-G", "1mb", */ "-v", "brief", "-s", "jrelog", "LIBGL", "NativeInput", "*:F").redirectErrorStream(true);
                     }
 
                     Log.i("jrelog-logcat","Clearing logcat");

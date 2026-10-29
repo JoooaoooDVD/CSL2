@@ -85,7 +85,9 @@ public final class LanHostDetector {
     /** Feed from the game log tap (any thread) */
     public void onLogLine(@Nullable String line) {
         if (line == null || !mRunning) return;
-        if (line.indexOf("serving on") < 0 && line.indexOf("hosted on port") < 0) return;
+        // "Started serving on N" (<= 1.20), "Local game hosted on port N" (1.21+),
+        // "Published LAN server on port N" (26.x)
+        if (line.indexOf("serving on") < 0 && line.indexOf("hosted on port") < 0 && line.indexOf("LAN server on port") < 0) return;
         Matcher m = LOG_PORT.matcher(line);
         if (m.find()) offerCandidate(parsePort(m.group(1)), "log");
     }

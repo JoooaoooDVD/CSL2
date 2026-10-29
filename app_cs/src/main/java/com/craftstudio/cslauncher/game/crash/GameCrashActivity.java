@@ -54,6 +54,9 @@ import java.util.List;
 public class GameCrashActivity extends BaseActivity {
     public static final String EXTRA_CODE = "code";
     public static final String EXTRA_SIGNAL = "isSignal";
+    /** Path of a {@link GameExitPostmortem} report: the game process died without reaching our own exit hooks */
+    public static final String EXTRA_POSTMORTEM = "postmortem";
+    public static final String EXTRA_POSTMORTEM_SUMMARY = "postmortemSummary";
 
     private static final long READ_TAIL_BYTES = 256 * 1024;
     private static final int SHOW_LINES = 600;
@@ -94,9 +97,18 @@ public class GameCrashActivity extends BaseActivity {
         File logFile = new File(Tools.DIR_GAME_HOME, "latestlog.txt");
         readTail(logFile);
 
+        // Post-mortem (Android's own record of why the game process died): shown first in the
+        // log pane, because latestlog.txt simply stops when a process is aborted or killed.
+        String postmortemPath = getIntent().getStringExtra(EXTRA_POSTMORTEM);
+        String postmortemSummary = getIntent().getStringExtra(EXTRA_POSTMORTEM_SUMMARY);
+        File postmortem = postmortemPath == null ? null : new File(postmortemPath);
+        if (postmortem != null && postmortem.isFile()) prependPostmortem(postmortem);
+        else postmortem = null;
+
         ((TextView) findViewById(R.id.gc_title)).setText(isSignal ? R.string.gc_title_crash : R.string.gc_title_exit);
         StringBuilder meta = new StringBuilder();
-        meta.append(isSignal ? getString(R.string.gc_meta_signal) : getString(R.string.gc_meta_code_fmt, code));
+        if (postmortem != null && postmortemSummary != null && !postmortemSummary.isEmpty()) meta.append(postmortemSummary);
+        else meta.append(isSignal ? getString(R.string.gc_meta_signal) : getString(R.string.gc_meta_code_fmt, code));
         if (instance != null) {
             if (instance.name != null && !instance.name.isEmpty()) meta.append("  \u00b7  ").append(instance.name);
             if (instance.versionId != null && !instance.versionId.isEmpty()) meta.append("  \u00b7  ").append(instance.versionId);
@@ -170,7 +182,14 @@ public class GameCrashActivity extends BaseActivity {
         findViewById(R.id.gc_crash_report).setVisibility(View.GONE); // replaced by VIEW CRASH REPORT
         mHsErr = newestHsErr(instance);
         TextView hsView = findViewById(R.id.gc_hs_err);
-        if (mHsErr != null) {
+        if (postmortem != null && mHsErr == null) {
+            final File fReport = postmortem;
+            hsView.setVisibility(View.VISIBLE);
+            hsView.setText(getString(R.string.gc_view_postmortem_fmt, fReport.getName()));
+            hsView.setOnClickListener(v -> {
+                try { Tools.openPath(this, fReport, true); } catch (Throwable t) { Toast.makeText(this, R.string.gc_share_failed, Toast.LENGTH_SHORT).show(); }
+            });
+        } else if (mHsErr != null) {
             final File fHsErr = mHsErr;
             hsView.setVisibility(View.VISIBLE);
             hsView.setText(getString(R.string.gc_share_hserr_fmt, fHsErr.getName()));
@@ -551,6 +570,26 @@ public class GameCrashActivity extends BaseActivity {
     @Override
     public void onBackPressed() {
         backToLauncher();
+    }
+
+    /** The post-mortem report goes on top of the log pane (header + trace highlights, bounded) */
+    private void prependPostmortem(File report) {
+        List<String> head = new ArrayList<>();
+        try (java.io.BufferedReader br = new java.io.BufferedReader(new java.io.InputStreamReader(new java.io.FileInputStream(report), "UTF-8"))) {
+            String line;
+            int n = 0;
+            while ((line = br.readLine()) != null && n < 160) {
+                if (line.startsWith("-- all strings --")) break; // the raw string dump stays in the file
+                head.add(line);
+                n++;
+            }
+        } catch (Exception ignored) {
+        }
+        if (head.isEmpty()) return;
+        head.add("");
+        head.add("==== latestlog.txt (tail) ====");
+        mLines.addAll(0, head);
+        mTotalLines += head.size();
     }
 
     private void readTail(File file) {

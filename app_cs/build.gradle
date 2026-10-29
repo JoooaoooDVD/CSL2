@@ -111,6 +111,13 @@ android {
     buildTypes {
         debug {
             applicationIdSuffix '.debug'
+            // The CI "debug" APK is what players install. A debuggable process runs ART with
+            // CheckJNI, which turns every JNI irregularity (an invalid UTF-8 byte handed to
+            // NewStringUTF, a pending exception on a native thread) into an immediate abort of
+            // the whole game process - no crash report, no hs_err, the game just disappears.
+            // Players never attach a debugger, so ship it non-debuggable; developers who need
+            // JDWP/CheckJNI export CS_DEBUGGABLE=1 before building.
+            debuggable System.getenv("CS_DEBUGGABLE") == "1"
             minifyEnabled false
             shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'

@@ -53,8 +53,12 @@ public final class LogTap implements Logger.eventLogListener {
 
     @Override
     public void onEventLogged(String text) {
+        // Nothing may ever propagate out of here: this runs on the native logger thread, and an
+        // exception left pending on that thread is fatal for the whole game process.
         Logger.eventLogListener ui = mUiListener;
-        if (ui != null) ui.onEventLogged(text);
+        if (ui != null) {
+            try { ui.onEventLogged(text); } catch (Throwable ignored) {}
+        }
         for (Logger.eventLogListener sink : mSinks) {
             try { sink.onEventLogged(text); } catch (Throwable ignored) {}
         }

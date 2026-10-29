@@ -1473,6 +1473,11 @@
     <string name="gc_dx_lan_title">Crashed right after Open to LAN</string>
     <string name="gc_dx_lan_advice">The game process died a moment after publishing the LAN world, without a Java error \u2014 that is a native crash in the network layer. Share the JVM crash file below (hs_err) with us if one was written; also try a plain profile without OptiFine or mods to see if it still happens.</string>
     <string name="gc_share_hserr_fmt">Share JVM crash file \u00b7 %1$s</string>
+    <string name="gc_view_postmortem_fmt">Open Android exit report \u00b7 %1$s</string>
+    <string name="pm_title">Game closed unexpectedly</string>
+    <string name="pm_body_intro">The game process ended without a crash report. Android recorded why:</string>
+    <string name="pm_view">View report</string>
+    <string name="pm_dismiss">Dismiss</string>
     <string name="gc_dx_unknown_title">No known cause found</string>
     <string name="gc_dx_unknown_advice">The log doesn\'t match a known problem. Share the logs with us \u2014 the link is all we need to look into it.</string>
 

@@ -1040,6 +1040,8 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
             report.append(com.craftstudio.cslauncher.multiplayer.VpnBridgeState.tail(com.craftstudio.cslauncher.multiplayer.VpnBridgeState.serviceLog(mContext), 24 * 1024));
             report.append("\n==== VPN bridge (tun2socks) log ====\n");
             report.append(com.craftstudio.cslauncher.multiplayer.VpnBridgeState.tail(com.craftstudio.cslauncher.multiplayer.VpnBridgeState.bridgeLog(mContext), 48 * 1024));
+            report.append("\n==== game process exit reasons (Android) ====\n");
+            try { report.append(com.craftstudio.cslauncher.game.crash.GameExitPostmortem.sectionForReport(mContext)); } catch (Throwable t) { report.append("(unavailable: ").append(t).append(")\n"); }
             java.io.File hs = newestHsErr();
             if (hs != null) {
                 report.append("\n==== JVM crash file ").append(hs.getName()).append(" (head) ====\n");
