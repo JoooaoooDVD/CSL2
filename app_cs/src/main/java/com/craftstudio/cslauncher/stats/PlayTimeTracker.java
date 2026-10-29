@@ -117,6 +117,24 @@ public final class PlayTimeTracker {
         @Nullable public String lastProfileKey;
         @Nullable public String lastProfileName;
         @Nullable public Session liveSession;
+        public long yesterdayMs;
+        public long lastWeekMs;
+        public long monthMs;
+        public long shortestMs;
+        /** Consecutive days with play ending today (or yesterday if today has none yet) */
+        public int streakDays;
+        public int bestStreakDays;
+        public int daysPlayed;
+        /** Play time per calendar day, index 0 = 6 days ago ... 6 = today */
+        public final long[] week = new long[7];
+        /** Sessions per calendar day, same indexing as {@link #week} */
+        public final int[] weekSessions = new int[7];
+        /** Start-of-day timestamps for {@link #week} */
+        public final long[] weekDayStart = new long[7];
+        /** Play time per weekday, Calendar.SUNDAY(1)..SATURDAY(7) at index 1..7, all time */
+        public final long[] byWeekday = new long[8];
+        /** Play time per 3-hour slot of the day (0 = 00-03h ... 7 = 21-24h), all time */
+        public final long[] byDaySlot = new long[8];
         /** Sorted by total time, descending */
         public final List<ProfileStats> profiles = new ArrayList<>();
         /** Newest first */
@@ -285,7 +303,12 @@ public final class PlayTimeTracker {
             }
         }
         long dayStart = startOfDay(now);
-        long weekStart = dayStart - 6L * 24 * 3600 * 1000;
+        long weekStart = dayStart - 6L * DAY_MS;
+        long lastWeekStart = weekStart - 7L * DAY_MS;
+        long monthStart = startOfMonth(now);
+        for (int i = 0; i < 7; i++) summary.weekDayStart[i] = dayStart - (6 - i) * DAY_MS;
+        summary.shortestMs = Long.MAX_VALUE;
+        java.util.HashSet<Long> playedDays = new java.util.HashSet<>();
         for (ProfileStats p : profiles.values()) {
             summary.totalMs += p.totalMs;
             summary.sessionCount += p.sessions;
@@ -312,8 +335,59 @@ public final class PlayTimeTracker {
             // Portion of the session inside today / the last 7 days
             if (end > dayStart) summary.todayMs += end - Math.max(start, dayStart);
             if (end > weekStart) summary.weekMs += end - Math.max(start, weekStart);
-            if (s.duration() >= MIN_SESSION_MS || !s.closed) summary.recent.add(s);
+            if (end > lastWeekStart && start < weekStart) summary.lastWeekMs += Math.min(end, weekStart) - Math.max(start, lastWeekStart);
+            if (end > dayStart - DAY_MS && start < dayStart) summary.yesterdayMs += Math.min(end, dayStart) - Math.max(start, dayStart - DAY_MS);
+            if (end > monthStart) summary.monthMs += end - Math.max(start, monthStart);
+            long duration = s.duration();
+            if (s.closed && duration >= MIN_SESSION_MS) summary.shortestMs = Math.min(summary.shortestMs, duration);
+            // Split the session over the calendar days / weekdays / day slots it touches
+            long cursor = start;
+            while (cursor < end) {
+                long cursorDay = startOfDay(cursor);
+                long next = Math.min(end, cursorDay + DAY_MS);
+                long part = next - cursor;
+                playedDays.add(cursorDay);
+                for (int d = 0; d < 7; d++) {
+                    if (summary.weekDayStart[d] == cursorDay) {
+                        summary.week[d] += part;
+                        if (cursor == start) summary.weekSessions[d]++;
+                        break;
+                    }
+                }
+                Calendar c = Calendar.getInstance();
+                c.setTimeInMillis(cursor);
+                summary.byWeekday[c.get(Calendar.DAY_OF_WEEK)] += part;
+                // 3-hour slots inside this day part
+                long slotCursor = cursor;
+                while (slotCursor < next) {
+                    c.setTimeInMillis(slotCursor);
+                    int hour = c.get(Calendar.HOUR_OF_DAY);
+                    int slot = hour / 3;
+                    long slotEnd = cursorDay + (slot + 1) * 3L * 3600_000L;
+                    long slotNext = Math.min(next, slotEnd);
+                    summary.byDaySlot[slot] += slotNext - slotCursor;
+                    slotCursor = slotNext;
+                }
+                cursor = next;
+            }
+            if (duration >= MIN_SESSION_MS || !s.closed) summary.recent.add(s);
         }
+        if (summary.shortestMs == Long.MAX_VALUE) summary.shortestMs = 0;
+        summary.daysPlayed = playedDays.size();
+        // Streaks over the set of played days
+        int streak = 0;
+        long cursorDay = playedDays.contains(dayStart) ? dayStart : dayStart - DAY_MS;
+        while (playedDays.contains(cursorDay)) { streak++; cursorDay -= DAY_MS; }
+        summary.streakDays = streak;
+        int best = 0;
+        for (Long day : playedDays) {
+            if (playedDays.contains(day - DAY_MS)) continue; // not a run start
+            int run = 0;
+            long d = day;
+            while (playedDays.contains(d)) { run++; d += DAY_MS; }
+            best = Math.max(best, run);
+        }
+        summary.bestStreakDays = best;
         return summary;
     }
 
@@ -332,7 +406,16 @@ public final class PlayTimeTracker {
         return c;
     }
 
-    private static long startOfDay(long now) {
+    private static final long DAY_MS = 24L * 3600 * 1000;
+
+    private static long startOfMonth(long now) {
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(startOfDay(now));
+        c.set(Calendar.DAY_OF_MONTH, 1);
+        return c.getTimeInMillis();
+    }
+
+    public static long startOfDay(long now) {
         Calendar c = Calendar.getInstance();
         c.setTimeInMillis(now);
         c.set(Calendar.HOUR_OF_DAY, 0);

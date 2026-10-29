@@ -1651,4 +1651,31 @@
     <string name="pt_never">Never</string>
     <string name="pt_show_more">Show more</string>
     <string name="lib_recommended_badge">RECOMMENDED · Highly required</string>
+    <string name="pt_stat_yesterday">Yesterday</string>
+    <string name="pt_stat_lastweek">Last week</string>
+    <string name="pt_stat_month">This month</string>
+    <string name="pt_stat_shortest">Shortest</string>
+    <string name="pt_stat_beststreak">Best streak</string>
+    <string name="pt_stat_topday">Top day</string>
+    <string name="pt_stat_favtime">Favourite time</string>
+    <string name="pt_stat_topprofile">Top profile</string>
+    <plurals name="pt_streak_chip"><item quantity="one">🔥 %d day streak</item><item quantity="other">🔥 %d day streak</item></plurals>
+    <plurals name="pt_days_played_chip"><item quantity="one">%d day played</item><item quantity="other">%d days played</item></plurals>
+    <plurals name="pt_days_short"><item quantity="one">%d day</item><item quantity="other">%d days</item></plurals>
+    <string name="pt_since_chip">since %1$s</string>
+    <string name="pt_delta_up">▲ %1$s vs yesterday</string>
+    <string name="pt_delta_down">▼ %1$s vs yesterday</string>
+    <string name="pt_delta_same">same as yesterday</string>
+    <string name="pt_day_today">Today</string>
+    <string name="pt_day_yesterday">Yesterday</string>
+    <string name="pt_day_caption">%1$s · %2$s</string>
+    <string name="pt_day_value">%1$s · %2$s</string>
+    <string name="pt_day_nothing">No play on this day</string>
+    <string name="pt_slot_night">Night</string>
+    <string name="pt_slot_early">Early morning</string>
+    <string name="pt_slot_morning">Morning</string>
+    <string name="pt_slot_noon">Midday</string>
+    <string name="pt_slot_afternoon">Afternoon</string>
+    <string name="pt_slot_evening">Evening</string>
+    <string name="pt_slot_late">Late night</string>
 </resources>

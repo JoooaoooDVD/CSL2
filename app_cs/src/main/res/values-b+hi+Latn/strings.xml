@@ -1463,4 +1463,31 @@ time set day</string>
     <string name="pt_never">Kabhi nahi</string>
     <string name="pt_show_more">Aur dikhao</string>
     <string name="lib_recommended_badge">RECOMMENDED · Zaroori hai</string>
+    <string name="pt_stat_yesterday">Kal</string>
+    <string name="pt_stat_lastweek">Pichla hafta</string>
+    <string name="pt_stat_month">Is mahine</string>
+    <string name="pt_stat_shortest">Sabse chhota</string>
+    <string name="pt_stat_beststreak">Best streak</string>
+    <string name="pt_stat_topday">Top din</string>
+    <string name="pt_stat_favtime">Favourite time</string>
+    <string name="pt_stat_topprofile">Top profile</string>
+    <plurals name="pt_streak_chip"><item quantity="one">🔥 %d din streak</item><item quantity="other">🔥 %d din streak</item></plurals>
+    <plurals name="pt_days_played_chip"><item quantity="one">%d din khela</item><item quantity="other">%d din khele</item></plurals>
+    <plurals name="pt_days_short"><item quantity="one">%d din</item><item quantity="other">%d din</item></plurals>
+    <string name="pt_since_chip">%1$s se</string>
+    <string name="pt_delta_up">▲ kal se %1$s zyada</string>
+    <string name="pt_delta_down">▼ kal se %1$s kam</string>
+    <string name="pt_delta_same">kal jitna hi</string>
+    <string name="pt_day_today">Aaj</string>
+    <string name="pt_day_yesterday">Kal</string>
+    <string name="pt_day_caption">%1$s · %2$s</string>
+    <string name="pt_day_value">%1$s · %2$s</string>
+    <string name="pt_day_nothing">Is din kuch nahi khela</string>
+    <string name="pt_slot_night">Raat</string>
+    <string name="pt_slot_early">Subah jaldi</string>
+    <string name="pt_slot_morning">Subah</string>
+    <string name="pt_slot_noon">Dopahar</string>
+    <string name="pt_slot_afternoon">Dopahar baad</string>
+    <string name="pt_slot_evening">Shaam</string>
+    <string name="pt_slot_late">Der raat</string>
 </resources>

@@ -141,109 +141,283 @@
                     tools:text="Minecraft is running right now · Fabric 1.21.1 · 12m 4s" />
             </LinearLayout>
 
-            <!-- Hero: total time -->
+            <!-- Hero: total time + today -->
             <LinearLayout
                 android:id="@+id/pt_hero"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="@drawable/bg_pt_hero"
+                android:baselineAligned="false"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingTop="14dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="14dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:letterSpacing="0.2"
+                        android:text="@string/pt_total_label"
+                        android:textAllCaps="true"
+                        android:textColor="@color/vl_text_faint"
+                        android:textSize="10sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/pt_total"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:fontFamily="@font/minecraft_ten"
+                        android:includeFontPadding="false"
+                        android:singleLine="true"
+                        android:textColor="@color/vl_text"
+                        android:textSize="30sp"
+                        tools:text="38h 12m" />
+
+                    <TextView
+                        android:id="@+id/pt_total_sub"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dp"
+                        android:textColor="@color/vl_text_dim"
+                        android:textSize="11.5sp"
+                        tools:text="38 hours 12 minutes · 54 sessions" />
+
+                    <LinearLayout
+                        android:id="@+id/pt_chips"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/pt_chip_streak"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_pt_chip"
+                            android:paddingHorizontal="9dp"
+                            android:paddingVertical="4dp"
+                            android:textColor="@color/vl_text"
+                            android:textSize="10.5sp"
+                            android:textStyle="bold"
+                            tools:text="🔥 4 day streak" />
+
+                        <TextView
+                            android:id="@+id/pt_chip_days"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:background="@drawable/bg_pt_chip"
+                            android:paddingHorizontal="9dp"
+                            android:paddingVertical="4dp"
+                            android:textColor="@color/vl_text"
+                            android:textSize="10.5sp"
+                            android:textStyle="bold"
+                            tools:text="12 days played" />
+
+                        <TextView
+                            android:id="@+id/pt_chip_since"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:background="@drawable/bg_pt_chip"
+                            android:paddingHorizontal="9dp"
+                            android:paddingVertical="4dp"
+                            android:textColor="@color/vl_text_dim"
+                            android:textSize="10.5sp"
+                            tools:text="since 12 Sep" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Today tile -->
+                <LinearLayout
+                    android:id="@+id/pt_today_tile"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginStart="12dp"
+                    android:background="@drawable/bg_pt_today_tile"
+                    android:gravity="center"
+                    android:minWidth="104dp"
+                    android:orientation="vertical"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:letterSpacing="0.2"
+                        android:text="@string/pt_stat_today"
+                        android:textAllCaps="true"
+                        android:textColor="#FF55596A"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/pt_today_value"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:fontFamily="@font/minecraft_ten"
+                        android:includeFontPadding="false"
+                        android:singleLine="true"
+                        android:textColor="#FF0E0E11"
+                        android:textSize="20sp"
+                        tools:text="1h 12m" />
+
+                    <TextView
+                        android:id="@+id/pt_today_delta"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:singleLine="true"
+                        android:textColor="#FF55596A"
+                        android:textSize="10sp"
+                        tools:text="▲ 20m vs yesterday" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- This week chart -->
+            <LinearLayout
+                android:id="@+id/pt_week_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
                 android:background="@drawable/bg_vl_card"
                 android:orientation="vertical"
                 android:paddingHorizontal="14dp"
-                android:paddingVertical="12dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:letterSpacing="0.18"
-                    android:text="@string/pt_total_label"
-                    android:textAllCaps="true"
-                    android:textColor="@color/vl_text_faint"
-                    android:textSize="10sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/pt_total"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:fontFamily="@font/minecraft_ten"
-                    android:includeFontPadding="false"
-                    android:singleLine="true"
-                    android:textColor="@color/vl_text"
-                    android:textSize="26sp"
-                    tools:text="38h 12m" />
-
-                <TextView
-                    android:id="@+id/pt_total_sub"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:textColor="@color/vl_text_dim"
-                    android:textSize="11.5sp"
-                    tools:text="38 hours 12 minutes · 54 sessions" />
+                android:paddingTop="12dp"
+                android:paddingBottom="10dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:gravity="center_vertical"
                     android:orientation="horizontal">
 
-                    <include
-                        android:id="@+id/pt_stat_today"
-                        layout="@layout/view_play_time_stat" />
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:letterSpacing="0.18"
+                        android:text="@string/pt_stat_week"
+                        android:textAllCaps="true"
+                        android:textColor="@color/vl_text_faint"
+                        android:textSize="10sp"
+                        android:textStyle="bold" />
 
-                    <Space
-                        android:layout_width="6dp"
-                        android:layout_height="1dp" />
-
-                    <include
-                        android:id="@+id/pt_stat_week"
-                        layout="@layout/view_play_time_stat" />
-
-                    <Space
-                        android:layout_width="6dp"
-                        android:layout_height="1dp" />
-
-                    <include
-                        android:id="@+id/pt_stat_sessions"
-                        layout="@layout/view_play_time_stat" />
+                    <TextView
+                        android:id="@+id/pt_week_total"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif-medium"
+                        android:textColor="@color/vl_text"
+                        android:textSize="13sp"
+                        tools:text="6h 40m" />
                 </LinearLayout>
+
+                <com.craftstudio.cslauncher.stats.WeekChartView
+                    android:id="@+id/pt_week_chart"
+                    android:layout_width="match_parent"
+                    android:layout_height="132dp"
+                    android:layout_marginTop="6dp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
+                    android:background="@drawable/bg_vl_tile"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="7dp">
+
+                    <TextView
+                        android:id="@+id/pt_week_day_name"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:singleLine="true"
+                        android:textColor="@color/vl_text"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        tools:text="Today · Wed 29 Oct" />
+
+                    <TextView
+                        android:id="@+id/pt_week_day_value"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:singleLine="true"
+                        android:textColor="@color/vl_text_dim"
+                        android:textSize="11.5sp"
+                        tools:text="1h 12m · 3 sessions" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Stat grid -->
+            <LinearLayout
+                android:id="@+id/pt_stats_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:id="@+id/pt_stats_row1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     android:orientation="horizontal">
 
-                    <include
-                        android:id="@+id/pt_stat_average"
-                        layout="@layout/view_play_time_stat" />
-
-                    <Space
-                        android:layout_width="6dp"
-                        android:layout_height="1dp" />
-
-                    <include
-                        android:id="@+id/pt_stat_longest"
-                        layout="@layout/view_play_time_stat" />
-
-                    <Space
-                        android:layout_width="6dp"
-                        android:layout_height="1dp" />
-
-                    <include
-                        android:id="@+id/pt_stat_last"
-                        layout="@layout/view_play_time_stat" />
+                    <include android:id="@+id/pt_stat_sessions" layout="@layout/view_play_time_stat" />
+                    <Space android:layout_width="6dp" android:layout_height="1dp" />
+                    <include android:id="@+id/pt_stat_average" layout="@layout/view_play_time_stat" />
+                    <Space android:layout_width="6dp" android:layout_height="1dp" />
+                    <include android:id="@+id/pt_stat_longest" layout="@layout/view_play_time_stat" />
+                    <Space android:layout_width="6dp" android:layout_height="1dp" />
+                    <include android:id="@+id/pt_stat_shortest" layout="@layout/view_play_time_stat" />
                 </LinearLayout>
 
-                <TextView
-                    android:id="@+id/pt_since"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:id="@+id/pt_stats_row2"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:textColor="@color/vl_text_faint"
-                    android:textSize="10.5sp"
-                    tools:text="Playing since 12 Sep 2026" />
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+
+                    <include android:id="@+id/pt_stat_yesterday" layout="@layout/view_play_time_stat" />
+                    <Space android:layout_width="6dp" android:layout_height="1dp" />
+                    <include android:id="@+id/pt_stat_lastweek" layout="@layout/view_play_time_stat" />
+                    <Space android:layout_width="6dp" android:layout_height="1dp" />
+                    <include android:id="@+id/pt_stat_month" layout="@layout/view_play_time_stat" />
+                    <Space android:layout_width="6dp" android:layout_height="1dp" />
+                    <include android:id="@+id/pt_stat_beststreak" layout="@layout/view_play_time_stat" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/pt_stats_row3"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+
+                    <include android:id="@+id/pt_stat_topday" layout="@layout/view_play_time_stat" />
+                    <Space android:layout_width="6dp" android:layout_height="1dp" />
+                    <include android:id="@+id/pt_stat_favtime" layout="@layout/view_play_time_stat" />
+                    <Space android:layout_width="6dp" android:layout_height="1dp" />
+                    <include android:id="@+id/pt_stat_last" layout="@layout/view_play_time_stat" />
+                    <Space android:layout_width="6dp" android:layout_height="1dp" />
+                    <include android:id="@+id/pt_stat_topprofile" layout="@layout/view_play_time_stat" />
+                </LinearLayout>
             </LinearLayout>
 
             <!-- Empty state -->
@@ -343,9 +517,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:orientation="vertical"
-                    android:showDividers="middle"
-                    android:divider="@drawable/pt_divider" />
+                    android:orientation="vertical" />
 
                 <TextView
                     android:id="@+id/pt_show_more"

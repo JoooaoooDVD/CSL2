@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hero card of the Play Time screen: dark card with a soft teal light from the top-left -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient android:angle="315" android:startColor="#FF1A1D25" android:centerColor="#FF1B2A2E" android:endColor="#FF17171B" />
+            <corners android:radius="16dp" />
+            <stroke android:width="1dp" android:color="#FF2E3A3E" />
+        </shape>
+    </item>
+    <item android:bottom="40dp" android:right="120dp">
+        <shape android:shape="oval">
+            <gradient android:type="radial" android:gradientRadius="160dp" android:centerX="0.2" android:centerY="0.1" android:startColor="#335FD3B8" android:endColor="#005FD3B8" />
+        </shape>
+    </item>
+</layer-list>

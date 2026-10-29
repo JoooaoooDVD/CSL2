@@ -45,8 +45,13 @@ public class PlayTimeFragment extends Fragment {
 
     private static final int SESSIONS_PAGE = 12;
 
-    private TextView mTotal, mTotalSub, mSince, mLiveText, mShowMore;
-    private View mLive, mEmpty, mHero, mProfilesCard, mSessionsCard;
+    private TextView mTotal, mTotalSub, mLiveText, mShowMore;
+    private TextView mChipStreak, mChipDays, mChipSince, mTodayValue, mTodayDelta;
+    private TextView mWeekTotal, mWeekDayName, mWeekDayValue;
+    private com.craftstudio.cslauncher.stats.WeekChartView mWeekChart;
+    private View mLive, mEmpty, mHero, mWeekCard, mStatsCard, mProfilesCard, mSessionsCard, mTodayTile;
+    @Nullable private PlayTimeTracker.Summary mLastSummary;
+    private long mShownTotal = -1;
     private LinearLayout mProfiles, mSessions;
     private final Map<Integer, TextView> mStatValues = new HashMap<>();
     private final Handler mHandler = new Handler(Looper.getMainLooper());
@@ -63,7 +68,21 @@ public class PlayTimeFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         mTotal = view.findViewById(R.id.pt_total);
         mTotalSub = view.findViewById(R.id.pt_total_sub);
-        mSince = view.findViewById(R.id.pt_since);
+        mChipStreak = view.findViewById(R.id.pt_chip_streak);
+        mChipDays = view.findViewById(R.id.pt_chip_days);
+        mChipSince = view.findViewById(R.id.pt_chip_since);
+        mTodayTile = view.findViewById(R.id.pt_today_tile);
+        mTodayValue = view.findViewById(R.id.pt_today_value);
+        mTodayDelta = view.findViewById(R.id.pt_today_delta);
+        mWeekCard = view.findViewById(R.id.pt_week_card);
+        mWeekTotal = view.findViewById(R.id.pt_week_total);
+        mWeekChart = view.findViewById(R.id.pt_week_chart);
+        mWeekDayName = view.findViewById(R.id.pt_week_day_name);
+        mWeekDayValue = view.findViewById(R.id.pt_week_day_value);
+        mStatsCard = view.findViewById(R.id.pt_stats_card);
+        mWeekChart.setOnDaySelectedListener(index -> {
+            if (mLastSummary != null) bindSelectedDay(mLastSummary, index, true);
+        });
         mLive = view.findViewById(R.id.pt_live);
         mLiveText = view.findViewById(R.id.pt_live_text);
         mEmpty = view.findViewById(R.id.pt_empty);
@@ -74,12 +93,18 @@ public class PlayTimeFragment extends Fragment {
         mSessions = view.findViewById(R.id.pt_sessions);
         mShowMore = view.findViewById(R.id.pt_show_more);
 
-        bindStat(view, R.id.pt_stat_today, R.string.pt_stat_today);
-        bindStat(view, R.id.pt_stat_week, R.string.pt_stat_week);
         bindStat(view, R.id.pt_stat_sessions, R.string.pt_stat_sessions);
         bindStat(view, R.id.pt_stat_average, R.string.pt_stat_average);
         bindStat(view, R.id.pt_stat_longest, R.string.pt_stat_longest);
+        bindStat(view, R.id.pt_stat_shortest, R.string.pt_stat_shortest);
+        bindStat(view, R.id.pt_stat_yesterday, R.string.pt_stat_yesterday);
+        bindStat(view, R.id.pt_stat_lastweek, R.string.pt_stat_lastweek);
+        bindStat(view, R.id.pt_stat_month, R.string.pt_stat_month);
+        bindStat(view, R.id.pt_stat_beststreak, R.string.pt_stat_beststreak);
+        bindStat(view, R.id.pt_stat_topday, R.string.pt_stat_topday);
+        bindStat(view, R.id.pt_stat_favtime, R.string.pt_stat_favtime);
         bindStat(view, R.id.pt_stat_last, R.string.pt_stat_last);
+        bindStat(view, R.id.pt_stat_topprofile, R.string.pt_stat_topprofile);
 
         View refresh = view.findViewById(R.id.pt_refresh_button);
         refresh.setOnClickListener(v -> {
@@ -93,7 +118,10 @@ public class PlayTimeFragment extends Fragment {
         CSAnimationEngine.attachPressFeedback(mShowMore);
 
         Motion.riseIn(view.findViewById(R.id.pt_banner), 0L, 8f);
-        Motion.riseIn(mHero, 60L, 12f);
+        Motion.riseIn(mHero, 60L, 14f);
+        Motion.popIn(mTodayTile, 260L, 0.8f);
+        Motion.riseIn(mWeekCard, 140L, 14f);
+        Motion.riseIn(mStatsCard, 220L, 14f);
     }
 
     private void bindStat(View root, int includeId, int labelRes) {
@@ -120,8 +148,12 @@ public class PlayTimeFragment extends Fragment {
         super.onDestroyView();
         mHandler.removeCallbacks(mTick);
         mStatValues.clear();
-        mTotal = mTotalSub = mSince = mLiveText = mShowMore = null;
-        mLive = mEmpty = mHero = mProfilesCard = mSessionsCard = null;
+        mTotal = mTotalSub = mLiveText = mShowMore = null;
+        mChipStreak = mChipDays = mChipSince = mTodayValue = mTodayDelta = null;
+        mWeekTotal = mWeekDayName = mWeekDayValue = null;
+        mWeekChart = null;
+        mLastSummary = null;
+        mLive = mEmpty = mHero = mWeekCard = mStatsCard = mProfilesCard = mSessionsCard = mTodayTile = null;
         mProfiles = mSessions = null;
     }
 
@@ -176,35 +208,75 @@ public class PlayTimeFragment extends Fragment {
             mLive.setVisibility(View.GONE);
         }
 
-        // Hero numbers (the live session is already folded into the totals by the tracker)
+        mLastSummary = summary;
         long total = summary.totalMs;
-        String totalShort = PlayTimeTracker.formatDuration(total);
-        if (!totalShort.contentEquals(mTotal.getText())) {
-            if (animateNumbers && !mFirstRender) Motion.swapText(mTotal, totalShort);
+
+        // Hero: total counts up on first show, morphs afterwards
+        if (mShownTotal < 0 && total > 0 && Motion.content(mTotal)) {
+            Motion.countUp(mTotal, total, 150L, PlayTimeTracker::formatDuration);
+        } else if (mShownTotal != total) {
+            String totalShort = PlayTimeTracker.formatDuration(total);
+            if (animateNumbers && mShownTotal >= 0) Motion.swapText(mTotal, totalShort);
             else mTotal.setText(totalShort);
         }
+        mShownTotal = total;
         String sessions = getResources().getQuantityString(R.plurals.pt_sessions_count, summary.sessionCount, summary.sessionCount);
         mTotalSub.setText(total > 0 ? PlayTimeTracker.formatDurationLong(context, total) + " · " + sessions : sessions);
 
-        setStat(R.id.pt_stat_today, PlayTimeTracker.formatDuration(summary.todayMs));
-        setStat(R.id.pt_stat_week, PlayTimeTracker.formatDuration(summary.weekMs));
+        // Chips
+        setChip(mChipStreak, summary.streakDays > 0
+                ? getResources().getQuantityString(R.plurals.pt_streak_chip, summary.streakDays, summary.streakDays) : null);
+        setChip(mChipDays, summary.daysPlayed > 0
+                ? getResources().getQuantityString(R.plurals.pt_days_played_chip, summary.daysPlayed, summary.daysPlayed) : null);
+        setChip(mChipSince, summary.firstPlayed > 0
+                ? getString(R.string.pt_since_chip, formatDate(context, summary.firstPlayed, false)) : null);
+
+        // Today tile
+        String today = PlayTimeTracker.formatDuration(summary.todayMs);
+        if (!today.contentEquals(mTodayValue.getText())) {
+            if (animateNumbers && mTodayValue.length() > 0) Motion.swapText(mTodayValue, today);
+            else mTodayValue.setText(today);
+        }
+        long delta = summary.todayMs - summary.yesterdayMs;
+        if (Math.abs(delta) < 60_000L) mTodayDelta.setText(R.string.pt_delta_same);
+        else if (delta > 0) mTodayDelta.setText(getString(R.string.pt_delta_up, PlayTimeTracker.formatDuration(delta)));
+        else mTodayDelta.setText(getString(R.string.pt_delta_down, PlayTimeTracker.formatDuration(-delta)));
+
+        // Week chart
+        mWeekTotal.setText(PlayTimeTracker.formatDuration(summary.weekMs));
+        String[] labels = new String[7];
+        for (int i = 0; i < 7; i++) labels[i] = DateFormat.format("EEE", new Date(summary.weekDayStart[i])).toString();
+        mWeekChart.setData(summary.week, labels, true);
+        mWeekChart.setLiveToday(live != null);
+        bindSelectedDay(summary, mWeekChart.getSelected(), false);
+
+        // Stat tiles
         setStat(R.id.pt_stat_sessions, String.valueOf(summary.sessionCount));
         setStat(R.id.pt_stat_average, PlayTimeTracker.formatDuration(summary.averageMs));
         setStat(R.id.pt_stat_longest, PlayTimeTracker.formatDuration(Math.max(summary.longestMs, liveMs)));
+        setStat(R.id.pt_stat_shortest, PlayTimeTracker.formatDuration(summary.shortestMs));
+        setStat(R.id.pt_stat_yesterday, PlayTimeTracker.formatDuration(summary.yesterdayMs));
+        setStat(R.id.pt_stat_lastweek, PlayTimeTracker.formatDuration(summary.lastWeekMs));
+        setStat(R.id.pt_stat_month, PlayTimeTracker.formatDuration(summary.monthMs));
+        setStat(R.id.pt_stat_beststreak, summary.bestStreakDays > 0
+                ? getResources().getQuantityString(R.plurals.pt_days_short, summary.bestStreakDays, summary.bestStreakDays) : "–");
+        setStat(R.id.pt_stat_topday, topWeekday(summary));
+        setStat(R.id.pt_stat_favtime, favouriteSlot(summary));
         setStat(R.id.pt_stat_last, live != null ? getString(R.string.pt_home_playing_now)
                 : summary.lastPlayed > 0 ? PlayTimeTracker.formatAgo(context, summary.lastPlayed) : getString(R.string.pt_never));
-        if (summary.firstPlayed > 0) {
-            mSince.setVisibility(View.VISIBLE);
-            mSince.setText(getString(R.string.pt_stat_since) + " " + formatDate(context, summary.firstPlayed, false));
-        } else {
-            mSince.setVisibility(View.GONE);
-        }
+        setStat(R.id.pt_stat_topprofile, summary.profiles.isEmpty() ? "–"
+                : nameOf(summary.profiles.get(0).profileKey, summary.profiles.get(0).profileName, instances));
 
         mEmpty.setVisibility(empty ? View.VISIBLE : View.GONE);
         mProfilesCard.setVisibility(empty ? View.GONE : View.VISIBLE);
         mSessionsCard.setVisibility(empty ? View.GONE : View.VISIBLE);
+        if (mFirstRender) {
+            Motion.popChildren((ViewGroup) requireView().findViewById(R.id.pt_stats_row1), 260L, 40L, 0.85f);
+            Motion.popChildren((ViewGroup) requireView().findViewById(R.id.pt_stats_row2), 380L, 40L, 0.85f);
+            Motion.popChildren((ViewGroup) requireView().findViewById(R.id.pt_stats_row3), 500L, 40L, 0.85f);
+        }
         if (empty) {
-            if (mFirstRender) Motion.riseIn(mEmpty, 120L, 12f);
+            if (mFirstRender) Motion.riseIn(mEmpty, 200L, 12f);
             mFirstRender = false;
             return;
         }
@@ -213,11 +285,81 @@ public class PlayTimeFragment extends Fragment {
         renderSessions(summary, instances, now);
 
         if (mFirstRender) {
-            Motion.riseIn(mProfilesCard, 120L, 12f);
-            Motion.riseIn(mSessionsCard, 180L, 12f);
-            Motion.cascadeChildren(mProfiles, 200L, 40L, 8f);
+            Motion.riseIn(mProfilesCard, 320L, 14f);
+            Motion.riseIn(mSessionsCard, 400L, 14f);
+            Motion.cascadeChildren(mProfiles, 420L, 50L, 10f);
+            Motion.cascadeChildren(mSessions, 520L, 30L, 6f);
         }
         mFirstRender = false;
+    }
+
+    private void setChip(@Nullable TextView chip, @Nullable String text) {
+        if (chip == null) return;
+        if (text == null) {
+            chip.setVisibility(View.GONE);
+            return;
+        }
+        boolean appear = chip.getVisibility() != View.VISIBLE;
+        chip.setVisibility(View.VISIBLE);
+        if (!text.contentEquals(chip.getText())) chip.setText(text);
+        if (appear && mFirstRender) Motion.popIn(chip, 350L, 0.7f);
+    }
+
+    /** Caption under the chart: "Today · Wed 29 Oct" + "1h 12m · 3 sessions" */
+    private void bindSelectedDay(@NonNull PlayTimeTracker.Summary summary, int index, boolean animate) {
+        if (mWeekDayName == null || index < 0 || index > 6) return;
+        Context context = requireContext();
+        long dayStart = summary.weekDayStart[index];
+        String date = DateFormat.format("EEE d MMM", new Date(dayStart)).toString();
+        String name = index == 6 ? getString(R.string.pt_day_caption, getString(R.string.pt_day_today), date)
+                : index == 5 ? getString(R.string.pt_day_caption, getString(R.string.pt_day_yesterday), date) : date;
+        long ms = summary.week[index];
+        int count = summary.weekSessions[index];
+        String value = ms <= 0 ? getString(R.string.pt_day_nothing)
+                : getString(R.string.pt_day_value, PlayTimeTracker.formatDuration(ms),
+                getResources().getQuantityString(R.plurals.pt_sessions_count, count, count));
+        if (animate) {
+            Motion.swapText(mWeekDayName, name);
+            Motion.swapText(mWeekDayValue, value);
+        } else {
+            if (!name.contentEquals(mWeekDayName.getText())) mWeekDayName.setText(name);
+            if (!value.contentEquals(mWeekDayValue.getText())) mWeekDayValue.setText(value);
+        }
+    }
+
+    /** Weekday with the most play time, all time: "Sunday" */
+    @NonNull
+    private String topWeekday(@NonNull PlayTimeTracker.Summary summary) {
+        int best = -1;
+        long bestMs = 0;
+        for (int d = 1; d <= 7; d++) {
+            if (summary.byWeekday[d] > bestMs) { bestMs = summary.byWeekday[d]; best = d; }
+        }
+        if (best < 0) return "–";
+        java.util.Calendar c = java.util.Calendar.getInstance();
+        c.set(java.util.Calendar.DAY_OF_WEEK, best);
+        return DateFormat.format("EEEE", c).toString();
+    }
+
+    /** Time of day the player is usually on: "Evening" */
+    @NonNull
+    private String favouriteSlot(@NonNull PlayTimeTracker.Summary summary) {
+        int best = -1;
+        long bestMs = 0;
+        for (int i = 0; i < 8; i++) {
+            if (summary.byDaySlot[i] > bestMs) { bestMs = summary.byDaySlot[i]; best = i; }
+        }
+        switch (best) {
+            case 0: return getString(R.string.pt_slot_night);
+            case 1: return getString(R.string.pt_slot_early);
+            case 2: return getString(R.string.pt_slot_morning);
+            case 3: return getString(R.string.pt_slot_noon);
+            case 4: return getString(R.string.pt_slot_afternoon);
+            case 5: return getString(R.string.pt_slot_evening);
+            case 6: return getString(R.string.pt_slot_evening);
+            case 7: return getString(R.string.pt_slot_late);
+            default: return "–";
+        }
     }
 
     private void setStat(int id, @NonNull String value) {
@@ -304,30 +446,54 @@ public class PlayTimeFragment extends Fragment {
         LayoutInflater inflater = LayoutInflater.from(requireContext());
         List<PlayTimeTracker.Session> list = summary.recent;
         int count = Math.min(list.size(), mSessionLimit);
-        while (mSessions.getChildCount() > count) mSessions.removeViewAt(mSessions.getChildCount() - 1);
         Context context = requireContext();
+        long todayStart = PlayTimeTracker.startOfDay(now);
+        // Rows are rebuilt as a flat list of [header | session] views; headers are reused by position too
+        int viewIndex = 0;
+        long lastDay = Long.MIN_VALUE;
         for (int i = 0; i < count; i++) {
             PlayTimeTracker.Session s = list.get(i);
-            View row;
-            if (i < mSessions.getChildCount()) {
-                row = mSessions.getChildAt(i);
-            } else {
-                row = inflater.inflate(R.layout.item_play_time_session, mSessions, false);
-                mSessions.addView(row);
+            long day = PlayTimeTracker.startOfDay(s.start);
+            if (day != lastDay) {
+                lastDay = day;
+                TextView header = (TextView) childOfType(mSessions, viewIndex, R.layout.view_play_time_day_header, inflater, true);
+                String label = day == todayStart ? getString(R.string.pt_day_today)
+                        : day == todayStart - 24L * 3600 * 1000 ? getString(R.string.pt_day_yesterday)
+                        : DateFormat.format("EEE d MMM", new Date(day)).toString();
+                if (!label.contentEquals(header.getText())) header.setText(label);
+                viewIndex++;
             }
+            View row = childOfType(mSessions, viewIndex, R.layout.item_play_time_session, inflater, false);
+            viewIndex++;
             boolean live = s.isLive(now) && !s.closed;
             ((TextView) row.findViewById(R.id.pt_session_name)).setText(nameOf(s.profileKey, s.profileName, instances));
             String version = InstanceVersionResolver.shortVersion(s.versionId);
             ((TextView) row.findViewById(R.id.pt_session_line)).setText(getString(R.string.pt_session_line,
-                    formatDate(context, s.start, true), version == null || version.isEmpty() ? "–" : version));
+                    DateFormat.getTimeFormat(context).format(new Date(s.start)), version == null || version.isEmpty() ? "–" : version));
             TextView duration = row.findViewById(R.id.pt_session_duration);
             duration.setText(live ? PlayTimeTracker.formatDuration(now - s.start) + " · " + getString(R.string.pt_session_live)
                     : PlayTimeTracker.formatDuration(s.duration()));
             View dot = row.findViewById(R.id.pt_session_dot);
             dot.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
                     androidx.core.content.ContextCompat.getColor(context, live ? R.color.vl_ok : R.color.vl_text_faint)));
+            if (live) Motion.pulse(dot);
         }
+        while (mSessions.getChildCount() > viewIndex) mSessions.removeViewAt(mSessions.getChildCount() - 1);
         mShowMore.setVisibility(list.size() > count ? View.VISIBLE : View.GONE);
+    }
+
+    /** Child at {@code index} if it was inflated from {@code layout}, otherwise a fresh one replaces it */
+    @NonNull
+    private static View childOfType(@NonNull LinearLayout parent, int index, int layout, @NonNull LayoutInflater inflater, boolean header) {
+        if (index < parent.getChildCount()) {
+            View existing = parent.getChildAt(index);
+            if (existing.getTag(R.id.pt_row_type) != null && (Integer) existing.getTag(R.id.pt_row_type) == layout) return existing;
+            parent.removeViewAt(index);
+        }
+        View view = inflater.inflate(layout, parent, false);
+        view.setTag(R.id.pt_row_type, layout);
+        parent.addView(view, index);
+        return view;
     }
 
     /** Current profile name if the profile still exists, otherwise the one recorded with the session */
