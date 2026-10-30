@@ -130,7 +130,7 @@ public class PartnerFragment extends Fragment {
         if (parent instanceof MainMenuFragment) {
             ((MainMenuFragment) parent).popRightPane();
         } else if (getActivity() != null) {
-            Tools.backToMainMenu(requireActivity());
+            requireActivity().getOnBackPressedDispatcher().onBackPressed();
         }
     }
 }

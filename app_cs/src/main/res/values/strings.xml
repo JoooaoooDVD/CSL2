@@ -1710,4 +1710,10 @@
     <string name="partner_optl_benefit_community_detail">Tier tests, events and the competitive Pojav PvP scene in one place.</string>
     <string name="partner_optl_join">JOIN OFFICIAL OPTL DISCORD</string>
     <string name="partner_optl_join_note">Join through this partnership announcement to claim exclusive collaboration perks and recognition.</string>
+    <string name="partner_popup_later">Not now</string>
+    <plurals name="partner_popup_more">
+        <item quantity="one">+ %d more exclusive benefit for CS Launcher users</item>
+        <item quantity="other">+ %d more exclusive benefits for CS Launcher users</item>
+    </plurals>
+    <string name="st_partner_desc">Official partnership, exclusive benefits and the OPTL Discord</string>
 </resources>

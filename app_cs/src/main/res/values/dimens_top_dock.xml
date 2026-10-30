@@ -3,5 +3,5 @@
 <resources>
     <dimen name="top_dock_item_width">38dp</dimen>
     <dimen name="top_dock_item_height">36dp</dimen>
-    <dimen name="top_account_min_width">140dp</dimen>
+    <dimen name="top_account_min_width">104dp</dimen>
 </resources>

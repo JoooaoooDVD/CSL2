@@ -1520,4 +1520,10 @@ time set day</string>
     <string name="partner_optl_benefit_community_detail">Tier tests, events aur competitive Pojav PvP scene – sab ek jagah.</string>
     <string name="partner_optl_join">OFFICIAL OPTL DISCORD JOIN KARO</string>
     <string name="partner_optl_join_note">Exclusive collaboration perks aur recognition claim karne ke liye isi partnership announcement se join karo.</string>
+    <string name="partner_popup_later">Abhi nahi</string>
+    <plurals name="partner_popup_more">
+        <item quantity="one">+ CS Launcher users ke liye %d aur exclusive benefit</item>
+        <item quantity="other">+ CS Launcher users ke liye %d aur exclusive benefits</item>
+    </plurals>
+    <string name="st_partner_desc">Official partnership, exclusive benefits aur OPTL Discord</string>
 </resources>

@@ -415,7 +415,12 @@ public class LauncherActivity extends BaseActivity {
         if (isFinishing() || isDestroyed()) return;
         if (!com.craftstudio.cslauncher.about.WelcomePolicy.isAccepted() || !StorageRoot.isSetupDone(this)) return;
         if (mStorageSetupDialog != null && mStorageSetupDialog.isShowing()) return;
-        com.kdt.mcgui.DiscordInviteDialog.showIfDue(this);
+        if (com.kdt.mcgui.DiscordInviteDialog.isDue(this)) {
+            com.kdt.mcgui.DiscordInviteDialog.showIfDue(this);
+        } else {
+            // No community popup this launch: the official partner announcement may take the slot
+            com.craftstudio.cslauncher.partners.PartnerPopupDialog.showIfDue(this);
+        }
     }
 
     private androidx.activity.result.ActivityResultLauncher<Uri> mFolderPickerLauncher;
