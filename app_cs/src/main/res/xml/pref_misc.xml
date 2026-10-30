@@ -87,31 +87,6 @@
             android:widgetLayout="@layout/view_chevron" />
     </PreferenceCategory>
 
-    <PreferenceCategory android:layout="@layout/item_settings_section" android:title="@string/preference_category_updates">
-        <Preference android:layout="@layout/item_setting_row"
-            android:key="checkUpdates"
-            android:icon="@drawable/ic_cs_update"
-            android:title="@string/preference_check_updates_title"
-            android:summary="@string/preference_check_updates_description"
-            android:widgetLayout="@layout/view_chevron" />
-        <SwitchPreferenceCompat android:layout="@layout/item_setting_row"
-            android:widgetLayout="@layout/preference_widget_material_switch"
-            android:defaultValue="true"
-            android:key="update_auto_check"
-            android:icon="@drawable/ic_px_zap"
-            android:title="@string/preference_update_auto_title"
-            android:summary="@string/preference_update_auto_description" />
-        <androidx.preference.ListPreference android:layout="@layout/item_setting_row"
-            android:defaultValue="latest"
-            android:key="update_channel"
-            android:icon="@drawable/ic_px_file_dl"
-            android:entries="@array/update_channel_names"
-            android:entryValues="@array/update_channel_values"
-            android:title="@string/preference_update_channel_title"
-            app2:useSimpleSummaryProvider="true"
-            android:widgetLayout="@layout/view_chevron" />
-    </PreferenceCategory>
-
     <PreferenceCategory android:layout="@layout/item_settings_section" android:title="@string/tut_pref_category">
         <Preference android:layout="@layout/item_setting_row"
             android:key="tutorialCenter"

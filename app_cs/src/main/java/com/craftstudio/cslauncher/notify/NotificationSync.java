@@ -190,7 +190,7 @@ public final class NotificationSync {
             new Thread(() -> NotifyApi.delivery("notification", fid, "clicked", NotifyStore.deviceHash(app), UpdateManager.currentCode())).start();
         }
         if ("update".equals(kind) && (url == null || url.isEmpty())) {
-            UpdateManager.manualCheck(activity);
+            // In-app update checking was removed: an update notice without a link does nothing
             return true;
         }
         if (url != null && !url.isEmpty()) {
