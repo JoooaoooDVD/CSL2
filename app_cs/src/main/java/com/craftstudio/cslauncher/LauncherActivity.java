@@ -241,6 +241,8 @@ public class LauncherActivity extends BaseActivity {
         mSettingsButton.setOnClickListener(mSettingButtonListener);
         View helpButton = findViewById(R.id.help_button);
         if (helpButton != null) helpButton.setOnClickListener(v -> com.craftstudio.cslauncher.tutorial.ContextualHelp.onHelpPressed(this));
+        View partnersButton = findViewById(R.id.partners_button);
+        if (partnersButton != null) partnersButton.setOnClickListener(v -> com.craftstudio.cslauncher.partners.PartnersFragment.open(this));
         ProgressKeeper.addTaskCountListener(mProgressLayout);
         ExtraCore.addExtraListener(ExtraConstants.BACK_PREFERENCE, mBackPreferenceListener);
         ExtraCore.addExtraListener(ExtraConstants.SELECT_AUTH_METHOD, mSelectAuthMethod);
@@ -415,12 +417,7 @@ public class LauncherActivity extends BaseActivity {
         if (isFinishing() || isDestroyed()) return;
         if (!com.craftstudio.cslauncher.about.WelcomePolicy.isAccepted() || !StorageRoot.isSetupDone(this)) return;
         if (mStorageSetupDialog != null && mStorageSetupDialog.isShowing()) return;
-        if (com.kdt.mcgui.DiscordInviteDialog.isDue(this)) {
-            com.kdt.mcgui.DiscordInviteDialog.showIfDue(this);
-        } else {
-            // No community popup this launch: the official partner announcement may take the slot
-            com.craftstudio.cslauncher.partners.PartnerPopupDialog.showIfDue(this);
-        }
+        com.kdt.mcgui.DiscordInviteDialog.showIfDue(this);
     }
 
     private androidx.activity.result.ActivityResultLauncher<Uri> mFolderPickerLauncher;

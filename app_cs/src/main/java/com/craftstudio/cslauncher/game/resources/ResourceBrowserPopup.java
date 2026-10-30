@@ -28,7 +28,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.craftstudio.cslauncher.R;
 import com.craftstudio.cslauncher.instances.Instance;
-import com.craftstudio.cslauncher.modding.modpacks.api.ModrinthApi;
+import com.craftstudio.cslauncher.modding.modpacks.api.CommonApi;
+import com.craftstudio.cslauncher.modding.modpacks.models.Constants;
 import com.craftstudio.cslauncher.modding.modpacks.imagecache.ModIconCache;
 import com.craftstudio.cslauncher.modding.modpacks.models.ContentType;
 import com.craftstudio.cslauncher.modding.modpacks.models.ModItem;
@@ -59,7 +60,10 @@ public final class ResourceBrowserPopup implements ResourceInstallManager.Listen
     @Nullable private final String mVersionId;
     private final Handler mMain = new Handler(Looper.getMainLooper());
     private final ExecutorService mSearchExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, "resource-search"));
-    private final ModrinthApi mApi = new ModrinthApi();
+    /** Modrinth + CurseForge (the launcher's key); CurseForge is skipped when the key is missing/disabled */
+    private final CommonApi mApi;
+    private final boolean mCurseforgeAvailable;
+    private int mEngine = Constants.ENGINE_MODRINTH;
     private final ModIconCache mIconCache = new ModIconCache();
     private final ResourceInstallManager mManager = ResourceInstallManager.get();
 
@@ -67,6 +71,7 @@ public final class ResourceBrowserPopup implements ResourceInstallManager.Listen
     private EditText mSearch;
     private View mSearchSpinner, mSearchClear;
     private TextView mTabPacks, mTabShaders;
+    private TextView mSrcModrinth, mSrcCurseforge;
     private RecyclerView mList;
     private View mStateRoot, mStateSpinner, mStateAction;
     private ImageView mStateIcon;
@@ -92,6 +97,15 @@ public final class ResourceBrowserPopup implements ResourceInstallManager.Listen
         mContainer = activity.findViewById(android.R.id.content);
         mInstance = instance;
         mVersionId = versionId;
+        String key = null;
+        try {
+            key = com.craftstudio.cslauncher.prefs.LauncherPreferences.PREF_DISABLE_CURSEFORGE_API
+                    ? null : com.craftstudio.cslauncher.prefs.LauncherPreferences.resolveCurseforgeApiKey(activity);
+        } catch (Throwable ignored) {}
+        if (key != null && key.trim().isEmpty()) key = null;
+        mCurseforgeAvailable = key != null;
+        mManager.attach(activity);
+        mApi = new CommonApi(key != null ? key : "", key == null);
     }
 
     /** Builds, attaches and animates the popup in. */
@@ -120,6 +134,8 @@ public final class ResourceBrowserPopup implements ResourceInstallManager.Listen
         mSearchClear = mRoot.findViewById(R.id.rb_search_clear);
         mTabPacks = mRoot.findViewById(R.id.rb_tab_resourcepacks);
         mTabShaders = mRoot.findViewById(R.id.rb_tab_shaders);
+        mSrcModrinth = mRoot.findViewById(R.id.rb_src_modrinth);
+        mSrcCurseforge = mRoot.findViewById(R.id.rb_src_curseforge);
         mList = mRoot.findViewById(R.id.rb_list);
         mStateRoot = mRoot.findViewById(R.id.rb_state_root);
         mStateSpinner = mRoot.findViewById(R.id.rb_state_spinner);
@@ -192,6 +208,13 @@ public final class ResourceBrowserPopup implements ResourceInstallManager.Listen
         mTabPacks.setOnClickListener(v -> selectType(ContentType.RESOURCE_PACK));
         mTabShaders.setOnClickListener(v -> selectType(ContentType.SHADER_PACK));
         mTabPacks.setSelected(true);
+        mSrcModrinth.setSelected(true);
+        mSrcModrinth.setOnClickListener(v -> selectEngine(Constants.ENGINE_MODRINTH));
+        mSrcCurseforge.setOnClickListener(v -> selectEngine(Constants.ENGINE_CURSEFORGE));
+        if (!mCurseforgeAvailable) {
+            View sources = mRoot.findViewById(R.id.rb_sources);
+            if (sources != null) sources.setVisibility(View.GONE);
+        }
 
         mStateAction.setOnClickListener(v -> startNewSearch());
         mConfirmRoot.setOnClickListener(v -> { /* swallow */ });
@@ -331,6 +354,15 @@ public final class ResourceBrowserPopup implements ResourceInstallManager.Listen
         startNewSearch();
     }
 
+    private void selectEngine(int engine) {
+        if (mEngine == engine) return;
+        mEngine = engine;
+        mSrcModrinth.setSelected(engine == Constants.ENGINE_MODRINTH);
+        mSrcCurseforge.setSelected(engine == Constants.ENGINE_CURSEFORGE);
+        mMain.removeCallbacks(mDebounced);
+        startNewSearch();
+    }
+
     private void startNewSearch() {
         if (!mShowing || !mProfileResolved) return;
         final int generation = ++mSearchGeneration;
@@ -455,6 +487,7 @@ public final class ResourceBrowserPopup implements ResourceInstallManager.Listen
         f.name = query;
         f.mcVersion = mcVersion;
         f.sort = query.isEmpty() ? SearchFilters.SORT_DOWNLOADS : SearchFilters.SORT_RELEVANCE;
+        f.engine = mCurseforgeAvailable ? mEngine : Constants.ENGINE_MODRINTH;
         SearchResult prev = previous instanceof Filtered ? ((Filtered) previous).inner : previous;
         return mApi.searchMod(f, prev);
     }
@@ -525,6 +558,10 @@ public final class ResourceBrowserPopup implements ResourceInstallManager.Listen
         }
         if (!isOnline()) {
             Toast.makeText(mActivity, R.string.rb_state_offline_message, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (item.isRestricted) {
+            Toast.makeText(mActivity, R.string.rb_err_restricted, Toast.LENGTH_LONG).show();
             return;
         }
         ResourceInstallManager.Task task = mManager.install(item, mType, mProfile);

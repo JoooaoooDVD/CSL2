@@ -1710,10 +1710,11 @@
     <string name="partner_optl_benefit_community_detail">Tier tests, events and the competitive Pojav PvP scene in one place.</string>
     <string name="partner_optl_join">JOIN OFFICIAL OPTL DISCORD</string>
     <string name="partner_optl_join_note">Join through this partnership announcement to claim exclusive collaboration perks and recognition.</string>
-    <string name="partner_popup_later">Not now</string>
-    <plurals name="partner_popup_more">
-        <item quantity="one">+ %d more exclusive benefit for CS Launcher users</item>
-        <item quantity="other">+ %d more exclusive benefits for CS Launcher users</item>
-    </plurals>
-    <string name="st_partner_desc">Official partnership, exclusive benefits and the OPTL Discord</string>
+    <string name="rb_err_restricted">The author doesn\'t allow third-party downloads for this file. Get it from the CurseForge page in the launcher.</string>
+    <string name="partners_title">Official Partners</string>
+    <string name="partners_subtitle">Communities and projects officially partnered with CS Launcher</string>
+    <string name="partners_featured">FEATURED</string>
+    <string name="partners_count_fmt">%1$d partner(s)</string>
+    <string name="pm_title_launcher">Launcher closed after Virtual LAN disconnect</string>
+    <string name="pm_body_intro_launcher">The launcher process ended right after Virtual LAN was disconnected, without a crash report. Android recorded why:</string>
 </resources>

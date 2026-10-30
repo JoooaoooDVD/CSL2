@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Source segmented control: Modrinth | CurseForge -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/rb_tab_height"
+    android:orientation="horizontal"
+    android:background="@drawable/bg_rb_tab_strip"
+    android:padding="3dp">
+    <TextView
+        android:id="@+id/rb_src_modrinth"
+        style="@style/RbTab"
+        android:text="@string/search_mod_engine_modrinth" />
+    <TextView
+        android:id="@+id/rb_src_curseforge"
+        style="@style/RbTab"
+        android:layout_marginStart="3dp"
+        android:text="@string/search_mod_engine_curseforge" />
+</LinearLayout>

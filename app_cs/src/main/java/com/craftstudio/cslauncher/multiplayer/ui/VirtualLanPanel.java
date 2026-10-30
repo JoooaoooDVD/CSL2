@@ -331,6 +331,9 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
         mShare.setOnClickListener(v -> shareInvite());
         mEnd.setOnClickListener(v -> {
             mEnd.setEnabled(false);
+            if (!mHost.inGame()) {
+                try { com.craftstudio.cslauncher.game.crash.GameExitPostmortem.markVirtualLanDisconnect(mContext); } catch (Throwable ignored) {}
+            }
             try {
                 mClient.endSession();
             } catch (Throwable t) {

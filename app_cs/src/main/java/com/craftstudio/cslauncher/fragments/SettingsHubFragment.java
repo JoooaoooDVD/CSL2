@@ -149,24 +149,6 @@ public class SettingsHubFragment extends Fragment {
         CSAnimationEngine.attachPressFeedback(notificationRow);
         updateNotificationRow();
 
-        View partnerRow = view.findViewById(R.id.st_partner_row);
-        if (partnerRow != null) {
-            com.craftstudio.cslauncher.partners.Partner partner = com.craftstudio.cslauncher.partners.Partners.featured();
-            if (partner == null) {
-                partnerRow.setVisibility(View.GONE);
-            } else {
-                ((android.widget.ImageView) view.findViewById(R.id.st_partner_logo)).setImageResource(partner.logo);
-                view.findViewById(R.id.st_partner_logo_wrap).setClipToOutline(true);
-                ((android.widget.TextView) view.findViewById(R.id.st_partner_title)).setText(partner.sectionTitle);
-                ((android.widget.TextView) view.findViewById(R.id.st_partner_badge)).setText(partner.badge);
-                partnerRow.setOnClickListener(v -> {
-                    if (getActivity() != null)
-                        com.craftstudio.cslauncher.partners.PartnerPopupDialog.openPartner(requireActivity(), partner);
-                });
-                CSAnimationEngine.attachPressFeedback(partnerRow);
-            }
-        }
-
         View aboutRow = view.findViewById(R.id.st_about_row);
         if (aboutRow != null) {
             aboutRow.setOnClickListener(v -> {

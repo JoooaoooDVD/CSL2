@@ -132,6 +132,29 @@ public final class ResourceInstallManager {
     private final Map<String, Task> mTasks = Collections.synchronizedMap(new HashMap<>());
     private final List<Listener> mListeners = new ArrayList<>();
     private final ModrinthApi mApi = new ModrinthApi();
+    @Nullable private volatile com.craftstudio.cslauncher.modding.modpacks.api.CurseforgeApi mCurseforgeApi;
+    @Nullable private volatile android.content.Context mAppContext;
+
+    /** Remembers the application context (needed to resolve the CurseForge key) */
+    public void attach(@NonNull android.content.Context context) {
+        mAppContext = context.getApplicationContext();
+    }
+
+    /** CurseForge needs the launcher's key; resolved lazily from the application context */
+    @Nullable
+    private com.craftstudio.cslauncher.modding.modpacks.api.CurseforgeApi curseforge() {
+        com.craftstudio.cslauncher.modding.modpacks.api.CurseforgeApi api = mCurseforgeApi;
+        if (api == null) {
+            try {
+                android.content.Context ctx = mAppContext;
+                String key = ctx == null ? null : com.craftstudio.cslauncher.prefs.LauncherPreferences.resolveCurseforgeApiKey(ctx);
+                if (key != null && !key.trim().isEmpty()) mCurseforgeApi = api = new com.craftstudio.cslauncher.modding.modpacks.api.CurseforgeApi(key);
+            } catch (Throwable t) {
+                Log.w(TAG, "curseforge api unavailable", t);
+            }
+        }
+        return api;
+    }
 
     private ResourceInstallManager() {
         ((ThreadPoolExecutor) mExecutor).allowCoreThreadTimeOut(true);
@@ -139,7 +162,9 @@ public final class ResourceInstallManager {
 
     @NonNull
     public static String keyFor(@NonNull ContentType type, @NonNull ModItem item) {
-        return type.modrinthType + ":" + item.id;
+        // CurseForge ids are numeric and live in their own namespace
+        String source = item.apiSource == com.craftstudio.cslauncher.modding.modpacks.models.Constants.SOURCE_CURSEFORGE ? "cf:" : "";
+        return type.modrinthType + ":" + source + item.id;
     }
 
     // ------------------------------------------------------------------ listeners
@@ -283,7 +308,14 @@ public final class ResourceInstallManager {
             int idx = pickVersion(detail, task.profile);
             String url = detail.versionUrls[idx];
             if (url == null || url.isEmpty()) {
-                fail(task, Status.FAILED, R.string.rb_err_no_version, null);
+                // Pick any other file that is downloadable before giving up
+                for (int i = 0; i < detail.versionUrls.length && (url == null || url.isEmpty()); i++) {
+                    if (detail.versionUrls[i] != null && !detail.versionUrls[i].isEmpty()) { idx = i; url = detail.versionUrls[i]; }
+                }
+            }
+            if (url == null || url.isEmpty()) {
+                fail(task, Status.FAILED, task.item.isRestricted || task.item.apiSource == com.craftstudio.cslauncher.modding.modpacks.models.Constants.SOURCE_CURSEFORGE
+                        ? R.string.rb_err_restricted : R.string.rb_err_no_version, null);
                 return;
             }
             String fileName = detail.versionFileNames != null && idx < detail.versionFileNames.length
@@ -408,12 +440,19 @@ public final class ResourceInstallManager {
     private ModDetail resolveDetail(@NonNull Task task) {
         String mc = task.profile.mcVersion;
         ModDetail detail = null;
+        boolean cf = task.item.apiSource == com.craftstudio.cslauncher.modding.modpacks.models.Constants.SOURCE_CURSEFORGE;
+        com.craftstudio.cslauncher.modding.modpacks.api.CurseforgeApi cfApi = cf ? curseforge() : null;
+        if (cf && cfApi == null) return null;
         if (mc != null && !mc.isEmpty()) {
-            try { detail = mApi.getModDetails(task.item, mc, null); } catch (Exception e) { Log.w(TAG, "version lookup", e); }
+            try {
+                detail = cf ? cfApi.getModDetails(task.item, mc, null) : mApi.getModDetails(task.item, mc, null);
+            } catch (Exception e) { Log.w(TAG, "version lookup", e); }
         }
         if (detail == null) {
             // Nothing published for this exact version: fall back to the newest file overall
-            try { detail = mApi.getModDetails(task.item); } catch (Exception e) { Log.w(TAG, "version lookup", e); }
+            try {
+                detail = cf ? cfApi.getModDetails(task.item) : mApi.getModDetails(task.item);
+            } catch (Exception e) { Log.w(TAG, "version lookup", e); }
         }
         return detail;
     }

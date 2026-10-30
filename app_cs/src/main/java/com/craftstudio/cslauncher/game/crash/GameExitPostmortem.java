@@ -52,7 +52,24 @@ public final class GameExitPostmortem {
     private static final int MAX_HIGHLIGHT_CHARS = 14_000;
     private static final int MAX_STRINGS_CHARS = 36_000;
 
+    private static final String KEY_VLAN_DISCONNECT_AT = "vlan_disconnect_at";
+    private static final String KEY_LAUNCHER_LAST_TS = "launcher_last_exit_ts";
+    /** A launcher-process death this soon after Disconnect is attributed to it */
+    private static final long VLAN_DISCONNECT_WINDOW_MS = 45_000L;
+
     private GameExitPostmortem() {}
+
+    /**
+     * Virtual LAN "Disconnect / End session" was just pressed in the launcher UI. If the launcher
+     * process dies within the next seconds, the next start reports that death (with Android's
+     * reason and trace) instead of staying silent.
+     */
+    public static void markVirtualLanDisconnect(@NonNull Context ctx) {
+        try {
+            ctx.getApplicationContext().getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+                    .putLong(KEY_VLAN_DISCONNECT_AT, System.currentTimeMillis()).apply();
+        } catch (Throwable ignored) {}
+    }
 
     /** Summary of one exit record, enough for a dialog line and for the report header */
     public static final class Record {
@@ -129,6 +146,19 @@ public final class GameExitPostmortem {
                     if (r.abnormal && (found == null || r.timestamp > found.timestamp)) found = r;
                 }
                 if (newestTs != lastSeen) prefs.edit().putLong(KEY_LAST_TS, newestTs).apply();
+                if (found == null) {
+                    // Launcher process itself: only when it died right after a Virtual LAN Disconnect
+                    long marker = prefs.getLong(KEY_VLAN_DISCONNECT_AT, 0L);
+                    if (marker > 0L) {
+                        long seenLauncher = prefs.getLong(KEY_LAUNCHER_LAST_TS, 0L);
+                        for (Record r : readProcess(app, app.getPackageName() + ":launcher", 24)) {
+                            if (r.timestamp <= seenLauncher || r.timestamp < marker || r.timestamp > marker + VLAN_DISCONNECT_WINDOW_MS) continue;
+                            if (r.abnormal && (found == null || r.timestamp > found.timestamp)) found = r;
+                        }
+                        if (found != null) prefs.edit().putLong(KEY_LAUNCHER_LAST_TS, found.timestamp).remove(KEY_VLAN_DISCONNECT_AT).apply();
+                        else if (System.currentTimeMillis() - marker > VLAN_DISCONNECT_WINDOW_MS) prefs.edit().remove(KEY_VLAN_DISCONNECT_AT).apply();
+                    }
+                }
                 if (found == null) return;
                 report = writeReport(app, found);
                 prefs.edit().putLong(KEY_SHOWN_TS, found.timestamp).apply();
@@ -147,12 +177,13 @@ public final class GameExitPostmortem {
 
     private static void showDialog(@NonNull Activity activity, @NonNull Record r, @Nullable File report) {
         StringBuilder body = new StringBuilder();
-        body.append(activity.getString(R.string.pm_body_intro)).append("\n\n");
+        boolean launcher = r.process != null && r.process.endsWith(":launcher");
+        body.append(activity.getString(launcher ? R.string.pm_body_intro_launcher : R.string.pm_body_intro)).append("\n\n");
         body.append(r.headline()).append('\n');
         if (!r.description.isEmpty()) body.append(r.description.trim()).append('\n');
         body.append('\n').append(r.explanation);
         MaterialAlertDialogBuilder b = new MaterialAlertDialogBuilder(activity)
-                .setTitle(R.string.pm_title)
+                .setTitle(launcher ? R.string.pm_title_launcher : R.string.pm_title)
                 .setMessage(body)
                 .setNegativeButton(R.string.pm_dismiss, null);
         if (report != null) {
@@ -172,6 +203,12 @@ public final class GameExitPostmortem {
     /** All exit records of the game process, newest first (empty below Android 11) */
     @NonNull
     public static List<Record> read(@NonNull Context ctx, int max) {
+        return readProcess(ctx, ctx.getPackageName() + ":game", max);
+    }
+
+    /** Exit records of one of our processes (full process name), newest first */
+    @NonNull
+    public static List<Record> readProcess(@NonNull Context ctx, @NonNull String gameProcess, int max) {
         List<Record> out = new ArrayList<>();
         if (!supported()) return out;
         try {
@@ -179,7 +216,6 @@ public final class GameExitPostmortem {
             if (am == null) return out;
             List<ApplicationExitInfo> infos = am.getHistoricalProcessExitReasons(ctx.getPackageName(), 0, Math.max(1, max));
             if (infos == null) return out;
-            String gameProcess = ctx.getPackageName() + ":game";
             for (ApplicationExitInfo info : infos) {
                 if (info == null || info.getProcessName() == null) continue;
                 if (!gameProcess.equals(info.getProcessName())) continue;
@@ -213,6 +249,22 @@ public final class GameExitPostmortem {
         if (newest.abnormal) {
             String trace = extractTrace(newest, 6000, 6000);
             if (!trace.isEmpty()) sb.append("\n-- trace of the newest record --\n").append(trace).append('\n');
+        }
+        // Launcher process too: a death right after Disconnect shows up here, not under :game
+        List<Record> launcher = readProcess(ctx, ctx.getPackageName() + ":launcher", 16);
+        if (!launcher.isEmpty()) {
+            sb.append("\n-- launcher process exits --\n");
+            int m = 0;
+            for (Record r : launcher) {
+                if (m++ >= 3) break;
+                sb.append(r.headline()).append(r.abnormal ? "  [abnormal]" : "").append('\n');
+                if (!r.description.isEmpty()) sb.append("  description: ").append(r.description.trim().replace('\n', ' ')).append('\n');
+            }
+            Record newestL = launcher.get(0);
+            if (newestL.abnormal) {
+                String trace = extractTrace(newestL, 6000, 6000);
+                if (!trace.isEmpty()) sb.append("-- trace of the newest launcher record --\n").append(trace).append('\n');
+            }
         }
         File report = new File(Tools.DIR_GAME_HOME, REPORT_FILE);
         if (report.isFile()) sb.append("(full report: ").append(report.getAbsolutePath()).append(")\n");

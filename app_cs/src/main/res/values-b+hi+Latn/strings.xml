@@ -1520,10 +1520,11 @@ time set day</string>
     <string name="partner_optl_benefit_community_detail">Tier tests, events aur competitive Pojav PvP scene – sab ek jagah.</string>
     <string name="partner_optl_join">OFFICIAL OPTL DISCORD JOIN KARO</string>
     <string name="partner_optl_join_note">Exclusive collaboration perks aur recognition claim karne ke liye isi partnership announcement se join karo.</string>
-    <string name="partner_popup_later">Abhi nahi</string>
-    <plurals name="partner_popup_more">
-        <item quantity="one">+ CS Launcher users ke liye %d aur exclusive benefit</item>
-        <item quantity="other">+ CS Launcher users ke liye %d aur exclusive benefits</item>
-    </plurals>
-    <string name="st_partner_desc">Official partnership, exclusive benefits aur OPTL Discord</string>
+    <string name="rb_err_restricted">Author ne is file ka third-party download allow nahi kiya. Ise launcher ke CurseForge page se lo.</string>
+    <string name="partners_title">Official Partners</string>
+    <string name="partners_subtitle">CS Launcher ke official partner communities aur projects</string>
+    <string name="partners_featured">FEATURED</string>
+    <string name="partners_count_fmt">%1$d partner(s)</string>
+    <string name="pm_title_launcher">Virtual LAN disconnect ke baad launcher band ho gaya</string>
+    <string name="pm_body_intro_launcher">Virtual LAN disconnect karte hi launcher process bina crash report ke band ho gaya. Android ne wajah record ki:</string>
 </resources>

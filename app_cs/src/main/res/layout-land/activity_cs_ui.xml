@@ -190,6 +190,19 @@
             android:popupBackground="@drawable/bg_popup_rounded"
             tools:ignore="RtlSymmetry" />
 
+        <!-- Official partners list -->
+        <ImageButton
+            android:id="@+id/partners_button"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_icon_button_home"
+            android:contentDescription="@string/partners_title"
+            android:padding="10dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_partners"
+            android:tooltipText="@string/partners_title" />
+
         <!-- Settings -->
         <ImageButton
             android:id="@+id/setting_button"

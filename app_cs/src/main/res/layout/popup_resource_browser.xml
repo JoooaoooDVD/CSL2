@@ -50,6 +50,13 @@
                 android:layout_height="@dimen/rb_tab_height"
                 android:layout_weight="0.75"
                 android:layout_marginStart="8dp" />
+            <include
+                android:id="@+id/rb_sources"
+                layout="@layout/view_resource_sources"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/rb_tab_height"
+                android:layout_weight="0.6"
+                android:layout_marginStart="8dp" />
         </LinearLayout>
 
         <FrameLayout
