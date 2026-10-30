@@ -1495,4 +1495,29 @@ time set day</string>
     <string name="pt_slot_afternoon">Dopahar baad</string>
     <string name="pt_slot_evening">Shaam</string>
     <string name="pt_slot_late">Der raat</string>
+    <!-- Official partners -->
+    <string name="partner_badge_official">OFFICIAL PARTNER</string>
+    <string name="partner_cross_fmt">CS Launcher × %1$s</string>
+    <string name="partner_full_name_fmt">%1$s · Official partnership</string>
+    <string name="partner_benefits_eyebrow">EXCLUSIVE</string>
+    <string name="partner_benefits_title">CS Launcher users ke liye partnership benefits</string>
+    <string name="partner_standard_fmt">Normal cooldown: %1$s</string>
+    <string name="partner_days">din</string>
+    <string name="partner_link_failed">Link nahi khula. Discord ya browser install karke dobara try karo.</string>
+    <string name="pn_back">Wapas</string>
+    <string name="partner_optl_section_title">Official Partner – OPTL</string>
+    <string name="partner_optl_description">CS Launcher OPTL ka official launcher hai – players ke liye better aur zyada competitive PvP experience.</string>
+    <string name="partner_optl_explore">OPTL dekho</string>
+    <string name="partner_optl_benefit_cooldown">5-Din Tier Testing Cooldown</string>
+    <string name="partner_optl_benefit_cooldown_detail">CS Launcher users ko normal 7 din ki jagah sirf 5 din ka tier testing cooldown milta hai.</string>
+    <string name="partner_optl_benefit_recognition">Official OPTL launcher recognition</string>
+    <string name="partner_optl_benefit_recognition_detail">CS Launcher OPTL ka official launcher maana jata hai.</string>
+    <string name="partner_optl_benefit_role">Exclusive collaboration role</string>
+    <string name="partner_optl_benefit_role_detail">OPTL Discord par CS Launcher collaboration ka khaas role.</string>
+    <string name="partner_optl_benefit_ranks">Special server ranks</string>
+    <string name="partner_optl_benefit_ranks_detail">OPTL servers par CS Launcher players ke liye special ranks.</string>
+    <string name="partner_optl_benefit_community">OPTL competitive PvP community ka access</string>
+    <string name="partner_optl_benefit_community_detail">Tier tests, events aur competitive Pojav PvP scene – sab ek jagah.</string>
+    <string name="partner_optl_join">OFFICIAL OPTL DISCORD JOIN KARO</string>
+    <string name="partner_optl_join_note">Exclusive collaboration perks aur recognition claim karne ke liye isi partnership announcement se join karo.</string>
 </resources>

@@ -147,6 +147,11 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         mPlayMore = view.findViewById(R.id.home_play_more);
         if (mDlFill != null) mDlFill.setPivotX(0f);
 
+        // Official partner strip (which partner + what it says comes from partners/Partners)
+        com.craftstudio.cslauncher.partners.PartnerHomeStrip.bind(view, partner ->
+                openPane(com.craftstudio.cslauncher.partners.PartnerFragment.class,
+                        com.craftstudio.cslauncher.partners.PartnerFragment.TAG,
+                        com.craftstudio.cslauncher.partners.PartnerFragment.args(partner)));
         view.findViewById(R.id.home_card_browser).setOnClickListener(v -> {
             HomeMotion.cardTapped(v, view.findViewById(R.id.home_card_browser_chevron), () -> openContentPicker(false));
         });
@@ -182,6 +187,7 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
                     new View[]{view.findViewById(R.id.home_card_browser), view.findViewById(R.id.home_card_manager)},
                     new View[]{view.findViewById(R.id.home_card_browser_tile), view.findViewById(R.id.home_card_manager_tile)},
                     new View[]{view.findViewById(R.id.home_card_browser_art), view.findViewById(R.id.home_card_manager_art)});
+            com.craftstudio.cslauncher.utils.motion.Motion.riseIn(view.findViewById(R.id.partner_strip), 300L, 14f);
             HomeMotion.profileDetails(mProfileTile, view.findViewById(R.id.home_profile_chevron),
                     view.findViewById(R.id.home_profile_dot));
             // Safety net: a selection reload during the entrance must never leave the icon tile hidden

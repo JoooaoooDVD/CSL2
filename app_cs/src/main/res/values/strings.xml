@@ -1683,4 +1683,31 @@
     <string name="pt_slot_afternoon">Afternoon</string>
     <string name="pt_slot_evening">Evening</string>
     <string name="pt_slot_late">Late night</string>
+    <!-- Official partners (partners/Partners) -->
+    <string name="partner_badge_official">OFFICIAL PARTNER</string>
+    <string name="partner_cross_fmt">CS Launcher × %1$s</string>
+    <string name="partner_full_name_fmt">%1$s · Official partnership</string>
+    <string name="partner_benefits_eyebrow">EXCLUSIVE</string>
+    <string name="partner_benefits_title">Partnership benefits for CS Launcher users</string>
+    <string name="partner_standard_fmt">Standard cooldown: %1$s</string>
+    <string name="partner_days">days</string>
+    <string name="partner_link_failed">Could not open the link. Install Discord or a browser and try again.</string>
+    <string name="pn_back">Back</string>
+    <string name="partner_optl_name">OPTL</string>
+    <string name="partner_optl_full_name">Official Pojav Tierlist</string>
+    <string name="partner_optl_section_title">Official Partner – OPTL</string>
+    <string name="partner_optl_description">CS Launcher is the official launcher of OPTL, bringing players a better and more competitive PvP experience.</string>
+    <string name="partner_optl_explore">Explore OPTL</string>
+    <string name="partner_optl_benefit_cooldown">5-Day Tier Testing Cooldown</string>
+    <string name="partner_optl_benefit_cooldown_detail">CS Launcher users get a reduced 5-day tier testing cooldown instead of the standard 7 days.</string>
+    <string name="partner_optl_benefit_recognition">Official OPTL launcher recognition</string>
+    <string name="partner_optl_benefit_recognition_detail">CS Launcher is recognised as the official launcher of OPTL.</string>
+    <string name="partner_optl_benefit_role">Exclusive collaboration role</string>
+    <string name="partner_optl_benefit_role_detail">A dedicated role on the OPTL Discord for the CS Launcher collaboration.</string>
+    <string name="partner_optl_benefit_ranks">Special server ranks</string>
+    <string name="partner_optl_benefit_ranks_detail">Special ranks on OPTL servers for CS Launcher players.</string>
+    <string name="partner_optl_benefit_community">Access to the OPTL competitive PvP community</string>
+    <string name="partner_optl_benefit_community_detail">Tier tests, events and the competitive Pojav PvP scene in one place.</string>
+    <string name="partner_optl_join">JOIN OFFICIAL OPTL DISCORD</string>
+    <string name="partner_optl_join_note">Join through this partnership announcement to claim exclusive collaboration perks and recognition.</string>
 </resources>

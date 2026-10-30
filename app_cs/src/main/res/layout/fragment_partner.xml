@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Official partner screen (right pane): branding hero, exclusive benefits, join button -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/transparent"
+    android:orientation="vertical">
+
+    <!-- Banner -->
+    <FrameLayout
+        android:id="@+id/pn_banner"
+        android:layout_width="match_parent"
+        android:layout_height="66dp"
+        android:layout_marginHorizontal="10dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="6dp"
+        android:background="@drawable/bg_banner_card"
+        android:clipToOutline="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="12dp">
+
+            <ImageButton
+                android:id="@+id/pn_back"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/bg_icon_button_home"
+                android:contentDescription="@string/pn_back"
+                android:padding="8dp"
+                android:rotation="180"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_home_chevron_right"
+                android:stateListAnimator="?attr/csPressAnimator" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/pn_banner_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:singleLine="true"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    tools:text="Official Partner – OPTL" />
+
+                <TextView
+                    android:id="@+id/pn_banner_subtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="1dp"
+                    android:ellipsize="end"
+                    android:singleLine="true"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="11sp"
+                    tools:text="Official Pojav Tierlist" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/pn_banner_badge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_partner_badge"
+                android:letterSpacing="0.08"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="3dp"
+                android:textColor="#D9B356"
+                android:textSize="9sp"
+                android:textStyle="bold"
+                tools:text="OFFICIAL PARTNER" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <ScrollView
+        android:id="@+id/pn_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        android:paddingHorizontal="10dp"
+        android:paddingBottom="10dp"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/pn_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Hero: logos + partnership branding + description -->
+            <LinearLayout
+                android:id="@+id/pn_hero"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_partner_hero"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <FrameLayout
+                        android:id="@+id/pn_logo_cs_wrap"
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        android:background="@drawable/bg_partner_logo_tile">
+
+                        <ImageView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:contentDescription="@null"
+                            android:padding="8dp"
+                            android:scaleType="fitCenter"
+                            android:src="@mipmap/ic_launcher" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:id="@+id/pn_cross"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="10dp"
+                        android:text="×"
+                        android:textColor="#D9B356"
+                        android:textSize="22sp" />
+
+                    <FrameLayout
+                        android:id="@+id/pn_logo_wrap"
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        android:background="@drawable/bg_partner_logo_tile">
+
+                        <ImageView
+                            android:id="@+id/pn_logo"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_margin="1dp"
+                            android:contentDescription="@null"
+                            android:scaleType="centerCrop"
+                            tools:src="@drawable/partner_optl_logo" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/pn_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/noto_sans_bold"
+                            android:textColor="#F2F5FA"
+                            android:textSize="16sp"
+                            tools:text="CS Launcher × OPTL" />
+
+                        <TextView
+                            android:id="@+id/pn_full_name"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="1dp"
+                            android:textColor="#9C9CA4"
+                            android:textSize="11sp"
+                            tools:text="Official Pojav Tierlist · Official partnership" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/pn_description"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:lineSpacingExtra="2dp"
+                    android:textColor="#D8DBE2"
+                    android:textSize="12.5sp"
+                    tools:text="CS Launcher is the official launcher of OPTL…" />
+            </LinearLayout>
+
+            <!-- Benefits -->
+            <LinearLayout
+                android:id="@+id/pn_benefits_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_partner_card"
+                android:orientation="vertical"
+                android:padding="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:letterSpacing="0.08"
+                    android:text="@string/partner_benefits_eyebrow"
+                    android:textColor="#D9B356"
+                    android:textSize="10.5sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/partner_benefits_title"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="14.5sp"
+                    android:textStyle="bold" />
+
+                <!-- Highlighted benefit (filled from the Partner) -->
+                <LinearLayout
+                    android:id="@+id/pn_highlight"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_partner_highlight"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="12dp"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/pn_highlight_value"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/minecraft_ten"
+                            android:includeFontPadding="false"
+                            android:textColor="#D9B356"
+                            android:textSize="30sp"
+                            tools:text="5" />
+
+                        <TextView
+                            android:id="@+id/pn_highlight_unit"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:letterSpacing="0.1"
+                            android:textColor="#D9B356"
+                            android:textSize="9.5sp"
+                            android:textStyle="bold"
+                            tools:text="DAYS" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/pn_highlight_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="13.5sp"
+                            android:textStyle="bold"
+                            tools:text="5-Day Tier Testing Cooldown" />
+
+                        <TextView
+                            android:id="@+id/pn_highlight_detail"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:lineSpacingExtra="1dp"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="11.5sp"
+                            tools:text="CS Launcher users get a reduced 5-day cooldown instead of the standard 7 days." />
+
+                        <TextView
+                            android:id="@+id/pn_highlight_old"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="10.5sp"
+                            tools:text="Standard: 7 days" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/pn_benefit_list"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="vertical" />
+            </LinearLayout>
+
+            <!-- Join -->
+            <LinearLayout
+                android:id="@+id/pn_join_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_partner_card"
+                android:orientation="vertical"
+                android:padding="12dp">
+
+                <TextView
+                    android:id="@+id/pn_join"
+                    android:layout_width="match_parent"
+                    android:layout_height="46dp"
+                    android:background="@drawable/bg_partner_discord_btn"
+                    android:drawableStart="@drawable/ic_discord"
+                    android:drawablePadding="10dp"
+                    android:drawableTint="#FFFFFF"
+                    android:ellipsize="end"
+                    android:gravity="center"
+                    android:letterSpacing="0.04"
+                    android:paddingHorizontal="18dp"
+                    android:singleLine="true"
+                    android:stateListAnimator="?attr/csPressAnimator"
+                    android:textColor="#FFFFFF"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    tools:text="JOIN OFFICIAL OPTL DISCORD" />
+
+                <TextView
+                    android:id="@+id/pn_join_note"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center"
+                    android:lineSpacingExtra="1dp"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="11sp"
+                    tools:text="Join through this partnership announcement to claim exclusive collaboration perks and recognition." />
+
+                <TextView
+                    android:id="@+id/pn_join_url"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="6dp"
+                    android:ellipsize="middle"
+                    android:padding="4dp"
+                    android:singleLine="true"
+                    android:textColor="#9C9CA4"
+                    android:textSize="10sp"
+                    tools:text="discord.gg/…" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- "OFFICIAL PARTNER" badge: muted gold on a soft tint, no glow -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#26D9B356" />
+    <corners android:radius="999dp" />
+    <stroke android:width="1dp" android:color="#59D9B356" />
+</shape>
