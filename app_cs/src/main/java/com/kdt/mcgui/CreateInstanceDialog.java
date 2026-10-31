@@ -643,15 +643,11 @@ public class CreateInstanceDialog extends CSPopupDialog {
             try {
                 FabricVersion[] versions = fabric.downloadLoaderVersions(game);
                 if (versions != null) {
+                    // Fabric/Quilt meta flags only the newest loader as "stable", so filtering on it
+                    // left a single entry. Offer every loader build (newest first, as served).
                     values = new ArrayList<>();
                     for (FabricVersion version : versions) {
-                        if (version != null && version.stable && version.version != null) values.add(version.version);
-                    }
-                    // Only betas for this game version: offer them rather than nothing
-                    if (values.isEmpty()) {
-                        for (FabricVersion version : versions) {
-                            if (version != null && version.version != null) values.add(version.version);
-                        }
+                        if (version != null && version.version != null) values.add(version.version);
                     }
                 }
             } catch (Exception e) {
