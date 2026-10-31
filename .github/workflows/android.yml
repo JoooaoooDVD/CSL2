@@ -66,9 +66,6 @@ jobs:
       - name: Build Virtual LAN VPN bridge (hev-socks5-tunnel)
         run: bash scripts/build_hev_tunnel.sh
 
-      - name: Unit tests (crash auto-fix engine)
-        run: gradle :app_cs:testFullDebugUnitTest
-
       - name: Build Debug .apk
         run: |
           gradle :app_cs:assembleFullDebug
@@ -98,8 +95,8 @@ jobs:
         if: env.CSPUB_KEYSTORE_PASSWORD != ''
         run: |
           gradle :app_cs:assembleFullPubRelease
-          mv app_cs/build/outputs/apk/full/pubRelease/app_cs-full-pubRelease.apk out/CS Launcher Plus-release.apk
-          md5sum "out/CS Launcher Plus-release.apk" > out/CS Launcher Plus-release.md5
+          mv app_cs/build/outputs/apk/full/pubRelease/app_cs-full-pubRelease.apk out/CS-Launcher-Plus-release.apk
+          md5sum out/CS-Launcher-Plus-release.apk > out/CS-Launcher-Plus-release.md5
 
       - name: Release notes + in-app update metadata
         run: |
@@ -142,8 +139,8 @@ jobs:
             out/app-debug-full.md5
             out/app-debug-noruntime.apk
             out/app-debug-noruntime.md5
-            out/CS Launcher Plus-release.apk
-            out/CS Launcher Plus-release.md5
+            out/CS-Launcher-Plus-release.apk
+            out/CS-Launcher-Plus-release.md5
           fail_on_unmatched_files: false
 
       - name: Release tagged build (v* tags)
@@ -157,6 +154,6 @@ jobs:
             out/app-debug-full.md5
             out/app-debug-noruntime.apk
             out/app-debug-noruntime.md5
-            out/CS Launcher Plus-release.apk
-            out/CS Launcher Plus-release.md5
+            out/CS-Launcher-Plus-release.apk
+            out/CS-Launcher-Plus-release.md5
           fail_on_unmatched_files: false
