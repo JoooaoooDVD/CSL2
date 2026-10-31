@@ -73,8 +73,9 @@ public class ListPickerDialog extends CSPopupDialog {
         close.setOnClickListener(v -> onDismissRequested());
         CSAnimationEngine.attachPressFeedback(close);
 
-        RecyclerView list = findViewById(R.id.lp_list);
+        MaxHeightRecyclerView list = findViewById(R.id.lp_list);
         list.setLayoutManager(new LinearLayoutManager(getContext()));
+        list.setMaxHeight(maxListHeight(mItems.size() > 8));
         mAdapter = new Adapter();
         list.setAdapter(mAdapter);
 
@@ -91,7 +92,10 @@ public class ListPickerDialog extends CSPopupDialog {
         }
         filter("");
         int position = mVisible.indexOf(mSelected);
-        if (position > 2) list.scrollToPosition(position);
+        if (position > 2) {
+            final int target = position;
+            list.post(() -> ((LinearLayoutManager) list.getLayoutManager()).scrollToPositionWithOffset(Math.max(0, target - 1), 0));
+        }
 
         CreatePopupMotion.chooserContent(findViewById(R.id.lp_header), new View[0], searchBox);
         Motion.cascadeChildren(list, 100L, 30L, 12f);
@@ -106,6 +110,14 @@ public class ListPickerDialog extends CSPopupDialog {
         mAdapter.notifyDataSetChanged();
         mCount.setText(String.valueOf(mVisible.size()));
         mEmpty.setVisibility(mVisible.isEmpty() ? View.VISIBLE : View.GONE);
+    }
+
+    /** Screen height minus the card's margins, paddings, header and (optional) search box */
+    private int maxListHeight(boolean withSearch) {
+        DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
+        float d = metrics.density;
+        int chrome = (int) ((12 + 12 + 16 + 12 + 10 + 48 + (withSearch ? 42 + 10 : 0)) * d);
+        return Math.max((int) (120 * d), metrics.heightPixels - chrome);
     }
 
     private void sizeCard(@NonNull View card) {
