@@ -49,12 +49,26 @@ public class InGUIEventProcessor extends TouchEventProcessor {
         public void scroll(float dx, float dy) {
             mScroller.performScroll(dx, dy);
         }
+
+        @Override
+        public void press(int button, boolean down) {
+            CallbackBridge.sendMouseButton(button == VirtualTouchpad.BUTTON_RIGHT
+                    ? MotionEvent.BUTTON_SECONDARY : MotionEvent.BUTTON_PRIMARY, down);
+        }
     }, FINGER_STILL_THRESHOLD, TAP_MAX_MS);
+
+    /** Re-reads the touchpad options (in-game Mouse settings). */
+    public void refreshTouchpadOptions() {
+        mVirtualTouchpad.tapToClick = LauncherPreferences.PREF_VMOUSE_TAP_CLICK;
+        mVirtualTouchpad.twoFingerRightClick = LauncherPreferences.PREF_VMOUSE_TWO_FINGER_RIGHT;
+        mVirtualTouchpad.doubleTapDrag = LauncherPreferences.PREF_VMOUSE_DOUBLE_TAP_DRAG;
+    }
     private static final long TAP_MAX_MS = 300;
 
     @Override
     public boolean processTouchEvent(MotionEvent motionEvent) {
         if (touchpadDisplayed() || mVirtualTouchpad.isActive()) {
+            if (motionEvent.getActionMasked() == MotionEvent.ACTION_DOWN) refreshTouchpadOptions();
             processTouchpadEvent(motionEvent);
             return true;
         }

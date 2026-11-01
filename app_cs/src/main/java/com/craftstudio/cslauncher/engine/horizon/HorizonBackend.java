@@ -21,6 +21,7 @@ public final class HorizonBackend implements PlatformBackend, Choreographer.Fram
     private static final int BUTTON_LEFT = 0, BUTTON_RIGHT = 1, BUTTON_MIDDLE = 2, BUTTON_BACK = 3, BUTTON_FORWARD = 4;
 
     private boolean mPolling;
+    private boolean mLastNotifiedGrab;
     private boolean mGrabbed;
     private boolean mKeyboard;
     private double mLastX = Double.NaN, mLastY = Double.NaN;
@@ -30,6 +31,11 @@ public final class HorizonBackend implements PlatformBackend, Choreographer.Fram
     private int mGrabChanges;
 
     public boolean grabbed() { return mGrabbed; }
+    /** The engine currently wants the soft keyboard (chat, sign, search...). */
+    public boolean keyboard() { return mKeyboard; }
+    /** Called on the UI thread when grab or keyboard state changes. */
+    public void setStateListener(@androidx.annotation.Nullable Runnable listener) { mStateListener = listener; }
+    @androidx.annotation.Nullable private Runnable mStateListener;
 
     /** One JSON object with the counters, for the input diagnostics file. */
     public org.json.JSONObject diagnostics() {
@@ -76,9 +82,14 @@ public final class HorizonBackend implements PlatformBackend, Choreographer.Fram
             if (!grabbed) Platform.resetCursorPosition();
             Platform.grabStateChanged(grabbed);
         }
-        if (keyboard != mKeyboard) {
+        boolean keyboardChanged = keyboard != mKeyboard;
+        if (keyboardChanged) {
             mKeyboard = keyboard;
             if (keyboard) GameActivity.toggleKeyboardState(true, 0);
+        }
+        if ((grabbed != mLastNotifiedGrab || keyboardChanged) && mStateListener != null) {
+            mLastNotifiedGrab = grabbed;
+            mStateListener.run();
         }
         Choreographer.getInstance().postFrameCallback(this);
     }

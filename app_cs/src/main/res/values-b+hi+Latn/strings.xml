@@ -1598,4 +1598,10 @@ time set day</string>
     <string name="horizon_skin_applied_microsoft">Is profile ke liye save · official skin waise hi rahegi</string>
     <string name="horizon_skin_invalid_cape">64×32 (ya HD multiple) ya 22×17 pixel ki PNG cape chuno.</string>
     <string name="horizon_skin_no_picker">Koi file picker app nahi mila.</string>
+    <string name="horizon_menu_mouse_settings">Mouse &amp; touch settings</string>
+    <string name="horizon_mouse_auto_menus">Menu aur inventory mein cursor apne aap dikhao</string>
+    <string name="horizon_mouse_tap_click">Tap = cursor par left click</string>
+    <string name="horizon_mouse_two_finger">Do ungli se tap = right click</string>
+    <string name="horizon_mouse_drag">Double-tap karke hold = drag</string>
+    <string name="horizon_mouse_hint">Do ungli move = scroll. Mouse control button cursor ko world mein bhi on rakhta hai.</string>
 </resources>

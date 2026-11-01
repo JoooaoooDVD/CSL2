@@ -1805,4 +1805,12 @@
     <string name="horizon_skin_applied_microsoft">Saved for this profile · official skin stays</string>
     <string name="horizon_skin_invalid_cape">Pick a PNG cape that is 64×32 (or HD multiple) or 22×17 pixels.</string>
     <string name="horizon_skin_no_picker">No file picker app found.</string>
+    <string name="horizon_menu_mouse_settings">Mouse &amp; touch settings</string>
+    <string name="horizon_mouse_speed">Cursor speed: %1$d%%</string>
+    <string name="horizon_mouse_size">Cursor size: %1$d%%</string>
+    <string name="horizon_mouse_auto_menus">Show cursor automatically in menus and inventory</string>
+    <string name="horizon_mouse_tap_click">Tap = left click at the cursor</string>
+    <string name="horizon_mouse_two_finger">Two-finger tap = right click</string>
+    <string name="horizon_mouse_drag">Double-tap and hold = drag</string>
+    <string name="horizon_mouse_hint">Two fingers moving = scroll. The Mouse control button keeps the cursor on in the world too.</string>
 </resources>

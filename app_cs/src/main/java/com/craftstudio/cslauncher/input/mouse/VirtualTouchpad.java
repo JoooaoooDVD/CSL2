@@ -21,7 +21,14 @@ public final class VirtualTouchpad {
         void click(int button);
         /** Two-finger scroll motion in raw pixels. */
         void scroll(float dx, float dy);
+        /** Button held / released (double-tap-and-hold drag). */
+        void press(int button, boolean down);
     }
+
+    /** Options, changeable at runtime (in-game Mouse settings). */
+    public boolean tapToClick = true;
+    public boolean twoFingerRightClick = true;
+    public boolean doubleTapDrag = true;
 
     private final Sink mSink;
     private final float mTapSlop;
@@ -32,6 +39,8 @@ public final class VirtualTouchpad {
     private int mPointers, mMaxPointers;
     private float mAnchorX, mAnchorY;
     private float mTravel;
+    private long mLastClickTime = Long.MIN_VALUE;
+    private boolean mDragging;
 
     public VirtualTouchpad(Sink sink, float tapSlopPx, long tapMaxMs) {
         mSink = sink;
@@ -47,6 +56,12 @@ public final class VirtualTouchpad {
         mAnchorX = x;
         mAnchorY = y;
         mTravel = 0;
+        // Double-tap-and-hold: a second touch right after a left click holds the button (drag).
+        if (doubleTapDrag && mLastClickTime != Long.MIN_VALUE && time - mLastClickTime <= mTapMaxMs) {
+            mDragging = true;
+            mLastClickTime = Long.MIN_VALUE;
+            mSink.press(BUTTON_LEFT, true);
+        }
     }
 
     /** The number of fingers changed (pointer down/up); x,y = pointer 0 now. No motion is emitted. */
@@ -78,14 +93,33 @@ public final class VirtualTouchpad {
     public void up(long time) {
         if (!mActive) return;
         mActive = false;
+        if (mDragging) {
+            mDragging = false;
+            mSink.press(BUTTON_LEFT, false);
+            return;
+        }
         boolean still = mTravel <= mTapSlop;
         boolean quick = time - mDownTime <= mTapMaxMs;
-        if (still && quick) mSink.click(mMaxPointers >= 2 ? BUTTON_RIGHT : BUTTON_LEFT);
+        if (!still || !quick) return;
+        if (mMaxPointers >= 2) {
+            if (twoFingerRightClick) mSink.click(BUTTON_RIGHT);
+        } else if (tapToClick) {
+            mSink.click(BUTTON_LEFT);
+            mLastClickTime = time;
+        }
     }
 
-    /** Gesture cancelled by the system: nothing is emitted. */
+    /** Gesture cancelled by the system: a held button is released, nothing else is emitted. */
     public void cancel() {
         mActive = false;
+        if (mDragging) {
+            mDragging = false;
+            mSink.press(BUTTON_LEFT, false);
+        }
+    }
+
+    public boolean isDragging() {
+        return mDragging;
     }
 
     public boolean isActive() {

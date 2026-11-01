@@ -59,6 +59,9 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
     private ContextThemeWrapper mUi;
     /** The Mouse control button's state: cursor wanted. It survives grab/release (menus <-> world). */
     private boolean mMouseWanted;
+    /** Auto mode: the cursor is shown by itself while a menu is open (engine not capturing). */
+    private boolean mAutoCursorShown;
+
     @Nullable private HorizonSkinDialog mSkinDialog;
     public static final String EXTRA_CONTROLS = "cs_controls";
     /** Written by the engine when it ends; CS reads it from the launcher process. */
@@ -136,6 +139,7 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
         // button does nothing.
         GameActivity.registerCursorView(mInputView.cursorView());
         GameActivity.setMouseToggleHandler(this::toggleVirtualMouse);
+        mBackend.setStateListener(this::updateAutoCursor);
         if (LauncherPreferences.PREF_VIRTUAL_MOUSE_START) setVirtualMouse(true, false);
         mControlLayout.setModifiable(false);
         mControlLayout.setMenuListener(this);
@@ -159,9 +163,111 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
         setVirtualMouse(!mMouseWanted, true);
     }
 
+    /**
+     * Auto cursor (PC feel): a menu/inventory/chat opens → the engine releases the pointer → the
+     * cursor appears by itself; back in the world it hides again. Independent of the manual Mouse
+     * button (which keeps the cursor across both states) and off when the preference is off.
+     */
+    private void updateAutoCursor() {
+        if (mInputView == null || mBackend == null || mMouseWanted || !LauncherPreferences.PREF_VMOUSE_AUTO_MENUS) return;
+        // Not while typing: chat / sign / search ask for the keyboard, and the cursor would only
+        // fight with the text input (mouse mode never turns on because of typing).
+        boolean show = !mBackend.grabbed() && !mBackend.keyboard();
+        if (show == mAutoCursorShown) return;
+        mAutoCursorShown = show;
+        mInputView.cursorView().setVisibility(show ? View.VISIBLE : View.GONE);
+        if (show) {
+            Platform.resetCursorPosition();
+            Platform.sendCursorPosition();
+        }
+    }
+
+    /** Menu → Mouse & touch settings: applied live, saved in the launcher preferences. */
+    private void openMouseSettings() {
+        android.content.SharedPreferences prefs = LauncherPreferences.DEFAULT_PREF;
+        android.widget.LinearLayout box = new android.widget.LinearLayout(mUi);
+        box.setOrientation(android.widget.LinearLayout.VERTICAL);
+        int pad = (int) (16 * getResources().getDisplayMetrics().density);
+        box.setPadding(pad, pad / 2, pad, 0);
+
+        android.widget.TextView speedLabel = new android.widget.TextView(mUi);
+        android.widget.SeekBar speed = new android.widget.SeekBar(mUi);
+        speed.setMax(290);
+        speed.setProgress(prefs.getInt("mousespeed", 100) - 10);
+        speedLabel.setText(getString(R.string.horizon_mouse_speed, prefs.getInt("mousespeed", 100)));
+        speed.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener() {
+            public void onProgressChanged(android.widget.SeekBar s, int p, boolean u) {
+                int v = p + 10;
+                speedLabel.setText(getString(R.string.horizon_mouse_speed, v));
+                prefs.edit().putInt("mousespeed", v).apply();
+                LauncherPreferences.PREF_MOUSESPEED = v / 100f;
+            }
+            public void onStartTrackingTouch(android.widget.SeekBar s) {}
+            public void onStopTrackingTouch(android.widget.SeekBar s) {}
+        });
+        android.widget.TextView sizeLabel = new android.widget.TextView(mUi);
+        android.widget.SeekBar size = new android.widget.SeekBar(mUi);
+        size.setMax(275);
+        size.setProgress(prefs.getInt("mousescale", 100) - 25);
+        sizeLabel.setText(getString(R.string.horizon_mouse_size, prefs.getInt("mousescale", 100)));
+        size.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener() {
+            public void onProgressChanged(android.widget.SeekBar s, int p, boolean u) {
+                int v = p + 25;
+                sizeLabel.setText(getString(R.string.horizon_mouse_size, v));
+                prefs.edit().putInt("mousescale", v).apply();
+                LauncherPreferences.PREF_MOUSESCALE = v / 100f;
+                mInputView.cursorView().setCursorScale(v / 100f);
+                mInputView.cursorView().invalidate();
+            }
+            public void onStartTrackingTouch(android.widget.SeekBar s) {}
+            public void onStopTrackingTouch(android.widget.SeekBar s) {}
+        });
+        box.addView(speedLabel); box.addView(speed);
+        box.addView(sizeLabel); box.addView(size);
+        box.addView(check(R.string.horizon_mouse_auto_menus, "vmouse_auto_menus", LauncherPreferences.PREF_VMOUSE_AUTO_MENUS,
+                v -> { LauncherPreferences.PREF_VMOUSE_AUTO_MENUS = v; if (!v && mAutoCursorShown && !mMouseWanted) { mAutoCursorShown = false; mInputView.cursorView().setVisibility(View.GONE); } }));
+        box.addView(check(R.string.horizon_mouse_tap_click, "vmouse_tap_click", LauncherPreferences.PREF_VMOUSE_TAP_CLICK,
+                v -> LauncherPreferences.PREF_VMOUSE_TAP_CLICK = v));
+        box.addView(check(R.string.horizon_mouse_two_finger, "vmouse_two_finger_right", LauncherPreferences.PREF_VMOUSE_TWO_FINGER_RIGHT,
+                v -> LauncherPreferences.PREF_VMOUSE_TWO_FINGER_RIGHT = v));
+        box.addView(check(R.string.horizon_mouse_drag, "vmouse_double_tap_drag", LauncherPreferences.PREF_VMOUSE_DOUBLE_TAP_DRAG,
+                v -> LauncherPreferences.PREF_VMOUSE_DOUBLE_TAP_DRAG = v));
+        android.widget.TextView hint = new android.widget.TextView(mUi);
+        hint.setText(R.string.horizon_mouse_hint);
+        hint.setTextSize(12);
+        hint.setPadding(0, pad / 2, 0, 0);
+        box.addView(hint);
+        android.widget.ScrollView scroll = new android.widget.ScrollView(mUi);
+        scroll.addView(box);
+        new AlertDialog.Builder(mUi)
+                .setTitle(R.string.horizon_menu_mouse_settings)
+                .setView(scroll)
+                .setPositiveButton(android.R.string.ok, null)
+                .show();
+    }
+
+    private interface BoolSink { void set(boolean value); }
+
+    private View check(int label, String key, boolean current, BoolSink sink) {
+        android.widget.CheckBox box = new android.widget.CheckBox(mUi);
+        box.setText(label);
+        box.setChecked(current);
+        box.setOnCheckedChangeListener((b, v) -> {
+            LauncherPreferences.DEFAULT_PREF.edit().putBoolean(key, v).apply();
+            sink.set(v);
+        });
+        return box;
+    }
+
     private void setVirtualMouse(boolean wanted, boolean toast) {
         mMouseWanted = wanted;
         if (mInputView == null) return;
+        if (!wanted && mAutoCursorShown && LauncherPreferences.PREF_VMOUSE_AUTO_MENUS && mBackend != null && !mBackend.grabbed()) {
+            // Manual mouse off inside a menu: the auto cursor stays until the world is back.
+            if (toast) Toast.makeText(mUi, R.string.control_mouseoff, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        mAutoCursorShown = false;
         mInputView.cursorView().setVisibility(wanted ? View.VISIBLE : View.GONE);
         if (wanted) {
             // Keep the last cursor position (desktop behaviour); only an unset/off-screen one is centred.
@@ -407,6 +513,7 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
         String[] items = {
                 getString(R.string.horizon_menu_keyboard),
                 getString(mMouseWanted ? R.string.horizon_menu_mouse_off : R.string.horizon_menu_mouse_on),
+                getString(R.string.horizon_menu_mouse_settings),
                 getString(R.string.horizon_menu_toggle_controls),
                 getString(R.string.horizon_menu_edit_controls),
                 getString(R.string.horizon_menu_account_skin),
@@ -418,10 +525,11 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
                     switch (which) {
                         case 0: GameActivity.switchKeyboardState(false); break;
                         case 1: toggleVirtualMouse(); break;
-                        case 2: mControlLayout.toggleControlVisible(); break;
-                        case 3: mControlLayout.setModifiable(true); break;
-                        case 4: openSkinDialog(); break;
-                        case 5:
+                        case 2: openMouseSettings(); break;
+                        case 3: mControlLayout.toggleControlVisible(); break;
+                        case 4: mControlLayout.setModifiable(true); break;
+                        case 5: openSkinDialog(); break;
+                        case 6:
                             // Escape twice reaches the pause menu; the engine saves and exits on "Save and Quit".
                             CallbackBridge.sendKeyPress(KeyEvent.KEYCODE_ESCAPE);
                             break;
