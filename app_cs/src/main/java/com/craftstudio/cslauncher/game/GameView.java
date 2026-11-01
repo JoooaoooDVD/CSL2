@@ -47,7 +47,15 @@ import static com.craftstudio.cslauncher.game.platform.Platform.PLATFORM;
 public class GameView extends FrameLayout implements PlatformGrabListener, SurfaceProvider.SurfaceCallback {
 
     /* Sensitivity, adjusted according to screen size */
-    private final double mSensitivityFactor = (1.4 * (1080f/ Tools.getDisplayMetrics((Activity) getContext()).heightPixels));
+    private final double mSensitivityFactor = (1.4 * (1080f/ Tools.getDisplayMetrics(activityOf(getContext())).heightPixels));
+
+    /** The hosting Activity behind any ContextWrapper chain (CS Engine inflates with a themed wrapper). */
+    public static Activity activityOf(android.content.Context context) {
+        while (!(context instanceof Activity) && context instanceof android.content.ContextWrapper) {
+            context = ((android.content.ContextWrapper) context).getBaseContext();
+        }
+        return (Activity) context;
+    }
 
     private final SurfaceProvider mSurfaceProvider = LauncherPreferences.PREF_USE_ALTERNATE_SURFACE ? new SurfaceViewSurfaceProvider() : new TextureViewSurfaceProvider();
     private boolean mRefreshOnly = true;
