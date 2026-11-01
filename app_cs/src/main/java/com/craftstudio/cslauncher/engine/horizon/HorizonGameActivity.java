@@ -82,6 +82,16 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
         // Input goes to our views, not to the native glue (see class comment).
         getWindow().takeInputQueue(null);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        // The engine window and the CS control window must cover the same screen pixels: the control
+        // window reports touches in its own coordinates and the engine maps them onto its render
+        // target. Lay both out edge to edge, into the cutout, like the engine configures itself.
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+                | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+            WindowManager.LayoutParams attrs = getWindow().getAttributes();
+            attrs.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+            getWindow().setAttributes(attrs);
+        }
 
         Platform.initializeMinimal(getApplicationContext());
         mBackend = new HorizonBackend();
@@ -102,6 +112,11 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
         TouchCharInput charInput = overlay.findViewById(R.id.mainTouchCharInput);
         GameActivity.touchCharInput = charInput;
         mInputView.cursorView().setCursorScale(LauncherPreferences.PREF_MOUSESCALE);
+        // The Mouse control button (SPECIALBTN_VIRTUALMOUSE) toggles the cursor GameActivity registered;
+        // this activity runs in its own process, so it has to register its own cursor view or the
+        // button does nothing.
+        GameActivity.registerCursorView(mInputView.cursorView());
+        if (LauncherPreferences.PREF_VIRTUAL_MOUSE_START) mInputView.cursorView().setVisibility(View.VISIBLE);
         mControlLayout.setModifiable(false);
         mControlLayout.setMenuListener(this);
         mMenuButton.setOnClickListener(v -> onClickedMenu());
@@ -238,7 +253,48 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
             mBackend.stopPolling();
             mBackend.releaseAll();
         }
+        writeInputDiagnostics("pause");
         super.onPause();
+    }
+
+    /**
+     * Input diagnostics: device, display, both windows' sizes, the control system's state and the
+     * counters of what was forwarded to the engine. One small JSON file in the engine home
+     * ({@code cs-input-diagnostics.json}, next to {@code cs-exit.json}, which carries the engine's own
+     * "received / processed / pointer mapping" counters). Written at pause and exit, not per event.
+     */
+    private void writeInputDiagnostics(String reason) {
+        try {
+            org.json.JSONObject o = new org.json.JSONObject();
+            o.put("reason", reason);
+            o.put("time", System.currentTimeMillis());
+            o.put("device", android.os.Build.MANUFACTURER + " " + android.os.Build.MODEL);
+            o.put("android", android.os.Build.VERSION.RELEASE + " (API " + android.os.Build.VERSION.SDK_INT + ")");
+            android.util.DisplayMetrics dm = new android.util.DisplayMetrics();
+            getWindowManager().getDefaultDisplay().getRealMetrics(dm);
+            o.put("display", dm.widthPixels + "x" + dm.heightPixels + " @" + dm.densityDpi + "dpi");
+            o.put("orientation", getResources().getConfiguration().orientation);
+            View decor = getWindow().getDecorView();
+            o.put("engine_window", decor.getWidth() + "x" + decor.getHeight());
+            if (mOverlayRoot != null) o.put("control_window", mOverlayRoot.getWidth() + "x" + mOverlayRoot.getHeight());
+            if (mInputView != null) o.put("input_view", mInputView.getWidth() + "x" + mInputView.getHeight());
+            o.put("callback_window", CallbackBridge.windowWidth + "x" + CallbackBridge.windowHeight);
+            o.put("overlay_attached", mOverlayAttached);
+            o.put("overlay_focus", mOverlayRoot != null && mOverlayRoot.hasWindowFocus());
+            o.put("engine_focus", decor.hasWindowFocus());
+            o.put("grabbing", Platform.isGrabbing());
+            o.put("cursor_x", Platform.cursorX);
+            o.put("cursor_y", Platform.cursorY);
+            if (mInputView != null) o.put("cursor_visible", mInputView.cursorView().getVisibility() == View.VISIBLE);
+            o.put("controls_visible", mControlLayout != null && mControlLayout.areControlVisible());
+            o.put("controls", mControlsPath);
+            if (mBackend != null) o.put("backend", mBackend.diagnostics());
+            File file = new File(HorizonEngine.home(), "cs-input-diagnostics.json");
+            Tools.write(file.getAbsolutePath(), o.toString(2));
+            Log.i(TAG, "Input diagnostics (" + reason + "): " + o.toString());
+        } catch (Throwable t) {
+            Log.w(TAG, "Input diagnostics not written", t);
+        }
     }
 
     @Override
@@ -290,6 +346,7 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
 
     @Override
     protected void onDestroy() {
+        writeInputDiagnostics("destroy");
         detachOverlay();
         super.onDestroy();
         // The engine calls exit(0) itself after saving; make sure no cached process lingers if it did not.

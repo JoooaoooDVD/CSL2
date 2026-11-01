@@ -550,6 +550,15 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         mQuickSettingSideDialog.appear(true);
     }
 
+    /**
+     * Registers the cursor view the Mouse control button toggles. {@link GameActivity} does this in
+     * onCreate; other engine hosts (CS Engine's {@code HorizonGameActivity}, a separate process with
+     * its own overlay) must do it too, or {@link #toggleMouse} has no cursor to show.
+     */
+    public static void registerCursorView(GameCursorView cursorView) {
+        weakCursor = cursorView == null ? null : new WeakReference<>(cursorView);
+    }
+
     public static void toggleMouse(Context ctx) {
         // Avoid going through the JNI each time.
         if (Platform.isGrabbing()) return;

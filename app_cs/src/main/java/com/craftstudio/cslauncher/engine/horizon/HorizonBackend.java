@@ -24,6 +24,32 @@ public final class HorizonBackend implements PlatformBackend, Choreographer.Fram
     private boolean mGrabbed;
     private boolean mKeyboard;
     private double mLastX = Double.NaN, mLastY = Double.NaN;
+    // Input diagnostics: what the CS control system handed to the engine (see HorizonGameActivity).
+    private long mSentCursor, mSentLook, mSentButton, mSentKey, mSentScroll, mSentText;
+    private double mLastCursorX = Double.NaN, mLastCursorY = Double.NaN;
+    private int mGrabChanges;
+
+    public boolean grabbed() { return mGrabbed; }
+
+    /** One JSON object with the counters, for the input diagnostics file. */
+    public org.json.JSONObject diagnostics() {
+        org.json.JSONObject o = new org.json.JSONObject();
+        try {
+            o.put("grabbed", mGrabbed);
+            o.put("grab_changes", mGrabChanges);
+            o.put("keyboard", mKeyboard);
+            o.put("sent_cursor", mSentCursor);
+            o.put("sent_look", mSentLook);
+            o.put("sent_button", mSentButton);
+            o.put("sent_key", mSentKey);
+            o.put("sent_scroll", mSentScroll);
+            o.put("sent_text", mSentText);
+            o.put("last_cursor_x", Double.isNaN(mLastCursorX) ? null : mLastCursorX);
+            o.put("last_cursor_y", Double.isNaN(mLastCursorY) ? null : mLastCursorY);
+        } catch (org.json.JSONException ignored) {
+        }
+        return o;
+    }
 
     /** Start mirroring engine state (call on the UI thread when the activity is visible). */
     public void startPolling() {
@@ -45,6 +71,7 @@ public final class HorizonBackend implements PlatformBackend, Choreographer.Fram
         boolean keyboard = (flags & 2) != 0;
         if (grabbed != mGrabbed) {
             mGrabbed = grabbed;
+            mGrabChanges++;
             mLastX = mLastY = Double.NaN;
             if (!grabbed) Platform.resetCursorPosition();
             Platform.grabStateChanged(grabbed);
@@ -71,12 +98,18 @@ public final class HorizonBackend implements PlatformBackend, Choreographer.Fram
             // CS accumulates the virtual pointer while grabbed; the engine wants deltas.
             if (!Double.isNaN(mLastX)) {
                 double dx = x - mLastX, dy = y - mLastY;
-                if (dx != 0 || dy != 0) HorizonNative.nativeHostLook(dx, dy);
+                if (dx != 0 || dy != 0) {
+                    mSentLook++;
+                    HorizonNative.nativeHostLook(dx, dy);
+                }
             }
             mLastX = x;
             mLastY = y;
         } else {
             mLastX = mLastY = Double.NaN;
+            mSentCursor++;
+            mLastCursorX = x;
+            mLastCursorY = y;
             HorizonNative.nativeHostCursor(x, y);
         }
     }
@@ -92,14 +125,23 @@ public final class HorizonBackend implements PlatformBackend, Choreographer.Fram
             case MotionEvent.BUTTON_FORWARD: engineButton = BUTTON_FORWARD; break;
             default: return;
         }
-        if (!relative) HorizonNative.nativeHostCursor(x, y);
+        if (!relative) {
+            mSentCursor++;
+            mLastCursorX = x;
+            mLastCursorY = y;
+            HorizonNative.nativeHostCursor(x, y);
+        }
+        mSentButton++;
         HorizonNative.nativeHostButton(engineButton, state != 0);
     }
 
     @Override
     public boolean sendKeyEvent(int key, int state, int mods, char codepoint) {
         String token = HorizonKeyMap.token(key);
-        if (token != null) HorizonNative.nativeHostKey(token, state != 0);
+        if (token != null) {
+            mSentKey++;
+            HorizonNative.nativeHostKey(token, state != 0);
+        }
         // Printable characters typed on a hardware keyboard go to the open text editor as text
         // (only while the engine asked for one, so the key that opens chat does not also type).
         if (mKeyboard && state != 0 && codepoint >= ' ' && codepoint != 127
@@ -121,12 +163,16 @@ public final class HorizonBackend implements PlatformBackend, Choreographer.Fram
 
     @Override
     public void sendScrollEvent(double x, double y) {
+        mSentScroll++;
         HorizonNative.nativeHostScroll((float) x, (float) y);
     }
 
     @Override
     public void sendBulkUnicodeEvent(String text, int mods) {
-        if (text != null && !text.isEmpty()) HorizonNative.nativeHostText(text);
+        if (text != null && !text.isEmpty()) {
+            mSentText++;
+            HorizonNative.nativeHostText(text);
+        }
     }
 
     @Override
