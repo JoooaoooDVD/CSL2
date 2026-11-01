@@ -163,7 +163,14 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
         mMouseWanted = wanted;
         if (mInputView == null) return;
         mInputView.cursorView().setVisibility(wanted ? View.VISIBLE : View.GONE);
-        if (wanted) Platform.resetCursorPosition();
+        if (wanted) {
+            // Keep the last cursor position (desktop behaviour); only an unset/off-screen one is centred.
+            int w = mInputView.getWidth(), h = mInputView.getHeight();
+            boolean unset = (Platform.cursorX <= 0 && Platform.cursorY <= 0)
+                    || Platform.cursorX > w || Platform.cursorY > h;
+            if (unset && w > 0 && h > 0) Platform.resetCursorPosition();
+            Platform.sendCursorPosition();
+        }
         if (!toast) return;
         int text = wanted
                 ? (mBackend != null && mBackend.grabbed() ? R.string.horizon_mouse_on_in_world : R.string.control_mouseon)

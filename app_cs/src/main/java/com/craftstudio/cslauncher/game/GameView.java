@@ -91,6 +91,10 @@ public class GameView extends FrameLayout implements PlatformGrabListener, Surfa
         super.onFinishInflate();
         mCursorView = findViewById(R.id.main_cursorview);
         Platform.setCursorImplementor(mCursorView);
+        // The GUI processor must know the cursor view from the start: hosts without a rendering
+        // surface (CS Engine) never call start(), and without it the virtual mouse fell back to
+        // absolute touch coordinates (cursor jumping to the finger).
+        mInGUIProcessor.setAbstractTouchpad(mCursorView);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
