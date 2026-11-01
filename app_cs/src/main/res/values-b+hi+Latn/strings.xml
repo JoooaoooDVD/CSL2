@@ -1527,4 +1527,12 @@ time set day</string>
     <string name="partners_count_fmt">%1$d partner(s)</string>
     <string name="pm_title_launcher">Virtual LAN disconnect ke baad launcher band ho gaya</string>
     <string name="pm_body_intro_launcher">Virtual LAN disconnect karte hi launcher process bina crash report ke band ho gaya. Android ne wajah record ki:</string>
+
+    <string name="horizon_install_title">Horizon engine install ho raha hai</string>
+    <string name="horizon_install_preparing">Taiyaar ho raha hai…</string>
+    <string name="horizon_install_done">Horizon engine ready hai</string>
+    <string name="horizon_install_failed">Horizon install fail ho gaya</string>
+    <string name="horizon_install_cancelled">Horizon install cancel kar diya</string>
+    <string name="horizon_install_incomplete">Install poora hua par kuch files missing hain. Dobara try karo.</string>
+    <string name="horizon_not_available">Horizon engine is build ya is device par available nahi hai (Android 9+ aur 64-bit processor chahiye).</string>
 </resources>

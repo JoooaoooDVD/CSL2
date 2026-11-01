@@ -1717,4 +1717,13 @@
     <string name="partners_count_fmt">%1$d partner(s)</string>
     <string name="pm_title_launcher">Launcher closed after Virtual LAN disconnect</string>
     <string name="pm_body_intro_launcher">The launcher process ended right after Virtual LAN was disconnected, without a crash report. Android recorded why:</string>
+
+    <!-- Horizon engine (Phase 2: install service) -->
+    <string name="horizon_install_title">Installing Horizon engine</string>
+    <string name="horizon_install_preparing">Preparing…</string>
+    <string name="horizon_install_done">Horizon engine is ready</string>
+    <string name="horizon_install_failed">Horizon install failed</string>
+    <string name="horizon_install_cancelled">Horizon install cancelled</string>
+    <string name="horizon_install_incomplete">The install finished but some files are missing. Try again.</string>
+    <string name="horizon_not_available">The Horizon engine is not available in this build or on this device (needs Android 9+ and a 64-bit processor).</string>
 </resources>

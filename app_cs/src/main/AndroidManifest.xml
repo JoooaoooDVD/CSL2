@@ -9,6 +9,10 @@
     <uses-feature
         android:name="android.hardware.usb.host"
         android:required="false" />
+    <!-- Horizon engine prefers Vulkan but falls back to OpenGL ES; never a hard requirement -->
+    <uses-feature
+        android:name="android.hardware.vulkan.level"
+        android:required="false" />
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Only used when the user picks a custom game folder in the first-launch setup -->
@@ -207,6 +211,31 @@
             android:excludeFromRecents="true"
             android:launchMode="singleTop"
             android:exported="false"/>
+
+        <!-- Horizon engine (Rust, Minecraft Java 26.3) — hosted as a NativeActivity in its own
+             process. CS Launcher stays the launcher: HorizonLaunch builds the request, the engine
+             exits the process when the player leaves. Library/assets are fetched at build time by
+             scripts/fetch_horizon_engine.sh (MIT, see assets/horizon/LICENSE.txt). -->
+        <activity
+            android:name=".engine.horizon.HorizonGameActivity"
+            android:process=":horizon"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:taskAffinity="com.craftstudio.cslauncher.horizon"
+            android:screenOrientation="sensorLandscape"
+            android:configChanges="orientation|keyboardHidden|keyboard|navigation|screenSize|smallestScreenSize|screenLayout|uiMode|density"
+            android:resizeableActivity="true"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+            android:hardwareAccelerated="true">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="horizon_android" />
+        </activity>
+        <service
+            android:name=".engine.horizon.HorizonInstallService"
+            android:process=":horizon"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
     </application>
     <queries>
         <package android:name="git.mojo.ffmpeg"/>
