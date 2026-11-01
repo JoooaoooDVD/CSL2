@@ -642,6 +642,7 @@
                             android:orientation="vertical">
 
                             <TextView
+                                android:id="@+id/pe_jvm_label"
                                 style="@style/PE.RowLabel"
                                 android:text="@string/pe_jvm_args" />
 

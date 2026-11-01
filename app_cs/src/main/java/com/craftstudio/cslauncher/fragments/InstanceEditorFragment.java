@@ -176,6 +176,7 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
         bindViews(view);
         bindBehaviors(view);
         applyStateToViews();
+        applyHorizonMode(view);
         applyCompactChrome(view);
 
         if (!mEntrancePlayed) {
@@ -300,6 +301,17 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
         mRuntimeIndex = instance.selectedRuntime != null ? mRuntimes.indexOf(new Runtime(instance.selectedRuntime)) : -1;
         if (mRuntimeIndex < 0) mRuntimeIndex = mRuntimes.size() - 1;
 
+        if (instance.isHorizon()) {
+            // Horizon Engine: its own renderer backends; "default" = the engine's default (Vulkan compatibility)
+            mRenderNames = com.craftstudio.cslauncher.engine.horizon.HorizonProfile.rendererIds();
+            mRenderDisplayNames.clear();
+            mRenderDisplayNames.addAll(com.craftstudio.cslauncher.engine.horizon.HorizonProfile.rendererNames(context));
+            mRenderDisplayNames.add(context.getString(R.string.hz_renderer_default));
+            mRendererIndex = instance.renderer == null ? -1 : mRenderNames.indexOf(instance.renderer);
+            if (mRendererIndex < 0) mRendererIndex = mRenderNames.size();
+            mHorizonScale = com.craftstudio.cslauncher.engine.horizon.HorizonProfile.scaleOf(instance);
+            return;
+        }
         RendererCache renderers = RendererCache.getCompatibleRenderers(context);
         mRenderNames = renderers.rendererIds;
         mRenderDisplayNames.clear();
@@ -307,6 +319,43 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
         mRenderDisplayNames.add(context.getString(R.string.global_default));
         mRendererIndex = mRenderNames.indexOf(instance.getLaunchRenderer());
         if (mRendererIndex < 0) mRendererIndex = mRenderNames.size();
+    }
+
+    /** Horizon Engine resolution scale (percent) while editing such a profile */
+    private int mHorizonScale = 100;
+
+    /**
+     * Horizon Engine profiles: no Java runtime / JVM args / shared folder / appearance pack, the version
+     * is fixed (Minecraft Java 26.3) and the JVM row becomes the resolution scale. Everything else
+     * (name, icon, banner, controls, renderer, files, shortcut, delete) is the same editor.
+     */
+    private void applyHorizonMode(@NonNull View view) {
+        if (mInstance == null || !mInstance.isHorizon()) return;
+        for (int id : new int[]{R.id.pe_row_runtime, R.id.pe_row_shared, R.id.pe_row_appearance}) {
+            View row = view.findViewById(id);
+            if (row != null) row.setVisibility(View.GONE);
+        }
+        View rowVersion = view.findViewById(R.id.pe_row_version);
+        rowVersion.setOnClickListener(v -> Toast.makeText(v.getContext(), R.string.pe_horizon_version_locked, Toast.LENGTH_SHORT).show());
+        TextView jvmLabel = view.findViewById(R.id.pe_jvm_label);
+        if (jvmLabel != null) jvmLabel.setText(R.string.pe_horizon_scale);
+        View rowJvm = view.findViewById(R.id.pe_row_jvm);
+        rowJvm.setOnClickListener(v -> {
+            java.util.List<String> items = new java.util.ArrayList<>();
+            int selected = 0;
+            int[] steps = com.craftstudio.cslauncher.engine.horizon.HorizonProfile.SCALE_STEPS;
+            for (int i = 0; i < steps.length; i++) {
+                items.add(steps[i] + "%");
+                if (steps[i] == mHorizonScale) selected = i;
+            }
+            new com.kdt.mcgui.ListPickerDialog(v.getContext(), getString(R.string.hz_title), getString(R.string.pe_horizon_scale),
+                    items, null, selected, index -> {
+                        mHorizonScale = steps[index];
+                        if (mJvmValue != null) ProfileEditorMotion.valueChanged(mJvmValue, mHorizonScale + "%");
+                    }).show();
+        });
+        if (mJvmValue != null) mJvmValue.setText(mHorizonScale + "%");
+        if (mVersionValue != null) mVersionValue.setText(R.string.hz_version_value);
     }
 
     private void bindViews(@NonNull View view) {
@@ -814,7 +863,13 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
         mInstance.name = newName;
         mInstance.versionId = mVersionId;
         mInstance.controlLayout = mControlLayout == null || mControlLayout.isEmpty() ? null : mControlLayout;
-        mInstance.jvmArgs = mJvmArgs == null || mJvmArgs.trim().isEmpty() ? null : mJvmArgs.trim();
+        if (mInstance.isHorizon()) {
+            mInstance.versionId = com.craftstudio.cslauncher.engine.horizon.HorizonProfile.VERSION_ID;
+            mInstance.horizonRenderScale = mHorizonScale;
+            mInstance.jvmArgs = null;
+        } else {
+            mInstance.jvmArgs = mJvmArgs == null || mJvmArgs.trim().isEmpty() ? null : mJvmArgs.trim();
+        }
         mInstance.sharedData = mSharedData;
         String newParts = com.craftstudio.cslauncher.game.branding.BrandingPart.serialize(mAppearanceParts);
         boolean appearanceChanged = mAppearance != com.craftstudio.cslauncher.game.branding.BrandingManager.modeOf(mInstance)

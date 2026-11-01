@@ -35,21 +35,26 @@ public final class HorizonLaunch {
     public static final String RENDERER_OPENGL = "opengl";
 
     public final String profileKey;
+    /** The profile's own game folder (saves, options.txt, packs, shaders, .hmod mods). */
+    public final File gameHome;
+    /** Resolution scale 25–100, 0 = engine default. */
+    public int renderScale;
     @Nullable public String server;
     public String renderer = "";
     public final List<String> extraArguments = new ArrayList<>();
     /** Control layout file for the CS overlay (null = launcher default). */
     @Nullable public String controlsPath;
 
-    public HorizonLaunch(@NonNull String profileKey) {
+    public HorizonLaunch(@NonNull String profileKey, @NonNull File gameHome) {
         this.profileKey = profileKey;
+        this.gameHome = gameHome;
     }
 
     /** The intent that starts the engine for this request. */
     @NonNull
     public Intent intent(@NonNull Context context, @Nullable Account account) throws IOException, JSONException {
         File engineData = HorizonEngine.stageEngineData(context);
-        File instance = HorizonEngine.instanceDir(profileKey);
+        File instance = gameHome;
         if (!instance.isDirectory() && !instance.mkdirs()) throw new IOException("Cannot create " + instance);
         JSONObject json = new JSONObject();
         json.put("home", HorizonEngine.home().getAbsolutePath());
@@ -67,6 +72,7 @@ public final class HorizonLaunch {
         json.put("extra_arguments", new JSONArray(extraArguments));
         // CS control system drives the game; the engine draws no touch controls of its own.
         json.put("host_input", true);
+        if (renderScale >= 25 && renderScale <= 100) json.put("render_scale", renderScale);
         Intent intent = new Intent(context, HorizonGameActivity.class);
         intent.putExtra(EXTRA, json.toString());
         intent.putExtra(HorizonGameActivity.EXTRA_PROFILE, profileKey);

@@ -11,6 +11,10 @@
     <string name="cc_cs_desc">You will be able to create CS Client profiles here too</string>
     <string name="cc_cs_badge">COMING SOON</string>
     <string name="cc_cs_toast">CS Client profiles are coming soon!</string>
+    <string name="cc_horizon_title">Horizon Engine</string>
+    <string name="cc_horizon_desc">Minecraft Java 26.3 on the native Horizon engine, with CS controls</string>
+    <string name="cc_horizon_badge">MC JAVA 26.3</string>
+    <string name="cc_horizon_unsupported">Horizon Engine needs Android 9 or newer on a 64-bit device</string>
     <string name="cc_modpack_title">Modpack</string>
     <string name="cc_modpack_desc">Browse modpacks and install one as a new profile</string>
     <string name="cc_modpack_badge">MODRINTH • CURSEFORGE</string>

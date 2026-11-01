@@ -7,11 +7,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ServiceInfo;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 
 import com.craftstudio.cslauncher.LauncherActivity;
@@ -25,6 +28,11 @@ import java.io.File;
  * {@link HorizonNative#nativeInstall}. Runs in the {@code :horizon} process (the engine library is
  * loaded only there). Progress is persisted in {@link HorizonInstallState} and broadcast as
  * {@link #ACTION_PROGRESS}; the launcher UI observes it from any process.
+ *
+ * <p>Completion rules: the engine returning {@code null} is not enough. The service re-checks
+ * {@link HorizonNative#nativeReady} (VERIFY stage), writes {@link HorizonEngine#readyMarker()} and only
+ * then reports {@link HorizonInstallState#STATUS_DONE}. Downloads that were verified before an interruption
+ * are kept in the cache; a retry re-uses them (the engine checks their SHA-1) instead of downloading again.
  */
 public class HorizonInstallService extends Service implements HorizonNative.InstallListener {
     private static final String TAG = "HorizonInstall";
@@ -32,11 +40,22 @@ public class HorizonInstallService extends Service implements HorizonNative.Inst
     public static final String ACTION_CANCEL = "com.craftstudio.cslauncher.horizon.CANCEL";
     public static final String ACTION_PROGRESS = "com.craftstudio.cslauncher.horizon.PROGRESS";
     public static final int NOTIFICATION_ID = 41;
+    private static final long HEARTBEAT_MS = 3000;
 
     private volatile boolean mCancelled;
     private Thread mWorker;
     private NotificationCompat.Builder mNotification;
     private long mLastNotify;
+    private Handler mHandler;
+    private final Runnable mHeartbeat = new Runnable() {
+        @Override
+        public void run() {
+            if (mWorker == null) return;
+            HorizonInstallState.touch(HorizonInstallService.this);
+            broadcast();
+            mHandler.postDelayed(this, HEARTBEAT_MS);
+        }
+    };
 
     public static void start(Context context) {
         Intent intent = new Intent(context, HorizonInstallService.class).setAction(ACTION_START);
@@ -51,7 +70,9 @@ public class HorizonInstallService extends Service implements HorizonNative.Inst
     @Override
     public void onCreate() {
         super.onCreate();
+        if (Tools.DIR_DATA == null) Tools.initEarlyConstants(this);
         if (Tools.DIR_GAME_HOME == null && Tools.checkStorageRoot(this)) Tools.initStorageConstants(this);
+        mHandler = new Handler(getMainLooper());
         Tools.buildNotificationChannel(getApplicationContext());
         Intent open = new Intent(this, LauncherActivity.class);
         PendingIntent pending = PendingIntent.getActivity(this, 0, open,
@@ -77,15 +98,19 @@ public class HorizonInstallService extends Service implements HorizonNative.Inst
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        String action = intent == null ? null : intent.getAction();
+        // A null intent = the system restarted a sticky service that was killed mid-install: resume.
+        String action = intent == null ? ACTION_START : intent.getAction();
         if (ACTION_CANCEL.equals(action)) {
             mCancelled = true;
-            HorizonInstallState.set(this, HorizonInstallState.STATUS_CANCELLED, getString(R.string.horizon_install_cancelled), 0, 0, null);
-            broadcast();
-            if (mWorker == null) stopSelf();
+            if (mWorker == null) {
+                HorizonInstallState.set(this, HorizonInstallState.STATUS_CANCELLED, getString(R.string.horizon_install_cancelled), 0, 0, null);
+                broadcast();
+                stopForeground(true);
+                stopSelf();
+            }
             return START_NOT_STICKY;
         }
-        if (mWorker != null) return START_NOT_STICKY;
+        if (mWorker != null) return START_STICKY;
         if (!HorizonNative.load()) {
             finish(getString(R.string.horizon_not_available));
             return START_NOT_STICKY;
@@ -95,31 +120,58 @@ public class HorizonInstallService extends Service implements HorizonNative.Inst
         broadcast();
         mWorker = new Thread(this::run, "horizon-install");
         mWorker.start();
-        return START_NOT_STICKY;
+        mHandler.removeCallbacks(mHeartbeat);
+        mHandler.postDelayed(mHeartbeat, HEARTBEAT_MS);
+        return START_STICKY;
     }
 
     private void run() {
         String error;
         try {
+            HorizonEngine.clearReadyMarker();
+            removeLegacyHome();
             File engineData = HorizonEngine.stageEngineData(this);
             File cache = HorizonEngine.cacheDir(this);
             //noinspection ResultOfMethodCallIgnored
             cache.mkdirs();
-            error = HorizonNative.nativeInstall(HorizonEngine.home().getAbsolutePath(),
-                    cache.getAbsolutePath(), engineData.getAbsolutePath(), this);
+            String home = HorizonEngine.home().getAbsolutePath();
+            error = HorizonNative.nativeInstall(home, cache.getAbsolutePath(), engineData.getAbsolutePath(), this);
+            if (error == null && !mCancelled) {
+                // 100% downloaded is not installed: the engine must agree that the prepared resources are complete.
+                onProgress("Verifying installation", 0, 0);
+                if (HorizonNative.nativeReady(home) && HorizonEngine.resourcesLookComplete()) {
+                    HorizonEngine.writeReadyMarker(this);
+                } else {
+                    error = getString(R.string.horizon_install_incomplete);
+                }
+            }
         } catch (Throwable t) {
             Log.e(TAG, "Install failed", t);
             error = t.getMessage() == null ? t.toString() : t.getMessage();
         }
         final String result = error;
-        new android.os.Handler(getMainLooper()).post(() -> finish(result));
+        mHandler.post(() -> finish(result));
+    }
+
+    /** The first test builds kept the engine home on the shared storage; it is not reused. */
+    private void removeLegacyHome() {
+        try {
+            if (Tools.DIR_GAME_HOME == null) return;
+            File legacy = HorizonEngine.legacyHome();
+            if (legacy.isDirectory() && !legacy.getCanonicalPath().equals(HorizonEngine.home().getCanonicalPath())) {
+                org.apache.commons.io.FileUtils.deleteQuietly(legacy);
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Legacy engine home not removed", e);
+        }
     }
 
     private void finish(@Nullable String error) {
         mWorker = null;
-        if (mCancelled) {
+        mHandler.removeCallbacks(mHeartbeat);
+        if (mCancelled || (error != null && error.toLowerCase(java.util.Locale.ROOT).contains("cancelled"))) {
             HorizonInstallState.set(this, HorizonInstallState.STATUS_CANCELLED, getString(R.string.horizon_install_cancelled), 0, 0, null);
-        } else if (error == null && HorizonNative.load() && HorizonNative.nativeReady(HorizonEngine.home().getAbsolutePath())) {
+        } else if (error == null && HorizonEngine.readyMarker().isFile()) {
             HorizonInstallState.set(this, HorizonInstallState.STATUS_DONE, getString(R.string.horizon_install_done), 1, 1, null);
         } else {
             HorizonInstallState.set(this, HorizonInstallState.STATUS_FAILED, getString(R.string.horizon_install_failed), 0, 0,
@@ -137,11 +189,15 @@ public class HorizonInstallService extends Service implements HorizonNative.Inst
         if (now - mLastNotify > 700) {
             mLastNotify = now;
             broadcast();
-            String text = total > 0 ? stage + " · " + HorizonInstallState.percent(done, total) + "%" : stage;
-            mNotification.setContentText(text);
-            if (total > 0) mNotification.setProgress(100, HorizonInstallState.percent(done, total), false);
-            else mNotification.setProgress(100, 0, true);
-            androidx.core.app.NotificationManagerCompat.from(this).notify(NOTIFICATION_ID, mNotification.build());
+            HorizonInstallState state = HorizonInstallState.get(this);
+            int percent = state.overallPercent();
+            mNotification.setContentText(state.stageLabel(this) + " · " + percent + "%");
+            mNotification.setProgress(100, percent, false);
+            try {
+                NotificationManagerCompat.from(this).notify(NOTIFICATION_ID, mNotification.build());
+            } catch (SecurityException ignored) {
+                // No notification permission: the in-app progress is enough.
+            }
         }
     }
 
@@ -153,6 +209,12 @@ public class HorizonInstallService extends Service implements HorizonNative.Inst
     private void broadcast() {
         Intent intent = new Intent(ACTION_PROGRESS).setPackage(getPackageName());
         sendBroadcast(intent);
+    }
+
+    @Override
+    public void onDestroy() {
+        if (mHandler != null) mHandler.removeCallbacks(mHeartbeat);
+        super.onDestroy();
     }
 
     @Nullable

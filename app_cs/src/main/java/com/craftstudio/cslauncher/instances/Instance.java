@@ -53,6 +53,21 @@ public class Instance extends DisplayInstance {
     public String appearanceRestore;
     /** Public URL of the modpack icon (Modrinth / CurseForge), used by the Discord presence */
     public String iconUrl;
+    /**
+     * Game engine of this profile: null/"java" = the regular Java launch pipeline,
+     * {@link com.craftstudio.cslauncher.engine.horizon.HorizonEngine#ENGINE_ID} = the native Horizon engine
+     * (Minecraft Java 26.3). See engine/horizon/HorizonProfile.
+     */
+    public String engine;
+    /** Horizon: resolution scale in percent (25–100), 0 = engine default (100). */
+    public int horizonRenderScale;
+    /** Horizon: last persisted setup state (HorizonProfile.STATE_*), informational — the engine install is the truth. */
+    public String horizonState;
+
+    /** True for a Horizon Engine profile (never launched through the Java pipeline). */
+    public boolean isHorizon() {
+        return com.craftstudio.cslauncher.engine.horizon.HorizonEngine.ENGINE_ID.equals(engine);
+    }
 
     protected Instance() {
     }

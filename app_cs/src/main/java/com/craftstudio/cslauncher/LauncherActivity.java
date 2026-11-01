@@ -34,6 +34,7 @@ import androidx.fragment.app.FragmentManager;
 
 import com.kdt.mcgui.ProgressLayout;
 
+import com.craftstudio.cslauncher.authenticator.accounts.Account;
 import com.craftstudio.cslauncher.authenticator.accounts.Accounts;
 import com.craftstudio.cslauncher.extra.ExtraConstants;
 import com.craftstudio.cslauncher.extra.ExtraCore;
@@ -152,6 +153,11 @@ public class LauncherActivity extends BaseActivity {
             return false;
         }
 
+        if (selectedInstance.isHorizon()) {
+            launchHorizon(selectedInstance);
+            return false;
+        }
+
         if (!Tools.isValidString(selectedInstance.versionId)){
             Toast.makeText(this, R.string.error_no_version, Toast.LENGTH_LONG).show();
             return false;
@@ -175,6 +181,67 @@ public class LauncherActivity extends BaseActivity {
         );
         return false;
     };
+
+    /**
+     * PLAY for a Horizon Engine profile. The shared engine must be installed and verified; otherwise the
+     * setup popup (same one as profile creation) shows/continues the progress. Launch refreshes the
+     * Microsoft session on a worker thread first, then hands the profile's own game folder, renderer,
+     * resolution scale and CS control layout to the engine process.
+     */
+    private void launchHorizon(@NonNull Instance instance) {
+        if (!com.craftstudio.cslauncher.engine.horizon.HorizonEngine.isSupported(this)) {
+            Toast.makeText(this, R.string.horizon_not_available, Toast.LENGTH_LONG).show();
+            return;
+        }
+        if (!com.craftstudio.cslauncher.engine.horizon.HorizonProfile.isReady(this, instance)) {
+            if (isFinishing()) return;
+            com.kdt.mcgui.CreateHorizonDialog.resume(this, instance).show();
+            return;
+        }
+        if (Accounts.getCurrent() == null) {
+            Toast.makeText(this, R.string.no_saved_accounts, Toast.LENGTH_LONG).show();
+            ExtraCore.setValue(ExtraConstants.SELECT_AUTH_METHOD, true);
+            return;
+        }
+        if (mHorizonLaunching) return;
+        mHorizonLaunching = true;
+        com.craftstudio.cslauncher.progresskeeper.ProgressKeeper.markLaunching();
+        com.craftstudio.cslauncher.tutorial.TutorialEvents.emit(com.craftstudio.cslauncher.tutorial.TutorialEvents.GAME_LAUNCHING);
+        com.kdt.mcgui.ProgressLayout.setProgress(com.kdt.mcgui.ProgressLayout.AUTHENTICATE, 0, R.string.home_launching_sub);
+        final Account account = Accounts.getCurrent();
+        CSLauncherApplication.sExecutorService.execute(() -> {
+            Account fresh = account;
+            Throwable failure = null;
+            try {
+                if (account != null && account.isMicrosoft) {
+                    fresh = com.craftstudio.cslauncher.skins.MinecraftSkinApi.ensureFreshSession(account);
+                }
+            } catch (Throwable t) {
+                Log.w("Horizon", "Session refresh failed, launching with the stored token", t);
+            }
+            android.content.Intent intent = null;
+            try {
+                intent = com.craftstudio.cslauncher.engine.horizon.HorizonProfile.launchIntent(this, fresh, instance);
+            } catch (Throwable t) {
+                failure = t;
+            }
+            final android.content.Intent finalIntent = intent;
+            final Throwable finalFailure = failure;
+            Tools.runOnUiThread(() -> {
+                com.kdt.mcgui.ProgressLayout.clearProgress(com.kdt.mcgui.ProgressLayout.AUTHENTICATE);
+                mHorizonLaunching = false;
+                if (finalFailure != null || finalIntent == null) {
+                    Tools.showError(this, finalFailure == null ? new IllegalStateException("No launch intent") : finalFailure);
+                    return;
+                }
+                com.craftstudio.cslauncher.discord.DiscordPresenceManager.getInstance(this)
+                        .setMinecraftLaunching(this, instance, com.craftstudio.cslauncher.engine.horizon.HorizonEngine.MINECRAFT_VERSION);
+                startActivity(finalIntent);
+            });
+        });
+    }
+
+    private boolean mHorizonLaunching;
 
     private final TaskCountListener mDoubleLaunchPreventionListener = taskCount -> {
         // Hide the notification that starts the game if there are tasks executing.

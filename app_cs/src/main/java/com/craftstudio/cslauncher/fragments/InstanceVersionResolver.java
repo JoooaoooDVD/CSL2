@@ -60,6 +60,7 @@ public final class InstanceVersionResolver {
     }
 
     public static String loaderFromVersionId(String versionId) {
+        if (versionId.startsWith("horizon-"))        return "horizon";
         if (versionId.startsWith("fabric-loader-")) return "fabric";
         if (versionId.startsWith("quilt-loader-"))  return "quilt";
         if (versionId.startsWith("neoforge-"))       return "neoforge";
@@ -75,6 +76,9 @@ public final class InstanceVersionResolver {
      *  version at all, so this relies entirely on inheritsFrom for that loader). */
     public static String cleanMcVersion(String versionId, String loader) {
         switch (loader) {
+            case "horizon":
+                // Horizon Engine profiles: "horizon-26.3" → "26.3" (no version JSON exists for them)
+                return versionId.substring("horizon-".length());
             case "fabric": {
                 String rest = versionId.substring("fabric-loader-".length());
                 int dash = rest.indexOf('-');

@@ -214,6 +214,13 @@ public class mcVersionSpinner extends ExtendedTextView {
             }
 
             @Override
+            public void onHorizon() {
+                if (activity.isFinishing()) return;
+                mCreateDialog = new CreateHorizonDialog(activity, mcVersionSpinner.this::showCreateChooser);
+                mCreateDialog.show();
+            }
+
+            @Override
             public void onModpack() {
                 if (activity.isFinishing()) return;
                 // Modpack library: same two pages as mods (grid, then the install page)

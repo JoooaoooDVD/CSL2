@@ -706,7 +706,8 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
             loader = info.loader;
         }
 
-        String loaderLabel = loader == null || loader.isEmpty() ? "Vanilla" : capitalize(loader);
+        String loaderLabel = loader == null || loader.isEmpty() ? "Vanilla"
+                : "horizon".equals(loader) ? "Horizon Engine" : capitalize(loader);
         String detail;
         if (mcVersion != null && !mcVersion.isEmpty()) {
             detail = getString(R.string.home_version_subtitle_fmt, mcVersion, loaderLabel);

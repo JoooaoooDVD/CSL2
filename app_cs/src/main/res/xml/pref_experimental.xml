@@ -3,12 +3,6 @@
     xmlns:app2="http://schemas.android.com/apk/res-auto">
     <com.craftstudio.cslauncher.prefs.BackButtonPreference />
     <PreferenceCategory android:layout="@layout/item_settings_section" android:title="@string/preference_category_experimental_settings">
-        <Preference android:layout="@layout/item_setting_row"
-            android:key="horizonTest"
-            android:icon="@drawable/ic_px_shader_dump"
-            android:title="@string/preference_horizon_test_title"
-            android:summary="@string/preference_horizon_test_summary" />
-
         <SwitchPreferenceCompat android:layout="@layout/item_setting_row"
             android:widgetLayout="@layout/preference_widget_material_switch"
             android:key="dump_shaders"
