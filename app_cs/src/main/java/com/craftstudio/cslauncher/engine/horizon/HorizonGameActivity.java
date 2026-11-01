@@ -87,9 +87,15 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
         mBackend = new HorizonBackend();
         Platform.setPlatformLibrary(mBackend);
 
-        View overlay = LayoutInflater.from(this).inflate(R.layout.activity_horizon_game, null);
-        addContentView(overlay, new ViewGroup.LayoutParams(
+        // NativeActivity hands its window surface to the engine (takeSurface): the activity's own view
+        // hierarchy is then never hardware-drawn, which is why controls added with addContentView were
+        // invisible / only partially visible. The CS overlay therefore lives in its OWN translucent window
+        // (application sub-window above the engine surface) with its own surface and input channel.
+        OverlayRoot root = new OverlayRoot(this);
+        View overlay = LayoutInflater.from(this).inflate(R.layout.activity_horizon_game, root, false);
+        root.addView(overlay, new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        mOverlayRoot = root;
         mControlLayout = overlay.findViewById(R.id.main_control_layout);
         mInputView = overlay.findViewById(R.id.main_game_render_view);
         mMenuButton = overlay.findViewById(R.id.drawer_button);
@@ -100,11 +106,105 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
         mControlLayout.setMenuListener(this);
         mMenuButton.setOnClickListener(v -> onClickedMenu());
         Platform.resetCursorPosition();
+        applyImmersive(getWindow().getDecorView());
+    }
+
+    private OverlayRoot mOverlayRoot;
+    private boolean mOverlayAttached;
+
+    @Override
+    public void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        attachOverlay();
+    }
+
+    /** Adds the CS control window once the activity window has a token (sub-windows need it). */
+    private void attachOverlay() {
+        if (mOverlayAttached || mOverlayRoot == null || isFinishing()) return;
+        android.os.IBinder token = getWindow().getDecorView().getWindowToken();
+        if (token == null) return;
+        WindowManager.LayoutParams lp = new WindowManager.LayoutParams(
+                WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.TYPE_APPLICATION_PANEL,
+                WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
+                        | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+                        | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+                        | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
+                android.graphics.PixelFormat.TRANSLUCENT);
+        lp.token = token;
+        lp.gravity = android.view.Gravity.TOP | android.view.Gravity.START;
+        lp.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING
+                | WindowManager.LayoutParams.SOFT_INPUT_STATE_UNCHANGED;
+        lp.setTitle("CS controls");
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+            lp.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+        }
+        try {
+            getWindowManager().addView(mOverlayRoot, lp);
+        } catch (RuntimeException e) {
+            Log.e(TAG, "Cannot add the control window, falling back to the activity window", e);
+            addContentView(mOverlayRoot, new ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        }
+        mOverlayAttached = true;
+        applyImmersive(mOverlayRoot);
+        // Same sizing as the Java game: window metrics first, then the layout file (positions are
+        // relative to CallbackBridge.windowWidth/Height, which refreshSize sets from the view size).
         mControlLayout.post(() -> {
             Tools.getDisplayMetrics(this);
             mInputView.refreshSize(true);
             loadControls();
         });
+    }
+
+    private void detachOverlay() {
+        if (!mOverlayAttached || mOverlayRoot == null) return;
+        mOverlayAttached = false;
+        try {
+            if (mOverlayRoot.getParent() != null && mOverlayRoot.getWindowToken() != null) {
+                getWindowManager().removeViewImmediate(mOverlayRoot);
+            }
+        } catch (RuntimeException ignored) {
+        }
+    }
+
+    /** Fullscreen, no system bars, in both windows (the engine's and the control overlay's). */
+    @SuppressWarnings("deprecation")
+    private static void applyImmersive(View view) {
+        view.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+    }
+
+    /**
+     * Root of the control window. Key events (back, hardware keyboard, gamepad) arrive here because the
+     * focused window is this one, not the activity's; they are routed through the activity's dispatcher
+     * so the CS key handling stays in one place.
+     */
+    private final class OverlayRoot extends android.widget.FrameLayout {
+        OverlayRoot(android.content.Context context) {
+            super(context);
+            setBackgroundColor(0x00000000);
+            setFitsSystemWindows(false);
+        }
+
+        @Override
+        public boolean dispatchKeyEvent(KeyEvent event) {
+            if (GameActivity.touchCharInput != null && GameActivity.touchCharInput.hasFocus()
+                    && event.getKeyCode() != KeyEvent.KEYCODE_BACK) {
+                return super.dispatchKeyEvent(event);
+            }
+            return HorizonGameActivity.this.dispatchKeyEvent(event) || super.dispatchKeyEvent(event);
+        }
+
+        @Override
+        public void onWindowFocusChanged(boolean hasWindowFocus) {
+            super.onWindowFocusChanged(hasWindowFocus);
+            if (hasWindowFocus) applyImmersive(this);
+        }
     }
 
     private void loadControls() {
@@ -190,6 +290,7 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
 
     @Override
     protected void onDestroy() {
+        detachOverlay();
         super.onDestroy();
         // The engine calls exit(0) itself after saving; make sure no cached process lingers if it did not.
         File exit = new File(HorizonEngine.home(), EXIT_FILE);
