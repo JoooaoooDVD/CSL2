@@ -1535,4 +1535,9 @@ time set day</string>
     <string name="horizon_install_cancelled">Horizon install cancel kar diya</string>
     <string name="horizon_install_incomplete">Install poora hua par kuch files missing hain. Dobara try karo.</string>
     <string name="horizon_not_available">Horizon engine is build ya is device par available nahi hai (Android 9+ aur 64-bit processor chahiye).</string>
+    <string name="horizon_menu_title">Horizon</string>
+    <string name="horizon_menu_keyboard">Keyboard</string>
+    <string name="horizon_menu_toggle_controls">Controls dikhao / chhupao</string>
+    <string name="horizon_menu_edit_controls">Controls edit karo</string>
+    <string name="horizon_menu_exit">Pause menu (Escape)</string>
 </resources>

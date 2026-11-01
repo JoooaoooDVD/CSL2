@@ -1726,4 +1726,9 @@
     <string name="horizon_install_cancelled">Horizon install cancelled</string>
     <string name="horizon_install_incomplete">The install finished but some files are missing. Try again.</string>
     <string name="horizon_not_available">The Horizon engine is not available in this build or on this device (needs Android 9+ and a 64-bit processor).</string>
+    <string name="horizon_menu_title">Horizon</string>
+    <string name="horizon_menu_keyboard">Keyboard</string>
+    <string name="horizon_menu_toggle_controls">Show / hide controls</string>
+    <string name="horizon_menu_edit_controls">Edit controls</string>
+    <string name="horizon_menu_exit">Pause menu (Escape)</string>
 </resources>

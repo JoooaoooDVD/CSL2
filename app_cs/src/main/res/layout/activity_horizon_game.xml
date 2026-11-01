@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- CS control overlay for the Horizon engine. The engine renders into the NativeActivity window
+     below; everything here is transparent input + HUD owned by CS Launcher Plus. -->
+<com.craftstudio.cslauncher.input.ControlLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main_control_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/transparent">
+
+    <com.craftstudio.cslauncher.game.HorizonInputView
+        android:id="@+id/main_game_render_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/transparent"
+        android:defaultFocusHighlightEnabled="false"
+        tools:ignore="UnusedAttribute">
+
+        <com.craftstudio.cslauncher.game.GameCursorView
+            android:id="@+id/main_cursorview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:focusable="false"
+            android:translationZ="1dp"
+            android:visibility="gone"
+            app:defaultCursorDrawable="@drawable/ic_mouse_pointer" />
+
+    </com.craftstudio.cslauncher.game.HorizonInputView>
+
+    <com.craftstudio.cslauncher.input.keyboard.TouchCharInput
+        android:id="@+id/mainTouchCharInput"
+        android:layout_width="1dp"
+        android:layout_height="1dp"
+        android:background="@android:color/darker_gray"
+        android:ems="10"
+        android:imeOptions="flagNoFullscreen|flagNoExtractUi|flagNoPersonalizedLearning|actionDone"
+        android:inputType="textFilter|textImeMultiLine|textAutoComplete|textAutoCorrect"
+        tools:ignore="TouchTargetSizeCheck" />
+
+    <ImageView
+        android:id="@+id/drawer_button"
+        android:layout_width="44dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center_horizontal"
+        android:background="@null"
+        android:contentDescription="@string/ce_title"
+        android:elevation="10dp"
+        android:outlineProvider="none"
+        android:padding="11dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_sharp_settings_24"
+        android:tint="#FFFFFFFF" />
+
+</com.craftstudio.cslauncher.input.ControlLayout>

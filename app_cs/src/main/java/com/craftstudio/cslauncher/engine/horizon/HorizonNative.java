@@ -52,4 +52,21 @@ public final class HorizonNative {
     /** One-line summary of the previous engine session (crash/unclean exit), or null. */
     @Nullable
     public static native String nativeDiagnosticsSummary(String home);
+
+    // --- CS control system -> engine (host input; only valid in the :horizon game process) ---
+
+    /** Key by Horizon name, e.g. {@code key.keyboard.w}; see {@link HorizonKeyMap}. */
+    public static native void nativeHostKey(String token, boolean down);
+    /** Relative camera motion in window pixels while the pointer is captured. */
+    public static native void nativeHostLook(double dx, double dy);
+    /** Absolute pointer position in window pixels (menus, inventory). */
+    public static native void nativeHostCursor(double x, double y);
+    /** 0 left, 1 right, 2 middle, 3 back, 4 forward. */
+    public static native void nativeHostButton(int button, boolean down);
+    public static native void nativeHostScroll(float x, float y);
+    /** Typed text for chat, signs, text fields. */
+    public static native void nativeHostText(String text);
+    public static native void nativeHostReleaseAll();
+    /** Bit 0: pointer captured (world view); bit 1: engine wants a text keyboard. */
+    public static native int nativeHostPoll();
 }

@@ -38,6 +38,8 @@ public final class HorizonLaunch {
     @Nullable public String server;
     public String renderer = "";
     public final List<String> extraArguments = new ArrayList<>();
+    /** Control layout file for the CS overlay (null = launcher default). */
+    @Nullable public String controlsPath;
 
     public HorizonLaunch(@NonNull String profileKey) {
         this.profileKey = profileKey;
@@ -63,9 +65,12 @@ public final class HorizonLaunch {
         if (server != null && !server.isEmpty()) json.put("server", server);
         if (!renderer.isEmpty()) json.put("renderer", renderer);
         json.put("extra_arguments", new JSONArray(extraArguments));
+        // CS control system drives the game; the engine draws no touch controls of its own.
+        json.put("host_input", true);
         Intent intent = new Intent(context, HorizonGameActivity.class);
         intent.putExtra(EXTRA, json.toString());
         intent.putExtra(HorizonGameActivity.EXTRA_PROFILE, profileKey);
+        if (controlsPath != null) intent.putExtra(HorizonGameActivity.EXTRA_CONTROLS, controlsPath);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         return intent;
     }
