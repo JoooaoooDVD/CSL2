@@ -1731,4 +1731,6 @@
     <string name="horizon_menu_toggle_controls">Show / hide controls</string>
     <string name="horizon_menu_edit_controls">Edit controls</string>
     <string name="horizon_menu_exit">Pause menu (Escape)</string>
+    <string name="preference_horizon_test_title">Horizon engine (test console)</string>
+    <string name="preference_horizon_test_summary">Install, launch and debug the Horizon Minecraft 26.3 engine. Engineering preview.</string>
 </resources>

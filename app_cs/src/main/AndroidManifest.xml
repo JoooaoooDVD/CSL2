@@ -231,6 +231,11 @@
                 android:name="android.app.lib_name"
                 android:value="horizon_android" />
         </activity>
+        <activity
+            android:name=".engine.horizon.HorizonTestActivity"
+            android:exported="false"
+            android:label="Horizon engine test"
+            android:theme="@style/AppTheme" />
         <service
             android:name=".engine.horizon.HorizonInstallService"
             android:process=":horizon"

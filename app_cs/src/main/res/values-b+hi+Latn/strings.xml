@@ -1540,4 +1540,6 @@ time set day</string>
     <string name="horizon_menu_toggle_controls">Controls dikhao / chhupao</string>
     <string name="horizon_menu_edit_controls">Controls edit karo</string>
     <string name="horizon_menu_exit">Pause menu (Escape)</string>
+    <string name="preference_horizon_test_title">Horizon engine (test console)</string>
+    <string name="preference_horizon_test_summary">Horizon Minecraft 26.3 engine install, launch aur debug karo. Engineering preview.</string>
 </resources>

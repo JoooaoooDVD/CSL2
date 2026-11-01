@@ -18,6 +18,10 @@ public class LauncherPreferenceExperimentalFragment extends LauncherPreferenceFr
     @Override
     public void onCreatePreferences(Bundle b, String str) {
         addPreferencesFromResource(R.xml.pref_experimental);
+        requirePreference("horizonTest").setOnPreferenceClickListener(p -> {
+            startActivity(new android.content.Intent(requireContext(), com.craftstudio.cslauncher.engine.horizon.HorizonTestActivity.class));
+            return true;
+        });
         SwitchPreferenceCompat sysmem = requirePreference("freedrenoSysmem", SwitchPreferenceCompat.class);
         SwitchPreferenceCompat ubwc = requirePreference("ubwcWorkaround", SwitchPreferenceCompat.class);
         boolean hasFreedreno = GpuUtils.getGlInfo().isAdreno();
