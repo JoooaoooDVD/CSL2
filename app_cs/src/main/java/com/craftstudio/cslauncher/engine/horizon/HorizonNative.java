@@ -5,7 +5,7 @@ import androidx.annotation.Nullable;
 
 /**
  * JNI surface of {@code libhorizon_android.so} built with the {@code cs-host} feature
- * (fork: craftstudioteam/horizon-android, {@code crates/horizon-client/src/android/cs_bridge.rs}).
+ * (fork: JoooaoooDVD/horizon-android, {@code crates/horizon-client/src/android/cs_bridge.rs}).
  * The play path does not go through these methods: the game is started by {@link HorizonGameActivity}
  * (a NativeActivity) with the {@code cs_launch} intent extra.
  */

@@ -19,6 +19,6 @@ app_cs/src/main/jniLibs/*/.easytier-*
 app_cs/src/main/jniLibs/*/libhev-socks5-tunnel.so
 app_cs/src/main/jniLibs/*/.hev-tag
 
-# Horizon engine (downloaded by scripts/fetch_horizon_engine.sh from craftstudioteam/horizon-android)
+# Horizon engine (downloaded by scripts/fetch_horizon_engine.sh from JoooaoooDVD/horizon-android)
 app_cs/src/main/jniLibs/*/libhorizon_android.so
 app_cs/src/main/assets/horizon/
