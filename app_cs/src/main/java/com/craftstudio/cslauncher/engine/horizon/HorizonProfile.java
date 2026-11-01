@@ -77,7 +77,7 @@ public final class HorizonProfile {
             i.controlLayout = finalControls;
             i.sharedData = false;
             i.horizonState = installed ? STATE_READY : STATE_NOT_INSTALLED;
-        }, "Horizon");
+        }, "CS-Engine");
         prepareGameHome(instance);
         return instance;
     }

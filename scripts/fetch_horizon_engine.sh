@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Downloads the Horizon engine artefacts built by JoooaoooDVD/horizon-android (branch main,
 # workflow "CS engine") and places them where the CS Launcher Plus build expects them:
-#   app_cs/src/main/jniLibs/<abi>/libhorizon_android.so
+#   app_cs/src/main/jniLibs/<abi>/libcs_engine.so
 #   app_cs/src/main/assets/horizon/{engine-data.zip,LICENSE.txt,THIRD_PARTY_NOTICES.md,BUILD.json}
 #
 # Horizon is MIT licensed (Ludovic Marie and the Horizon contributors; Android port by Vasysik).
@@ -37,16 +37,16 @@ for f in BUILD.json engine-data.zip LICENSE.txt THIRD_PARTY_NOTICES.md; do
 done
 got_any=0
 for abi in "${ABIS[@]}"; do
-  if curl -fsSL -o "$WORK/libhorizon_android-$abi.so" "$BASE/libhorizon_android-$abi.so"; then
+  if curl -fsSL -o "$WORK/libcs_engine-$abi.so" "$BASE/libcs_engine-$abi.so"; then
     got_any=1
   else
-    rm -f "$WORK/libhorizon_android-$abi.so"
+    rm -f "$WORK/libcs_engine-$abi.so"
     echo "[horizon] no library for $abi in this release"
   fi
 done
 [[ "$got_any" == "1" ]] || fail "no engine library found in release $TAG"
 
-( cd "$WORK" && grep -E "engine-data.zip|LICENSE.txt|THIRD_PARTY_NOTICES.md|libhorizon_android-" SHA256SUMS.txt | while read -r sum name; do
+( cd "$WORK" && grep -E "engine-data.zip|LICENSE.txt|THIRD_PARTY_NOTICES.md|libcs_engine-" SHA256SUMS.txt | while read -r sum name; do
     [[ -f "$name" ]] || continue
     echo "$sum  $name" | sha256sum -c - >/dev/null || { echo "[horizon] checksum mismatch: $name"; exit 1; }
   done ) || fail "checksum verification failed"
@@ -54,10 +54,10 @@ done
 mkdir -p "$ASSET_DIR"
 cp "$WORK/engine-data.zip" "$WORK/LICENSE.txt" "$WORK/THIRD_PARTY_NOTICES.md" "$WORK/BUILD.json" "$ASSET_DIR/"
 for abi in "${ABIS[@]}"; do
-  if [[ -f "$WORK/libhorizon_android-$abi.so" ]]; then
+  if [[ -f "$WORK/libcs_engine-$abi.so" ]]; then
     mkdir -p "$JNI_DIR/$abi"
-    cp "$WORK/libhorizon_android-$abi.so" "$JNI_DIR/$abi/libhorizon_android.so"
-    echo "[horizon] $abi: $(stat -c %s "$JNI_DIR/$abi/libhorizon_android.so") bytes"
+    cp "$WORK/libcs_engine-$abi.so" "$JNI_DIR/$abi/libcs_engine.so"
+    echo "[horizon] $abi: $(stat -c %s "$JNI_DIR/$abi/libcs_engine.so") bytes"
   fi
 done
 echo "[horizon] engine: $(python3 -c "import json;d=json.load(open('$ASSET_DIR/BUILD.json'));print(d.get('version'),d.get('commit'))" 2>/dev/null)"

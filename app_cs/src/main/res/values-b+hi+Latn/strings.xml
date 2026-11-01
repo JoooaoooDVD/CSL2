@@ -1528,14 +1528,14 @@ time set day</string>
     <string name="pm_title_launcher">Virtual LAN disconnect ke baad launcher band ho gaya</string>
     <string name="pm_body_intro_launcher">Virtual LAN disconnect karte hi launcher process bina crash report ke band ho gaya. Android ne wajah record ki:</string>
 
-    <string name="horizon_install_title">Horizon engine install ho raha hai</string>
+    <string name="horizon_install_title">CS Engine install ho raha hai</string>
     <string name="horizon_install_preparing">Taiyaar ho raha hai…</string>
-    <string name="horizon_install_done">Horizon engine ready hai</string>
-    <string name="horizon_install_failed">Horizon install fail ho gaya</string>
-    <string name="horizon_install_cancelled">Horizon install cancel kar diya</string>
+    <string name="horizon_install_done">CS Engine ready hai</string>
+    <string name="horizon_install_failed">CS Engine install fail ho gaya</string>
+    <string name="horizon_install_cancelled">CS Engine install cancel kar diya</string>
     <string name="horizon_install_incomplete">Install poora hua par kuch files missing hain. Dobara try karo.</string>
-    <string name="horizon_not_available">Horizon engine is build ya is device par available nahi hai (Android 9+ aur 64-bit processor chahiye).</string>
-    <string name="horizon_menu_title">Horizon</string>
+    <string name="horizon_not_available">CS Engine is build ya is device par available nahi hai (Android 9+ aur 64-bit processor chahiye).</string>
+    <string name="horizon_menu_title">CS Engine</string>
     <string name="horizon_menu_keyboard">Keyboard</string>
     <string name="horizon_menu_toggle_controls">Controls dikhao / chhupao</string>
     <string name="horizon_menu_edit_controls">Controls edit karo</string>
@@ -1548,7 +1548,7 @@ time set day</string>
     <string name="horizon_stage_finalize">Installation poori ho rahi hai</string>
     <string name="horizon_stage_verify">Installation verify ho rahi hai</string>
     <string name="horizon_install_interrupted">Install beech mein ruk gaya tha. Verified files safe hain; Retry dabao, download wahin se chalega.</string>
-    <string name="hz_title">Horizon Engine profile</string>
+    <string name="hz_title">CS Engine profile</string>
     <string name="hz_subtitle">Minecraft Java 26.3 · native engine, CS controls</string>
     <string name="hz_version">GAME VERSION</string>
     <string name="hz_renderer">RENDERER</string>
@@ -1558,12 +1558,12 @@ time set day</string>
     <string name="hz_scale">RESOLUTION SCALE</string>
     <string name="hz_scale_hint">Kam value = kam pixels render, zyada FPS; UI sharp rehta hai.</string>
     <string name="hz_engine">ENGINE</string>
-    <string name="hz_engine_installed">Engine installed aur verified · sabhi Horizon profiles share karte hain</string>
-    <string name="hz_engine_missing">Engine abhi install nahi hai · Mojang se lagbhag 500 MB download, sirf ek baar sab Horizon profiles ke liye</string>
+    <string name="hz_engine_installed">Engine installed aur verified · sabhi CS Engine profiles share karte hain</string>
+    <string name="hz_engine_missing">Engine abhi install nahi hai · Mojang se lagbhag 500 MB download, sirf ek baar sab CS Engine profiles ke liye</string>
     <string name="hz_engine_installing">Engine install chal raha hai · yeh profile usi mein jud jayega</string>
     <string name="hz_summary">Har profile ke apne saves, options, resource packs, shaders aur .hmod mods</string>
     <string name="hz_create">Profile banao</string>
-    <string name="hz_progress_title">Horizon Engine set up ho raha hai</string>
+    <string name="hz_progress_title">CS Engine set up ho raha hai</string>
     <string name="hz_progress_profile">Profile “%1$s” save ho gaya. Minecraft 26.3 resources taiyaar ho rahe hain.</string>
     <string name="hz_progress_hint">Yeh window band kar sakte ho — setup background mein chalta rahega aur ready hone tak PLAY progress dikhayega.</string>
     <string name="hz_progress_hide">Chhupao</string>
@@ -1579,12 +1579,12 @@ time set day</string>
     <string name="hz_state_failed">Fail ho gaya</string>
     <string name="hz_ready_toast">%1$s khelne ke liye ready hai</string>
     <string name="hz_created_toast">%1$s ban gaya</string>
-    <string name="hz_play_not_ready">Horizon Engine abhi set up ho raha hai</string>
+    <string name="hz_play_not_ready">CS Engine abhi set up ho raha hai</string>
     <string name="hz_tasks_ongoing">Pehle chal rahe downloads poore hone do</string>
-    <string name="hz_account_needed">Horizon Engine se khelne ke liye Minecraft wale Microsoft account se sign in karo</string>
+    <string name="hz_account_needed">CS Engine se khelne ke liye Minecraft wale Microsoft account se sign in karo</string>
     <string name="pe_horizon_scale">Resolution scale</string>
-    <string name="pe_horizon_version_locked">Horizon profiles hamesha Minecraft Java 26.3 chalate hain</string>
-    <string name="cc_horizon_title">Horizon Engine</string>
-    <string name="cc_horizon_desc">Native Horizon engine par Minecraft Java 26.3, CS controls ke saath</string>
-    <string name="cc_horizon_unsupported">Horizon Engine ke liye Android 9+ aur 64-bit device chahiye</string>
+    <string name="pe_horizon_version_locked">CS Engine profiles hamesha Minecraft Java 26.3 chalate hain</string>
+    <string name="cc_horizon_title">CS Engine</string>
+    <string name="cc_horizon_desc">Native CS Engine (Powered by Craft Studio) par Minecraft Java 26.3, CS controls ke saath</string>
+    <string name="cc_horizon_unsupported">CS Engine ke liye Android 9+ aur 64-bit device chahiye</string>
 </resources>

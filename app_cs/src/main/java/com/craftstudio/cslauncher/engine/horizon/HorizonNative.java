@@ -4,14 +4,15 @@ import androidx.annotation.Keep;
 import androidx.annotation.Nullable;
 
 /**
- * JNI surface of {@code libhorizon_android.so} built with the {@code cs-host} feature
+ * JNI surface of {@code libcs_engine.so} (CS Engine, built with the {@code cs-host} feature
  * (fork: JoooaoooDVD/horizon-android, {@code crates/horizon-client/src/android/cs_bridge.rs}).
  * The play path does not go through these methods: the game is started by {@link HorizonGameActivity}
  * (a NativeActivity) with the {@code cs_launch} intent extra.
  */
 @Keep
 public final class HorizonNative {
-    public static final String LIBRARY = "horizon_android";
+    /** CS Engine library (fork {@code crates/cs-brand} LIB; {@code android.app.lib_name} in the manifest). */
+    public static final String LIBRARY = "cs_engine";
     private static Boolean sLoaded;
 
     private HorizonNative() {}

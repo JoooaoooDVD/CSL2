@@ -256,7 +256,7 @@ public class ProfilePickerDialog extends Dialog {
             case "quilt": loaderLabel = "Quilt"; break;
             case "forge": loaderLabel = "Forge"; break;
             case "neoforge": loaderLabel = "NeoForge"; break;
-            case "horizon": loaderLabel = "Horizon Engine"; break;
+            case "horizon": loaderLabel = "CS Engine"; break;
             default: loaderLabel = "Vanilla"; break;
         }
         if (version == null) return loaderLabel;

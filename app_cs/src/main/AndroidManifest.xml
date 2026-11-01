@@ -229,7 +229,7 @@
             android:hardwareAccelerated="true">
             <meta-data
                 android:name="android.app.lib_name"
-                android:value="horizon_android" />
+                android:value="cs_engine" />
         </activity>
         <service
             android:name=".engine.horizon.HorizonInstallService"

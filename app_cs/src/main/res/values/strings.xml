@@ -1719,14 +1719,14 @@
     <string name="pm_body_intro_launcher">The launcher process ended right after Virtual LAN was disconnected, without a crash report. Android recorded why:</string>
 
     <!-- Horizon engine (Phase 2: install service) -->
-    <string name="horizon_install_title">Installing Horizon engine</string>
+    <string name="horizon_install_title">Installing CS Engine</string>
     <string name="horizon_install_preparing">Preparing…</string>
-    <string name="horizon_install_done">Horizon engine is ready</string>
-    <string name="horizon_install_failed">Horizon install failed</string>
-    <string name="horizon_install_cancelled">Horizon install cancelled</string>
+    <string name="horizon_install_done">CS Engine is ready</string>
+    <string name="horizon_install_failed">CS Engine install failed</string>
+    <string name="horizon_install_cancelled">CS Engine install cancelled</string>
     <string name="horizon_install_incomplete">The install finished but some files are missing. Try again.</string>
-    <string name="horizon_not_available">The Horizon engine is not available in this build or on this device (needs Android 9+ and a 64-bit processor).</string>
-    <string name="horizon_menu_title">Horizon</string>
+    <string name="horizon_not_available">CS Engine is not available in this build or on this device (needs Android 9+ and a 64-bit processor).</string>
+    <string name="horizon_menu_title">CS Engine</string>
     <string name="horizon_menu_keyboard">Keyboard</string>
     <string name="horizon_menu_toggle_controls">Show / hide controls</string>
     <string name="horizon_menu_edit_controls">Edit controls</string>
@@ -1741,11 +1741,11 @@
     <string name="horizon_detail_bytes">%1$s MB / %2$s MB</string>
     <string name="horizon_detail_files">%1$d / %2$d files</string>
     <string name="horizon_install_interrupted">The install was interrupted. Verified files are kept; tap Retry to continue.</string>
-    <string name="hz_title">Horizon Engine profile</string>
+    <string name="hz_title">CS Engine profile</string>
     <string name="hz_subtitle">Minecraft Java 26.3 · native engine, CS controls</string>
-    <string name="hz_name_hint">Horizon 26.3</string>
+    <string name="hz_name_hint">CS Engine 26.3</string>
     <string name="hz_version">GAME VERSION</string>
-    <string name="hz_version_value">Minecraft Java 26.3 · Horizon Engine</string>
+    <string name="hz_version_value">Minecraft Java 26.3 · CS Engine · Powered by Craft Studio</string>
     <string name="hz_renderer">RENDERER</string>
     <string name="hz_renderer_vulkan">Vulkan</string>
     <string name="hz_renderer_vulkan_compat">Vulkan (compatibility)</string>
@@ -1756,12 +1756,12 @@
     <string name="hz_scale">RESOLUTION SCALE</string>
     <string name="hz_scale_hint">Lower values render fewer pixels for more FPS; the UI stays sharp.</string>
     <string name="hz_engine">ENGINE</string>
-    <string name="hz_engine_installed">Engine installed and verified · shared by all Horizon profiles</string>
-    <string name="hz_engine_missing">Engine not installed yet · about 500 MB download from Mojang, done once for all Horizon profiles</string>
+    <string name="hz_engine_installed">Engine installed and verified · shared by all CS Engine profiles</string>
+    <string name="hz_engine_missing">Engine not installed yet · about 500 MB download from Mojang, done once for all CS Engine profiles</string>
     <string name="hz_engine_installing">Engine install in progress · this profile joins it</string>
     <string name="hz_summary">Own saves, options, resource packs, shaders and .hmod mods per profile</string>
     <string name="hz_create">Create profile</string>
-    <string name="hz_progress_title">Setting up Horizon Engine</string>
+    <string name="hz_progress_title">Setting up CS Engine</string>
     <string name="hz_progress_profile">Profile “%1$s” is saved. Minecraft 26.3 resources are being prepared.</string>
     <string name="hz_progress_hint">You can close this window — the setup continues in the background and PLAY shows the progress until it is ready.</string>
     <string name="hz_progress_hide">Hide</string>
@@ -1777,9 +1777,9 @@
     <string name="hz_state_failed">Failed</string>
     <string name="hz_ready_toast">%1$s is ready to play</string>
     <string name="hz_created_toast">%1$s created</string>
-    <string name="hz_play_not_ready">Horizon Engine is still being set up</string>
+    <string name="hz_play_not_ready">CS Engine is still being set up</string>
     <string name="hz_tasks_ongoing">Finish the running downloads first</string>
-    <string name="hz_account_needed">Sign in with a Microsoft account that owns Minecraft to play with Horizon Engine</string>
+    <string name="hz_account_needed">Sign in with a Microsoft account that owns Minecraft to play with CS Engine</string>
     <string name="pe_horizon_scale">Resolution scale</string>
-    <string name="pe_horizon_version_locked">Horizon profiles always run Minecraft Java 26.3</string>
+    <string name="pe_horizon_version_locked">CS Engine profiles always run Minecraft Java 26.3</string>
 </resources>

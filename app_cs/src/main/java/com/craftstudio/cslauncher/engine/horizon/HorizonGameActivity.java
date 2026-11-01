@@ -72,7 +72,7 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
             return;
         }
         if (!HorizonNative.load()) {
-            Log.e(TAG, "libhorizon_android.so is not available in this build");
+            Log.e(TAG, "libcs_engine.so is not available in this build");
             super.onCreate(savedInstanceState);
             finish();
             return;

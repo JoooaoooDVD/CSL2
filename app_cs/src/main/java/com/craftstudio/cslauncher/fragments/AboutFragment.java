@@ -66,6 +66,7 @@ public class AboutFragment extends Fragment {
     };
 
     private static final Credit[] LIBRARIES = {
+            new Credit("Horizon Android", "CS Engine (Powered by Craft Studio) is built on Horizon Android, a native Rust engine for Minecraft: Java Edition.", "MIT", "https://github.com/Vasysik/horizon-android"),
             new Credit("Boardwalk", "The project that first ran Minecraft: Java Edition on Android — the ancestor of every Pojav-based launcher.", "Apache-2.0", "https://github.com/zhuowei/Boardwalk"),
             new Credit("OpenJDK (multiarch)", "Java runtimes 8, 17 and 21 built for Android by the PojavLauncher team.", "GPL-2.0 + CE", "https://github.com/PojavLauncherTeam/android-openjdk-build-multiarch"),
             new Credit("GLFW (Android)", "Window, input and EGL context backend for LWJGL 3.", "zlib", "https://github.com/MojoLauncher/glfw"),

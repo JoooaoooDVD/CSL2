@@ -131,7 +131,7 @@ public final class HorizonBackend implements PlatformBackend, Choreographer.Fram
 
     @Override
     public String backendName() {
-        return "Horizon";
+        return "CS Engine";
     }
 
     @Override
