@@ -56,6 +56,13 @@ public final class HorizonNative {
 
     // --- CS control system -> engine (host input; only valid in the :horizon game process) ---
 
+    /**
+     * Skin &amp; Cape hot switch: PNG paths (empty = none) and {@code slim}/{@code classic}. The engine
+     * shows them where no account/server texture applies (offline accounts always; Microsoft accounts
+     * keep their official skin and only fill a missing cape).
+     */
+    public static native void nativeHostSkin(String skinPath, String model, String capePath);
+
     /** Key by Horizon name, e.g. {@code key.keyboard.w}; see {@link HorizonKeyMap}. */
     public static native void nativeHostKey(String token, boolean down);
     /** Relative camera motion in window pixels while the pointer is captured. */

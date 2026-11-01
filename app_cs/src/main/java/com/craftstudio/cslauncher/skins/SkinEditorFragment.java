@@ -589,7 +589,7 @@ public class SkinEditorFragment extends Fragment {
         });
     }
 
-    private static byte[] readLimited(Context context, Uri uri) throws IOException {
+    public static byte[] readLimited(Context context, Uri uri) throws IOException {
         try (InputStream in = context.getContentResolver().openInputStream(uri)) {
             if (in == null) throw new IOException("Could not open the selected file");
             byte[] data = IOUtils.toByteArray(in);
@@ -598,14 +598,14 @@ public class SkinEditorFragment extends Fragment {
         }
     }
 
-    private static boolean isPng(byte[] data) {
+    public static boolean isPng(byte[] data) {
         if (data.length < PNG_MAGIC.length) return false;
         for (int i = 0; i < PNG_MAGIC.length; i++) if (data[i] != PNG_MAGIC[i]) return false;
         return true;
     }
 
     @NonNull
-    private static String displayName(Context context, Uri uri) {
+    public static String displayName(Context context, Uri uri) {
         try (Cursor cursor = context.getContentResolver().query(uri, new String[]{OpenableColumns.DISPLAY_NAME}, null, null, null)) {
             if (cursor != null && cursor.moveToFirst()) {
                 String name = cursor.getString(0);

@@ -559,7 +559,22 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         weakCursor = cursorView == null ? null : new WeakReference<>(cursorView);
     }
 
+    /**
+     * Another engine host takes over the Mouse control button (CS Engine keeps the virtual mouse
+     * wanted across grab/release and shows it the moment menus open). Null = the Java engine path.
+     */
+    public static void setMouseToggleHandler(@Nullable Runnable handler) {
+        sMouseToggleHandler = handler;
+    }
+
+    @Nullable private static volatile Runnable sMouseToggleHandler;
+
     public static void toggleMouse(Context ctx) {
+        Runnable handler = sMouseToggleHandler;
+        if (handler != null) {
+            handler.run();
+            return;
+        }
         // Avoid going through the JNI each time.
         if (Platform.isGrabbing()) return;
         GameCursorView cursorView = Tools.getWeakReference(weakCursor);

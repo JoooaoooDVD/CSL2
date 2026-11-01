@@ -5,8 +5,11 @@ import android.app.NativeActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.net.Uri;
+import android.view.ContextThemeWrapper;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.widget.Toast;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -42,6 +45,21 @@ import java.io.IOException;
 public class HorizonGameActivity extends NativeActivity implements ControlButtonMenuListener {
     private static final String TAG = "HorizonGameActivity";
     public static final String EXTRA_PROFILE = "cs_profile";
+    public static final String EXTRA_ACCOUNT_NAME = "cs_account_name";
+    public static final String EXTRA_ACCOUNT_MICROSOFT = "cs_account_microsoft";
+    public static final String EXTRA_ACCOUNT_KEY = "cs_account_key";
+    private static final int REQUEST_IMPORT_SKIN = 0x5C1;
+    private static final int REQUEST_IMPORT_CAPE = 0x5C2;
+
+    /**
+     * The manifest keeps the plain fullscreen framework theme a NativeActivity needs; everything the CS
+     * control system inflates (Material switches in the button editor, dialogs, toasts) needs the
+     * launcher's Material theme, which an inflated view only gets from its context.
+     */
+    private ContextThemeWrapper mUi;
+    /** The Mouse control button's state: cursor wanted. It survives grab/release (menus <-> world). */
+    private boolean mMouseWanted;
+    @Nullable private HorizonSkinDialog mSkinDialog;
     public static final String EXTRA_CONTROLS = "cs_controls";
     /** Written by the engine when it ends; CS reads it from the launcher process. */
     public static final String EXIT_FILE = "cs-exit.json";
@@ -101,8 +119,9 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
         // hierarchy is then never hardware-drawn, which is why controls added with addContentView were
         // invisible / only partially visible. The CS overlay therefore lives in its OWN translucent window
         // (application sub-window above the engine surface) with its own surface and input channel.
-        OverlayRoot root = new OverlayRoot(this);
-        View overlay = LayoutInflater.from(this).inflate(R.layout.activity_horizon_game, root, false);
+        mUi = new ContextThemeWrapper(this, R.style.AppTheme);
+        OverlayRoot root = new OverlayRoot(mUi);
+        View overlay = LayoutInflater.from(mUi).inflate(R.layout.activity_horizon_game, root, false);
         root.addView(overlay, new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         mOverlayRoot = root;
@@ -116,7 +135,8 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
         // this activity runs in its own process, so it has to register its own cursor view or the
         // button does nothing.
         GameActivity.registerCursorView(mInputView.cursorView());
-        if (LauncherPreferences.PREF_VIRTUAL_MOUSE_START) mInputView.cursorView().setVisibility(View.VISIBLE);
+        GameActivity.setMouseToggleHandler(this::toggleVirtualMouse);
+        if (LauncherPreferences.PREF_VIRTUAL_MOUSE_START) setVirtualMouse(true, false);
         mControlLayout.setModifiable(false);
         mControlLayout.setMenuListener(this);
         mMenuButton.setOnClickListener(v -> onClickedMenu());
@@ -126,6 +146,60 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
 
     private OverlayRoot mOverlayRoot;
     private boolean mOverlayAttached;
+
+    /**
+     * Desktop-like virtual mouse on the CS cursor/touchpad: while wanted, the cursor view stays
+     * VISIBLE, so the GUI touch processor runs in touchpad mode (drag moves the cursor, tap = left
+     * click at the cursor, the scroll/right-click control buttons act there) and the cursor is drawn
+     * whenever the engine is not capturing the pointer (menus, inventory, chat). While the world has
+     * the pointer captured the view skips drawing (grab state); it reappears by itself when a menu
+     * opens, which is what a desktop does. Off = plain touch again (absolute taps).
+     */
+    private void toggleVirtualMouse() {
+        setVirtualMouse(!mMouseWanted, true);
+    }
+
+    private void setVirtualMouse(boolean wanted, boolean toast) {
+        mMouseWanted = wanted;
+        if (mInputView == null) return;
+        mInputView.cursorView().setVisibility(wanted ? View.VISIBLE : View.GONE);
+        if (wanted) Platform.resetCursorPosition();
+        if (!toast) return;
+        int text = wanted
+                ? (mBackend != null && mBackend.grabbed() ? R.string.horizon_mouse_on_in_world : R.string.control_mouseon)
+                : R.string.control_mouseoff;
+        Toast.makeText(mUi, text, Toast.LENGTH_SHORT).show();
+    }
+
+    private void openSkinDialog() {
+        Intent intent = getIntent();
+        String profile = intent.getStringExtra(EXTRA_PROFILE);
+        if (profile == null) profile = "default";
+        mSkinDialog = new HorizonSkinDialog(mUi, profile,
+                intent.getStringExtra(EXTRA_ACCOUNT_NAME),
+                intent.getBooleanExtra(EXTRA_ACCOUNT_MICROSOFT, false),
+                intent.getStringExtra(EXTRA_ACCOUNT_KEY),
+                cape -> {
+                    Intent pick = new Intent(Intent.ACTION_GET_CONTENT);
+                    pick.addCategory(Intent.CATEGORY_OPENABLE);
+                    pick.setType("image/png");
+                    try {
+                        startActivityForResult(Intent.createChooser(pick, null), cape ? REQUEST_IMPORT_CAPE : REQUEST_IMPORT_SKIN);
+                    } catch (android.content.ActivityNotFoundException e) {
+                        Toast.makeText(mUi, R.string.horizon_skin_no_picker, Toast.LENGTH_LONG).show();
+                    }
+                });
+        mSkinDialog.setOnDismissListener(d -> mSkinDialog = null);
+        mSkinDialog.show();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode != REQUEST_IMPORT_SKIN && requestCode != REQUEST_IMPORT_CAPE) return;
+        Uri uri = resultCode == RESULT_OK && data != null ? data.getData() : null;
+        if (uri != null && mSkinDialog != null) mSkinDialog.onPicked(uri, requestCode == REQUEST_IMPORT_CAPE);
+    }
 
     @Override
     public void onAttachedToWindow() {
@@ -286,6 +360,7 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
             o.put("cursor_x", Platform.cursorX);
             o.put("cursor_y", Platform.cursorY);
             if (mInputView != null) o.put("cursor_visible", mInputView.cursorView().getVisibility() == View.VISIBLE);
+            o.put("mouse_wanted", mMouseWanted);
             o.put("controls_visible", mControlLayout != null && mControlLayout.areControlVisible());
             o.put("controls", mControlsPath);
             if (mBackend != null) o.put("backend", mBackend.diagnostics());
@@ -324,18 +399,22 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
     public void onClickedMenu() {
         String[] items = {
                 getString(R.string.horizon_menu_keyboard),
+                getString(mMouseWanted ? R.string.horizon_menu_mouse_off : R.string.horizon_menu_mouse_on),
                 getString(R.string.horizon_menu_toggle_controls),
                 getString(R.string.horizon_menu_edit_controls),
+                getString(R.string.horizon_menu_account_skin),
                 getString(R.string.horizon_menu_exit)
         };
-        new AlertDialog.Builder(this)
+        new AlertDialog.Builder(mUi)
                 .setTitle(R.string.horizon_menu_title)
                 .setItems(items, (dialog, which) -> {
                     switch (which) {
                         case 0: GameActivity.switchKeyboardState(false); break;
-                        case 1: mControlLayout.toggleControlVisible(); break;
-                        case 2: mControlLayout.setModifiable(true); break;
-                        case 3:
+                        case 1: toggleVirtualMouse(); break;
+                        case 2: mControlLayout.toggleControlVisible(); break;
+                        case 3: mControlLayout.setModifiable(true); break;
+                        case 4: openSkinDialog(); break;
+                        case 5:
                             // Escape twice reaches the pause menu; the engine saves and exits on "Save and Quit".
                             CallbackBridge.sendKeyPress(KeyEvent.KEYCODE_ESCAPE);
                             break;
@@ -347,6 +426,8 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
     @Override
     protected void onDestroy() {
         writeInputDiagnostics("destroy");
+        if (mSkinDialog != null) mSkinDialog.dismiss();
+        GameActivity.setMouseToggleHandler(null);
         detachOverlay();
         super.onDestroy();
         // The engine calls exit(0) itself after saving; make sure no cached process lingers if it did not.

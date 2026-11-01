@@ -1587,4 +1587,15 @@ time set day</string>
     <string name="cc_horizon_title">CS Engine</string>
     <string name="cc_horizon_desc">Native CS Engine (Powered by Craft Studio) par Minecraft Java 26.3, CS controls ke saath</string>
     <string name="cc_horizon_unsupported">CS Engine ke liye Android 9+ aur 64-bit device chahiye</string>
+    <string name="horizon_menu_mouse_on">Mouse: on (desktop cursor)</string>
+    <string name="horizon_menu_mouse_off">Mouse: off (touch)</string>
+    <string name="horizon_menu_account_skin">Account · Skin &amp; Cape</string>
+    <string name="horizon_mouse_on_in_world">Mouse on. Cursor menus mein dikhega; world mein touch se hi dekhte rahoge.</string>
+    <string name="horizon_skin_account_offline">Offline account · skin aur cape is launcher se</string>
+    <string name="horizon_skin_account_microsoft">Microsoft account · official skin</string>
+    <string name="horizon_skin_microsoft_note">Game mein aapki official Minecraft skin dikhti hai. Yahan chuna cape sirf tab dikhega jab profile par koi cape na ho. Official skin badalne ke liye launcher mein Edit skin and cape use karo.</string>
+    <string name="horizon_skin_applied">Skin apply ho gayi · is profile ke liye save</string>
+    <string name="horizon_skin_applied_microsoft">Is profile ke liye save · official skin waise hi rahegi</string>
+    <string name="horizon_skin_invalid_cape">64×32 (ya HD multiple) ya 22×17 pixel ki PNG cape chuno.</string>
+    <string name="horizon_skin_no_picker">Koi file picker app nahi mila.</string>
 </resources>

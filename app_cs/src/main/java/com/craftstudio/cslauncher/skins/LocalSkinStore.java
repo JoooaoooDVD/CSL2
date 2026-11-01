@@ -168,6 +168,12 @@ public final class LocalSkinStore {
         setSelectedCapeByKey(keyOf(account), id);
     }
 
+    /** Selection under any key (accounts use {@link #keyOf}; CS Engine profiles their own key). */
+    @Nullable
+    public static synchronized String getSelectedCapeByKey(@NonNull String key) {
+        return readCapeIndex().selected.get(key);
+    }
+
     public static synchronized void setSelectedCapeByKey(@NonNull String key, @Nullable String id) throws IOException {
         CapeIndex index = readCapeIndex();
         if (id == null) index.selected.remove(key);

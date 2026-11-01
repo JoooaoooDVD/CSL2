@@ -1782,4 +1782,27 @@
     <string name="hz_account_needed">Sign in with a Microsoft account that owns Minecraft to play with CS Engine</string>
     <string name="pe_horizon_scale">Resolution scale</string>
     <string name="pe_horizon_version_locked">CS Engine profiles always run Minecraft Java 26.3</string>
+    <string name="horizon_menu_mouse_on">Mouse: on (desktop cursor)</string>
+    <string name="horizon_menu_mouse_off">Mouse: off (touch)</string>
+    <string name="horizon_menu_account_skin">Account · Skin &amp; Cape</string>
+    <string name="horizon_mouse_on_in_world">Mouse on. The cursor appears in menus; in the world you keep looking around with touch.</string>
+    <string name="horizon_skin_eyebrow">Account</string>
+    <string name="horizon_skin_no_account">No account</string>
+    <string name="horizon_skin_account_offline">Offline account · skin and cape from this launcher</string>
+    <string name="horizon_skin_account_microsoft">Microsoft account · official skin</string>
+    <string name="horizon_skin_microsoft_note">Your official Minecraft skin is shown in game. A cape chosen here only shows when your profile has no cape. To change the official skin, use Edit skin and cape in the launcher.</string>
+    <string name="horizon_skin_section_model">Model</string>
+    <string name="horizon_skin_model_steve">Steve</string>
+    <string name="horizon_skin_model_alex">Alex</string>
+    <string name="horizon_skin_model_steve_hint">Classic arms (4 px)</string>
+    <string name="horizon_skin_model_alex_hint">Slim arms (3 px)</string>
+    <string name="horizon_skin_section_skins">Skins</string>
+    <string name="horizon_skin_section_capes">Capes</string>
+    <string name="horizon_skin_default">Default</string>
+    <string name="horizon_skin_import">+ Import PNG</string>
+    <string name="horizon_skin_apply">Apply</string>
+    <string name="horizon_skin_applied">Skin applied · saved for this profile</string>
+    <string name="horizon_skin_applied_microsoft">Saved for this profile · official skin stays</string>
+    <string name="horizon_skin_invalid_cape">Pick a PNG cape that is 64×32 (or HD multiple) or 22×17 pixels.</string>
+    <string name="horizon_skin_no_picker">No file picker app found.</string>
 </resources>

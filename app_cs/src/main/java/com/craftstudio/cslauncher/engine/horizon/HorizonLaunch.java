@@ -73,9 +73,17 @@ public final class HorizonLaunch {
         // CS control system drives the game; the engine draws no touch controls of its own.
         json.put("host_input", true);
         if (renderScale >= 25 && renderScale <= 100) json.put("render_scale", renderScale);
+        // Skin & Cape: the profile's (else the account's) selection from the CS skin library.
+        String accountKey = HorizonSkins.accountKey(account);
+        HorizonSkins.putLaunch(json, HorizonSkins.resolve(profileKey, accountKey));
         Intent intent = new Intent(context, HorizonGameActivity.class);
         intent.putExtra(EXTRA, json.toString());
         intent.putExtra(HorizonGameActivity.EXTRA_PROFILE, profileKey);
+        if (account != null) {
+            intent.putExtra(HorizonGameActivity.EXTRA_ACCOUNT_NAME, account.username);
+            intent.putExtra(HorizonGameActivity.EXTRA_ACCOUNT_MICROSOFT, account.isMicrosoft && hasProfile(account));
+            intent.putExtra(HorizonGameActivity.EXTRA_ACCOUNT_KEY, accountKey);
+        }
         if (controlsPath != null) intent.putExtra(HorizonGameActivity.EXTRA_CONTROLS, controlsPath);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         return intent;
