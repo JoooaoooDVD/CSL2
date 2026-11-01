@@ -246,6 +246,67 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
                 .show();
     }
 
+    /**
+     * Report problem: one text file with the engine's own log (<home>/performance/diagnostic.log,
+     * written by the engine, secrets redacted by it), the previous session's log tail, the exit
+     * report, the input diagnostics and device info — shared over the system share sheet.
+     */
+    private void shareEngineReport() {
+        writeInputDiagnostics("report");
+        File home = HorizonEngine.home();
+        StringBuilder sb = new StringBuilder();
+        sb.append("CS Engine problem report\n");
+        sb.append("time: ").append(new java.util.Date()).append('\n');
+        sb.append("device: ").append(android.os.Build.MANUFACTURER).append(' ').append(android.os.Build.MODEL)
+                .append(" · Android ").append(android.os.Build.VERSION.RELEASE).append(" (API ").append(android.os.Build.VERSION.SDK_INT).append(")\n");
+        try { sb.append("engine: ").append(HorizonNative.load() ? HorizonNative.nativeVersion() : "not loaded").append('\n'); } catch (Throwable t) { sb.append("engine: ?\n"); }
+        sb.append("profile: ").append(getIntent().getStringExtra(EXTRA_PROFILE)).append('\n');
+        sb.append("mouse_wanted: ").append(mMouseWanted).append(" auto_cursor: ").append(mAutoCursorShown)
+                .append(" grabbed: ").append(mBackend != null && mBackend.grabbed()).append('\n');
+        appendFile(sb, new File(home, "cs-input-diagnostics.json"), 16 * 1024);
+        appendFile(sb, new File(home, EXIT_FILE), 16 * 1024);
+        appendFile(sb, new File(home, "android-error.txt"), 32 * 1024);
+        appendFile(sb, new File(home, "performance/current-session.json"), 16 * 1024);
+        appendFile(sb, new File(home, "performance/diagnostic.log"), 400 * 1024);
+        appendFile(sb, new File(home, "performance/previous-diagnostic.log"), 120 * 1024);
+        try {
+            File dir = new File(getCacheDir(), "reports");
+            if (!dir.isDirectory() && !dir.mkdirs()) throw new IOException("reports dir");
+            File out = new File(dir, "cs-engine-report.txt");
+            try (java.io.FileOutputStream fos = new java.io.FileOutputStream(out)) {
+                fos.write(sb.toString().getBytes("UTF-8"));
+            }
+            Uri uri = androidx.core.content.FileProvider.getUriForFile(this, getPackageName() + ".updates", out);
+            Intent send = new Intent(Intent.ACTION_SEND);
+            send.setType("text/plain");
+            send.putExtra(Intent.EXTRA_STREAM, uri);
+            send.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.horizon_report_subject));
+            send.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivity(Intent.createChooser(send, getString(R.string.horizon_menu_report)));
+        } catch (Throwable t) {
+            Toast.makeText(mUi, getString(R.string.skin_editor_error, t.getMessage()), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private static void appendFile(StringBuilder sb, File file, int tailBytes) {
+        sb.append("\n===== ").append(file.getName()).append(" =====\n");
+        if (!file.isFile()) {
+            sb.append("(missing)\n");
+            return;
+        }
+        try (java.io.RandomAccessFile raf = new java.io.RandomAccessFile(file, "r")) {
+            long len = raf.length();
+            long start = Math.max(0, len - tailBytes);
+            if (start > 0) sb.append("(last ").append(tailBytes / 1024).append(" KB of ").append(len / 1024).append(" KB)\n");
+            raf.seek(start);
+            byte[] buf = new byte[(int) (len - start)];
+            raf.readFully(buf);
+            sb.append(new String(buf, "UTF-8")).append('\n');
+        } catch (IOException e) {
+            sb.append("(unreadable: ").append(e.getMessage()).append(")\n");
+        }
+    }
+
     private interface BoolSink { void set(boolean value); }
 
     private View check(int label, String key, boolean current, BoolSink sink) {
@@ -517,6 +578,7 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
                 getString(R.string.horizon_menu_toggle_controls),
                 getString(R.string.horizon_menu_edit_controls),
                 getString(R.string.horizon_menu_account_skin),
+                getString(R.string.horizon_menu_report),
                 getString(R.string.horizon_menu_exit)
         };
         new AlertDialog.Builder(mUi)
@@ -529,7 +591,8 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
                         case 3: mControlLayout.toggleControlVisible(); break;
                         case 4: mControlLayout.setModifiable(true); break;
                         case 5: openSkinDialog(); break;
-                        case 6:
+                        case 6: shareEngineReport(); break;
+                        case 7:
                             // Escape twice reaches the pause menu; the engine saves and exits on "Save and Quit".
                             CallbackBridge.sendKeyPress(KeyEvent.KEYCODE_ESCAPE);
                             break;

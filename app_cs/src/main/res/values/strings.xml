@@ -1813,4 +1813,6 @@
     <string name="horizon_mouse_two_finger">Two-finger tap = right click</string>
     <string name="horizon_mouse_drag">Double-tap and hold = drag</string>
     <string name="horizon_mouse_hint">Two fingers moving = scroll. The Mouse control button keeps the cursor on in the world too.</string>
+    <string name="horizon_menu_report">Report problem (share engine log)</string>
+    <string name="horizon_report_subject">CS Engine problem report</string>
 </resources>

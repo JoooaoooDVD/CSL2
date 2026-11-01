@@ -1604,4 +1604,5 @@ time set day</string>
     <string name="horizon_mouse_two_finger">Do ungli se tap = right click</string>
     <string name="horizon_mouse_drag">Double-tap karke hold = drag</string>
     <string name="horizon_mouse_hint">Do ungli move = scroll. Mouse control button cursor ko world mein bhi on rakhta hai.</string>
+    <string name="horizon_menu_report">Problem report karo (engine log share)</string>
 </resources>
