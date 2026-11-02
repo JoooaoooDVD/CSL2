@@ -1730,7 +1730,9 @@
     <string name="horizon_menu_keyboard">Keyboard</string>
     <string name="horizon_menu_toggle_controls">Show / hide controls</string>
     <string name="horizon_menu_edit_controls">Edit controls</string>
-    <string name="horizon_menu_exit">Pause menu (Escape)</string>
+    <string name="horizon_menu_exit">Exit game (save and leave)</string>
+    <string name="horizon_menu_hud_editor">HUD Editor</string>
+    <string name="horizon_editor_exit">Exit editor</string>
     <string name="horizon_stage_metadata">Checking Minecraft version</string>
     <string name="horizon_stage_download">Downloading game resources</string>
     <string name="horizon_stage_extract">Unpacking verified files</string>

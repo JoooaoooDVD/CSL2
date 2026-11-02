@@ -127,6 +127,7 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
     private ControlLayout mControlLayout;
     private HorizonInputView mInputView;
     private View mMenuButton;
+    private View mEditorExit;
     private HorizonBackend mBackend;
     private String mControlsPath;
 
@@ -191,6 +192,8 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
         mControlLayout = overlay.findViewById(R.id.main_control_layout);
         mInputView = overlay.findViewById(R.id.main_game_render_view);
         mMenuButton = overlay.findViewById(R.id.drawer_button);
+        mEditorExit = overlay.findViewById(R.id.horizon_editor_exit);
+        mEditorExit.setOnClickListener(v -> exitControlEditor());
         TouchCharInput charInput = overlay.findViewById(R.id.mainTouchCharInput);
         GameActivity.touchCharInput = charInput;
         mInputView.cursorView().setCursorScale(LauncherPreferences.PREF_MOUSESCALE);
@@ -540,10 +543,7 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
         if (mInputView == null) return super.dispatchKeyEvent(event);
         if (mControlLayout.getModifiable()) {
             if (event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
-                if (event.getAction() == KeyEvent.ACTION_DOWN) mControlLayout.askToExit(() -> {
-                    mControlLayout.setModifiable(false);
-                    loadControls();
-                });
+                if (event.getAction() == KeyEvent.ACTION_DOWN) exitControlEditor();
                 return true;
             }
             return super.dispatchKeyEvent(event);
@@ -567,6 +567,7 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
                 getString(R.string.horizon_menu_mouse_settings),
                 getString(R.string.horizon_menu_toggle_controls),
                 getString(R.string.horizon_menu_edit_controls),
+                getString(R.string.horizon_menu_hud_editor),
                 getString(R.string.horizon_menu_account_skin),
                 getString(R.string.horizon_menu_report),
                 getString(R.string.horizon_menu_exit)
@@ -579,16 +580,41 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
                         case 1: GameActivity.toggleMouse(mUi); break;
                         case 2: openMouseSettings(); break;
                         case 3: mControlLayout.toggleControlVisible(); break;
-                        case 4: mControlLayout.setModifiable(true); break;
-                        case 5: openSkinDialog(); break;
-                        case 6: shareEngineReport(); break;
-                        case 7:
-                            // Escape twice reaches the pause menu; the engine saves and exits on "Save and Quit".
-                            CallbackBridge.sendKeyPress(KeyEvent.KEYCODE_ESCAPE);
+                        case 4: startControlEditor(); break;
+                        case 5: hostCommand("cs:hud_edit"); break;
+                        case 6: openSkinDialog(); break;
+                        case 7: shareEngineReport(); break;
+                        case 8:
+                            // The engine saves the world (or leaves the server) and returns here.
+                            hostCommand("cs:exit");
                             break;
                     }
                 })
                 .show();
+    }
+
+    /** A CS command token to the engine (game/cs_hud_edit.rs `cs_host_token`): a press and a release. */
+    private static void hostCommand(String token) {
+        HorizonNative.nativeHostKey(token, true);
+        HorizonNative.nativeHostKey(token, false);
+    }
+
+    /** CS control editor over the engine: the game pauses behind a dimmed screen (`cs:blur`). */
+    private void startControlEditor() {
+        if (mControlLayout == null) return;
+        HorizonNative.nativeHostKey("cs:blur", true);
+        mControlLayout.setModifiable(true);
+        if (mEditorExit != null) mEditorExit.setVisibility(View.VISIBLE);
+    }
+
+    private void exitControlEditor() {
+        if (mControlLayout == null || !mControlLayout.getModifiable()) return;
+        mControlLayout.askToExit(() -> {
+            mControlLayout.setModifiable(false);
+            loadControls();
+            if (mEditorExit != null) mEditorExit.setVisibility(View.GONE);
+            HorizonNative.nativeHostKey("cs:blur", false);
+        });
     }
 
     @Override

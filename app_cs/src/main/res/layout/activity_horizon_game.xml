@@ -52,4 +52,22 @@
         android:src="@drawable/ic_sharp_settings_24"
         android:tint="#FFFFFFFF" />
 
+    <!-- CS control editor: a visible way out (Back works too); the engine dims the game behind. -->
+    <TextView
+        android:id="@+id/horizon_editor_exit"
+        android:layout_width="wrap_content"
+        android:layout_height="36dp"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="12dp"
+        android:background="@drawable/bg_cs_pill_dark"
+        android:elevation="12dp"
+        android:gravity="center"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:text="@string/horizon_editor_exit"
+        android:textColor="#F2F5FA"
+        android:textSize="13sp"
+        android:visibility="gone" />
+
 </com.craftstudio.cslauncher.input.ControlLayout>
