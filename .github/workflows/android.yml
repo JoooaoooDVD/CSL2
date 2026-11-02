@@ -69,9 +69,6 @@ jobs:
       - name: Fetch Horizon engine (JoooaoooDVD/horizon-android, cs-engine-latest)
         run: bash scripts/fetch_horizon_engine.sh
 
-      - name: Unit tests (virtual mouse touchpad regression)
-        run: gradle :app_cs:testFullDebugUnitTest --tests 'com.craftstudio.cslauncher.input.mouse.*'
-
       - name: Build Debug .apk
         run: |
           gradle :app_cs:assembleFullDebug

@@ -8,7 +8,6 @@ import com.craftstudio.cslauncher.input.mouse.LeftClickGesture;
 import com.craftstudio.cslauncher.input.mouse.PointerTracker;
 import com.craftstudio.cslauncher.input.mouse.Scroller;
 import com.craftstudio.cslauncher.input.mouse.TapDetector;
-import com.craftstudio.cslauncher.input.mouse.VirtualTouchpad;
 import com.craftstudio.cslauncher.prefs.LauncherPreferences;
 
 import com.craftstudio.cslauncher.CallbackBridge;
@@ -21,14 +20,6 @@ public class InGUIEventProcessor extends TouchEventProcessor {
     private final TapDetector mSingleTapDetector;
     private View mTouchpad;
     private boolean mIsMouseDown = false;
-    /**
-     * CS Engine: with the touchpad cursor shown in a menu/inventory, a plain one-finger tap clicks
-     * where the finger is (the cursor jumps there first), so slots and buttons answer direct taps
-     * as they do without the cursor; a drag still moves the cursor like a touchpad. Set by the
-     * engine activity from its preference; the Java engine keeps the pure touchpad behaviour.
-     */
-    public static volatile boolean sDirectTapInMenus = false;
-    private float mTouchpadDownX, mTouchpadDownY;
     private float mStartX, mStartY;
     private final Scroller mScroller = new Scroller(FINGER_SCROLL_THRESHOLD);
 
@@ -37,77 +28,39 @@ public class InGUIEventProcessor extends TouchEventProcessor {
         mSingleTapDetector = new TapDetector(1, TapDetector.DETECTION_METHOD_BOTH);
     }
 
-    /**
-     * Virtual-mouse (touchpad) mode: the finger never positions the cursor. Relative movement only,
-     * tap = left click at the cursor, two-finger tap = right click, two moving fingers = scroll.
-     */
-    private final VirtualTouchpad mVirtualTouchpad = new VirtualTouchpad(new VirtualTouchpad.Sink() {
-        @Override
-        public void move(float dx, float dy) {
-            applyMoveVector(dx, dy);
-        }
-
-        @Override
-        public void click(int button) {
-            if (sDirectTapInMenus && button == VirtualTouchpad.BUTTON_LEFT) {
-                // One-finger tap in a menu: click under the finger, like a plain touch.
-                sendTouchCoordinates(mTouchpadDownX, mTouchpadDownY);
-            }
-            CallbackBridge.performClick(button == VirtualTouchpad.BUTTON_RIGHT
-                    ? MotionEvent.BUTTON_SECONDARY : MotionEvent.BUTTON_PRIMARY);
-        }
-
-        @Override
-        public void scroll(float dx, float dy) {
-            mScroller.performScroll(dx, dy);
-        }
-
-        @Override
-        public void press(int button, boolean down) {
-            CallbackBridge.sendMouseButton(button == VirtualTouchpad.BUTTON_RIGHT
-                    ? MotionEvent.BUTTON_SECONDARY : MotionEvent.BUTTON_PRIMARY, down);
-        }
-    }, FINGER_STILL_THRESHOLD, TAP_MAX_MS);
-
-    /** Re-reads the touchpad options (in-game Mouse settings). */
-    public void refreshTouchpadOptions() {
-        mVirtualTouchpad.tapToClick = LauncherPreferences.PREF_VMOUSE_TAP_CLICK;
-        mVirtualTouchpad.twoFingerRightClick = LauncherPreferences.PREF_VMOUSE_TWO_FINGER_RIGHT;
-        mVirtualTouchpad.doubleTapDrag = LauncherPreferences.PREF_VMOUSE_DOUBLE_TAP_DRAG;
-    }
-    private static final long TAP_MAX_MS = 300;
-
     @Override
     public boolean processTouchEvent(MotionEvent motionEvent) {
-        if (touchpadDisplayed() || mVirtualTouchpad.isActive()) {
-            if (motionEvent.getActionMasked() == MotionEvent.ACTION_DOWN) refreshTouchpadOptions();
-            processTouchpadEvent(motionEvent);
-            return true;
-        }
         boolean singleTap = mSingleTapDetector.onTouchEvent(motionEvent);
 
         switch (motionEvent.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
                 mTracker.startTracking(motionEvent);
-                sendTouchCoordinates(motionEvent.getX(), motionEvent.getY());
+                if(!touchpadDisplayed()) {
+                    sendTouchCoordinates(motionEvent.getX(), motionEvent.getY());
 
-                // disabled gestures means no scrolling possible, send gesture early
-                if (LauncherPreferences.PREF_DISABLE_GESTURES) enableMouse();
-                else setGestureStart(motionEvent);
+                    // disabled gestures means no scrolling possible, send gesture early
+                    if (LauncherPreferences.PREF_DISABLE_GESTURES) enableMouse();
+                    else setGestureStart(motionEvent);
+                }
                 break;
 
             case MotionEvent.ACTION_MOVE:
                 int pointerCount = motionEvent.getPointerCount();
                 int pointerIndex = mTracker.trackEvent(motionEvent);
                 if(pointerCount == 1 || LauncherPreferences.PREF_DISABLE_GESTURES) {
-                    float mainPointerX = motionEvent.getX(pointerIndex);
-                    float mainPointerY = motionEvent.getY(pointerIndex);
-                    sendTouchCoordinates(mainPointerX, mainPointerY);
+                    if(touchpadDisplayed()) {
+                        applyMoveVector(mTracker.getMotionVector());
+                    } else {
+                        float mainPointerX = motionEvent.getX(pointerIndex);
+                        float mainPointerY = motionEvent.getY(pointerIndex);
+                        sendTouchCoordinates(mainPointerX, mainPointerY);
 
-                    if(!mIsMouseDown) {
-                        if(!hasGestureStarted()) setGestureStart(motionEvent);
-                        if(!LeftClickGesture.isFingerStill(mStartX, mStartY, mainPointerX, mainPointerY, FINGER_STILL_THRESHOLD))
-                            enableMouse();
+                        if(!mIsMouseDown) {
+                            if(!hasGestureStarted()) setGestureStart(motionEvent);
+                            if(!LeftClickGesture.isFingerStill(mStartX, mStartY, mainPointerX, mainPointerY, FINGER_STILL_THRESHOLD))
+                                enableMouse();
+                        }
+
                     }
                 } else mScroller.performScroll(mTracker.getMotionVector());
                 break;
@@ -118,7 +71,7 @@ public class InGUIEventProcessor extends TouchEventProcessor {
                 mTracker.cancelTracking();
 
                 // Handle single tap on gestures
-                if(!LauncherPreferences.PREF_DISABLE_GESTURES && !mIsMouseDown && singleTap) {
+                if((!LauncherPreferences.PREF_DISABLE_GESTURES || touchpadDisplayed()) && !mIsMouseDown && singleTap) {
                     CallbackBridge.performClick(MotionEvent.BUTTON_PRIMARY);
                 }
 
@@ -128,39 +81,6 @@ public class InGUIEventProcessor extends TouchEventProcessor {
 
 
         return true;
-    }
-
-    private void processTouchpadEvent(MotionEvent e) {
-        switch (e.getActionMasked()) {
-            case MotionEvent.ACTION_DOWN:
-                mTouchpadDownX = e.getX(0);
-                mTouchpadDownY = e.getY(0);
-                mVirtualTouchpad.down(e.getEventTime(), e.getX(0), e.getY(0));
-                break;
-            case MotionEvent.ACTION_POINTER_DOWN:
-            case MotionEvent.ACTION_POINTER_UP: {
-                // Pointer 0 after this event: on a pointer-up of index 0 the next pointer takes over.
-                int count = e.getPointerCount();
-                int index = 0;
-                if (e.getActionMasked() == MotionEvent.ACTION_POINTER_UP) {
-                    count--;
-                    if (e.getActionIndex() == 0 && e.getPointerCount() > 1) index = 1;
-                }
-                mVirtualTouchpad.pointerCount(count, e.getX(index), e.getY(index));
-                break;
-            }
-            case MotionEvent.ACTION_MOVE:
-                mVirtualTouchpad.move(e.getX(0), e.getY(0), e.getPointerCount());
-                break;
-            case MotionEvent.ACTION_UP:
-                mScroller.resetScrollOvershoot();
-                mVirtualTouchpad.up(e.getEventTime());
-                break;
-            case MotionEvent.ACTION_CANCEL:
-                mScroller.resetScrollOvershoot();
-                mVirtualTouchpad.cancel();
-                break;
-        }
     }
 
     private boolean touchpadDisplayed() {
@@ -197,7 +117,6 @@ public class InGUIEventProcessor extends TouchEventProcessor {
     @Override
     public void cancelPendingActions() {
         mScroller.resetScrollOvershoot();
-        mVirtualTouchpad.cancel();
         if(mIsMouseDown) disableMouse();
     }
 }

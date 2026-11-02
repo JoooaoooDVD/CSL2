@@ -190,19 +190,6 @@
             android:popupBackground="@drawable/bg_popup_rounded"
             tools:ignore="RtlSymmetry" />
 
-        <!-- CS Friends -->
-        <ImageButton
-            android:id="@+id/friends_button"
-            android:layout_width="38dp"
-            android:layout_height="38dp"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/bg_icon_button_home"
-            android:contentDescription="@string/friends_title"
-            android:padding="10dp"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_friends"
-            android:tooltipText="@string/friends_title" />
-
         <!-- Official partners list -->
         <ImageButton
             android:id="@+id/partners_button"

@@ -10,11 +10,11 @@ import android.view.ContextThemeWrapper;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.widget.Toast;
-import androidx.annotation.NonNull;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.craftstudio.cslauncher.CallbackBridge;
@@ -59,66 +59,66 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
      * launcher's Material theme, which an inflated view only gets from its context.
      */
     private ContextThemeWrapper mUi;
-    /** The Mouse control button's state: cursor wanted. It survives grab/release (menus <-> world). */
-    private boolean mMouseWanted;
-    public static final String EXTRA_PROFILE_NAME = "cs_profile_name";
-    /** CS Friends presence from the game process: in_game, or hosting with the public e4mc address. */
-    private final android.os.Handler mFriendsHandler = new android.os.Handler(android.os.Looper.getMainLooper());
-    private String mPublishedAddress;
-    private final Runnable mFriendsPoll = new Runnable() {
-        @Override
-        public void run() {
-            String address = null;
-            try { address = HorizonNative.nativeHostPublished(); } catch (Throwable ignored) {}
-            if (address != null && address.isEmpty()) address = null;
-            boolean changed = address == null ? mPublishedAddress != null : !address.equals(mPublishedAddress);
-            if (changed) {
-                mPublishedAddress = address;
-                String world = getIntent() == null ? null : getIntent().getStringExtra(EXTRA_PROFILE_NAME);
-                com.craftstudio.cslauncher.multiplayer.friends.FriendsService.get(HorizonGameActivity.this)
-                        .setPresence(address == null ? "in_game" : "hosting", address, world, "cs-engine");
-                if (address != null && mUi != null) {
-                    Toast.makeText(mUi, R.string.horizon_published_toast, Toast.LENGTH_LONG).show();
-                }
-            }
-            mFriendsHandler.postDelayed(this, 3000);
-        }
-    };
-    private final com.craftstudio.cslauncher.multiplayer.friends.FriendsService.Listener mFriendsListener =
-            new com.craftstudio.cslauncher.multiplayer.friends.FriendsService.Listener() {
-        @Override public void onFriendsUpdated(@NonNull com.craftstudio.cslauncher.multiplayer.friends.FriendsApi.Snapshot snapshot) {}
-        @Override public void onFriendsError(@NonNull String message) {}
-        @Override public void onInvite(@NonNull com.craftstudio.cslauncher.multiplayer.friends.FriendsApi.Invite invite) {
-            if (mUi == null || isFinishing()) return;
-            String world = invite.world == null || invite.world.isEmpty() ? getString(R.string.friends_invite_world_default) : invite.world;
-            Toast.makeText(mUi, getString(R.string.horizon_invite_toast_fmt, invite.from, world), Toast.LENGTH_LONG).show();
-        }
-    };
-
-    /** Game Menu › Invite friends: every online friend gets the public address (publish first). */
-    private void inviteFriends() {
-        final String address = mPublishedAddress;
-        if (address == null) {
-            Toast.makeText(mUi, R.string.friends_invite_no_address, Toast.LENGTH_LONG).show();
-            // Reach the screen that publishes: Esc → pause menu; the player taps Play with Friends.
-            CallbackBridge.sendKeyPress(KeyEvent.KEYCODE_ESCAPE);
-            return;
-        }
-        String world = getIntent() == null ? null : getIntent().getStringExtra(EXTRA_PROFILE_NAME);
-        com.craftstudio.cslauncher.multiplayer.friends.FriendsService.get(this).invite(null, address, world, "cs-engine", (error, info) -> {
-            if (mUi == null) return;
-            if (error != null) Toast.makeText(mUi, getString(R.string.friends_error_fmt, error), Toast.LENGTH_LONG).show();
-            else {
-                int n = 0;
-                try { n = Integer.parseInt(info); } catch (Throwable ignored) {}
-                Toast.makeText(mUi, n == 0 ? getString(R.string.friends_invite_none) : getString(R.string.friends_invite_sent_fmt, n), Toast.LENGTH_LONG).show();
-            }
-        });
-    }
-    /** Auto mode: the cursor is shown by itself while a menu is open (engine not capturing). */
-    private boolean mAutoCursorShown;
 
     @Nullable private HorizonSkinDialog mSkinDialog;
+
+    /**
+     * CS Friends notices from the engine (invites, chat, requests) as system notifications, so a
+     * player who switched apps sees them; tapping one brings the game back (the in-game popup has
+     * the Join button). The game screen itself shows the same notice, nothing else lives here.
+     */
+    private static final String FRIENDS_CHANNEL = "cs_friends";
+    private final android.os.Handler mNoticeHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private int mNoticeId = 7100;
+    private boolean mNoticeChannelReady;
+    private final Runnable mNoticePoll = new Runnable() {
+        @Override
+        public void run() {
+            for (int i = 0; i < 8; i++) {
+                String notice;
+                try { notice = HorizonNative.nativeHostNotice(); } catch (Throwable t) { notice = null; }
+                if (notice == null || notice.isEmpty()) break;
+                showFriendsNotification(notice);
+            }
+            mNoticeHandler.postDelayed(this, 2500);
+        }
+    };
+
+    private void showFriendsNotification(@NonNull String notice) {
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= 33
+                    && checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                return;
+            }
+            int nl = notice.indexOf('\n');
+            String title = nl < 0 ? getString(R.string.horizon_friends_notice_title) : notice.substring(0, nl);
+            String text = nl < 0 ? notice : notice.substring(nl + 1);
+            android.app.NotificationManager nm = (android.app.NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            if (nm == null) return;
+            if (!mNoticeChannelReady && android.os.Build.VERSION.SDK_INT >= 26) {
+                android.app.NotificationChannel c = new android.app.NotificationChannel(FRIENDS_CHANNEL,
+                        getString(R.string.horizon_friends_channel), android.app.NotificationManager.IMPORTANCE_HIGH);
+                nm.createNotificationChannel(c);
+                mNoticeChannelReady = true;
+            }
+            Intent open = new Intent(this, HorizonGameActivity.class);
+            open.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            int flags = android.app.PendingIntent.FLAG_UPDATE_CURRENT;
+            if (android.os.Build.VERSION.SDK_INT >= 23) flags |= android.app.PendingIntent.FLAG_IMMUTABLE;
+            android.app.PendingIntent pi = android.app.PendingIntent.getActivity(this, mNoticeId, open, flags);
+            androidx.core.app.NotificationCompat.Builder b = new androidx.core.app.NotificationCompat.Builder(this, FRIENDS_CHANNEL)
+                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setContentTitle(title)
+                    .setContentText(text)
+                    .setStyle(new androidx.core.app.NotificationCompat.BigTextStyle().bigText(text))
+                    .setAutoCancel(true)
+                    .setPriority(androidx.core.app.NotificationCompat.PRIORITY_HIGH)
+                    .setContentIntent(pi);
+            nm.notify(mNoticeId++, b.build());
+        } catch (Throwable t) {
+            Log.w(TAG, "friends notification failed", t);
+        }
+    }
     public static final String EXTRA_CONTROLS = "cs_controls";
     /** Written by the engine when it ends; CS reads it from the launcher process. */
     public static final String EXIT_FILE = "cs-exit.json";
@@ -194,50 +194,24 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
         // this activity runs in its own process, so it has to register its own cursor view or the
         // button does nothing.
         GameActivity.registerCursorView(mInputView.cursorView());
-        GameActivity.setMouseToggleHandler(this::toggleVirtualMouse);
-        mBackend.setStateListener(this::updateAutoCursor);
-        InGUIEventProcessor.sDirectTapInMenus = LauncherPreferences.PREF_VMOUSE_DIRECT_TAP;
-        if (LauncherPreferences.PREF_VIRTUAL_MOUSE_START) setVirtualMouse(true, false);
+        // PojavLauncher behaviour: the Mouse button shows/hides the cursor in menus only; in menus
+        // the finger moves it like a touchpad and a tap clicks; without it, taps land where the finger is.
+        if (LauncherPreferences.PREF_VIRTUAL_MOUSE_START) mInputView.cursorView().setVisibility(View.VISIBLE);
         mControlLayout.setModifiable(false);
         mControlLayout.setMenuListener(this);
         mMenuButton.setOnClickListener(v -> onClickedMenu());
         Platform.resetCursorPosition();
         applyImmersive(getWindow().getDecorView());
+        if (android.os.Build.VERSION.SDK_INT >= 33
+                && checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            try { requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 7101); } catch (Throwable ignored) {}
+        }
+        mNoticeHandler.removeCallbacks(mNoticePoll);
+        mNoticeHandler.postDelayed(mNoticePoll, 4000);
     }
 
     private OverlayRoot mOverlayRoot;
     private boolean mOverlayAttached;
-
-    /**
-     * Desktop-like virtual mouse on the CS cursor/touchpad: while wanted, the cursor view stays
-     * VISIBLE, so the GUI touch processor runs in touchpad mode (drag moves the cursor, tap = left
-     * click at the cursor, the scroll/right-click control buttons act there) and the cursor is drawn
-     * whenever the engine is not capturing the pointer (menus, inventory, chat). While the world has
-     * the pointer captured the view skips drawing (grab state); it reappears by itself when a menu
-     * opens, which is what a desktop does. Off = plain touch again (absolute taps).
-     */
-    private void toggleVirtualMouse() {
-        setVirtualMouse(!mMouseWanted, true);
-    }
-
-    /**
-     * Auto cursor (PC feel): a menu/inventory/chat opens → the engine releases the pointer → the
-     * cursor appears by itself; back in the world it hides again. Independent of the manual Mouse
-     * button (which keeps the cursor across both states) and off when the preference is off.
-     */
-    private void updateAutoCursor() {
-        if (mInputView == null || mBackend == null || mMouseWanted || !LauncherPreferences.PREF_VMOUSE_AUTO_MENUS) return;
-        // Not while typing: chat / sign / search ask for the keyboard, and the cursor would only
-        // fight with the text input (mouse mode never turns on because of typing).
-        boolean show = !mBackend.grabbed() && !mBackend.keyboard();
-        if (show == mAutoCursorShown) return;
-        mAutoCursorShown = show;
-        mInputView.cursorView().setVisibility(show ? View.VISIBLE : View.GONE);
-        if (show) {
-            Platform.resetCursorPosition();
-            Platform.sendCursorPosition();
-        }
-    }
 
     /** Menu → Mouse & touch settings: applied live, saved in the launcher preferences. */
     private void openMouseSettings() {
@@ -281,16 +255,6 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
         });
         box.addView(speedLabel); box.addView(speed);
         box.addView(sizeLabel); box.addView(size);
-        box.addView(check(R.string.horizon_mouse_auto_menus, "vmouse_auto_menus", LauncherPreferences.PREF_VMOUSE_AUTO_MENUS,
-                v -> { LauncherPreferences.PREF_VMOUSE_AUTO_MENUS = v; if (!v && mAutoCursorShown && !mMouseWanted) { mAutoCursorShown = false; mInputView.cursorView().setVisibility(View.GONE); } }));
-        box.addView(check(R.string.horizon_mouse_tap_click, "vmouse_tap_click", LauncherPreferences.PREF_VMOUSE_TAP_CLICK,
-                v -> LauncherPreferences.PREF_VMOUSE_TAP_CLICK = v));
-        box.addView(check(R.string.horizon_mouse_direct_tap, "vmouse_direct_tap", LauncherPreferences.PREF_VMOUSE_DIRECT_TAP,
-                v -> { LauncherPreferences.PREF_VMOUSE_DIRECT_TAP = v; InGUIEventProcessor.sDirectTapInMenus = v; }));
-        box.addView(check(R.string.horizon_mouse_two_finger, "vmouse_two_finger_right", LauncherPreferences.PREF_VMOUSE_TWO_FINGER_RIGHT,
-                v -> LauncherPreferences.PREF_VMOUSE_TWO_FINGER_RIGHT = v));
-        box.addView(check(R.string.horizon_mouse_drag, "vmouse_double_tap_drag", LauncherPreferences.PREF_VMOUSE_DOUBLE_TAP_DRAG,
-                v -> LauncherPreferences.PREF_VMOUSE_DOUBLE_TAP_DRAG = v));
         android.widget.TextView hint = new android.widget.TextView(mUi);
         hint.setText(R.string.horizon_mouse_hint);
         hint.setTextSize(12);
@@ -320,7 +284,7 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
                 .append(" · Android ").append(android.os.Build.VERSION.RELEASE).append(" (API ").append(android.os.Build.VERSION.SDK_INT).append(")\n");
         try { sb.append("engine: ").append(HorizonNative.load() ? HorizonNative.nativeVersion() : "not loaded").append('\n'); } catch (Throwable t) { sb.append("engine: ?\n"); }
         sb.append("profile: ").append(getIntent().getStringExtra(EXTRA_PROFILE)).append('\n');
-        sb.append("mouse_wanted: ").append(mMouseWanted).append(" auto_cursor: ").append(mAutoCursorShown)
+        sb.append("cursor_shown: ").append(mInputView != null && mInputView.cursorView().getVisibility() == View.VISIBLE)
                 .append(" grabbed: ").append(mBackend != null && mBackend.grabbed()).append('\n');
         appendFile(sb, new File(home, "cs-input-diagnostics.json"), 16 * 1024);
         appendFile(sb, new File(home, EXIT_FILE), 16 * 1024);
@@ -364,44 +328,6 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
         } catch (IOException e) {
             sb.append("(unreadable: ").append(e.getMessage()).append(")\n");
         }
-    }
-
-    private interface BoolSink { void set(boolean value); }
-
-    private View check(int label, String key, boolean current, BoolSink sink) {
-        android.widget.CheckBox box = new android.widget.CheckBox(mUi);
-        box.setText(label);
-        box.setChecked(current);
-        box.setOnCheckedChangeListener((b, v) -> {
-            LauncherPreferences.DEFAULT_PREF.edit().putBoolean(key, v).apply();
-            sink.set(v);
-        });
-        return box;
-    }
-
-    private void setVirtualMouse(boolean wanted, boolean toast) {
-        mMouseWanted = wanted;
-        if (mInputView == null) return;
-        if (!wanted && mAutoCursorShown && LauncherPreferences.PREF_VMOUSE_AUTO_MENUS && mBackend != null && !mBackend.grabbed()) {
-            // Manual mouse off inside a menu: the auto cursor stays until the world is back.
-            if (toast) Toast.makeText(mUi, R.string.control_mouseoff, Toast.LENGTH_SHORT).show();
-            return;
-        }
-        mAutoCursorShown = false;
-        mInputView.cursorView().setVisibility(wanted ? View.VISIBLE : View.GONE);
-        if (wanted) {
-            // Keep the last cursor position (desktop behaviour); only an unset/off-screen one is centred.
-            int w = mInputView.getWidth(), h = mInputView.getHeight();
-            boolean unset = (Platform.cursorX <= 0 && Platform.cursorY <= 0)
-                    || Platform.cursorX > w || Platform.cursorY > h;
-            if (unset && w > 0 && h > 0) Platform.resetCursorPosition();
-            Platform.sendCursorPosition();
-        }
-        if (!toast) return;
-        int text = wanted
-                ? (mBackend != null && mBackend.grabbed() ? R.string.horizon_mouse_on_in_world : R.string.control_mouseon)
-                : R.string.control_mouseoff;
-        Toast.makeText(mUi, text, Toast.LENGTH_SHORT).show();
     }
 
     private void openSkinDialog() {
@@ -552,19 +478,10 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
     protected void onResume() {
         super.onResume();
         if (mBackend != null) mBackend.startPolling();
-        try {
-            com.craftstudio.cslauncher.multiplayer.friends.FriendsService.get(this).setPresence(
-                    mPublishedAddress == null ? "in_game" : "hosting", mPublishedAddress,
-                    getIntent() == null ? null : getIntent().getStringExtra(EXTRA_PROFILE_NAME), "cs-engine");
-            com.craftstudio.cslauncher.multiplayer.friends.FriendsService.get(this).addListener(mFriendsListener);
-        } catch (Throwable ignored) {}
-        mFriendsHandler.removeCallbacks(mFriendsPoll);
-        mFriendsHandler.postDelayed(mFriendsPoll, 2000);
     }
 
     @Override
     protected void onPause() {
-        mFriendsHandler.removeCallbacks(mFriendsPoll);
         if (mBackend != null) {
             mBackend.stopPolling();
             mBackend.releaseAll();
@@ -602,7 +519,7 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
             o.put("cursor_x", Platform.cursorX);
             o.put("cursor_y", Platform.cursorY);
             if (mInputView != null) o.put("cursor_visible", mInputView.cursorView().getVisibility() == View.VISIBLE);
-            o.put("mouse_wanted", mMouseWanted);
+            o.put("cursor_shown", mInputView != null && mInputView.cursorView().getVisibility() == View.VISIBLE);
             o.put("controls_visible", mControlLayout != null && mControlLayout.areControlVisible());
             o.put("controls", mControlsPath);
             if (mBackend != null) o.put("backend", mBackend.diagnostics());
@@ -641,12 +558,12 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
     public void onClickedMenu() {
         String[] items = {
                 getString(R.string.horizon_menu_keyboard),
-                getString(mMouseWanted ? R.string.horizon_menu_mouse_off : R.string.horizon_menu_mouse_on),
+                getString(mInputView != null && mInputView.cursorView().getVisibility() == View.VISIBLE
+                        ? R.string.horizon_menu_mouse_off : R.string.horizon_menu_mouse_on),
                 getString(R.string.horizon_menu_mouse_settings),
                 getString(R.string.horizon_menu_toggle_controls),
                 getString(R.string.horizon_menu_edit_controls),
                 getString(R.string.horizon_menu_account_skin),
-                getString(R.string.horizon_menu_invite),
                 getString(R.string.horizon_menu_report),
                 getString(R.string.horizon_menu_exit)
         };
@@ -655,14 +572,13 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
                 .setItems(items, (dialog, which) -> {
                     switch (which) {
                         case 0: GameActivity.switchKeyboardState(false); break;
-                        case 1: toggleVirtualMouse(); break;
+                        case 1: GameActivity.toggleMouse(mUi); break;
                         case 2: openMouseSettings(); break;
                         case 3: mControlLayout.toggleControlVisible(); break;
                         case 4: mControlLayout.setModifiable(true); break;
                         case 5: openSkinDialog(); break;
-                        case 6: inviteFriends(); break;
-                        case 7: shareEngineReport(); break;
-                        case 8:
+                        case 6: shareEngineReport(); break;
+                        case 7:
                             // Escape twice reaches the pause menu; the engine saves and exits on "Save and Quit".
                             CallbackBridge.sendKeyPress(KeyEvent.KEYCODE_ESCAPE);
                             break;
@@ -673,14 +589,9 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
 
     @Override
     protected void onDestroy() {
-        mFriendsHandler.removeCallbacks(mFriendsPoll);
-        try {
-            com.craftstudio.cslauncher.multiplayer.friends.FriendsService.get(this).removeListener(mFriendsListener);
-            com.craftstudio.cslauncher.multiplayer.friends.FriendsService.get(this).setPresence("offline", null, null, null);
-        } catch (Throwable ignored) {}
+        mNoticeHandler.removeCallbacks(mNoticePoll);
         writeInputDiagnostics("destroy");
         if (mSkinDialog != null) mSkinDialog.dismiss();
-        GameActivity.setMouseToggleHandler(null);
         detachOverlay();
         super.onDestroy();
         // The engine calls exit(0) itself after saving; make sure no cached process lingers if it did not.

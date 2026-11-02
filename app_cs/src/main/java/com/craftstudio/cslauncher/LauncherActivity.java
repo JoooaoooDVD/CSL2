@@ -189,19 +189,6 @@ public class LauncherActivity extends BaseActivity {
      * resolution scale and CS control layout to the engine process.
      */
     private void launchHorizon(@NonNull Instance instance) {
-        launchHorizon(instance, null);
-    }
-
-    /** CS Friends "Join": the CS Engine profile started straight into {@code server}. */
-    public void launchHorizonServer(@NonNull Instance instance, @NonNull String server) {
-        if (mProgressLayout.hasProcesses()) {
-            Toast.makeText(this, R.string.tasks_ongoing, Toast.LENGTH_LONG).show();
-            return;
-        }
-        launchHorizon(instance, server);
-    }
-
-    private void launchHorizon(@NonNull Instance instance, @Nullable String server) {
         if (!com.craftstudio.cslauncher.engine.horizon.HorizonEngine.isSupported(this)) {
             Toast.makeText(this, R.string.horizon_not_available, Toast.LENGTH_LONG).show();
             return;
@@ -234,7 +221,7 @@ public class LauncherActivity extends BaseActivity {
             }
             android.content.Intent intent = null;
             try {
-                intent = com.craftstudio.cslauncher.engine.horizon.HorizonProfile.launchIntent(this, fresh, instance, server);
+                intent = com.craftstudio.cslauncher.engine.horizon.HorizonProfile.launchIntent(this, fresh, instance);
             } catch (Throwable t) {
                 failure = t;
             }
@@ -323,8 +310,6 @@ public class LauncherActivity extends BaseActivity {
         if (helpButton != null) helpButton.setOnClickListener(v -> com.craftstudio.cslauncher.tutorial.ContextualHelp.onHelpPressed(this));
         View partnersButton = findViewById(R.id.partners_button);
         if (partnersButton != null) partnersButton.setOnClickListener(v -> com.craftstudio.cslauncher.partners.PartnersFragment.open(this));
-        View friendsButton = findViewById(R.id.friends_button);
-        if (friendsButton != null) friendsButton.setOnClickListener(v -> com.craftstudio.cslauncher.multiplayer.friends.FriendsFragment.open(this));
         ProgressKeeper.addTaskCountListener(mProgressLayout);
         ExtraCore.addExtraListener(ExtraConstants.BACK_PREFERENCE, mBackPreferenceListener);
         ExtraCore.addExtraListener(ExtraConstants.SELECT_AUTH_METHOD, mSelectAuthMethod);
@@ -563,30 +548,9 @@ public class LauncherActivity extends BaseActivity {
         ContextExecutor.clearActivity(this);
     }
 
-    /** CS Friends presence while the launcher is on screen; invites pop up here. */
-    private final com.craftstudio.cslauncher.multiplayer.friends.FriendsService.Listener mFriendsListener =
-            new com.craftstudio.cslauncher.multiplayer.friends.FriendsService.Listener() {
-        @Override public void onFriendsUpdated(@NonNull com.craftstudio.cslauncher.multiplayer.friends.FriendsApi.Snapshot snapshot) {}
-        @Override public void onFriendsError(@NonNull String message) {}
-        @Override public void onInvite(@NonNull final com.craftstudio.cslauncher.multiplayer.friends.FriendsApi.Invite invite) {
-            if (isFinishing()) return;
-            String world = invite.world == null || invite.world.isEmpty() ? getString(R.string.friends_invite_world_default) : invite.world;
-            new androidx.appcompat.app.AlertDialog.Builder(LauncherActivity.this)
-                    .setTitle(getString(R.string.friends_invite_title, invite.from))
-                    .setMessage(getString(R.string.friends_invite_msg_fmt, invite.from, world))
-                    .setPositiveButton(R.string.friends_join, (d, w) ->
-                            com.craftstudio.cslauncher.multiplayer.friends.FriendsJoin.join(LauncherActivity.this, invite.address))
-                    .setNegativeButton(android.R.string.cancel, null)
-                    .show();
-        }
-    };
-
-
-
     @Override
     protected void onStop() {
         super.onStop();
-        try { com.craftstudio.cslauncher.multiplayer.friends.FriendsService.get(this).removeListener(mFriendsListener); } catch (Throwable ignored) {}
         com.craftstudio.cslauncher.tutorial.TutorialManager.getInstance().detach(this);
         // Not visible any more (game taking over, or another app): hand the Discord presence back
         com.craftstudio.cslauncher.discord.DiscordPresenceManager.getInstance(this).releaseFromLauncher();
@@ -595,12 +559,6 @@ public class LauncherActivity extends BaseActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        if (StorageRoot.isSetupDone(this) && com.craftstudio.cslauncher.about.WelcomePolicy.isAccepted()) {
-            try {
-                com.craftstudio.cslauncher.multiplayer.friends.FriendsService.get(this).setPresence("online", null, null, null);
-                com.craftstudio.cslauncher.multiplayer.friends.FriendsService.get(this).addListener(mFriendsListener);
-            } catch (Throwable ignored) {}
-        }
         getSupportFragmentManager().registerFragmentLifecycleCallbacks(mFragmentCallbackListener, true);
         AnimationManager.installFragmentTransitions(this);
         com.craftstudio.cslauncher.tutorial.TutorialManager.getInstance().attach(this);

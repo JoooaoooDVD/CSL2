@@ -1604,57 +1604,8 @@ time set day</string>
     <string name="horizon_mouse_direct_tap">Menus: slot/button par seedha tap (cursor ungli par aa jata hai)</string>
     <string name="horizon_mouse_two_finger">Do ungli se tap = right click</string>
     <string name="horizon_mouse_drag">Double-tap karke hold = drag</string>
-    <string name="horizon_mouse_hint">Do ungli move = scroll. Mouse control button cursor ko world mein bhi on rakhta hai.</string>
+    <string name="horizon_mouse_hint">Mouse on: menus mein ungli cursor ko touchpad ki tarah chalati hai, tap = click, do ungli = scroll. Mouse off: tap wahin lagta hai jahan ungli hai.</string>
     <string name="horizon_menu_report">Problem report karo (engine log share)</string>
-    <!-- CS Friends -->
-    <string name="friends_title">Friends</string>
-    <string name="friends_subtitle">Friends ko invite karo aur unki world join karo</string>
-    <string name="friends_my_code_eyebrow">Aapka friend code</string>
-    <string name="friends_my_name_fmt">%1$s · ye code friends ko do</string>
-    <string name="friends_copy">Copy</string>
-    <string name="friends_share">Share</string>
-    <string name="friends_share_text">Mujhe CS Launcher Plus par add karo! Mera friend code: %1$s</string>
-    <string name="friends_add_hint">Friend code, jaise CS-7K3M9Q</string>
-    <string name="friends_add">Add</string>
-    <string name="friends_section_invites">Invites</string>
-    <string name="friends_section_requests">Friend requests</string>
-    <string name="friends_section_friends">Friends</string>
-    <string name="friends_section_world">Aapki world</string>
-    <string name="friends_motd_help">Host karte waqt friends ko server list me ye naam dikhega (MOTD). Khali = player name aur world.</string>
-    <string name="friends_motd_hint">jaise {name} ki world · {world}</string>
-    <string name="friends_empty">Abhi koi friend nahi. Apna code share karo ya upar friend ka code daalo.</string>
-    <string name="friends_online_count">%1$d online</string>
-    <string name="friends_connecting">Connect ho raha hai…</string>
-    <string name="friends_copied">Friend code copy ho gaya</string>
-    <string name="friends_status_online">Online</string>
-    <string name="friends_status_offline">Offline</string>
-    <string name="friends_status_in_game">Game me</string>
-    <string name="friends_status_hosting_fmt">Host kar raha hai · %1$s</string>
-    <string name="friends_join">Join</string>
-    <string name="friends_invite">Invite</string>
-    <string name="friends_accept">Accept</string>
-    <string name="friends_decline">Decline</string>
-    <string name="friends_cancel">Cancel</string>
-    <string name="friends_sent">Request bhej di</string>
-    <string name="friends_request_sent_fmt">%1$s ko friend request bhej di</string>
-    <string name="friends_now_friends_fmt">Aap aur %1$s ab friends ho</string>
-    <string name="friends_already_fmt">%1$s pehle se friend hai</string>
-    <string name="friends_no_such_code">Is friend code ka koi player nahi mila</string>
-    <string name="friends_self">Ye aapka hi code hai</string>
-    <string name="friends_remove_title">Friend hataayein</string>
-    <string name="friends_remove_msg_fmt">%1$s ko friends se hataana hai?</string>
-    <string name="friends_remove">Hataao</string>
-    <string name="friends_invite_title">%1$s ka invite</string>
-    <string name="friends_invite_msg_fmt">%1$s ne aapko %2$s me invite kiya.\nAbhi join karein?</string>
-    <string name="friends_invite_world_default">unki world</string>
-    <string name="friends_invite_sent_fmt">%1$d friend(s) ko invite bhej diya</string>
-    <string name="friends_invite_none">Invite ke liye koi friend online nahi</string>
-    <string name="friends_invite_no_address">Pehle world publish karo: Game Menu › Play with Friends</string>
-    <string name="friends_join_no_profile">Join karne ke liye pehle CS Engine profile banao</string>
-    <string name="friends_join_not_ready">CS Engine profile abhi install nahi hui</string>
-    <string name="friends_joining_fmt">%1$s join ho raha hai…</string>
-    <string name="friends_error_fmt">Friends: %1$s</string>
-    <string name="horizon_menu_invite">Friends ko invite karo</string>
-    <string name="horizon_invite_toast_fmt">%1$s ne aapko %2$s me invite kiya — launcher se join karo</string>
-    <string name="horizon_published_toast">Public address ready — Game Menu › Friends ko invite karo</string>
+    <string name="horizon_friends_notice_title">CS Friends</string>
+    <string name="horizon_friends_channel">CS Friends (invite, chat)</string>
 </resources>

@@ -110,12 +110,6 @@ public final class VirtualLanPanel implements VirtualLanClient.Listener {
         mHelp = root.findViewById(R.id.vl_help);
         mHome = root.findViewById(R.id.vl_home);
         mUnsupported = root.findViewById(R.id.vl_unsupported);
-        View friendsCard = root.findViewById(R.id.vl_friends_card);
-        if (friendsCard != null) friendsCard.setOnClickListener(v -> {
-            Activity act = mHost.activity();
-            if (act instanceof androidx.fragment.app.FragmentActivity)
-                com.craftstudio.cslauncher.multiplayer.friends.FriendsFragment.open((androidx.fragment.app.FragmentActivity) act);
-        });
         mActionCreate = root.findViewById(R.id.vl_action_create);
         mActionJoin = root.findViewById(R.id.vl_action_join);
         mJoinBox = root.findViewById(R.id.vl_join_box);

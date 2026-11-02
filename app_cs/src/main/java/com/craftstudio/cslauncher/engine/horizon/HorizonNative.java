@@ -85,6 +85,13 @@ public final class HorizonNative {
     public static native String nativeHostPublished();
 
     /**
+     * The next notice the engine wants shown as a system notification (CS Friends: an invite, a
+     * chat message, a friend request) as {@code title\ntext}, else {@code null}; one per call,
+     * oldest first (engine build 14+).
+     */
+    public static native String nativeHostNotice();
+
+    /**
      * A touch began at (x, y) window pixels while the world has the pointer: if it lies on the
      * hotbar drawn last frame, the engine selects that slot and answers 0..8; -1 otherwise
      * (engine build 13+).
