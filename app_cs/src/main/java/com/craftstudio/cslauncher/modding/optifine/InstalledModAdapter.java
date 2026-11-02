@@ -1463,7 +1463,15 @@ public class InstalledModAdapter extends RecyclerView.Adapter<InstalledModAdapte
     private static String[] extractModMeta(File jarFile) {
         String[] out = new String[3];
         try (ZipFile zip = new ZipFile(jarFile)) {
-            String content = readEntry(zip, "fabric.mod.json");
+            // CS Engine content mod (.hmod): its manifest is horizon-mod.toml at the root
+            String content = readEntry(zip, "horizon-mod.toml");
+            if (content != null) {
+                out[0] = nonEmpty(tomlStringField(content, "name"));
+                out[1] = nonEmpty(tomlStringField(content, "version"));
+                out[2] = cleanText(tomlStringField(content, "description"));
+                if (out[0] != null) return out;
+            }
+            content = readEntry(zip, "fabric.mod.json");
             if (content != null) {
                 try {
                     JsonObject obj = JsonParser.parseString(content).getAsJsonObject();

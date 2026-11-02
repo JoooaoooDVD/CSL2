@@ -24,7 +24,7 @@ import java.util.List;
  *
  * <pre>
  * profile folder (instance root)   = Horizon game_home: saves/, options.txt, resourcepacks/, shaderpacks/,
- *                                    mods/ (.hmod), horizon-mods.json, logs/ — one per profile
+ *                                    horizon-mods/ (.hmod), horizon-mods.txt, logs/ — one per profile
  * {@link HorizonEngine#home()}      = shared engine home + prepared Minecraft 26.3 resources (one download
  *                                    for every Horizon profile)
  * </pre>
@@ -85,10 +85,23 @@ public final class HorizonProfile {
     /** Per-profile folders the engine and the CS content managers expect. */
     public static void prepareGameHome(@NonNull Instance instance) {
         File home = gameHome(instance);
-        for (String dir : new String[]{"saves", "resourcepacks", "shaderpacks", "mods", "logs", "screenshots"}) {
+        for (String dir : new String[]{"saves", "resourcepacks", "shaderpacks", "horizon-mods", "logs", "screenshots"}) {
             File f = new File(home, dir);
             if (!f.isDirectory()) //noinspection ResultOfMethodCallIgnored
                 f.mkdirs();
+        }
+        // Earlier builds created mods/ for this profile; the engine reads .hmod files from horizon-mods/ only
+        File legacy = new File(home, "mods");
+        File[] stray = legacy.isDirectory() ? legacy.listFiles() : null;
+        if (stray != null) {
+            for (File file : stray) {
+                String name = file.getName();
+                if (file.isFile() && (name.endsWith(".hmod") || name.endsWith(".hmod.disabled"))) {
+                    File target = new File(home, "horizon-mods/" + name);
+                    if (!target.exists()) //noinspection ResultOfMethodCallIgnored
+                        file.renameTo(target);
+                }
+            }
         }
     }
 

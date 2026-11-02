@@ -122,7 +122,7 @@ public class ManageModsFragment extends Fragment {
     // onImportFilePicked() checks the picked file against mContentType itself.
     // Several files can be picked at once; each one is checked against mContentType.
     private final ActivityResultLauncher<Object> mImportLauncher =
-            registerForActivityResult(new OpenMultipleDocumentsWithExtension(new String[]{"jar", "zip"}),
+            registerForActivityResult(new OpenMultipleDocumentsWithExtension(new String[]{"jar", "zip", "hmod"}),
                     this::onImportFilesPicked);
     private boolean mImporting;
 
@@ -139,6 +139,7 @@ public class ManageModsFragment extends Fragment {
             String saved = savedInstanceState.getString(ARG_CONTENT_TYPE, null);
             if (saved != null) mContentType = ContentType.valueOf(saved);
         }
+        mContentType = profileType(mContentType);
 
         ImageButton backButton = view.findViewById(R.id.manage_mods_back);
         mRefreshButton  = view.findViewById(R.id.manage_mods_refresh);
@@ -189,7 +190,7 @@ public class ManageModsFragment extends Fragment {
         ContentType[] tabTypes = {ContentType.MOD, ContentType.RESOURCE_PACK, ContentType.SHADER_PACK};
         for (int i = 0; i < mTabs.length; i++) {
             final ContentType type = tabTypes[i];
-            mTabs[i].setOnClickListener(v -> switchType(type));
+            mTabs[i].setOnClickListener(v -> switchType(profileType(type)));
         }
 
         // State filter chips (counts are appended by the stats listener)
@@ -321,6 +322,23 @@ public class ManageModsFragment extends Fragment {
 
     // ── Content type ─────────────────────────────────────────────────────────
 
+    /** True when the selected profile runs the CS Engine (Horizon): its mods are .hmod files */
+    private boolean isHorizonProfile() {
+        try {
+            Instance instance = Instances.loadInstance(getCurrentProfileKey());
+            return instance != null && instance.isHorizon();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /** The Mods tab of a CS Engine profile manages horizon-mods/*.hmod instead of mods/*.jar */
+    private ContentType profileType(ContentType type) {
+        if (type == ContentType.MOD && isHorizonProfile()) return ContentType.HORIZON_MOD;
+        if (type == ContentType.HORIZON_MOD && !isHorizonProfile()) return ContentType.MOD;
+        return type;
+    }
+
     private static int tabIndex(ContentType type) {
         switch (type) {
             case RESOURCE_PACK: return 1;
@@ -368,7 +386,8 @@ public class ManageModsFragment extends Fragment {
                 tileRes = R.drawable.bg_mm_type_mods; glowRes = R.drawable.bg_mm_glow_mods;
                 glyphColor = R.color.mm_mods_glyph; iconRes = R.drawable.ic_lib_cube;
                 searchHint = R.string.mm_search_mods;
-                emptyTitle = R.string.mm_empty_title_mods; emptyDesc = R.string.mm_empty_desc_mods;
+                emptyTitle = R.string.mm_empty_title_mods;
+                emptyDesc = mContentType == ContentType.HORIZON_MOD ? R.string.mm_empty_desc_hmods : R.string.mm_empty_desc_mods;
                 break;
         }
         View root = getView();
@@ -513,6 +532,7 @@ public class ManageModsFragment extends Fragment {
      */
     private void runUpdateCheck(boolean silent) {
         if (mAdapter == null) return;
+        if (mContentType == ContentType.HORIZON_MOD) return; // .hmod files are not on Modrinth/CurseForge
 
         String[] filter = resolveFilter(getCurrentProfileKey());
         String version = filter[0];
@@ -550,6 +570,22 @@ public class ManageModsFragment extends Fragment {
     }
 
     private void openModSearch() {
+        if (mContentType == ContentType.HORIZON_MOD) {
+            // Java mods from Modrinth/CurseForge never run on the CS Engine: offer the two real paths
+            new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                    .setTitle(R.string.hz_mods_title)
+                    .setMessage(R.string.hz_mods_message)
+                    .setPositiveButton(R.string.hz_mods_import, (d, w) -> launchImport())
+                    .setNeutralButton(R.string.hz_mods_registry, (d, w) -> {
+                        try {
+                            startActivity(new android.content.Intent(android.content.Intent.ACTION_VIEW,
+                                    Uri.parse("https://horizon-rust.github.io/horizon-mods/")));
+                        } catch (Exception ignored) {}
+                    })
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show();
+            return;
+        }
         String[] filter = resolveFilter(getCurrentProfileKey());
         String version = filter[0];
         String loader  = filter[1];

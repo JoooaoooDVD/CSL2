@@ -14,6 +14,12 @@ package com.craftstudio.cslauncher.modding.modpacks.models;
  */
 public enum ContentType {
     MOD("mods", ".jar", "mod", 6),
+    /**
+     * CS Engine (Horizon) content mods: {@code .hmod} files in {@code horizon-mods/} beside the
+     * engine's {@code options.txt}. Not on Modrinth/CurseForge — imported from a file, or from the
+     * Horizon registry. The engine lists them on Options > Mods, where each one is switched on.
+     */
+    HORIZON_MOD("horizon-mods", ".hmod", "mod", 6),
     RESOURCE_PACK("resourcepacks", ".zip", "resourcepack", 12),
     // https://api.curseforge.com/v1/categories?gameId=432 — "Shaders" category id.
     SHADER_PACK("shaderpacks", ".zip", "shader", 6552),
