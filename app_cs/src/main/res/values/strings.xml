@@ -1808,7 +1808,7 @@
     <string name="horizon_menu_mouse_settings">Mouse &amp; touch settings</string>
     <string name="horizon_mouse_speed">Cursor speed: %1$d%%</string>
     <string name="horizon_mouse_size">Cursor size: %1$d%%</string>
-    <string name="horizon_mouse_auto_menus">Show cursor automatically in menus and inventory</string>
+    <string name="horizon_mouse_auto_menus">Show cursor automatically in menus and inventory (off = tap slots directly, like normal touch)</string>
     <string name="horizon_mouse_tap_click">Tap = left click at the cursor</string>
     <string name="horizon_mouse_two_finger">Two-finger tap = right click</string>
     <string name="horizon_mouse_drag">Double-tap and hold = drag</string>

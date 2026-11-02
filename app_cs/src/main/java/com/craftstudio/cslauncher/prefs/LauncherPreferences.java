@@ -53,7 +53,7 @@ public class LauncherPreferences {
     public static boolean PREF_VMOUSE_TWO_FINGER_RIGHT = true;
     public static boolean PREF_VMOUSE_DOUBLE_TAP_DRAG = true;
     /** CS Engine: show the cursor automatically whenever a menu/inventory is open, hide it in the world. */
-    public static boolean PREF_VMOUSE_AUTO_MENUS = true;
+    public static boolean PREF_VMOUSE_AUTO_MENUS = false;
     public static boolean PREF_USE_ALTERNATE_SURFACE = true;
     public static boolean PREF_JAVA_SANDBOX = true;
     public static float PREF_SCALE_FACTOR = 1f;
@@ -123,7 +123,7 @@ public class LauncherPreferences {
         PREF_VMOUSE_TAP_CLICK = DEFAULT_PREF.getBoolean("vmouse_tap_click", true);
         PREF_VMOUSE_TWO_FINGER_RIGHT = DEFAULT_PREF.getBoolean("vmouse_two_finger_right", true);
         PREF_VMOUSE_DOUBLE_TAP_DRAG = DEFAULT_PREF.getBoolean("vmouse_double_tap_drag", true);
-        PREF_VMOUSE_AUTO_MENUS = DEFAULT_PREF.getBoolean("vmouse_auto_menus", true);
+        PREF_VMOUSE_AUTO_MENUS = DEFAULT_PREF.getBoolean("vmouse_auto_menus", false);
         PREF_USE_ALTERNATE_SURFACE = DEFAULT_PREF.getBoolean("alternate_surface", isDevicePowerful);
         PREF_JAVA_SANDBOX = DEFAULT_PREF.getBoolean("java_sandbox", true);
         PREF_SCALE_FACTOR = DEFAULT_PREF.getInt("resolutionRatio", findBestResolution(ctx, isDevicePowerful))/100f;
