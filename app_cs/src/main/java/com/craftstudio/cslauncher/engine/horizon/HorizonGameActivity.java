@@ -173,6 +173,10 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
         Platform.initializeMinimal(getApplicationContext());
         mBackend = new HorizonBackend();
         Platform.setPlatformLibrary(mBackend);
+        // CS Engine title screen: the skin panel's Customize button opens the Skin & Cape dialog
+        mBackend.setSkinRequestListener(() -> {
+            if (!isFinishing() && mSkinDialog == null) openSkinDialog();
+        });
 
         // NativeActivity hands its window surface to the engine (takeSurface): the activity's own view
         // hierarchy is then never hardware-drawn, which is why controls added with addContentView were

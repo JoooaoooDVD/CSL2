@@ -35,6 +35,9 @@ public final class HorizonBackend implements PlatformBackend, Choreographer.Fram
     public boolean keyboard() { return mKeyboard; }
     /** Called on the UI thread when grab or keyboard state changes. */
     public void setStateListener(@androidx.annotation.Nullable Runnable listener) { mStateListener = listener; }
+    /** Bit 4 of {@link HorizonNative#nativeHostPoll()}: the title screen's Customize button asks for the Skin &amp; Cape dialog. */
+    public void setSkinRequestListener(@androidx.annotation.Nullable Runnable listener) { mSkinRequestListener = listener; }
+    @androidx.annotation.Nullable private Runnable mSkinRequestListener;
     @androidx.annotation.Nullable private Runnable mStateListener;
 
     /** One JSON object with the counters, for the input diagnostics file. */
@@ -87,6 +90,7 @@ public final class HorizonBackend implements PlatformBackend, Choreographer.Fram
             mKeyboard = keyboard;
             if (keyboard) GameActivity.toggleKeyboardState(true, 0);
         }
+        if ((flags & 4) != 0 && mSkinRequestListener != null) mSkinRequestListener.run();
         if ((grabbed != mLastNotifiedGrab || keyboardChanged) && mStateListener != null) {
             mLastNotifiedGrab = grabbed;
             mStateListener.run();
