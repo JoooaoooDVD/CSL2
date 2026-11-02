@@ -1831,8 +1831,8 @@
     <string name="friends_section_friends">Friends</string>
     <string name="friends_section_world">Your world</string>
     <string name="friends_motd_help">Name shown to friends in the server list when you host (MOTD). Blank = player name and world.</string>
-    <string name="friends_motd_hint">e.g. {name}'s world · {world}</string>
-    <string name="friends_empty">No friends yet. Share your code or add a friend's code above.</string>
+    <string name="friends_motd_hint">e.g. {name}\'s world · {world}</string>
+    <string name="friends_empty">No friends yet. Share your code or add a friend\'s code above.</string>
     <string name="friends_online_count">%1$d online</string>
     <string name="friends_connecting">Connecting…</string>
     <string name="friends_copied">Friend code copied</string>
