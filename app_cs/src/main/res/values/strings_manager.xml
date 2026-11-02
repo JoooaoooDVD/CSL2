@@ -89,4 +89,5 @@
     <string name="ce_hint">Tap the ⚙ tab at the top to add buttons. Tap any control to edit, resize or remap it.</string>
     <string name="ce_added">Added. Drag it where you want.</string>
     <string name="ce_edit_controls">Edit control</string>
+    <string name="mm_import_hnmod">.hnmod files are native CS Engine mods: they must be compiled into the engine and cannot be installed. Only .hmod content mods, resource packs and shader packs can be added.</string>
 </resources>

@@ -615,16 +615,25 @@ public class ManageModsFragment extends Fragment {
         final ArrayList<Uri> accepted = new ArrayList<>();
         final ArrayList<String> names = new ArrayList<>();
         int skipped = 0;
+        int nativeMods = 0;
         for (Uri uri : uris) {
             String pickedName = queryDisplayName(uri);
             if (pickedName == null || !pickedName.toLowerCase(java.util.Locale.ROOT).endsWith(requiredExtension)) {
+                // Horizon's registry is mostly native .hnmod crates: those are compiled into
+                // the engine and can never be loaded at runtime - say so instead of "wrong type".
+                if (mContentType == ContentType.HORIZON_MOD && pickedName != null
+                        && pickedName.toLowerCase(java.util.Locale.ROOT).endsWith(".hnmod")) {
+                    nativeMods++;
+                }
                 skipped++;
                 continue;
             }
             accepted.add(uri);
             names.add(pickedName);
         }
-        if (skipped > 0) {
+        if (nativeMods > 0) {
+            Toast.makeText(requireContext(), R.string.mm_import_hnmod, Toast.LENGTH_LONG).show();
+        } else if (skipped > 0) {
             Toast.makeText(requireContext(), accepted.isEmpty()
                     ? getString(R.string.content_import_wrong_type, requiredExtension)
                     : getString(R.string.mm_import_skipped, skipped, requiredExtension),
