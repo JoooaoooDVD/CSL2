@@ -132,6 +132,61 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
+                <!-- CS Friends entry (friends system lives in its own page) -->
+                <LinearLayout
+                    android:id="@+id/vl_friends_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/vl_gap"
+                    android:background="@drawable/bg_card_home"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="@dimen/vl_card_pad"
+                    android:stateListAnimator="?attr/csPressAnimator">
+
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_settings_icon_box"
+                        android:contentDescription="@null"
+                        android:padding="9dp"
+                        android:src="@drawable/ic_friends"
+                        android:tint="#7FD4A8" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/noto_sans_bold"
+                            android:text="@string/friends_title"
+                            android:textColor="@color/vl_text"
+                            android:textSize="15sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/friends_subtitle"
+                            android:textColor="@color/vl_text_dim"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_home_chevron_right"
+                        android:tint="@color/vl_text_dim" />
+                </LinearLayout>
+
                 <!-- device without the engine (x86 32-bit) -->
                 <LinearLayout
                     android:id="@+id/vl_unsupported"
