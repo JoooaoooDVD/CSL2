@@ -83,4 +83,11 @@ public final class HorizonNative {
      * else {@code null}. Play with Friends invites carry it (engine build 11+).
      */
     public static native String nativeHostPublished();
+
+    /**
+     * A touch began at (x, y) window pixels while the world has the pointer: if it lies on the
+     * hotbar drawn last frame, the engine selects that slot and answers 0..8; -1 otherwise
+     * (engine build 13+).
+     */
+    public static native int nativeHostHotbarTap(double x, double y);
 }

@@ -10,6 +10,7 @@ import android.view.ContextThemeWrapper;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.widget.Toast;
+import androidx.annotation.NonNull;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -60,6 +61,60 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
     private ContextThemeWrapper mUi;
     /** The Mouse control button's state: cursor wanted. It survives grab/release (menus <-> world). */
     private boolean mMouseWanted;
+    public static final String EXTRA_PROFILE_NAME = "cs_profile_name";
+    /** CS Friends presence from the game process: in_game, or hosting with the public e4mc address. */
+    private final android.os.Handler mFriendsHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private String mPublishedAddress;
+    private final Runnable mFriendsPoll = new Runnable() {
+        @Override
+        public void run() {
+            String address = null;
+            try { address = HorizonNative.nativeHostPublished(); } catch (Throwable ignored) {}
+            if (address != null && address.isEmpty()) address = null;
+            boolean changed = address == null ? mPublishedAddress != null : !address.equals(mPublishedAddress);
+            if (changed) {
+                mPublishedAddress = address;
+                String world = getIntent() == null ? null : getIntent().getStringExtra(EXTRA_PROFILE_NAME);
+                com.craftstudio.cslauncher.multiplayer.friends.FriendsService.get(HorizonGameActivity.this)
+                        .setPresence(address == null ? "in_game" : "hosting", address, world, "cs-engine");
+                if (address != null && mUi != null) {
+                    Toast.makeText(mUi, R.string.horizon_published_toast, Toast.LENGTH_LONG).show();
+                }
+            }
+            mFriendsHandler.postDelayed(this, 3000);
+        }
+    };
+    private final com.craftstudio.cslauncher.multiplayer.friends.FriendsService.Listener mFriendsListener =
+            new com.craftstudio.cslauncher.multiplayer.friends.FriendsService.Listener() {
+        @Override public void onFriendsUpdated(@NonNull com.craftstudio.cslauncher.multiplayer.friends.FriendsApi.Snapshot snapshot) {}
+        @Override public void onFriendsError(@NonNull String message) {}
+        @Override public void onInvite(@NonNull com.craftstudio.cslauncher.multiplayer.friends.FriendsApi.Invite invite) {
+            if (mUi == null || isFinishing()) return;
+            String world = invite.world == null || invite.world.isEmpty() ? getString(R.string.friends_invite_world_default) : invite.world;
+            Toast.makeText(mUi, getString(R.string.horizon_invite_toast_fmt, invite.from, world), Toast.LENGTH_LONG).show();
+        }
+    };
+
+    /** Game Menu › Invite friends: every online friend gets the public address (publish first). */
+    private void inviteFriends() {
+        final String address = mPublishedAddress;
+        if (address == null) {
+            Toast.makeText(mUi, R.string.friends_invite_no_address, Toast.LENGTH_LONG).show();
+            // Reach the screen that publishes: Esc → pause menu; the player taps Play with Friends.
+            CallbackBridge.sendKeyPress(KeyEvent.KEYCODE_ESCAPE);
+            return;
+        }
+        String world = getIntent() == null ? null : getIntent().getStringExtra(EXTRA_PROFILE_NAME);
+        com.craftstudio.cslauncher.multiplayer.friends.FriendsService.get(this).invite(null, address, world, "cs-engine", (error, info) -> {
+            if (mUi == null) return;
+            if (error != null) Toast.makeText(mUi, getString(R.string.friends_error_fmt, error), Toast.LENGTH_LONG).show();
+            else {
+                int n = 0;
+                try { n = Integer.parseInt(info); } catch (Throwable ignored) {}
+                Toast.makeText(mUi, n == 0 ? getString(R.string.friends_invite_none) : getString(R.string.friends_invite_sent_fmt, n), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
     /** Auto mode: the cursor is shown by itself while a menu is open (engine not capturing). */
     private boolean mAutoCursorShown;
 
@@ -497,10 +552,19 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
     protected void onResume() {
         super.onResume();
         if (mBackend != null) mBackend.startPolling();
+        try {
+            com.craftstudio.cslauncher.multiplayer.friends.FriendsService.get(this).setPresence(
+                    mPublishedAddress == null ? "in_game" : "hosting", mPublishedAddress,
+                    getIntent() == null ? null : getIntent().getStringExtra(EXTRA_PROFILE_NAME), "cs-engine");
+            com.craftstudio.cslauncher.multiplayer.friends.FriendsService.get(this).addListener(mFriendsListener);
+        } catch (Throwable ignored) {}
+        mFriendsHandler.removeCallbacks(mFriendsPoll);
+        mFriendsHandler.postDelayed(mFriendsPoll, 2000);
     }
 
     @Override
     protected void onPause() {
+        mFriendsHandler.removeCallbacks(mFriendsPoll);
         if (mBackend != null) {
             mBackend.stopPolling();
             mBackend.releaseAll();
@@ -582,6 +646,7 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
                 getString(R.string.horizon_menu_toggle_controls),
                 getString(R.string.horizon_menu_edit_controls),
                 getString(R.string.horizon_menu_account_skin),
+                getString(R.string.horizon_menu_invite),
                 getString(R.string.horizon_menu_report),
                 getString(R.string.horizon_menu_exit)
         };
@@ -595,8 +660,9 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
                         case 3: mControlLayout.toggleControlVisible(); break;
                         case 4: mControlLayout.setModifiable(true); break;
                         case 5: openSkinDialog(); break;
-                        case 6: shareEngineReport(); break;
-                        case 7:
+                        case 6: inviteFriends(); break;
+                        case 7: shareEngineReport(); break;
+                        case 8:
                             // Escape twice reaches the pause menu; the engine saves and exits on "Save and Quit".
                             CallbackBridge.sendKeyPress(KeyEvent.KEYCODE_ESCAPE);
                             break;
@@ -607,6 +673,11 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
 
     @Override
     protected void onDestroy() {
+        mFriendsHandler.removeCallbacks(mFriendsPoll);
+        try {
+            com.craftstudio.cslauncher.multiplayer.friends.FriendsService.get(this).removeListener(mFriendsListener);
+            com.craftstudio.cslauncher.multiplayer.friends.FriendsService.get(this).setPresence("offline", null, null, null);
+        } catch (Throwable ignored) {}
         writeInputDiagnostics("destroy");
         if (mSkinDialog != null) mSkinDialog.dismiss();
         GameActivity.setMouseToggleHandler(null);

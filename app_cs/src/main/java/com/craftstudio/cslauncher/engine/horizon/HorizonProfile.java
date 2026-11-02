@@ -199,11 +199,61 @@ public final class HorizonProfile {
     @NonNull
     public static Intent launchIntent(@NonNull Context context, @Nullable Account account, @NonNull Instance instance)
             throws IOException, org.json.JSONException {
+        return launchIntent(context, account, instance, null);
+    }
+
+    /** The same, started straight into {@code server} (CS Friends "Join"). */
+    @NonNull
+    public static Intent launchIntent(@NonNull Context context, @Nullable Account account, @NonNull Instance instance,
+                                      @Nullable String server) throws IOException, org.json.JSONException {
         prepareGameHome(instance);
+        writeServerBranding(context, gameHome(instance));
         HorizonLaunch launch = new HorizonLaunch(instance.getKey(), gameHome(instance));
+        launch.server = server;
         launch.renderer = instance.renderer == null || !rendererIds().contains(instance.renderer) ? "" : instance.renderer;
         launch.renderScale = instance.horizonRenderScale;
         launch.controlsPath = instance.getLaunchControls();
-        return launch.intent(context, account);
+        Intent intent = launch.intent(context, account);
+        intent.putExtra(HorizonGameActivity.EXTRA_PROFILE_NAME, instance.name);
+        return intent;
+    }
+
+    /**
+     * What friends see in their server list when this profile hosts: the launcher icon as the
+     * server icon ({@code cs-server-icon.png}, 64x64) and the MOTD from the Friends page
+     * ({@code cs-server.json}); the engine reads both when the world opens to LAN.
+     */
+    private static void writeServerBranding(@NonNull Context context, @NonNull File gameHome) {
+        try {
+            File icon = new File(gameHome, "cs-server-icon.png");
+            if (!icon.isFile() || icon.length() == 0) {
+                android.graphics.drawable.Drawable d = androidx.core.content.ContextCompat.getDrawable(context, R.mipmap.ic_launcher);
+                if (d != null) {
+                    android.graphics.Bitmap bmp = android.graphics.Bitmap.createBitmap(64, 64, android.graphics.Bitmap.Config.ARGB_8888);
+                    android.graphics.Canvas canvas = new android.graphics.Canvas(bmp);
+                    d.setBounds(0, 0, 64, 64);
+                    d.draw(canvas);
+                    java.io.FileOutputStream out = new java.io.FileOutputStream(icon);
+                    try {
+                        bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, out);
+                    } finally {
+                        out.close();
+                    }
+                }
+            }
+            String motd = com.craftstudio.cslauncher.multiplayer.friends.FriendsService.get(context).motd();
+            File json = new File(gameHome, "cs-server.json");
+            if (motd == null || motd.trim().isEmpty()) {
+                if (json.isFile()) //noinspection ResultOfMethodCallIgnored
+                    json.delete();
+            } else {
+                org.json.JSONObject o = new org.json.JSONObject();
+                o.put("motd", motd.trim());
+                o.put("icon", "cs-server-icon.png");
+                Tools.write(json.getAbsolutePath(), o.toString());
+            }
+        } catch (Throwable t) {
+            android.util.Log.w("Horizon", "server branding not written", t);
+        }
     }
 }

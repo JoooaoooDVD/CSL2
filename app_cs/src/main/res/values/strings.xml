@@ -1816,4 +1816,55 @@
     <string name="horizon_mouse_hint">Two fingers moving = scroll. The Mouse control button keeps the cursor on in the world too.</string>
     <string name="horizon_menu_report">Report problem (share engine log)</string>
     <string name="horizon_report_subject">CS Engine problem report</string>
+    <!-- CS Friends -->
+    <string name="friends_title">Friends</string>
+    <string name="friends_subtitle">Invite friends and join their worlds</string>
+    <string name="friends_my_code_eyebrow">Your friend code</string>
+    <string name="friends_my_name_fmt">%1$s · give this code to friends</string>
+    <string name="friends_copy">Copy</string>
+    <string name="friends_share">Share</string>
+    <string name="friends_share_text">Add me on CS Launcher Plus! My friend code: %1$s</string>
+    <string name="friends_add_hint">Friend code, e.g. CS-7K3M9Q</string>
+    <string name="friends_add">Add</string>
+    <string name="friends_section_invites">Invites</string>
+    <string name="friends_section_requests">Friend requests</string>
+    <string name="friends_section_friends">Friends</string>
+    <string name="friends_section_world">Your world</string>
+    <string name="friends_motd_help">Name shown to friends in the server list when you host (MOTD). Blank = player name and world.</string>
+    <string name="friends_motd_hint">e.g. {name}'s world · {world}</string>
+    <string name="friends_empty">No friends yet. Share your code or add a friend's code above.</string>
+    <string name="friends_online_count">%1$d online</string>
+    <string name="friends_connecting">Connecting…</string>
+    <string name="friends_copied">Friend code copied</string>
+    <string name="friends_status_online">Online</string>
+    <string name="friends_status_offline">Offline</string>
+    <string name="friends_status_in_game">In game</string>
+    <string name="friends_status_hosting_fmt">Hosting · %1$s</string>
+    <string name="friends_join">Join</string>
+    <string name="friends_invite">Invite</string>
+    <string name="friends_accept">Accept</string>
+    <string name="friends_decline">Decline</string>
+    <string name="friends_cancel">Cancel</string>
+    <string name="friends_sent">Request sent</string>
+    <string name="friends_request_sent_fmt">Friend request sent to %1$s</string>
+    <string name="friends_now_friends_fmt">You and %1$s are now friends</string>
+    <string name="friends_already_fmt">%1$s is already your friend</string>
+    <string name="friends_no_such_code">No player has this friend code</string>
+    <string name="friends_self">That is your own code</string>
+    <string name="friends_remove_title">Remove friend</string>
+    <string name="friends_remove_msg_fmt">Remove %1$s from your friends?</string>
+    <string name="friends_remove">Remove</string>
+    <string name="friends_invite_title">Invite from %1$s</string>
+    <string name="friends_invite_msg_fmt">%1$s invited you to %2$s.\nJoin now?</string>
+    <string name="friends_invite_world_default">their world</string>
+    <string name="friends_invite_sent_fmt">Invite sent to %1$d friend(s)</string>
+    <string name="friends_invite_none">No friends online to invite</string>
+    <string name="friends_invite_no_address">Publish the world first: Game Menu › Play with Friends</string>
+    <string name="friends_join_no_profile">Create a CS Engine profile first to join</string>
+    <string name="friends_join_not_ready">The CS Engine profile is not installed yet</string>
+    <string name="friends_joining_fmt">Joining %1$s…</string>
+    <string name="friends_error_fmt">Friends: %1$s</string>
+    <string name="horizon_menu_invite">Invite friends</string>
+    <string name="horizon_invite_toast_fmt">%1$s invited you to %2$s — join from the launcher</string>
+    <string name="horizon_published_toast">Public address ready — Game Menu › Invite friends</string>
 </resources>
