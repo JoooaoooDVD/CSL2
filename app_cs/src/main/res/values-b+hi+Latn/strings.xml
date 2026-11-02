@@ -1601,6 +1601,7 @@ time set day</string>
     <string name="horizon_menu_mouse_settings">Mouse &amp; touch settings</string>
     <string name="horizon_mouse_auto_menus">Menu aur inventory mein cursor apne aap dikhao (off = slots par seedha tap, normal touch)</string>
     <string name="horizon_mouse_tap_click">Tap = cursor par left click</string>
+    <string name="horizon_mouse_direct_tap">Menus: slot/button par seedha tap (cursor ungli par aa jata hai)</string>
     <string name="horizon_mouse_two_finger">Do ungli se tap = right click</string>
     <string name="horizon_mouse_drag">Double-tap karke hold = drag</string>
     <string name="horizon_mouse_hint">Do ungli move = scroll. Mouse control button cursor ko world mein bhi on rakhta hai.</string>

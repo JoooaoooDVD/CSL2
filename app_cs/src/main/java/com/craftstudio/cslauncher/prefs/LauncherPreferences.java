@@ -50,6 +50,8 @@ public class LauncherPreferences {
     public static boolean PREF_VIRTUAL_MOUSE_START = false;
     /** Virtual mouse (touchpad) options: tap = click, two-finger tap = right click, double-tap-and-hold = drag. */
     public static boolean PREF_VMOUSE_TAP_CLICK = true;
+    /** CS Engine menus: a one-finger tap clicks under the finger even while the cursor is shown. */
+    public static boolean PREF_VMOUSE_DIRECT_TAP = true;
     public static boolean PREF_VMOUSE_TWO_FINGER_RIGHT = true;
     public static boolean PREF_VMOUSE_DOUBLE_TAP_DRAG = true;
     /** CS Engine: show the cursor automatically whenever a menu/inventory is open, hide it in the world. */
@@ -121,6 +123,7 @@ public class LauncherPreferences {
         PREF_SUSTAINED_PERFORMANCE = DEFAULT_PREF.getBoolean("sustainedPerformance", isDevicePowerful);
         PREF_VIRTUAL_MOUSE_START = DEFAULT_PREF.getBoolean("mouse_start", false);
         PREF_VMOUSE_TAP_CLICK = DEFAULT_PREF.getBoolean("vmouse_tap_click", true);
+        PREF_VMOUSE_DIRECT_TAP = DEFAULT_PREF.getBoolean("vmouse_direct_tap", true);
         PREF_VMOUSE_TWO_FINGER_RIGHT = DEFAULT_PREF.getBoolean("vmouse_two_finger_right", true);
         PREF_VMOUSE_DOUBLE_TAP_DRAG = DEFAULT_PREF.getBoolean("vmouse_double_tap_drag", true);
         PREF_VMOUSE_AUTO_MENUS = DEFAULT_PREF.getBoolean("vmouse_auto_menus", false);

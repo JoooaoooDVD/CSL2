@@ -21,6 +21,7 @@ import com.craftstudio.cslauncher.R;
 import com.craftstudio.cslauncher.Tools;
 import com.craftstudio.cslauncher.game.GameActivity;
 import com.craftstudio.cslauncher.game.HorizonInputView;
+import com.craftstudio.cslauncher.game.InGUIEventProcessor;
 import com.craftstudio.cslauncher.game.platform.Platform;
 import com.craftstudio.cslauncher.input.ControlButtonMenuListener;
 import com.craftstudio.cslauncher.input.ControlLayout;
@@ -140,6 +141,7 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
         GameActivity.registerCursorView(mInputView.cursorView());
         GameActivity.setMouseToggleHandler(this::toggleVirtualMouse);
         mBackend.setStateListener(this::updateAutoCursor);
+        InGUIEventProcessor.sDirectTapInMenus = LauncherPreferences.PREF_VMOUSE_DIRECT_TAP;
         if (LauncherPreferences.PREF_VIRTUAL_MOUSE_START) setVirtualMouse(true, false);
         mControlLayout.setModifiable(false);
         mControlLayout.setMenuListener(this);
@@ -228,6 +230,8 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
                 v -> { LauncherPreferences.PREF_VMOUSE_AUTO_MENUS = v; if (!v && mAutoCursorShown && !mMouseWanted) { mAutoCursorShown = false; mInputView.cursorView().setVisibility(View.GONE); } }));
         box.addView(check(R.string.horizon_mouse_tap_click, "vmouse_tap_click", LauncherPreferences.PREF_VMOUSE_TAP_CLICK,
                 v -> LauncherPreferences.PREF_VMOUSE_TAP_CLICK = v));
+        box.addView(check(R.string.horizon_mouse_direct_tap, "vmouse_direct_tap", LauncherPreferences.PREF_VMOUSE_DIRECT_TAP,
+                v -> { LauncherPreferences.PREF_VMOUSE_DIRECT_TAP = v; InGUIEventProcessor.sDirectTapInMenus = v; }));
         box.addView(check(R.string.horizon_mouse_two_finger, "vmouse_two_finger_right", LauncherPreferences.PREF_VMOUSE_TWO_FINGER_RIGHT,
                 v -> LauncherPreferences.PREF_VMOUSE_TWO_FINGER_RIGHT = v));
         box.addView(check(R.string.horizon_mouse_drag, "vmouse_double_tap_drag", LauncherPreferences.PREF_VMOUSE_DOUBLE_TAP_DRAG,

@@ -21,6 +21,14 @@ public class InGUIEventProcessor extends TouchEventProcessor {
     private final TapDetector mSingleTapDetector;
     private View mTouchpad;
     private boolean mIsMouseDown = false;
+    /**
+     * CS Engine: with the touchpad cursor shown in a menu/inventory, a plain one-finger tap clicks
+     * where the finger is (the cursor jumps there first), so slots and buttons answer direct taps
+     * as they do without the cursor; a drag still moves the cursor like a touchpad. Set by the
+     * engine activity from its preference; the Java engine keeps the pure touchpad behaviour.
+     */
+    public static volatile boolean sDirectTapInMenus = false;
+    private float mTouchpadDownX, mTouchpadDownY;
     private float mStartX, mStartY;
     private final Scroller mScroller = new Scroller(FINGER_SCROLL_THRESHOLD);
 
@@ -41,6 +49,10 @@ public class InGUIEventProcessor extends TouchEventProcessor {
 
         @Override
         public void click(int button) {
+            if (sDirectTapInMenus && button == VirtualTouchpad.BUTTON_LEFT) {
+                // One-finger tap in a menu: click under the finger, like a plain touch.
+                sendTouchCoordinates(mTouchpadDownX, mTouchpadDownY);
+            }
             CallbackBridge.performClick(button == VirtualTouchpad.BUTTON_RIGHT
                     ? MotionEvent.BUTTON_SECONDARY : MotionEvent.BUTTON_PRIMARY);
         }
@@ -121,6 +133,8 @@ public class InGUIEventProcessor extends TouchEventProcessor {
     private void processTouchpadEvent(MotionEvent e) {
         switch (e.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
+                mTouchpadDownX = e.getX(0);
+                mTouchpadDownY = e.getY(0);
                 mVirtualTouchpad.down(e.getEventTime(), e.getX(0), e.getY(0));
                 break;
             case MotionEvent.ACTION_POINTER_DOWN:
