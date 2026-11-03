@@ -35,6 +35,8 @@ curl -fsSL -o "$WORK/SHA256SUMS.txt" "$BASE/SHA256SUMS.txt" || fail "no SHA256SU
 for f in BUILD.json engine-data.zip LICENSE.txt THIRD_PARTY_NOTICES.md; do
   curl -fsSL -o "$WORK/$f" "$BASE/$f" || fail "download failed: $f"
 done
+# List of registry native mods compiled into this engine (drives the launcher's CS Engine mod browser).
+curl -fsSL -o "$WORK/cs-native-mods.json" "$BASE/cs-native-mods.json" || echo '{"built":[],"skipped":[]}' > "$WORK/cs-native-mods.json"
 got_any=0
 for abi in "${ABIS[@]}"; do
   if curl -fsSL -o "$WORK/libcs_engine-$abi.so" "$BASE/libcs_engine-$abi.so"; then
@@ -52,7 +54,7 @@ done
   done ) || fail "checksum verification failed"
 
 mkdir -p "$ASSET_DIR"
-cp "$WORK/engine-data.zip" "$WORK/LICENSE.txt" "$WORK/THIRD_PARTY_NOTICES.md" "$WORK/BUILD.json" "$ASSET_DIR/"
+cp "$WORK/engine-data.zip" "$WORK/LICENSE.txt" "$WORK/THIRD_PARTY_NOTICES.md" "$WORK/BUILD.json" "$WORK/cs-native-mods.json" "$ASSET_DIR/"
 for abi in "${ABIS[@]}"; do
   if [[ -f "$WORK/libcs_engine-$abi.so" ]]; then
     mkdir -p "$JNI_DIR/$abi"

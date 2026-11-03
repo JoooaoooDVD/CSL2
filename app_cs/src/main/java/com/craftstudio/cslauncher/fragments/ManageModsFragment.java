@@ -570,20 +570,16 @@ public class ManageModsFragment extends Fragment {
     }
 
     private void openModSearch() {
-        if (mContentType == ContentType.HORIZON_MOD) {
-            // Java mods from Modrinth/CurseForge never run on the CS Engine: offer the two real paths
-            new androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                    .setTitle(R.string.hz_mods_title)
-                    .setMessage(R.string.hz_mods_message)
-                    .setPositiveButton(R.string.hz_mods_import, (d, w) -> launchImport())
-                    .setNeutralButton(R.string.hz_mods_registry, (d, w) -> {
-                        try {
-                            startActivity(new android.content.Intent(android.content.Intent.ACTION_VIEW,
-                                    Uri.parse("https://horizon-rust.github.io/horizon-mods/")));
-                        } catch (Exception ignored) {}
-                    })
-                    .setNegativeButton(android.R.string.cancel, null)
-                    .show();
+        if (mContentType == ContentType.HORIZON_MOD
+                || (mContentType == ContentType.RESOURCE_PACK && isHorizonProfile())) {
+            // CS Engine profiles browse the Horizon registry (built-in native mods, .hmod content
+            // mods, resource packs) — Modrinth/CurseForge only know Java mods.
+            Bundle hzArgs = new Bundle();
+            hzArgs.putString(CsEngineModsFragment.ARG_TAB,
+                    mContentType == ContentType.RESOURCE_PACK ? "packs" : "mods");
+            CsEngineModsFragment hz = new CsEngineModsFragment();
+            hz.setArguments(hzArgs);
+            navigateToFragment(hz, CsEngineModsFragment.TAG);
             return;
         }
         String[] filter = resolveFilter(getCurrentProfileKey());
