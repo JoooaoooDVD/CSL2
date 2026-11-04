@@ -84,6 +84,7 @@ public class AsyncAssetManager {
             tryUnpackComponent(ctx, "security", true);
             tryUnpackComponent(ctx, "forge_installer", true);
             tryUnpackComponent(ctx, "authlib-injector", true);
+            tryUnpackComponent(ctx, "e4mc-agent", true);
             ProgressLayout.clearProgress(ProgressLayout.EXTRACT_COMPONENTS);
             // New Minecraft versions can need a newer authlib-injector (skins on local accounts, Ely.by)
             com.craftstudio.cslauncher.authenticator.yggdrasil.AuthlibInjectorUpdater.checkForUpdate();

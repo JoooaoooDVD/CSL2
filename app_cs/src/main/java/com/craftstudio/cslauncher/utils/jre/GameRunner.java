@@ -309,6 +309,7 @@ public class GameRunner {
         javaArgList.add("-Dorg.lwjgl.system.SharedLibraryExtractPath="+lwjglExtractDir.getAbsolutePath());
 
         addAuthlibInjectorArgs(javaArgList, account);
+        addE4mcAgentArgs(javaArgList);
 
         mergeMoJsonArgs(javaArgList, getMoJsonJvmArgs(versionId));
 
@@ -393,6 +394,17 @@ public class GameRunner {
             }
         } else {
             Log.w(Tools.APP_NAME, "Failed to create the configuration directory");
+        }
+    }
+
+    /** Lets e4mc (Netty-Quiche) load the Android native published by the LAN mod. */
+    private static void addE4mcAgentArgs(List<String> javaArgList) {
+        File agent = new File(Tools.DIR_DATA, "e4mc-agent/MasterixE4mcAgent.jar");
+
+        if(agent.isFile()) {
+            javaArgList.add("-javaagent:" + agent.getAbsolutePath());
+        } else {
+            Log.w("GameRunner", "e4mc-agent jar missing, e4mc may not work");
         }
     }
 
