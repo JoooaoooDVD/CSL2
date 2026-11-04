@@ -1,23 +1,24 @@
-name: CS Launcher Plus CI
+name: Build Masterix
 
-# Builds on every push; auto-publishes the rolling "latest" prerelease from main
-# and a proper GitHub Release for every v* tag - no manual upload, no signing
-# secrets, no Play Store steps needed.
 on:
-  push:
-    branches: [main, master]
-    tags: ['v*']
   workflow_dispatch:
+    inputs:
+      publish_release:
+        description: "APK ko Releases me bhi daalna hai?"
+        type: boolean
+        default: true
 
 permissions:
   contents: write
 
+env:
+  APP_NAME: Masterix
+
 jobs:
   build:
     runs-on: ubuntu-22.04
+    timeout-minutes: 90
     env:
-      # Optional: set these repo secrets to also produce a signed release APK.
-      # Without them the step is skipped and only the debug build is published.
       UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.UPLOAD_NEXT_KEYSTORE_PASSWORD }}
       CSPUB_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_NEXT_KEYSTORE_PASSWORD }}
       CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
@@ -26,6 +27,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Check project layout
+        run: |
+          ls
+          if [ ! -d app_cs ]; then
+            echo "::error::app_cs folder nahi mila."
+            exit 1
+          fi
 
       - name: Get LTW
         uses: dawidd6/action-download-artifact@v6
@@ -66,17 +75,17 @@ jobs:
       - name: Build Virtual LAN VPN bridge (hev-socks5-tunnel)
         run: bash scripts/build_hev_tunnel.sh
 
-      - name: Fetch Horizon engine (JoooaoooDVD/horizon-android, cs-engine-latest)
+      - name: Fetch Horizon engine
         run: bash scripts/fetch_horizon_engine.sh
 
       - name: Build Debug .apk
         run: |
-          gradle :app_cs:assembleFullDebug
+          gradle :app_cs:assembleFullDebug --console=plain
           mv app_cs/build/outputs/apk/full/debug/app_cs-full-debug.apk out/app-debug-full.apk
 
       - name: Build Debug .apk (No runtime)
         run: |
-          gradle :app_cs:assembleNoruntimeDebug
+          gradle :app_cs:assembleNoruntimeDebug --console=plain
           mv app_cs/build/outputs/apk/noruntime/debug/app_cs-noruntime-debug.apk out/app-debug-noruntime.apk
 
       - name: Gen md5sums
@@ -97,27 +106,22 @@ jobs:
       - name: Build Release .apk (signed, optional)
         if: env.CSPUB_KEYSTORE_PASSWORD != ''
         run: |
-          gradle :app_cs:assembleFullPubRelease
+          gradle :app_cs:assembleFullPubRelease --console=plain
           mv app_cs/build/outputs/apk/full/pubRelease/app_cs-full-pubRelease.apk out/CS-Launcher-Plus-release.apk
           md5sum out/CS-Launcher-Plus-release.apk > out/CS-Launcher-Plus-release.md5
 
-      - name: Release notes + in-app update metadata
+      - name: Release notes
         run: |
           VERSION_NAME=$(grep -oP 'versionName "\K[^"]+' app_cs/build.gradle | head -1)
+          echo "VERSION_NAME=${VERSION_NAME}" >> "$GITHUB_ENV"
           {
-            if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
-              echo "## CS Launcher Plus ${GITHUB_REF_NAME}"
-              echo ""
-              echo "Release build of ${GITHUB_SHA}."
-            else
-              echo "## CS Launcher Plus ${VERSION_NAME} - build ${GITHUB_RUN_NUMBER}"
-              echo ""
-              echo "Automated build of ${GITHUB_SHA} (${GITHUB_REF_NAME}), published by GitHub Actions."
-            fi
+            echo "## ${APP_NAME} ${VERSION_NAME} - build ${GITHUB_RUN_NUMBER}"
+            echo ""
+            echo "Manual build of ${GITHUB_SHA} (${GITHUB_REF_NAME})."
             echo "**app-debug-full.apk** is the one to install (includes the Java runtime)."
             echo ""
             echo "### What's new"
-            git log -15 --no-merges --pretty=format:'- %s' | sed -E 's/^- (Fix|Feat|Upd)\[([^]]*)\]: ?/- **\2:** /' || true
+            git log -15 --no-merges --pretty=format:'- %s' || true
             echo ""
             echo ""
             echo "<!-- cs-update-begin (read by the launcher's update checker, do not edit) -->"
@@ -129,28 +133,20 @@ jobs:
           } > out/release-body.md
           cat out/release-body.md
 
-      - name: Publish rolling latest build (main branch)
-        if: github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'master')
+      - name: Upload APKs as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: apks-${{ github.run_number }}
+          path: out/*.apk
+          if-no-files-found: error
+
+      - name: Publish to Releases (latest)
+        if: inputs.publish_release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
-          name: CS Launcher Plus 1.4 - latest build
+          name: ${{ env.APP_NAME }} ${{ env.VERSION_NAME }} - latest build
           prerelease: true
-          body_path: out/release-body.md
-          files: |
-            out/app-debug-full.apk
-            out/app-debug-full.md5
-            out/app-debug-noruntime.apk
-            out/app-debug-noruntime.md5
-            out/CS-Launcher-Plus-release.apk
-            out/CS-Launcher-Plus-release.md5
-          fail_on_unmatched_files: false
-
-      - name: Release tagged build (v* tags)
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
-        with:
-          name: CS Launcher Plus ${{ github.ref_name }}
           body_path: out/release-body.md
           files: |
             out/app-debug-full.apk
