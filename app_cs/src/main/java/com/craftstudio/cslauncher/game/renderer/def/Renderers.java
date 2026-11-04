@@ -10,4 +10,6 @@ public final class Renderers {
     public static final String LEGACYZINK_RENDERER = "vulkan_legacyzink";
     public static final String MOBILEGLUES_RENDERER = "opengles_mobileglues";
     public static final String SFPEW_RENDERER = "opengles_sfpew";
+    /** Craft Studio Graphics Engine: the CS build of MobileGlues, shipped as libcsge.so next to it. */
+    public static final String CSGE_RENDERER = "opengles_csge";
 }

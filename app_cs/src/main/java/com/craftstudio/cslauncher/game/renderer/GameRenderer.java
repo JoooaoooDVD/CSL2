@@ -7,6 +7,7 @@ import static com.craftstudio.cslauncher.game.renderer.def.Renderers.LTW_RENDERE
 import static com.craftstudio.cslauncher.game.renderer.def.Renderers.MESA_RENDERER;
 import static com.craftstudio.cslauncher.game.renderer.def.Renderers.MESA_RENDERER_EXT;
 import static com.craftstudio.cslauncher.game.renderer.def.Renderers.MOBILEGLUES_RENDERER;
+import static com.craftstudio.cslauncher.game.renderer.def.Renderers.CSGE_RENDERER;
 import static com.craftstudio.cslauncher.game.renderer.def.Renderers.SFPEW_RENDERER;
 import static com.craftstudio.cslauncher.game.renderer.def.Renderers.ZINK_RENDERER;
 
@@ -20,6 +21,7 @@ import com.craftstudio.cslauncher.Tools;
 import com.craftstudio.cslauncher.game.renderer.impl.GLESRenderSpec;
 import com.craftstudio.cslauncher.game.renderer.impl.MesaRenderSpec;
 import com.craftstudio.cslauncher.game.renderer.impl.MobileGluesRenderSpec;
+import com.craftstudio.cslauncher.game.renderer.impl.CsgeRenderSpec;
 import com.craftstudio.cslauncher.prefs.LauncherPreferences;
 
 import java.util.HashMap;
@@ -74,6 +76,7 @@ public class GameRenderer {
             case MESA_RENDERER_EXT: return new MesaRenderSpec.ExtMesaRenderSpec();
             case LEGACYZINK_RENDERER: return new MesaRenderSpec.LegacyZinkRenderSpec();
             case MOBILEGLUES_RENDERER: return new MobileGluesRenderSpec();
+            case CSGE_RENDERER: return new CsgeRenderSpec();
             case SFPEW_RENDERER: return new GLESRenderSpec.SFPEWRenderSpec();
             default:
                 Log.e(TAG, "Unknown renderer " + renderer);

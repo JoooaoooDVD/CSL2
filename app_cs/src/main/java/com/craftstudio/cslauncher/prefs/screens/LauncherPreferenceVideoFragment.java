@@ -132,7 +132,8 @@ public class LauncherPreferenceVideoFragment extends LauncherPreferenceFragment 
         requirePreference("force_vsync", SwitchPreferenceCompat.class)
                 .setVisible(LauncherPreferences.PREF_USE_ALTERNATE_SURFACE);
 
-        boolean isMobileGluesRenderer = Renderers.MOBILEGLUES_RENDERER.equals(LauncherPreferences.PREF_RENDERER);
+        boolean isMobileGluesRenderer = Renderers.MOBILEGLUES_RENDERER.equals(LauncherPreferences.PREF_RENDERER)
+                || Renderers.CSGE_RENDERER.equals(LauncherPreferences.PREF_RENDERER);
         requirePreference("renderer_settings").setVisible(isMobileGluesRenderer);
     }
 }

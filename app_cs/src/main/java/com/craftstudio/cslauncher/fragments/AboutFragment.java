@@ -76,6 +76,7 @@ public class AboutFragment extends Fragment {
             new Credit("Holy GL4ES", "OpenGL 2.1 to OpenGL ES translation layer.", "MIT", "https://github.com/artdeell/gl4es_extra_extra"),
             new Credit("LTW", "Lightweight OpenGL translation wrapper with modern extension support.", "LGPL-3.0", "https://github.com/artdeell/LTW"),
             new Credit("MobileGlues", "OpenGL 4.x on OpenGL ES 3.2 renderer for Adreno and Mali GPUs.", "LGPL-2.1", "https://github.com/MobileGL-Dev/MobileGlues"),
+            new Credit("Craft Studio Graphics Engine", "CSGE: the Craft Studio Development Group build of MobileGlues 2.0.0, selectable as its own renderer.", "LGPL-2.1", "https://github.com/MobileGL-Dev/MobileGlues"),
             new Credit("Mesa 3D (Zink / Virgl)", "Open source graphics drivers, used for the Vulkan-backed Zink renderer.", "MIT", "https://gitlab.freedesktop.org/mesa/mesa"),
             new Credit("jreexec", "Launches the Java runtime in a clean process on Android.", "MIT", "https://github.com/MojoLauncher/jreexec"),
             new Credit("bhook", "PLT hook framework, used to trap the game exit code.", "MIT", "https://github.com/bytedance/bhook"),

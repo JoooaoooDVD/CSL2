@@ -699,6 +699,7 @@
     <string name="rp_desc_legacy_zink">Purana Zink build, performance kam. Sirf tab use karo jab normal Zink tumhare device pe crash kare.</string>
     <string name="rp_desc_freedreno">Adreno GPU ke liye native Mesa driver. Supported Snapdragon chips pe shaders ki performance badhiya.</string>
     <string name="rp_desc_mesa">DRM ke through desktop Mesa driver. Experimental — har device pe shuru nahi hota.</string>
+    <string name="rp_desc_csge">Craft Studio Graphics Engine — hamara apna MobileGlues-based OpenGL on GLES renderer. Naya build: pehle vanilla, phir Sodium, phir Iris try karein.</string>
     <string name="rp_desc_mobileglues">GLES ke upar OpenGL wrapper, extra tuning options ke saath. Modern versions ke liye accha balance.</string>
     <string name="rp_desc_sfpew">MobileGlues ke saath SFPEW layer, taaki purane versions bhi is par chal sakein.</string>
     <string name="rp_desc_generic">Alternative renderer. Default wala dikkat de to isse try karo.</string>

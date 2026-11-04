@@ -761,6 +761,7 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
             case Renderers.MESA_RENDERER: return "Mesa (Vulkan)";
             case Renderers.MESA_RENDERER_EXT: return "Mesa (external)";
             case Renderers.MOBILEGLUES_RENDERER: return "MobileGlues";
+            case Renderers.CSGE_RENDERER: return "CSGE";
             case Renderers.SFPEW_RENDERER: return "SimpleFPE Wrapper";
             default: return key.toUpperCase(Locale.ROOT);
         }

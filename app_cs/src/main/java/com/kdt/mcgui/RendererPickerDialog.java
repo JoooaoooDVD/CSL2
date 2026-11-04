@@ -176,6 +176,8 @@ public class RendererPickerDialog extends CSPopupDialog {
                 return new Info(R.drawable.rp_icon_mesa, R.string.rp_desc_mesa, R.string.rp_ver_all, R.string.rp_tag_experimental, TAG_WARN);
             case "opengles_mobileglues":
                 return new Info(R.drawable.rp_icon_mobileglues, R.string.rp_desc_mobileglues, R.string.rp_ver_117_plus, 0, TAG_GOOD);
+            case "opengles_csge":
+                return new Info(R.drawable.rp_icon_mobileglues, R.string.rp_desc_csge, R.string.rp_ver_117_plus, R.string.rp_tag_beta, TAG_NEUTRAL);
             case "opengles_sfpew":
                 return new Info(R.drawable.rp_icon_sfpew, R.string.rp_desc_sfpew, R.string.rp_ver_all, 0, TAG_GOOD);
             default:

@@ -130,6 +130,7 @@
     <string name="mcl_setting_renderer_mesa_desktop">Mesa (DRM) - all versions</string>
     <string name="mcl_setting_renderer_mesa_desktop_ext">Mesa (DRM, external) - all versions</string>
     <string name="mcl_setting_renderer_mobileglues">MobileGlues (OpenGL ES) - 1.17+ only</string>
+    <string name="mcl_setting_renderer_csge">CSGE - Craft Studio Graphics Engine (Beta) - 1.17+ only</string>
     <string name="mcl_setting_renderer_sfpew">SFPEW/MobileGlues (OpenGL ES) - (all versions)</string>
     <string name="mcl_setting_veroption_release">Release</string>
     <string name="mcl_setting_veroption_snapshot">Snapshot</string>
@@ -1321,6 +1322,8 @@
     <string name="rp_tag_shaders">SHADERS</string>
     <string name="rp_tag_slow">SLOW</string>
     <string name="rp_tag_experimental">EXPERIMENTAL</string>
+    <string name="rp_tag_beta">BETA</string>
+    <string name="rp_desc_csge">Craft Studio Graphics Engine — our own MobileGlues-based OpenGL on GLES renderer. New build: try vanilla first, then Sodium, then Iris.</string>
     <string name="policy_ai_title">Only the images are AI-generated</string>
     <string name="policy_ai_body">The illustrations, backgrounds and banners you see in the launcher were created with AI image tools. Nothing else is: the launcher itself, its features and these terms are made by CRAFT STUDIO. The artwork is decorative only and is not from Mojang / Microsoft.</string>
     <string name="policy_agree_first">Please tick the box to confirm you agree first.</string>

@@ -248,6 +248,11 @@ public class LauncherPreferences {
 
     /** Write the current MG-ES (MobileGlues) renderer settings to its config.json */
     public static void writeMGRendererSettings() throws IOException {
+        writeMGRendererSettings(new File(Tools.DIR_DATA + "/MobileGlues", "config.json"));
+    }
+
+    /** Same MG-ES settings, written for a renderer that keeps its own MG_DIR_PATH (CSGE). */
+    public static void writeMGRendererSettings(File configFile) throws IOException {
         LinkedHashMap<String, Object> MGConfigJson = new LinkedHashMap<>();
         MGConfigJson.put("enableANGLE", Integer.parseInt(DEFAULT_PREF.getString("mg_renderer_setting_angle", "0")));
         MGConfigJson.put("enableNoError", Integer.parseInt(DEFAULT_PREF.getString("mg_renderer_setting_errorSetting", "0")));
@@ -266,7 +271,6 @@ public class LauncherPreferences {
         } else MGConfigJson.put("multidrawMode", Integer.parseInt(DEFAULT_PREF.getString("mg_renderer_setting_multidraw", "0")));
         MGConfigJson.put("maxGlslCacheSize", Integer.parseInt(DEFAULT_PREF.getString("mg_renderer_setting_glsl_cache_size", "128")));
 
-        File configFile = new File(Tools.DIR_DATA + "/MobileGlues", "config.json");
         FileUtils.ensureParentDirectory(configFile);
         Tools.write(configFile.getAbsolutePath(), Tools.GLOBAL_GSON.toJson(MGConfigJson));
         Logger.appendToLog("Writing MG-ES config to " + configFile.getAbsolutePath());
