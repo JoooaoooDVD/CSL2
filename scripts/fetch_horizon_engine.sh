@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Downloads the Horizon engine artefacts built by JoooaoooDVD/horizon-android (branch main,
+# Downloads the Horizon engine artefacts built by JoooaoooDVD/cs-engine (branch main,
 # workflow "CS engine") and places them where the CS Launcher Plus build expects them:
 #   app_cs/src/main/jniLibs/<abi>/libcs_engine.so
 #   app_cs/src/main/assets/horizon/{engine-data.zip,LICENSE.txt,THIRD_PARTY_NOTICES.md,BUILD.json}
@@ -13,7 +13,7 @@
 set -uo pipefail
 
 TAG="${1:-cs-engine-latest}"
-REPO="JoooaoooDVD/horizon-android"
+REPO="JoooaoooDVD/cs-engine"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 JNI_DIR="$ROOT/app_cs/src/main/jniLibs"
 ASSET_DIR="$ROOT/app_cs/src/main/assets/horizon"
