@@ -352,7 +352,8 @@ public class CsEngineModsFragment extends Fragment {
             return e.fileName != null && new File(new File(mGameHome, "horizon-mods"), e.fileName).isFile()
                     && Boolean.TRUE.equals(on);
         }
-        return Boolean.TRUE.equals(on);
+        // A built-in native mod is installed once it has its line (on or off: the game toggles it).
+        return on != null;
     }
 
     private void setModOn(String id, boolean on) {
@@ -370,10 +371,11 @@ public class CsEngineModsFragment extends Fragment {
             return;
         }
         boolean installed = isInstalled(e);
-        if (e.kind == KIND_NATIVE) {
-            setModOn(e.id, !installed);
-            Toast.makeText(requireContext(), getString(installed ? R.string.hz_browser_disabled_toast
-                    : R.string.hz_browser_enabled_toast, e.name), Toast.LENGTH_SHORT).show();
+        if (e.kind == KIND_NATIVE && !installed) {
+            // Built in: installing is one line in horizon-mods.txt; the game lists it from now on.
+            setModOn(e.id, true);
+            Toast.makeText(requireContext(), getString(R.string.hz_browser_enabled_toast, e.name),
+                    Toast.LENGTH_SHORT).show();
             mAdapter.notifyItemChanged(position);
             return;
         }
@@ -381,8 +383,10 @@ public class CsEngineModsFragment extends Fragment {
             new androidx.appcompat.app.AlertDialog.Builder(requireContext())
                     .setMessage(getString(R.string.hz_browser_remove_q, e.name))
                     .setPositiveButton(R.string.hz_browser_remove, (d, w) -> {
-                        File dir = new File(mGameHome, e.kind == KIND_PACK ? "resourcepacks" : "horizon-mods");
-                        new File(dir, e.fileName).delete();
+                        if (e.kind != KIND_NATIVE && e.fileName != null) {
+                            File dir = new File(mGameHome, e.kind == KIND_PACK ? "resourcepacks" : "horizon-mods");
+                            new File(dir, e.fileName).delete();
+                        }
                         if (e.kind == KIND_PACK) selectPack(e.fileName, false);
                         else {
                             LinkedHashMap<String, Boolean> map = readModsFile();
@@ -524,8 +528,8 @@ public class CsEngineModsFragment extends Fragment {
             name.setText(e.name);
             summary.setText(e.summary);
             summary.setVisibility(e.summary.isEmpty() ? View.GONE : View.VISIBLE);
-            meta.setText(e.author == null ? getString(R.string.hz_browser_version, e.version)
-                    : getString(R.string.hz_browser_by, e.author, e.version));
+            meta.setText((e.author == null ? getString(R.string.hz_browser_version, e.version)
+                    : getString(R.string.hz_browser_by, e.author, e.version)) + "  ·  " + e.id);
             int kindRes = e.kind == KIND_NATIVE ? R.string.hz_browser_kind_builtin
                     : e.kind == KIND_PACK ? R.string.hz_browser_kind_pack : R.string.hz_browser_kind_mod;
             kind.setText(kindRes);
