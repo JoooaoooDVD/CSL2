@@ -51,6 +51,8 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
     public static final String EXTRA_ACCOUNT_MICROSOFT = "cs_account_microsoft";
     public static final String EXTRA_ACCOUNT_KEY = "cs_account_key";
     private static final int REQUEST_IMPORT_SKIN = 0x5C1;
+    /** The microphone permission was asked for this session (once; the engine retries opening it). */
+    private boolean mMicAsked;
     private static final int REQUEST_IMPORT_CAPE = 0x5C2;
 
     /**
@@ -177,6 +179,15 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
         // CS Engine title screen: the skin panel's Customize button opens the Skin & Cape dialog
         mBackend.setSkinRequestListener(() -> {
             if (!isFinishing() && mSkinDialog == null) openSkinDialog();
+        });
+        // CS voice chat: the engine opens the microphone itself; it only needs the permission from us.
+        mBackend.setMicRequestListener(() -> {
+            if (isFinishing() || mMicAsked) return;
+            mMicAsked = true;
+            if (android.os.Build.VERSION.SDK_INT >= 23
+                    && checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                try { requestPermissions(new String[]{android.Manifest.permission.RECORD_AUDIO}, 7102); } catch (Throwable ignored) {}
+            }
         });
 
         // NativeActivity hands its window surface to the engine (takeSurface): the activity's own view

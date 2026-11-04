@@ -38,6 +38,9 @@ public final class HorizonBackend implements PlatformBackend, Choreographer.Fram
     /** Bit 4 of {@link HorizonNative#nativeHostPoll()}: the title screen's Customize button asks for the Skin &amp; Cape dialog. */
     public void setSkinRequestListener(@androidx.annotation.Nullable Runnable listener) { mSkinRequestListener = listener; }
     @androidx.annotation.Nullable private Runnable mSkinRequestListener;
+    /** Bit 8 of {@link HorizonNative#nativeHostPoll()}: CS voice chat wants the microphone (RECORD_AUDIO). */
+    public void setMicRequestListener(@androidx.annotation.Nullable Runnable listener) { mMicRequestListener = listener; }
+    @androidx.annotation.Nullable private Runnable mMicRequestListener;
     @androidx.annotation.Nullable private Runnable mStateListener;
 
     /** One JSON object with the counters, for the input diagnostics file. */
@@ -91,6 +94,7 @@ public final class HorizonBackend implements PlatformBackend, Choreographer.Fram
             if (keyboard) GameActivity.toggleKeyboardState(true, 0);
         }
         if ((flags & 4) != 0 && mSkinRequestListener != null) mSkinRequestListener.run();
+        if ((flags & 8) != 0 && mMicRequestListener != null) mMicRequestListener.run();
         if ((grabbed != mLastNotifiedGrab || keyboardChanged) && mStateListener != null) {
             mLastNotifiedGrab = grabbed;
             mStateListener.run();
