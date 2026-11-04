@@ -403,6 +403,14 @@ public class GameRunner {
 
         if(agent.isFile()) {
             javaArgList.add("-javaagent:" + agent.getAbsolutePath());
+            // The agent only redirects Quiche.loadNativeLibrary() when this property points at
+            // an existing file: the aarch64 netty-quiche build shipped in jniLibs.
+            File quiche = new File(Tools.NATIVE_LIB_DIR, "libdev_xhyrom_e4mc_shadow_netty_quiche.so");
+            if(quiche.isFile()) {
+                javaArgList.add("-Dlink.e4mc.native_path=" + quiche.getAbsolutePath());
+            } else {
+                Log.w("GameRunner", "e4mc quiche native missing in " + Tools.NATIVE_LIB_DIR);
+            }
         } else {
             Log.w("GameRunner", "e4mc-agent jar missing, e4mc may not work");
         }
