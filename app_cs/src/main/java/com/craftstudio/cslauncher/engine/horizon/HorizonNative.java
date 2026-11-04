@@ -77,6 +77,10 @@ public final class HorizonNative {
     public static native void nativeHostReleaseAll();
     /** Bit 0: pointer captured (world view); bit 1: engine wants a text keyboard. */
     public static native int nativeHostPoll();
+    /** CS voice chat: microphone samples (16 kHz mono PCM16) recorded by the launcher for the engine. */
+    public static native void nativeHostMic(short[] data, int count);
+    /** CS voice chat: the microphone's state (0 idle, 1 recording, 2 failed). */
+    public static native void nativeHostMicState(int state);
 
     /**
      * The world's public e4mc address ({@code xxxx.e4mc.link}) while the engine publishes it,

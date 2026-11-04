@@ -41,6 +41,11 @@ public final class HorizonBackend implements PlatformBackend, Choreographer.Fram
     /** Bit 8 of {@link HorizonNative#nativeHostPoll()}: CS voice chat wants the microphone (RECORD_AUDIO). */
     public void setMicRequestListener(@androidx.annotation.Nullable Runnable listener) { mMicRequestListener = listener; }
     @androidx.annotation.Nullable private Runnable mMicRequestListener;
+    /** Bit 16: the engine wants the microphone recording (CS voice chat) — true to start, false to stop. */
+    public interface MicWantedListener { void onMicWanted(boolean wanted); }
+    public void setMicWantedListener(@androidx.annotation.Nullable MicWantedListener listener) { mMicWantedListener = listener; }
+    @androidx.annotation.Nullable private MicWantedListener mMicWantedListener;
+    private boolean mMicWanted;
     @androidx.annotation.Nullable private Runnable mStateListener;
 
     /** One JSON object with the counters, for the input diagnostics file. */
@@ -95,6 +100,11 @@ public final class HorizonBackend implements PlatformBackend, Choreographer.Fram
         }
         if ((flags & 4) != 0 && mSkinRequestListener != null) mSkinRequestListener.run();
         if ((flags & 8) != 0 && mMicRequestListener != null) mMicRequestListener.run();
+        boolean micWanted = (flags & 16) != 0;
+        if (micWanted != mMicWanted) {
+            mMicWanted = micWanted;
+            if (mMicWantedListener != null) mMicWantedListener.onMicWanted(micWanted);
+        }
         if ((grabbed != mLastNotifiedGrab || keyboardChanged) && mStateListener != null) {
             mLastNotifiedGrab = grabbed;
             mStateListener.run();

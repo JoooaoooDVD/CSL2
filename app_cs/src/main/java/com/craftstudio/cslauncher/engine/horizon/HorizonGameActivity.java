@@ -53,6 +53,13 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
     private static final int REQUEST_IMPORT_SKIN = 0x5C1;
     /** The microphone permission was asked for this session (once; the engine retries opening it). */
     private boolean mMicAsked;
+    private void requestMicPermission() {
+        if (isFinishing() || mMicAsked || HorizonMic.hasPermission(this)) return;
+        mMicAsked = true;
+        if (android.os.Build.VERSION.SDK_INT >= 23) {
+            try { requestPermissions(new String[]{android.Manifest.permission.RECORD_AUDIO}, 7102); } catch (Throwable ignored) {}
+        }
+    }
     private static final int REQUEST_IMPORT_CAPE = 0x5C2;
 
     /**
@@ -180,14 +187,17 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
         mBackend.setSkinRequestListener(() -> {
             if (!isFinishing() && mSkinDialog == null) openSkinDialog();
         });
-        // CS voice chat: the engine opens the microphone itself; it only needs the permission from us.
-        mBackend.setMicRequestListener(() -> {
-            if (isFinishing() || mMicAsked) return;
-            mMicAsked = true;
-            if (android.os.Build.VERSION.SDK_INT >= 23
-                    && checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                try { requestPermissions(new String[]{android.Manifest.permission.RECORD_AUDIO}, 7102); } catch (Throwable ignored) {}
+        // CS voice chat: the launcher records (AudioRecord, voice-communication preset: echo cancellation
+        // and noise suppression) and streams 16 kHz PCM to the engine; the engine says when it wants it.
+        mBackend.setMicRequestListener(this::requestMicPermission);
+        mBackend.setMicWantedListener(wanted -> {
+            if (!wanted) { HorizonMic.stop(); return; }
+            if (!HorizonMic.hasPermission(this)) {
+                HorizonNative.nativeHostMicState(2);
+                requestMicPermission();
+                return;
             }
+            HorizonMic.start();
         });
 
         // NativeActivity hands its window surface to the engine (takeSurface): the activity's own view
@@ -630,6 +640,7 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
 
     @Override
     protected void onDestroy() {
+        HorizonMic.stop();
         mNoticeHandler.removeCallbacks(mNoticePoll);
         writeInputDiagnostics("destroy");
         if (mSkinDialog != null) mSkinDialog.dismiss();
