@@ -365,7 +365,7 @@ public class MainMenuFragment extends Fragment {
     }
 
     /** Skins + capes of the selected account (local or Microsoft) */
-    private void openSkinManager() {
+    public void openSkinManager() {
         if (getActivity() == null) return;
         com.craftstudio.cslauncher.authenticator.accounts.Account account =
                 com.craftstudio.cslauncher.authenticator.accounts.Accounts.getCurrent();

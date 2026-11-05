@@ -90,6 +90,12 @@ public class ControlLayout extends FrameLayout {
         }
 	}
 
+	private boolean mSkipFpsCounters = false;
+	/** Leave the layout's FPS counter buttons out (CS Engine shows the engine's FPS panel instead). Set before loading. */
+	public void setSkipFpsCounters(boolean skip) {
+		mSkipFpsCounters = skip;
+	}
+
 	public void loadLayout(CustomControls controlLayout) {
 		this.mButtonsOpacity = (float) LauncherPreferences.PREF_BUTTON_TRANSPARENCY / 100;
 		boolean sanitizedModified = false;
@@ -127,6 +133,8 @@ public class ControlLayout extends FrameLayout {
 
 		//CONTROL BUTTON
 		for (ControlData button : controlLayout.mControlDataList) {
+			// CS Engine draws its own FPS panel: the layout's FPS counter would measure nothing there.
+			if (mSkipFpsCounters && button.isFpsCounter()) continue;
 			addControlView(button);
 		}
 

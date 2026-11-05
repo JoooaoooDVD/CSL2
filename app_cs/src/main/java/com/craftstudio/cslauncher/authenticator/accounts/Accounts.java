@@ -144,6 +144,8 @@ public class Accounts {
 		LauncherPreferences.DEFAULT_PREF
 				.edit().putString(PROFILE_PREF_FILE, account.mSaveLocation.getName())
 				.apply();
+		com.craftstudio.cslauncher.extra.ExtraCore.setValue(
+				com.craftstudio.cslauncher.extra.ExtraConstants.REFRESH_HOME_PLAYER, true);
 	}
 
 	public static void delete(Account account) {

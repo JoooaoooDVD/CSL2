@@ -1537,6 +1537,7 @@ time set day</string>
     <string name="horizon_install_incomplete">Install poora hua par kuch files missing hain. Dobara try karo.</string>
     <string name="horizon_not_available">CS Engine is build ya is device par available nahi hai (Android 9+ aur 64-bit processor chahiye).</string>
     <string name="horizon_menu_title">CS Engine</string>
+    <string name="horizon_menu_subtitle">Powered by Craft Studio</string>
     <string name="horizon_menu_keyboard">Keyboard</string>
     <string name="horizon_menu_toggle_controls">Controls dikhao / chhupao</string>
     <string name="horizon_menu_edit_controls">Controls edit karo</string>

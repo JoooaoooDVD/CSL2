@@ -94,6 +94,8 @@ public final class HorizonNative {
      * oldest first (engine build 14+).
      */
     public static native String nativeHostNotice();
+    /** What the player is doing (`scene\tworld\tserver\tplayers`): menu, singleplayer, hosting, multiplayer. */
+    public static native String nativeHostStatus();
 
     /**
      * A touch began at (x, y) window pixels while the world has the pointer: if it lies on the

@@ -6,7 +6,6 @@ import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.media.audiofx.AcousticEchoCanceler;
-import android.media.audiofx.AutomaticGainControl;
 import android.media.audiofx.NoiseSuppressor;
 import android.os.Build;
 import android.util.Log;
@@ -47,7 +46,6 @@ public final class HorizonMic {
         AudioRecord rec = null;
         AcousticEchoCanceler aec = null;
         NoiseSuppressor ns = null;
-        AutomaticGainControl agc = null;
         try {
             int min = AudioRecord.getMinBufferSize(RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
             if (min <= 0) min = 3200;
@@ -67,8 +65,6 @@ public final class HorizonMic {
             try {
                 if (AcousticEchoCanceler.isAvailable()) { aec = AcousticEchoCanceler.create(rec.getAudioSessionId()); if (aec != null) aec.setEnabled(true); }
                 if (NoiseSuppressor.isAvailable()) { ns = NoiseSuppressor.create(rec.getAudioSessionId()); if (ns != null) ns.setEnabled(true); }
-                // Quiet mics / far-from-mouth phones: level the input before it reaches the codec.
-                if (AutomaticGainControl.isAvailable()) { agc = AutomaticGainControl.create(rec.getAudioSessionId()); if (agc != null) agc.setEnabled(true); }
             } catch (Throwable ignored) {}
             rec.startRecording();
             if (rec.getRecordingState() != AudioRecord.RECORDSTATE_RECORDING) {
@@ -94,7 +90,6 @@ public final class HorizonMic {
         } finally {
             try { if (aec != null) aec.release(); } catch (Throwable ignored) {}
             try { if (ns != null) ns.release(); } catch (Throwable ignored) {}
-            try { if (agc != null) agc.release(); } catch (Throwable ignored) {}
             try { if (rec != null) { rec.stop(); rec.release(); } } catch (Throwable ignored) {}
             if (!sRun) { try { HorizonNative.nativeHostMicState(0); } catch (Throwable ignored) {} }
         }

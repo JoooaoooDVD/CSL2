@@ -28,6 +28,11 @@ import com.craftstudio.cslauncher.input.ControlButtonMenuListener;
 import com.craftstudio.cslauncher.input.ControlLayout;
 import com.craftstudio.cslauncher.input.keyboard.TouchCharInput;
 import com.craftstudio.cslauncher.prefs.LauncherPreferences;
+import com.craftstudio.cslauncher.discord.DiscordPresenceManager;
+import com.craftstudio.cslauncher.game.GameMenuAdapter;
+import com.craftstudio.cslauncher.instances.Instance;
+import com.craftstudio.cslauncher.instances.Instances;
+import com.craftstudio.cslauncher.stats.PlayTimeTracker;
 
 import java.io.File;
 import java.io.IOException;
@@ -89,9 +94,46 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
                 if (notice == null || notice.isEmpty()) break;
                 showFriendsNotification(notice);
             }
+            pollEngineStatus();
             mNoticeHandler.postDelayed(this, 2500);
         }
     };
+
+    /** The last engine status handed to Discord presence (scene, world, server), to report changes only. */
+    private String mLastEngineStatus = "";
+
+    /**
+     * Discord Rich Presence and play time follow the engine: `nativeHostStatus` says whether the player
+     * is in the menus, a singleplayer world, a hosted (published) one or on a server. Older engine
+     * builds without the symbol leave presence at "Loading".
+     */
+    private void pollEngineStatus() {
+        String status;
+        try { status = HorizonNative.nativeHostStatus(); } catch (Throwable t) { return; }
+        if (status == null || status.isEmpty() || status.equals(mLastEngineStatus)) return;
+        mLastEngineStatus = status;
+        String[] parts = status.split("\t", -1);
+        String scene = parts.length > 0 ? parts[0] : "";
+        String world = parts.length > 1 ? parts[1] : "";
+        String server = parts.length > 2 ? parts[2] : "";
+        try {
+            DiscordPresenceManager.getInstance(this).onEngineScene(scene, world, server);
+        } catch (Throwable t) {
+            Log.w(TAG, "Discord presence not updated", t);
+        }
+    }
+
+    /** The profile this engine run belongs to (`EXTRA_PROFILE` is its key), for presence and play time. */
+    @Nullable
+    private Instance sessionInstance() {
+        try {
+            String key = getIntent().getStringExtra(EXTRA_PROFILE);
+            Instance instance = key == null ? null : Instances.loadInstance(key);
+            return instance != null ? instance : Instances.loadSelectedInstance();
+        } catch (Throwable t) {
+            return null;
+        }
+    }
 
     private void showFriendsNotification(@NonNull String notice) {
         try {
@@ -166,6 +208,22 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
         }
         mControlsPath = intent.getStringExtra(EXTRA_CONTROLS);
         super.onCreate(savedInstanceState);
+        // Discord presence is owned by this process from now on (the launcher released it), and the
+        // session counts in Play Time — the same as a Java game (GameActivity / GameRunner).
+        {
+            Instance instance = sessionInstance();
+            String versionId = instance != null && instance.versionId != null ? instance.versionId : "";
+            try {
+                DiscordPresenceManager.getInstance(this).onGameProcessStarted(this, instance, versionId);
+            } catch (Throwable t) {
+                Log.w(TAG, "Discord presence not started", t);
+            }
+            try {
+                PlayTimeTracker.beginSession(instance, versionId);
+            } catch (Throwable t) {
+                Log.w(TAG, "Play time session not started", t);
+            }
+        }
         // Input goes to our views, not to the native glue (see class comment).
         getWindow().takeInputQueue(null);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -226,6 +284,8 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
         // the finger moves it like a touchpad and a tap clicks; without it, taps land where the finger is.
         if (LauncherPreferences.PREF_VIRTUAL_MOUSE_START) mInputView.cursorView().setVisibility(View.VISIBLE);
         mControlLayout.setModifiable(false);
+        // The engine draws the one FPS panel (Extras > FPS counter); a layout's FPS button is left out.
+        mControlLayout.setSkipFpsCounters(true);
         mControlLayout.setMenuListener(this);
         mMenuButton.setOnClickListener(v -> onClickedMenu());
         Platform.resetCursorPosition();
@@ -578,54 +638,67 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
         return handled || super.dispatchKeyEvent(event);
     }
 
-    /** In-game menu (Phase 2/4 minimum; the full CS drawer menu comes with the Horizon UI phase). */
+    /**
+     * The in-game menu: the CS game menu rows (icon tile, label), in a dialog over the engine.
+     * Controls are not customised here — the layout comes from the profile (Custom controls in the
+     * launcher) — so there is no editor entry; the HUD Editor is the engine's own.
+     */
     @Override
     public void onClickedMenu() {
-        String[] items = {
+        boolean mouseOn = mInputView != null && mInputView.cursorView().getVisibility() == View.VISIBLE;
+        final String[] items = {
                 getString(R.string.horizon_menu_keyboard),
-                getString(mInputView != null && mInputView.cursorView().getVisibility() == View.VISIBLE
-                        ? R.string.horizon_menu_mouse_off : R.string.horizon_menu_mouse_on),
+                getString(mouseOn ? R.string.horizon_menu_mouse_off : R.string.horizon_menu_mouse_on),
                 getString(R.string.horizon_menu_mouse_settings),
                 getString(R.string.horizon_menu_toggle_controls),
-                getString(R.string.horizon_menu_edit_controls),
                 getString(R.string.horizon_menu_hud_editor),
                 getString(R.string.horizon_menu_account_skin),
                 getString(R.string.horizon_menu_report),
                 getString(R.string.horizon_menu_exit)
         };
-        new AlertDialog.Builder(mUi)
-                .setTitle(R.string.horizon_menu_title)
-                .setItems(items, (dialog, which) -> {
-                    switch (which) {
-                        case 0: GameActivity.switchKeyboardState(false); break;
-                        case 1: GameActivity.toggleMouse(mUi); break;
-                        case 2: openMouseSettings(); break;
-                        case 3: mControlLayout.toggleControlVisible(); break;
-                        case 4: startControlEditor(); break;
-                        case 5: hostCommand("cs:hud_edit"); break;
-                        case 6: openSkinDialog(); break;
-                        case 7: shareEngineReport(); break;
-                        case 8:
-                            // The engine saves the world (or leaves the server) and returns here.
-                            hostCommand("cs:exit");
-                            break;
-                    }
-                })
-                .show();
+        final int[] icons = {
+                R.drawable.ic_gm_keyboard,
+                mouseOn ? R.drawable.ic_gm_eye_off : R.drawable.ic_gm_eye,
+                R.drawable.ic_gm_sliders,
+                R.drawable.ic_gm_gamepad,
+                R.drawable.ic_gm_layers,
+                R.drawable.ic_gm_star,
+                R.drawable.ic_gm_share,
+                R.drawable.ic_gm_power
+        };
+        View content = LayoutInflater.from(mUi).inflate(R.layout.dialog_horizon_menu, null, false);
+        android.widget.ListView list = content.findViewById(R.id.hm_list);
+        list.setAdapter(new GameMenuAdapter(mUi, items, icons));
+        final AlertDialog dialog = new AlertDialog.Builder(mUi)
+                .setView(content)
+                .create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+        content.findViewById(R.id.hm_close).setOnClickListener(v -> dialog.dismiss());
+        list.setOnItemClickListener((parent, view, which, id) -> {
+            dialog.dismiss();
+            switch (which) {
+                case 0: GameActivity.switchKeyboardState(false); break;
+                case 1: GameActivity.toggleMouse(mUi); break;
+                case 2: openMouseSettings(); break;
+                case 3: mControlLayout.toggleControlVisible(); break;
+                case 4: hostCommand("cs:hud_edit"); break;
+                case 5: openSkinDialog(); break;
+                case 6: shareEngineReport(); break;
+                case 7:
+                    // The engine saves the world (or leaves the server) and returns here.
+                    hostCommand("cs:exit");
+                    break;
+            }
+        });
+        dialog.show();
     }
 
     /** A CS command token to the engine (game/cs_hud_edit.rs `cs_host_token`): a press and a release. */
     private static void hostCommand(String token) {
         HorizonNative.nativeHostKey(token, true);
         HorizonNative.nativeHostKey(token, false);
-    }
-
-    /** CS control editor over the engine: the game pauses behind a dimmed screen (`cs:blur`). */
-    private void startControlEditor() {
-        if (mControlLayout == null) return;
-        HorizonNative.nativeHostKey("cs:blur", true);
-        mControlLayout.setModifiable(true);
-        if (mEditorExit != null) mEditorExit.setVisibility(View.VISIBLE);
     }
 
     private void exitControlEditor() {
@@ -642,6 +715,8 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
     protected void onDestroy() {
         HorizonMic.stop();
         mNoticeHandler.removeCallbacks(mNoticePoll);
+        try { PlayTimeTracker.endSession(); } catch (Throwable ignored) {}
+        try { DiscordPresenceManager.getInstance(this).onGameExiting(); } catch (Throwable ignored) {}
         writeInputDiagnostics("destroy");
         if (mSkinDialog != null) mSkinDialog.dismiss();
         detachOverlay();

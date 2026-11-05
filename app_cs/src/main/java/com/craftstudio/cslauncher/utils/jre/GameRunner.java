@@ -309,7 +309,6 @@ public class GameRunner {
         javaArgList.add("-Dorg.lwjgl.system.SharedLibraryExtractPath="+lwjglExtractDir.getAbsolutePath());
 
         addAuthlibInjectorArgs(javaArgList, account);
-        addE4mcAgentArgs(javaArgList);
 
         mergeMoJsonArgs(javaArgList, getMoJsonJvmArgs(versionId));
 
@@ -394,25 +393,6 @@ public class GameRunner {
             }
         } else {
             Log.w(Tools.APP_NAME, "Failed to create the configuration directory");
-        }
-    }
-
-    /** Lets e4mc (Netty-Quiche) load the Android native published by the LAN mod. */
-    private static void addE4mcAgentArgs(List<String> javaArgList) {
-        File agent = new File(Tools.DIR_DATA, "e4mc-agent/MasterixE4mcAgent.jar");
-
-        if(agent.isFile()) {
-            javaArgList.add("-javaagent:" + agent.getAbsolutePath());
-            // The agent only redirects Quiche.loadNativeLibrary() when this property points at
-            // an existing file: the aarch64 netty-quiche build shipped in jniLibs.
-            File quiche = new File(Tools.NATIVE_LIB_DIR, "libdev_xhyrom_e4mc_shadow_netty_quiche.so");
-            if(quiche.isFile()) {
-                javaArgList.add("-Dlink.e4mc.native_path=" + quiche.getAbsolutePath());
-            } else {
-                Log.w("GameRunner", "e4mc quiche native missing in " + Tools.NATIVE_LIB_DIR);
-            }
-        } else {
-            Log.w("GameRunner", "e4mc-agent jar missing, e4mc may not work");
         }
     }
 

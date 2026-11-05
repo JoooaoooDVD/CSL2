@@ -43,6 +43,17 @@ import com.craftstudio.cslauncher.utils.CSAnimationEngine;
 import com.craftstudio.cslauncher.utils.LauncherBackground;
 import com.craftstudio.cslauncher.utils.motion.HomeMotion;
 import com.craftstudio.cslauncher.utils.motion.Motion;
+import com.craftstudio.cslauncher.authenticator.accounts.Account;
+import com.craftstudio.cslauncher.authenticator.accounts.Accounts;
+import com.craftstudio.cslauncher.engine.horizon.HorizonSkins;
+import com.craftstudio.cslauncher.skins.LocalSkinStore;
+import com.craftstudio.cslauncher.skins.PlayerPreviewView;
+import com.craftstudio.cslauncher.skins.PremiumProfileLookup;
+import com.craftstudio.cslauncher.skins.SkinLibrary;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 import java.io.File;
 import java.util.Locale;
@@ -84,6 +95,20 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
             (taskCount, aggregatePercent) -> Tools.runOnUiThread(
                     () -> onDownloadStateChanged(taskCount, aggregatePercent));
     private CenterCropVideoView mVideo;
+    // Player stage (banner): skin of the selected account, see refreshPlayerStage()
+    private PlayerPreviewView mPlayerModel;
+    private TextView mPlayerName;
+    /** Identity of what the stage currently shows, so a refresh that changes nothing stays still */
+    private String mPlayerShown = "";
+    private int mPlayerLoadSeq;
+    private final ExtraListener<Boolean> mPlayerListener = (key, value) -> {
+        View root = getView();
+        if (root != null) {
+            ExtraCore.consumeValue(key);
+            root.post(() -> refreshPlayerStage(true));
+        }
+        return false;
+    };
     private mcVersionSpinner mVersionSpinner;
     /** Selected profile card: mirrors the (hidden) spinner + the "version • loader" line */
     private View mProfileTile;
@@ -110,6 +135,7 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         mWallpaper = view.findViewById(R.id.right_pane_wallpaper);
         mVideo = view.findViewById(R.id.right_pane_wallpaper_video);
+        bindPlayerStage(view);
         mVideo.setErrorListener(this::clearBackground);
         loadBackground();
 
@@ -306,6 +332,9 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
     public void onResume() {
         super.onResume();
         ExtraCore.addExtraListener(ExtraConstants.REFRESH_VERSION_SPINNER, this);
+        ExtraCore.addExtraListener(ExtraConstants.REFRESH_HOME_PLAYER, mPlayerListener);
+        ExtraCore.addExtraListener(ExtraConstants.REFRESH_ACCOUNT_SPINNER, mPlayerListener);
+        refreshPlayerStage(false);
         // The PLAY button carries the download state here, so the floating panel steps aside
         ProgressKeeper.addGlobalListener(mGlobalProgressListener);
         ProgressLayout progressLayout = requireActivity().findViewById(R.id.progress_layout);
@@ -320,6 +349,8 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
     public void onPause() {
         super.onPause();
         ExtraCore.removeExtraListenerFromValue(ExtraConstants.REFRESH_VERSION_SPINNER, this);
+        ExtraCore.removeExtraListenerFromValue(ExtraConstants.REFRESH_HOME_PLAYER, mPlayerListener);
+        ExtraCore.removeExtraListenerFromValue(ExtraConstants.REFRESH_ACCOUNT_SPINNER, mPlayerListener);
         ProgressKeeper.removeGlobalListener(mGlobalProgressListener);
         ProgressLayout progressLayout = requireActivity().findViewById(R.id.progress_layout);
         if (progressLayout != null) progressLayout.setHiddenByHost(false);
@@ -678,6 +709,158 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
         updateDownloadFill();
     }
 
+    // ─── Player stage (Essential-style home) ─────────────────────────────────
+
+    private void bindPlayerStage(@NonNull View view) {
+        mPlayerModel = view.findViewById(R.id.home_player_model);
+        mPlayerName = view.findViewById(R.id.home_player_name);
+        if (mPlayerModel == null || mPlayerName == null) return;
+        View.OnClickListener open = v -> {
+            Fragment parent = getParentFragment();
+            if (parent instanceof MainMenuFragment && isAdded()) ((MainMenuFragment) parent).openSkinManager();
+        };
+        mPlayerModel.setOnClickListener(open);
+        mPlayerName.setOnClickListener(open);
+        CSAnimationEngine.attachPressFeedback(mPlayerName);
+    }
+
+    /**
+     * Shows the skin the selected account plays with: the launcher's own choice for the selected
+     * profile/account (skin library) first, else the Mojang skin of a Microsoft account (cached
+     * on disk, refreshed in the background), else the CS default. {@code force} re-downloads the
+     * Microsoft skin (after the editor uploaded a new one or the account changed).
+     */
+    private void refreshPlayerStage(boolean force) {
+        if (mPlayerModel == null || getView() == null) return;
+        final Account account = Accounts.getCurrent();
+        final String profileKey = Instances.getSelectedInstanceKey();
+        final String name = account == null ? getString(R.string.home_player_default_name) : account.username;
+        if (!name.contentEquals(mPlayerName.getText())) {
+            mPlayerName.setText(name);
+            Motion.popIn(mPlayerName, 0L, 0.7f);
+        }
+        final int seq = ++mPlayerLoadSeq;
+        final android.content.res.Resources res = getResources();
+        CSLauncherApplication.sExecutorService.execute(() -> {
+            StageSkin skin = loadStageSkin(res, account, profileKey, force);
+            View root = getView();
+            if (root == null || skin == null) return;
+            root.post(() -> {
+                if (seq != mPlayerLoadSeq || getView() == null) { skin.recycle(); return; }
+                applyStageSkin(skin);
+            });
+        });
+    }
+
+    /** What the stage renders: the raw skin/cape bitmaps plus an identity string */
+    private static final class StageSkin {
+        Bitmap skin;
+        @Nullable Bitmap cape;
+        boolean slim;
+        String identity = "";
+        void recycle() {
+            if (skin != null) skin.recycle();
+            if (cape != null) cape.recycle();
+        }
+    }
+
+    /** Last Mojang lookup attempt (ms); failed attempts are not repeated on every resume */
+    private static long sPlayerLookupAt;
+
+    @Nullable
+    private StageSkin loadStageSkin(@NonNull android.content.res.Resources res, @Nullable Account account,
+                                    @Nullable String profileKey, boolean force) {
+        StageSkin out = new StageSkin();
+        try {
+            // 1. The launcher's own selection (skin library), same lookup the game launch uses
+            HorizonSkins.Selection sel = HorizonSkins.resolve(profileKey == null ? "" : profileKey,
+                    HorizonSkins.accountKey(account));
+            if (sel.skin != null) {
+                File f = SkinLibrary.fileOf(sel.skin);
+                out.skin = BitmapFactory.decodeFile(f.getAbsolutePath());
+                out.slim = sel.skin.slim;
+                out.identity = "lib:" + sel.skin.id + ":" + f.lastModified();
+                if (out.skin != null && sel.cape != null && !sel.capeDisabled) {
+                    out.cape = BitmapFactory.decodeFile(LocalSkinStore.capeFile(sel.cape).getAbsolutePath());
+                    out.identity += ":" + sel.cape.id;
+                }
+            }
+            // 2. Microsoft account: the skin on the Mojang profile, cached per username
+            if (out.skin == null && account != null && !account.isLocal()) {
+                File dir = new File(Tools.DIR_CACHE, "home-skins");
+                String safe = account.username.replaceAll("[^A-Za-z0-9_]", "_");
+                File skinFile = new File(dir, safe + ".png");
+                File capeFile = new File(dir, safe + ".cape.png");
+                File slimFile = new File(dir, safe + ".slim");
+                long age = System.currentTimeMillis() - skinFile.lastModified();
+                boolean stale = !skinFile.isFile() || age > 6L * 3600_000L;
+                long now = System.currentTimeMillis();
+                if ((stale && now - sPlayerLookupAt > 10L * 60_000L) || force) {
+                    sPlayerLookupAt = now;
+                    PremiumProfileLookup.Result r = PremiumProfileLookup.lookup(account.username);
+                    if (r.found() && r.skinPng != null) {
+                        dir.mkdirs();
+                        writeBytes(skinFile, r.skinPng);
+                        if (r.capePng != null) writeBytes(capeFile, r.capePng); else capeFile.delete();
+                        if (r.slim) writeBytes(slimFile, new byte[0]); else slimFile.delete();
+                    }
+                }
+                if (skinFile.isFile()) {
+                    out.skin = BitmapFactory.decodeFile(skinFile.getAbsolutePath());
+                    out.slim = slimFile.isFile();
+                    out.identity = "ms:" + safe + ":" + skinFile.lastModified() + ":" + capeFile.lastModified();
+                    if (out.skin != null && capeFile.isFile()) {
+                        out.cape = BitmapFactory.decodeFile(capeFile.getAbsolutePath());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            android.util.Log.w(TAG, "player stage: skin lookup failed", e);
+        }
+        // 3. Default CS skin
+        if (out.skin == null) {
+            out.skin = BitmapFactory.decodeResource(res, R.drawable.skin_default_cs);
+            out.slim = false;
+            out.cape = null;
+            out.identity = "default";
+        }
+        if (out.skin == null) return null;
+        if (out.identity.equals(mPlayerShown)) { out.recycle(); return null; }
+        return out;
+    }
+
+    private void applyStageSkin(@NonNull StageSkin skin) {
+        boolean first = mPlayerShown.isEmpty();
+        mPlayerShown = skin.identity;
+        Runnable swap = () -> {
+            if (mPlayerModel == null) { skin.recycle(); return; }
+            mPlayerModel.setSkin(skin.skin, skin.slim);
+            mPlayerModel.setCape(skin.cape);
+            skin.recycle(); // the preview keeps its own normalized copies
+        };
+        if (first || !Motion.content(mPlayerModel)) {
+            swap.run();
+            if (first) {
+                Motion.popIn(mPlayerModel, 120L, 0.8f);
+                mPlayerModel.postDelayed(() -> { if (getView() != null) mPlayerModel.startWave(); }, 900L);
+            }
+            return;
+        }
+        // Skin changed while on screen: quick shrink + fade, swap, spring back and wave
+        mPlayerModel.animate().alpha(0f).scaleX(0.7f).scaleY(0.7f).setDuration(140L).withEndAction(() -> {
+            if (getView() == null) { skin.recycle(); return; }
+            swap.run();
+            mPlayerModel.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(320L)
+                    .setInterpolator(Motion.SPRING).start();
+            mPlayerModel.postDelayed(() -> { if (getView() != null) mPlayerModel.startWave(); }, 500L);
+        }).start();
+    }
+
+    private static void writeBytes(@NonNull File file, @NonNull byte[] bytes) throws IOException {
+        FileOutputStream out = new FileOutputStream(file);
+        try { out.write(bytes); } finally { out.close(); }
+    }
+
     /** The spinner broadcasts a refresh through ExtraCore whenever the selection changed */
     @Override
     public boolean onValueSet(String key, @NonNull Void value) {
@@ -686,6 +869,7 @@ public class RightPaneHomeFragment extends Fragment implements ExtraListener<Voi
             // Consume so late-attached screens don't replay it, then update from the real state
             ExtraCore.consumeValue(key);
             root.post(this::refreshVersionInfo);
+            root.post(() -> refreshPlayerStage(false));
         }
         return false;
     }

@@ -381,6 +381,48 @@ public final class DiscordPresenceManager {
         } catch (Throwable ignored) {}
     }
 
+    // ---- CS Engine → scene -------------------------------------------------------------
+
+    /**
+     * CS Engine (Horizon) has no game log to follow: the engine says what the player is doing
+     * (`nativeHostStatus`, polled by {@code HorizonGameActivity}). {@code scene} is one of
+     * {@code menu}, {@code singleplayer}, {@code hosting}, {@code multiplayer}; {@code server} is
+     * {@code host[:port]} for a server.
+     */
+    public void onEngineScene(@NonNull String scene, @NonNull String world, @NonNull String server) {
+        Scene next;
+        switch (scene) {
+            case "menu": next = Scene.MENU; break;
+            case "singleplayer": next = Scene.SINGLEPLAYER; break;
+            case "hosting": next = Scene.LAN_HOST; break;
+            case "multiplayer": next = Scene.MULTIPLAYER; break;
+            default: return;
+        }
+        String host = server;
+        int port = 0;
+        int colon = server.lastIndexOf(':');
+        if (colon > 0 && colon < server.length() - 1 && server.indexOf(']') < colon) {
+            try {
+                port = Integer.parseInt(server.substring(colon + 1));
+                host = server.substring(0, colon);
+            } catch (NumberFormatException ignored) {
+                port = 0;
+                host = server;
+            }
+        }
+        synchronized (this) {
+            if (mScene == Scene.HOME || mScene == Scene.LAUNCHING) return; // not our process' session
+            boolean same = mScene == next && mWorldName.equals(world) && mServerHost.equals(host) && mServerPort == port;
+            if (same) return;
+            if (next != mScene && next != Scene.MENU) mLastWorldSwitchAt = SystemClock.elapsedRealtime();
+            mScene = next;
+            mWorldName = next == Scene.MULTIPLAYER ? "" : world;
+            mServerHost = next == Scene.MULTIPLAYER ? host : "";
+            mServerPort = next == Scene.MULTIPLAYER ? port : 0;
+        }
+        refresh();
+    }
+
     // ---- game log → scene -------------------------------------------------------------
 
     private static final Pattern LOG_CONNECTING = Pattern.compile("Connecting to ([^,\\s]+), (\\d{1,5})");
