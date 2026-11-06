@@ -53,134 +53,146 @@
                 android:textSize="7sp" />
         </LinearLayout>
 
-        <View
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:layout_weight="1" />
-
         <!-- Navigation dock: replaces the old left sidebar, so every screen gets the full
-             width. The indicator slides behind the active button (see TopNavDock) -->
-        <FrameLayout
-            android:id="@+id/top_nav_dock"
-            android:layout_width="wrap_content"
-            android:layout_height="44dp"
-            android:background="@drawable/bg_top_dock"
-            android:padding="3dp">
-
-            <View
-                android:id="@+id/top_nav_indicator"
-                android:layout_width="@dimen/top_dock_item_width"
-                android:layout_height="@dimen/top_dock_item_height"
-                android:layout_gravity="center_vertical"
-                android:background="@drawable/bg_top_dock_indicator"
-                android:visibility="invisible" />
+             width. It takes whatever is left between the brand and the account cluster,
+             centred, and scrolls sideways on narrow phones instead of pushing the Settings /
+             Help buttons off the screen. The indicator slides behind the active button
+             (see TopNavDock) -->
+        <HorizontalScrollView
+            android:id="@+id/top_nav_scroll"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:fillViewport="true"
+            android:overScrollMode="never"
+            android:scrollbars="none">
 
             <LinearLayout
-                android:id="@+id/top_nav_items"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:orientation="horizontal">
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp">
 
-                <ImageButton
-                    android:id="@+id/nav_home"
-                    android:layout_width="@dimen/top_dock_item_width"
-                    android:layout_height="@dimen/top_dock_item_height"
-                    android:background="@drawable/bg_top_dock_item"
-                    android:contentDescription="@string/home_nav_home"
-                    android:padding="8dp"
-                    android:scaleType="fitCenter"
-                    android:src="@drawable/ic_nav_home"
-                    android:tooltipText="@string/home_nav_home" />
+                <FrameLayout
+                    android:id="@+id/top_nav_dock"
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_top_dock"
+                    android:padding="3dp">
 
-                <ImageButton
-                    android:id="@+id/mod_store_button"
-                    android:layout_width="@dimen/top_dock_item_width"
-                    android:layout_height="@dimen/top_dock_item_height"
-                    android:background="@drawable/bg_top_dock_item"
-                    android:contentDescription="@string/home_nav_browser"
-                    android:padding="8dp"
-                    android:scaleType="fitCenter"
-                    android:src="@drawable/ic_dock_download"
-                    android:tooltipText="@string/home_nav_browser" />
+                    <View
+                        android:id="@+id/top_nav_indicator"
+                        android:layout_width="@dimen/top_dock_item_width"
+                        android:layout_height="@dimen/top_dock_item_height"
+                        android:layout_gravity="center_vertical"
+                        android:background="@drawable/bg_top_dock_indicator"
+                        android:visibility="invisible" />
 
-                <ImageButton
-                    android:id="@+id/open_files_button"
-                    android:layout_width="@dimen/top_dock_item_width"
-                    android:layout_height="@dimen/top_dock_item_height"
-                    android:background="@drawable/bg_top_dock_item"
-                    android:contentDescription="@string/home_nav_manager"
-                    android:padding="8dp"
-                    android:scaleType="fitCenter"
-                    android:src="@drawable/ic_dock_manager"
-                    android:tooltipText="@string/home_nav_manager" />
+                    <LinearLayout
+                        android:id="@+id/top_nav_items"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:orientation="horizontal">
 
-                <ImageButton
-                    android:id="@+id/nav_multiplayer"
-                    android:layout_width="@dimen/top_dock_item_width"
-                    android:layout_height="@dimen/top_dock_item_height"
-                    android:background="@drawable/bg_top_dock_item"
-                    android:contentDescription="@string/vlan_nav"
-                    android:padding="8dp"
-                    android:scaleType="fitCenter"
-                    android:src="@drawable/ic_dock_multiplayer"
-                    android:tooltipText="@string/vlan_nav" />
+                        <ImageButton
+                            android:id="@+id/nav_home"
+                            android:layout_width="@dimen/top_dock_item_width"
+                            android:layout_height="@dimen/top_dock_item_height"
+                            android:background="@drawable/bg_top_dock_item"
+                            android:contentDescription="@string/home_nav_home"
+                            android:padding="8dp"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/ic_nav_home"
+                            android:tooltipText="@string/home_nav_home" />
 
-                <ImageButton
-                    android:id="@+id/nav_skins"
-                    android:layout_width="@dimen/top_dock_item_width"
-                    android:layout_height="@dimen/top_dock_item_height"
-                    android:background="@drawable/bg_top_dock_item"
-                    android:contentDescription="@string/home_nav_skins"
-                    android:padding="8dp"
-                    android:scaleType="fitCenter"
-                    android:src="@drawable/ic_dock_skins"
-                    android:tooltipText="@string/home_nav_skins" />
+                        <ImageButton
+                            android:id="@+id/mod_store_button"
+                            android:layout_width="@dimen/top_dock_item_width"
+                            android:layout_height="@dimen/top_dock_item_height"
+                            android:background="@drawable/bg_top_dock_item"
+                            android:contentDescription="@string/home_nav_browser"
+                            android:padding="8dp"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/ic_dock_download"
+                            android:tooltipText="@string/home_nav_browser" />
 
-                <ImageButton
-                    android:id="@+id/nav_playtime"
-                    android:layout_width="@dimen/top_dock_item_width"
-                    android:layout_height="@dimen/top_dock_item_height"
-                    android:background="@drawable/bg_top_dock_item"
-                    android:contentDescription="@string/home_nav_playtime"
-                    android:padding="8dp"
-                    android:scaleType="fitCenter"
-                    android:src="@drawable/ic_dock_playtime"
-                    android:tooltipText="@string/home_nav_playtime" />
+                        <ImageButton
+                            android:id="@+id/open_files_button"
+                            android:layout_width="@dimen/top_dock_item_width"
+                            android:layout_height="@dimen/top_dock_item_height"
+                            android:background="@drawable/bg_top_dock_item"
+                            android:contentDescription="@string/home_nav_manager"
+                            android:padding="8dp"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/ic_dock_manager"
+                            android:tooltipText="@string/home_nav_manager" />
 
-                <ImageButton
-                    android:id="@+id/nav_controls"
-                    android:layout_width="@dimen/top_dock_item_width"
-                    android:layout_height="@dimen/top_dock_item_height"
-                    android:background="@drawable/bg_top_dock_item"
-                    android:contentDescription="@string/home_nav_controls"
-                    android:padding="8dp"
-                    android:scaleType="fitCenter"
-                    android:src="@drawable/ic_dock_controls"
-                    android:tooltipText="@string/home_nav_controls" />
+                        <ImageButton
+                            android:id="@+id/nav_multiplayer"
+                            android:layout_width="@dimen/top_dock_item_width"
+                            android:layout_height="@dimen/top_dock_item_height"
+                            android:background="@drawable/bg_top_dock_item"
+                            android:contentDescription="@string/vlan_nav"
+                            android:padding="8dp"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/ic_dock_multiplayer"
+                            android:tooltipText="@string/vlan_nav" />
 
-                <ImageButton
-                    android:id="@+id/nav_logs"
-                    android:layout_width="@dimen/top_dock_item_width"
-                    android:layout_height="@dimen/top_dock_item_height"
-                    android:background="@drawable/bg_top_dock_item"
-                    android:contentDescription="@string/home_nav_logs"
-                    android:padding="8dp"
-                    android:scaleType="fitCenter"
-                    android:src="@drawable/ic_dock_logs"
-                    android:tooltipText="@string/home_nav_logs" />
+                        <ImageButton
+                            android:id="@+id/nav_skins"
+                            android:layout_width="@dimen/top_dock_item_width"
+                            android:layout_height="@dimen/top_dock_item_height"
+                            android:background="@drawable/bg_top_dock_item"
+                            android:contentDescription="@string/home_nav_skins"
+                            android:padding="8dp"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/ic_dock_skins"
+                            android:tooltipText="@string/home_nav_skins" />
+
+                        <ImageButton
+                            android:id="@+id/nav_playtime"
+                            android:layout_width="@dimen/top_dock_item_width"
+                            android:layout_height="@dimen/top_dock_item_height"
+                            android:background="@drawable/bg_top_dock_item"
+                            android:contentDescription="@string/home_nav_playtime"
+                            android:padding="8dp"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/ic_dock_playtime"
+                            android:tooltipText="@string/home_nav_playtime" />
+
+                        <ImageButton
+                            android:id="@+id/nav_controls"
+                            android:layout_width="@dimen/top_dock_item_width"
+                            android:layout_height="@dimen/top_dock_item_height"
+                            android:background="@drawable/bg_top_dock_item"
+                            android:contentDescription="@string/home_nav_controls"
+                            android:padding="8dp"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/ic_dock_controls"
+                            android:tooltipText="@string/home_nav_controls" />
+
+                        <ImageButton
+                            android:id="@+id/nav_logs"
+                            android:layout_width="@dimen/top_dock_item_width"
+                            android:layout_height="@dimen/top_dock_item_height"
+                            android:background="@drawable/bg_top_dock_item"
+                            android:contentDescription="@string/home_nav_logs"
+                            android:padding="8dp"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/ic_dock_logs"
+                            android:tooltipText="@string/home_nav_logs" />
+                    </LinearLayout>
+                </FrameLayout>
             </LinearLayout>
-        </FrameLayout>
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:layout_weight="1" />
+        </HorizontalScrollView>
 
         <!-- Account selector (existing AccountSpinner, restyled) -->
         <com.kdt.mcgui.AccountSpinner
             android:id="@+id/account_spinner"
-            android:layout_width="wrap_content"
+            android:layout_width="@dimen/top_account_width"
             android:layout_height="38dp"
             android:background="@drawable/bg_account_pill"
             android:dropDownVerticalOffset="40dp"

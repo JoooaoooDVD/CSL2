@@ -1731,8 +1731,6 @@
     <string name="horizon_not_available">CS Engine is not available in this build or on this device (needs Android 9+ and a 64-bit processor).</string>
     <string name="horizon_menu_title">CS Engine</string>
     <string name="horizon_menu_subtitle">Powered by Craft Studio</string>
-    <string name="home_player_default_name">Steve</string>
-    <string name="home_player_stage_hint">Your skin. Drag to turn, tap for skins and capes</string>
     <string name="horizon_menu_keyboard">Keyboard</string>
     <string name="horizon_menu_toggle_controls">Show / hide controls</string>
     <string name="horizon_menu_edit_controls">Edit controls</string>

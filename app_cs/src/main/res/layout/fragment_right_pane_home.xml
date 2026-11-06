@@ -43,49 +43,6 @@
             android:layout_height="match_parent"
             android:background="@drawable/bg_home_banner_shade" />
 
-        <!--
-            Player stage (Essential-style home): the selected account's skin stands in the
-            banner, idles and waves, drag rotates it, tap opens Skins & capes. The name plate
-            floats above the head like in-game.
-        -->
-        <LinearLayout
-            android:id="@+id/home_player_stage"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_gravity="center_horizontal|top"
-            android:clipChildren="false"
-            android:clipToPadding="false"
-            android:gravity="center_horizontal"
-            android:orientation="vertical"
-            android:paddingTop="8dp"
-            android:paddingBottom="6dp">
-
-            <TextView
-                android:id="@+id/home_player_name"
-                android:layout_width="wrap_content"
-                android:layout_height="22dp"
-                android:background="@drawable/bg_home_nameplate"
-                android:ellipsize="end"
-                android:fontFamily="@font/minecraft_ten"
-                android:gravity="center"
-                android:includeFontPadding="false"
-                android:maxWidth="150dp"
-                android:paddingStart="9dp"
-                android:paddingEnd="9dp"
-                android:singleLine="true"
-                android:text="@string/home_player_default_name"
-                android:textColor="@color/home_white"
-                android:textSize="11sp" />
-
-            <com.craftstudio.cslauncher.skins.PlayerPreviewView
-                android:id="@+id/home_player_model"
-                android:layout_width="104dp"
-                android:layout_height="0dp"
-                android:layout_marginTop="2dp"
-                android:layout_weight="1"
-                android:contentDescription="@string/home_player_stage_hint" />
-        </LinearLayout>
-
         <!-- Selected version + loader: opens the profile list -->
         <LinearLayout
             android:id="@+id/home_banner_version_chip"
