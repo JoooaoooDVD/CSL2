@@ -31,6 +31,17 @@ public final class E4mcPublisher {
 
     public interface Listener { void onE4mcChanged(); }
 
+    /** A guest the relay turned away (name, reason): shown as a toast/notice by whoever listens. */
+    public interface RefusalListener { void onGuestRefused(@NonNull String name, @NonNull String reason); }
+    private final CopyOnWriteArrayList<RefusalListener> mRefusals = new CopyOnWriteArrayList<>();
+    public void addRefusalListener(RefusalListener l) { mRefusals.addIfAbsent(l); }
+    public void removeRefusalListener(RefusalListener l) { mRefusals.remove(l); }
+    /** The last refusal lines ("name — reason"), newest first, for the sharing card. */
+    private final java.util.ArrayDeque<String> mRecentRefusals = new java.util.ArrayDeque<>();
+    @NonNull public java.util.List<String> recentRefusals() {
+        synchronized (mRecentRefusals) { return new java.util.ArrayList<>(mRecentRefusals); }
+    }
+
     private final Handler mMain = new Handler(Looper.getMainLooper());
     private final CopyOnWriteArrayList<Listener> mListeners = new CopyOnWriteArrayList<>();
     private volatile long mHandle;
@@ -119,7 +130,7 @@ public final class E4mcPublisher {
             notifyChanged();
             return;
         }
-        long h = E4mcNative.nativeStart(port, null);
+        long h = E4mcNative.nativeStart(port, HostSettings.relayOrNull());
         if (h == 0) {
             mPhase = Phase.FAILED;
             mProblem = E4mcNative.nativeError();
@@ -129,6 +140,8 @@ public final class E4mcPublisher {
         }
         mHandle = h;
         mPhase = Phase.STARTING;
+        HostSettings.clearInvited();
+        applyPolicy();
         notifyChanged();
         mMain.removeCallbacks(mPoll);
         mMain.postDelayed(mPoll, 400);
@@ -154,8 +167,48 @@ public final class E4mcPublisher {
             changed = true;
         }
         if (guests != mGuests) { mGuests = guests; changed = true; }
+        String news = E4mcNative.nativePoll(h);
+        if (news != null) {
+            for (String line : news.split("\n")) {
+                int tab = line.indexOf('\t');
+                if (tab <= 0) continue;
+                String name = line.substring(0, tab), reason = line.substring(tab + 1);
+                synchronized (mRecentRefusals) {
+                    mRecentRefusals.addFirst(name + " — " + reason);
+                    while (mRecentRefusals.size() > 5) mRecentRefusals.removeLast();
+                }
+                for (RefusalListener l : mRefusals) {
+                    try { l.onGuestRefused(name, reason); } catch (RuntimeException e) { Log.w(TAG, "refusal listener", e); }
+                }
+            }
+            changed = true;
+        }
+        // Friends come and go: "friends only" follows the current list.
+        if (HostSettings.access() == HostSettings.ACCESS_FRIENDS) applyPolicy();
         if (changed) notifyChanged();
         mMain.postDelayed(mPoll, mAddress == null ? 500 : 2000);
+    }
+
+    /**
+     * Hands the relay the current {@link HostSettings}: the guest limit (the host counted out)
+     * and the names allowed. Cheap; safe to call whenever a setting or the friends list changes.
+     */
+    public void applyPolicy() {
+        long h = mHandle;
+        if (h == 0) return;
+        java.util.List<String> names = HostSettings.allowedNames();
+        String allowed = null;
+        if (names != null) {
+            StringBuilder sb = new StringBuilder();
+            for (String n : names) { if (sb.length() > 0) sb.append('\n'); sb.append(n); }
+            allowed = sb.toString();
+        }
+        int guests = Math.max(1, HostSettings.maxPlayers() - 1);
+        try {
+            E4mcNative.nativeSetPolicy(h, guests, allowed, HostSettings.closedReason());
+        } catch (Throwable t) {
+            Log.w(TAG, "policy", t);
+        }
     }
 
     /** Ends the tunnel and clears the hosting presence. Main thread. */
@@ -172,6 +225,7 @@ public final class E4mcPublisher {
         mAddress = null;
         mGuests = 0;
         mPhase = Phase.IDLE;
+        synchronized (mRecentRefusals) { mRecentRefusals.clear(); }
         if (notify) notifyChanged();
     }
 

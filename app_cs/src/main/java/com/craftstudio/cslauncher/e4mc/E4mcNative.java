@@ -40,5 +40,13 @@ public final class E4mcNative {
     /** Guests currently connected through the tunnel. */
     public static native int nativeGuests(long handle);
     public static native void nativeStop(long handle);
+    /**
+     * Who the relay lets in from now on: {@code maxPlayers} guests at once (0 = no limit at the
+     * relay), and when {@code allowedNamesOrNull} is set (newline separated) only those names,
+     * others shown {@code reason}. Guests already playing stay.
+     */
+    public static native void nativeSetPolicy(long handle, int maxPlayers, @Nullable String allowedNamesOrNull, @Nullable String reason);
+    /** Refused guests since the last call, one {@code name<TAB>reason} per line; null when none. */
+    @Nullable public static native String nativePoll(long handle);
     @Nullable public static native String nativeError();
 }

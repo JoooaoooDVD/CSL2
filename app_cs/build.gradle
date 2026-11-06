@@ -71,12 +71,22 @@ android {
             storePassword System.getenv("UPLOAD_KEYSTORE_PASSWORD")
             keyAlias "key0"
             keyPassword System.getenv("UPLOAD_KEYSTORE_PASSWORD")
+            // Every scheme: v1 for old installers, v2/v3 for Android 7+/9+ (v3 carries key
+            // rotation proofs; Android 16 verifiers look for it), v4 for incremental installs.
+            enableV1Signing true
+            enableV2Signing true
+            enableV3Signing true
+            enableV4Signing true
         }
         publicBuild {
             storeFile file("cs_release_next.jks")
             storePassword System.getenv("CSPUB_KEYSTORE_PASSWORD")
             keyAlias "key0"
             keyPassword System.getenv("CSPUB_KEYSTORE_PASSWORD")
+            enableV1Signing true
+            enableV2Signing true
+            enableV3Signing true
+            enableV4Signing true
         }
     }
 

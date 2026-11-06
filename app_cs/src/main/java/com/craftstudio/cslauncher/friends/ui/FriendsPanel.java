@@ -30,6 +30,7 @@ import androidx.core.content.ContextCompat;
 
 import com.craftstudio.cslauncher.R;
 import com.craftstudio.cslauncher.e4mc.E4mcPublisher;
+import com.craftstudio.cslauncher.e4mc.HostSettings;
 import com.craftstudio.cslauncher.friends.CsAccount;
 import com.craftstudio.cslauncher.friends.FriendsClient;
 import com.craftstudio.cslauncher.friends.JoinWorld;
@@ -248,6 +249,7 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
         if (!mHost.inGame()) {
             card.addView(body(mCtx.getString(R.string.friends_sharing_launcher)));
             mContent.addView(card);
+            renderHostSettings();
             return;
         }
         E4mcPublisher p = E4mcPublisher.get();
@@ -276,6 +278,7 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
                 lp.topMargin = dp(6);
                 card.addView(addr, lp);
                 card.addView(dim(mCtx.getString(R.string.friends_sharing_guests, p.guests())));
+                for (String line : p.recentRefusals()) card.addView(statusLine(mCtx.getString(R.string.host_refused, line), R.color.vl_warn));
                 LinearLayout row = hrow();
                 row.addView(button(mCtx.getString(R.string.friends_invite_all), R.drawable.bg_friends_btn_join, v -> inviteAll()));
                 row.addView(gap());
@@ -296,6 +299,92 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
                 card.addView(body(mCtx.getString(R.string.friends_sharing_idle)));
         }
         mContent.addView(card);
+        renderHostSettings();
+    }
+
+    /**
+     * World hosting settings (Java worlds through e4mc): who can join, the player limit and the
+     * relay. Live while a world is published; otherwise the values the next publish starts with.
+     */
+    private void renderHostSettings() {
+        LinearLayout card = card();
+        card.addView(heading(mCtx.getString(R.string.host_settings_title)));
+        // Who can join.
+        int access = HostSettings.access();
+        LinearLayout accessRow = hrow();
+        LinearLayout accessText = vcol();
+        accessText.addView(strong(mCtx.getString(R.string.host_access)));
+        accessText.addView(dim(HostSettings.accessLabel(access)));
+        accessRow.addView(accessText);
+        accessRow.addView(gap());
+        accessRow.addView(smallButton(mCtx.getString(R.string.host_change), R.drawable.bg_vl_btn_ghost, v -> {
+            HostSettings.setAccess((HostSettings.access() + 1) % 3);
+            render();
+        }));
+        card.addView(accessRow);
+        if (access == HostSettings.ACCESS_INVITED) {
+            int n = HostSettings.invitedCount();
+            card.addView(dim(n == 0 ? mCtx.getString(R.string.host_invited_none) : mCtx.getString(R.string.host_invited_count, n)));
+        } else if (access == HostSettings.ACCESS_FRIENDS) {
+            card.addView(dim(mCtx.getString(R.string.host_friends_hint)));
+        }
+        // Player limit (the Java integrated server stops at 8).
+        LinearLayout playersRow = hrow();
+        LinearLayout playersText = vcol();
+        playersText.addView(strong(mCtx.getString(R.string.host_players, HostSettings.maxPlayers())));
+        playersText.addView(dim(mCtx.getString(R.string.host_players_java_cap)));
+        playersRow.addView(playersText);
+        playersRow.addView(gap());
+        playersRow.addView(smallButton("−", R.drawable.bg_vl_btn_ghost, v -> { HostSettings.setMaxPlayers(HostSettings.maxPlayers() - 1); render(); }));
+        playersRow.addView(gap());
+        playersRow.addView(smallButton("+", R.drawable.bg_vl_btn_ghost, v -> { HostSettings.setMaxPlayers(HostSettings.maxPlayers() + 1); render(); }));
+        card.addView(playersRow);
+        // Cheats: the game decides at Open to LAN.
+        card.addView(strong(mCtx.getString(R.string.host_cheats)));
+        card.addView(dim(mCtx.getString(R.string.host_cheats_java)));
+        // The relay.
+        card.addView(strong(mCtx.getString(R.string.host_relay)));
+        LinearLayout relayRow = hrow();
+        relayRow.setPadding(0, dp(2), 0, 0);
+        EditText relay = new EditText(mCtx);
+        relay.setHint(R.string.host_relay_hint);
+        relay.setSingleLine(true);
+        relay.setText(HostSettings.relay());
+        relay.setBackgroundResource(R.drawable.bg_vl_field);
+        relay.setTextColor(color(R.color.vl_text));
+        relay.setHintTextColor(color(R.color.vl_text_faint));
+        relay.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        relay.setPadding(dp(14), 0, dp(14), 0);
+        relay.setImeOptions(EditorInfo.IME_ACTION_DONE);
+        relay.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_URI);
+        relay.setLayoutParams(new LinearLayout.LayoutParams(0, dp(44), 1f));
+        relayRow.addView(relay);
+        relayRow.addView(gap());
+        relayRow.addView(button(mCtx.getString(R.string.host_save), R.drawable.bg_vl_btn_primary, v -> {
+            String text = relay.getText().toString().trim();
+            hideKeyboard(relay);
+            if (!text.isEmpty() && !isHostPort(text)) {
+                toast(R.string.host_relay_bad);
+                return;
+            }
+            HostSettings.setRelay(text);
+            toast(mHost.inGame() && E4mcPublisher.get().isActive() ? R.string.host_relay_saved_next : R.string.host_saved);
+            render();
+        }));
+        card.addView(relayRow);
+        card.addView(dim(mCtx.getString(R.string.host_relay_note)));
+        mContent.addView(card);
+    }
+
+    private static boolean isHostPort(String text) {
+        int i = text.lastIndexOf(':');
+        if (i <= 0 || i == text.length() - 1) return false;
+        try {
+            int port = Integer.parseInt(text.substring(i + 1));
+            return port > 0 && port <= 65535;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     private void renderInvites() {
@@ -412,7 +501,7 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
             if (hosting && f.online()) {
                 row.addView(smallButton(mCtx.getString(R.string.friends_invite), R.drawable.bg_vl_btn_primary, b -> act(() -> mClient.invite(f.id, p.address(), null, "java", e -> {
                     done(e);
-                    if (e == null) toast(R.string.friends_invite_sent);
+                    if (e == null) { HostSettings.noteInvited(f.name); toast(R.string.friends_invite_sent); }
                 }))));
                 row.addView(gap());
             }
@@ -738,7 +827,7 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
         if (!p.isPublished()) return;
         act(() -> mClient.invite(null, p.address(), null, "java", e -> {
             done(e);
-            if (e == null) toast(R.string.friends_invite_sent);
+            if (e == null) { HostSettings.noteInvitedAll(); toast(R.string.friends_invite_sent); }
         }));
     }
 
