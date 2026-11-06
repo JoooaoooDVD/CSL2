@@ -124,6 +124,13 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
     private QuickSettingSideDialog mQuickSettingSideDialog;
     private ResourceBrowserPopup mResourceBrowser;
     private com.craftstudio.cslauncher.friends.ui.FriendsPopup mVirtualLan;
+    /** CS Friends while playing: invites / requests / messages show as in-game banners. */
+    private final com.craftstudio.cslauncher.friends.FriendsClient.Listener mFriendsListener = new com.craftstudio.cslauncher.friends.FriendsClient.Listener() {
+        @Override public void onFriendsChanged(@NonNull com.craftstudio.cslauncher.friends.FriendsClient.Snapshot snapshot) {}
+        @Override public void onNote(@NonNull com.craftstudio.cslauncher.friends.FriendsClient.Note note) {
+            if (!isFinishing()) com.craftstudio.cslauncher.friends.ui.FriendsBanner.show(GameActivity.this, note, false);
+        }
+    };
     private String mLaunchVersionId;
 
     public static int mForcedPanningHeight = 0;
@@ -146,6 +153,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         // Route the native game log through the tap so the Virtual LAN host can see "Started serving on"
         com.craftstudio.cslauncher.multiplayer.LogTap.install();
         com.craftstudio.cslauncher.e4mc.E4mcPublisher.get().install();
+        com.craftstudio.cslauncher.friends.FriendsClient.get().addListener(mFriendsListener);
         instance = Instances.loadSelectedInstance();
         // The launcher hands the account file over: this process may hold a stale preference
         // cache (separate process) and must never start the game with a null account.
@@ -418,6 +426,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
 
     @Override
     protected void onDestroy() {
+        com.craftstudio.cslauncher.friends.FriendsClient.get().removeListener(mFriendsListener);
         if (isFinishing()) {
             com.craftstudio.cslauncher.stats.PlayTimeTracker.endSession();
             com.craftstudio.cslauncher.discord.DiscordPresenceManager.getInstance(this).onGameExiting();

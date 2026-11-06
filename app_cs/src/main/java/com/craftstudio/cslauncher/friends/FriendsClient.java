@@ -552,9 +552,30 @@ public final class FriendsClient {
             }
             final String fe = err;
             mMain.post(() -> {
-                if (fe == null) onAccountChanged();
+                if (fe == null) {
+                    onAccountChanged();
+                    publishLocalSkin();
+                }
                 cb.done(fe);
             });
+        });
+    }
+
+    /** Shares the current local account's launcher skin with CS Launcher friends (background). */
+    public void publishLocalSkin() {
+        final com.craftstudio.cslauncher.authenticator.accounts.Account me = com.craftstudio.cslauncher.authenticator.accounts.Accounts.getCurrent();
+        if (me == null || !CsAccount.isSignedIn()) return;
+        mIo.execute(() -> {
+            try {
+                com.craftstudio.cslauncher.skins.SkinLibrary.Entry skin = com.craftstudio.cslauncher.skins.LocalSkinStore.selectedSkin(me);
+                com.craftstudio.cslauncher.skins.LocalSkinStore.Cape cape = com.craftstudio.cslauncher.skins.LocalSkinStore.selectedCape(me);
+                byte[] skinPng = skin == null ? null : com.craftstudio.cslauncher.skins.SkinLibrary.readBytes(skin);
+                byte[] capePng = cape == null ? null : com.craftstudio.cslauncher.skins.LocalSkinStore.readBytes(com.craftstudio.cslauncher.skins.LocalSkinStore.capeFile(cape));
+                if (skinPng == null && capePng == null) return;
+                RemoteSkins.publish(me.username, skinPng, skin != null && skin.slim, capePng);
+            } catch (RuntimeException | java.io.IOException e) {
+                Log.w(TAG, "skin publish", e);
+            }
         });
     }
 

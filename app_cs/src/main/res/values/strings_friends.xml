@@ -65,4 +65,5 @@
     <string name="friends_clear">Clear</string>
     <string name="friends_working">Please wait…</string>
     <string name="friends_offline_hint">Offline — showing the last known state.</string>
+    <string name="lib_subtitle_cs_engine">CS Engine registry · built-in mods, .hmod mods and resource packs for this profile</string>
 </resources>

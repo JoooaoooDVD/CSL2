@@ -66,6 +66,8 @@ import java.util.concurrent.Executors;
 public class CsEngineModsFragment extends Fragment {
     public static final String TAG = "CsEngineModsFragment";
     public static final String ARG_TAB = "tab"; // "mods" | "packs"
+    /** Hosted inside the library page: no header / back / own tabs, the library tabs drive it. */
+    public static final String ARG_EMBEDDED = "embedded";
 
     private static final String INDEX_URL = "https://horizon-rust.github.io/horizon-mods/index.json";
     private static final String MODS_FILE = "horizon-mods.txt";
@@ -134,6 +136,11 @@ public class CsEngineModsFragment extends Fragment {
         });
         Bundle args = getArguments();
         mPacksTab = args != null && "packs".equals(args.getString(ARG_TAB));
+        if (args != null && args.getBoolean(ARG_EMBEDDED, false)) {
+            v.findViewById(R.id.cem_header).setVisibility(View.GONE);
+            v.setPadding(0, 0, 0, 0);
+            v.setBackground(null);
+        }
         applyTabLook();
 
         try {

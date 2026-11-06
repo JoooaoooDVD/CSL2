@@ -1,6 +1,7 @@
 package com.craftstudio.cslauncher.fragments;
 
 import com.craftstudio.cslauncher.instances.Instances;
+import com.craftstudio.cslauncher.engine.horizon.HorizonProfile;
 import com.craftstudio.cslauncher.instances.Instance;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -799,6 +800,9 @@ public class ManageModsFragment extends Fragment {
         try {
             Instance instance = Instances.loadInstance(getCurrentProfileKey());
             if (instance != null) {
+                // CS Engine profiles keep their content in the profile folder itself (never the
+                // shared Java data directory): horizon-mods/, resourcepacks/, shaderpacks/
+                if (instance.isHorizon()) return new File(HorizonProfile.gameHome(instance), mContentType.folderName);
                 return new File(instance.getGameDirectory(), mContentType.folderName);
             }
         } catch (Exception ignored) {}

@@ -11,6 +11,7 @@
     android:paddingTop="6dp">
 
     <LinearLayout
+        android:id="@+id/cem_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/bg_mm_panel"

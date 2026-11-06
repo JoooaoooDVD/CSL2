@@ -551,4 +551,13 @@
                 app:icon="@drawable/ic_lib_update" />
         </LinearLayout>
     </FrameLayout>
+    <!-- CS Engine profile selected: the Horizon registry (built-in native mods, .hmod mods,
+         resource packs) renders here, inside this same page, driven by the tabs above -->
+    <FrameLayout
+        android:id="@+id/library_engine_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -332,6 +332,8 @@ public class LauncherActivity extends BaseActivity {
         final String shortcutProfile = com.craftstudio.cslauncher.utils.ProfileShortcuts.profileFrom(getIntent());
         if (savedInstanceState == null && shortcutProfile == null) {
             ViewGroup content = findViewById(android.R.id.content);
+            // The chime plays on every device whatever the animation switches say
+            com.craftstudio.cslauncher.utils.StartupSound.playOnce(this);
             if (content != null) content.post(() -> AnimationManager.playBrandIntro(content));
         }
         // First launch: privacy policy & terms, then the storage setup (where game files live)

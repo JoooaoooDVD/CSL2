@@ -3,6 +3,7 @@ package com.craftstudio.cslauncher.utils;
 import android.content.Context;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.media.SoundPool;
 import android.util.Log;
 
@@ -13,15 +14,16 @@ import com.craftstudio.cslauncher.R;
 import com.craftstudio.cslauncher.Tools;
 
 /**
- * The Craft Studio startup chime (res/raw/cs_startup): a soft power-on swell, a rising boot
- * tone and a two-note bell, 1.9 s. Plays once per process start together with the brand
- * intro; respects the user's switch and the device's silent / vibrate mode. SoundPool is
- * loaded on demand and released right after playback, so nothing stays resident.
+ * The CS Launcher Plus startup chime (res/raw/cs_startup.wav, 1.9 s). Played once per process
+ * start when the user's switch is on. MediaPlayer is the primary path — it decodes on every
+ * Android version and OEM without SoundPool's sample-size and codec limits; SoundPool is the
+ * fallback if MediaPlayer cannot be created. Only the user's switch and a zero media volume
+ * keep it quiet (vibrate / silent ringer modes do not affect media playback on Android).
  */
 public final class StartupSound {
-    public static final String PREF_KEY = "startup_sound";
     private static final String TAG = "StartupSound";
-    private static boolean sPlayed;
+    public static final String PREF_KEY = "startup_sound";
+    private static volatile boolean sPlayed;
 
     private StartupSound() {}
 
@@ -29,7 +31,7 @@ public final class StartupSound {
         return PreferenceManager.getDefaultSharedPreferences(context).getBoolean(PREF_KEY, true);
     }
 
-    /** Plays the chime once (no-op if already played, disabled, or the phone is muted). */
+    /** Plays the chime once (no-op if already played or disabled). */
     public static void playOnce(@NonNull Context context) {
         if (sPlayed) return;
         sPlayed = true;
@@ -37,9 +39,37 @@ public final class StartupSound {
         if (!isEnabled(app)) return;
         try {
             AudioManager am = (AudioManager) app.getSystemService(Context.AUDIO_SERVICE);
-            if (am == null) return;
-            if (am.getRingerMode() != AudioManager.RINGER_MODE_NORMAL) return;
-            if (am.getStreamVolume(AudioManager.STREAM_MUSIC) <= 0) return;
+            if (am != null && am.getStreamVolume(AudioManager.STREAM_MUSIC) <= 0) return;
+        } catch (Throwable ignored) {}
+        if (!playWithMediaPlayer(app)) playWithSoundPool(app);
+    }
+
+    private static boolean playWithMediaPlayer(Context app) {
+        MediaPlayer mp = null;
+        try {
+            AudioAttributes attrs = new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build();
+            mp = MediaPlayer.create(app, R.raw.cs_startup, attrs, 0);
+            if (mp == null) return false;
+            final MediaPlayer player = mp;
+            player.setVolume(0.85f, 0.85f);
+            player.setOnCompletionListener(MediaPlayer::release);
+            player.setOnErrorListener((p, what, extra) -> { p.release(); return true; });
+            player.start();
+            // Safety net: never keep the player (and the audio session) around longer than needed
+            Tools.MAIN_HANDLER.postDelayed(() -> { try { player.release(); } catch (Throwable ignored) {} }, 5000L);
+            return true;
+        } catch (Throwable t) {
+            Log.w(TAG, "MediaPlayer path failed: " + t);
+            if (mp != null) try { mp.release(); } catch (Throwable ignored) {}
+            return false;
+        }
+    }
+
+    private static void playWithSoundPool(Context app) {
+        try {
             AudioAttributes attrs = new AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_MEDIA)
                     .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)

@@ -41,7 +41,7 @@ import java.util.List;
  * The CS Friends panel: account, world sharing (e4mc), invites, requests, friends and chat.
  * Hosted by {@link FriendsFragment} (launcher) and {@link FriendsPopup} (Java game process).
  */
-public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher.Listener {
+public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher.Listener, com.craftstudio.cslauncher.friends.RemoteSkins.HeadListener {
 
     public interface Host {
         @NonNull Activity activity();
@@ -108,6 +108,7 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
         mShown = true;
         mClient.addListener(this);
         E4mcPublisher.get().addListener(this);
+        com.craftstudio.cslauncher.friends.RemoteSkins.addHeadListener(this);
         if (mChatWith != null) mClient.setFast(true);
         render();
     }
@@ -118,6 +119,7 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
         mClient.setFast(false);
         mClient.removeListener(this);
         E4mcPublisher.get().removeListener(this);
+        com.craftstudio.cslauncher.friends.RemoteSkins.removeHeadListener(this);
     }
 
     /** True when the back press was consumed (chat → list). */
@@ -129,6 +131,19 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
     @Override public void onFriendsChanged(@NonNull FriendsClient.Snapshot snapshot) { render(); }
     @Override public void onFriendsError(@NonNull String message) { mSubtitle.setText(message); }
     @Override public void onE4mcChanged() { if (mChatWith == null) render(); }
+    @Override public void onHeadsChanged() { if (mChatWith == null) render(); }
+
+    /** The player's head icon (launcher skin shared through CS Friends), Steve until known. */
+    private ImageView headView(@Nullable String name, int sizeDp) {
+        ImageView iv = new ImageView(mCtx);
+        android.graphics.Bitmap b = com.craftstudio.cslauncher.friends.RemoteSkins.head(name);
+        if (b != null) iv.setImageBitmap(b); else iv.setImageResource(R.drawable.ic_default_head);
+        iv.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(sizeDp), dp(sizeDp));
+        lp.rightMargin = dp(10);
+        iv.setLayoutParams(lp);
+        return iv;
+    }
 
     // ------------------------------------------------------------------ rendering
 
@@ -167,6 +182,11 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
             return;
         }
         LinearLayout top = hrow();
+        com.craftstudio.cslauncher.authenticator.accounts.Account me = com.craftstudio.cslauncher.authenticator.accounts.Accounts.getCurrent();
+        android.graphics.Bitmap myFace = me == null ? null : me.getSkinFace();
+        ImageView myHead = headView(null, 36);
+        if (myFace != null) myHead.setImageBitmap(myFace);
+        top.addView(myHead);
         LinearLayout names = new LinearLayout(mCtx);
         names.setOrientation(LinearLayout.VERTICAL);
         names.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
@@ -261,6 +281,7 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
         card.addView(heading(mCtx.getString(R.string.friends_invites)));
         for (FriendsClient.Invite v : invites) {
             LinearLayout row = listRow();
+            row.addView(headView(v.from, 28));
             LinearLayout text = vcol();
             text.addView(strong(v.from));
             String world = v.world == null || v.world.isEmpty() ? v.address : v.world + "  ·  " + v.address;
@@ -288,6 +309,7 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
         card.addView(heading(mCtx.getString(R.string.friends_requests)));
         for (FriendsClient.Request q : s.requests) {
             LinearLayout row = listRow();
+            row.addView(headView(q.name, 28));
             LinearLayout text = vcol();
             text.addView(strong(q.name));
             text.addView(dim(q.code));
@@ -349,6 +371,7 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
             LinearLayout.LayoutParams dlp = new LinearLayout.LayoutParams(dp(9), dp(9));
             dlp.rightMargin = dp(10);
             row.addView(dot, dlp);
+            row.addView(headView(f.name, 28));
             LinearLayout text = vcol();
             text.addView(strong(f.name));
             String status;

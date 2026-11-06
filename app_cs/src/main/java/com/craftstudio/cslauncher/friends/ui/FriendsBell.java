@@ -64,6 +64,7 @@ public final class FriendsBell implements FriendsClient.Listener {
     }
 
     @Override public void onNote(@NonNull FriendsClient.Note note) {
+        FriendsBanner.show(mActivity, note, true);
         if (!Motion.buttons(mButton)) return;
         mButton.animate().rotation(-14f).setDuration(70).withEndAction(() ->
                 mButton.animate().rotation(12f).setDuration(110).withEndAction(() ->
