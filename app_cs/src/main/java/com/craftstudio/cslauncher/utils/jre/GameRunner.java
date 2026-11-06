@@ -266,6 +266,8 @@ public class GameRunner {
         if (account == null) throw new IllegalStateException("No account selected: open the launcher and sign in or create a local account");
         com.craftstudio.cslauncher.authenticator.yggdrasil.LocalSkinBridge.prepare(account);
         List<String> launchArgs = getMoJsonClientArgs(account, versionInfo, gamedir);
+        // "Join World" from a CS Friends invite: connect straight to the friend's address
+        com.craftstudio.cslauncher.friends.JoinWorld.appendJavaArgs(launchArgs, versionId);
 
         // Select the appropriate openGL version
         OldVersionsUtils.selectOpenGlVersion(versionInfo);
@@ -369,8 +371,8 @@ public class GameRunner {
             com.craftstudio.cslauncher.discord.DiscordPresenceManager.getInstance(activity).onGameExiting();
         }
 
-        // Let an active Virtual LAN session say goodbye before the process dies
-        com.craftstudio.cslauncher.multiplayer.VirtualLanService.shutdownForProcessExit(2500);
+        // Close the e4mc tunnel and clear the "hosting" presence before the process dies
+        com.craftstudio.cslauncher.e4mc.E4mcPublisher.shutdownForProcessExit();
         Tools.restartLauncherActivity(activity);
         Tools.fullyExit();
     }

@@ -60,12 +60,6 @@ jobs:
       - name: Create out directory
         run: mkdir out
 
-      - name: Fetch Virtual LAN tunnel engine (EasyTier)
-        run: bash scripts/fetch_easytier.sh
-
-      - name: Build Virtual LAN VPN bridge (hev-socks5-tunnel)
-        run: bash scripts/build_hev_tunnel.sh
-
       - name: Fetch Horizon engine (JoooaoooDVD/horizon-android, cs-engine-latest)
         run: bash scripts/fetch_horizon_engine.sh
 

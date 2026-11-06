@@ -347,8 +347,8 @@ public class MainMenuFragment extends Fragment {
             startActivity(new android.content.Intent(requireContext(), com.craftstudio.cslauncher.CustomControlsActivity.class));
             return true;
         } else if (navId == R.id.nav_multiplayer) {
-            openPane(com.craftstudio.cslauncher.multiplayer.ui.VirtualLanFragment.class,
-                    com.craftstudio.cslauncher.multiplayer.ui.VirtualLanFragment.TAG, null);
+            openPane(com.craftstudio.cslauncher.friends.ui.FriendsFragment.class,
+                    com.craftstudio.cslauncher.friends.ui.FriendsFragment.TAG, null);
         } else if (navId == R.id.nav_logs) {
             openPane(LogsFragment.class, LogsFragment.TAG, null);
         } else if (navId == R.id.nav_playtime) {
@@ -407,7 +407,7 @@ public class MainMenuFragment extends Fragment {
         String top = manager.getBackStackEntryAt(count - 1).getName();
         if (LogsFragment.TAG.equals(top)) setActiveNav(R.id.nav_logs);
         else if (PlayTimeFragment.TAG.equals(top)) setActiveNav(R.id.nav_playtime);
-        else if (com.craftstudio.cslauncher.multiplayer.ui.VirtualLanFragment.TAG.equals(top)) setActiveNav(R.id.nav_multiplayer);
+        else if (com.craftstudio.cslauncher.friends.ui.FriendsFragment.TAG.equals(top)) setActiveNav(R.id.nav_multiplayer);
         else if (top != null && (top.startsWith(ModsSearchFragment.TAG) || ModInstallFragment.TAG.equals(top)))
             setActiveNav(R.id.mod_store_button);
         else if (top != null && top.startsWith(ManageModsFragment.TAG))

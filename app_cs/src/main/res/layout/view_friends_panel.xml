@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- CS Friends panel (launcher page and in-game popup share it). Sections are built by FriendsPanel. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/fp_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/fp_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingBottom="8dp">
+
+        <ImageButton
+            android:id="@+id/fp_back"
+            android:layout_width="@dimen/vl_round_btn"
+            android:layout_height="@dimen/vl_round_btn"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/bg_vl_round_btn"
+            android:contentDescription="@string/friends_back"
+            android:padding="9dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_vl_back"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/fp_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/noto_sans_bold"
+                android:text="@string/friends_title"
+                android:textColor="@color/vl_text"
+                android:textSize="17sp" />
+
+            <TextView
+                android:id="@+id/fp_subtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/friends_subtitle"
+                android:textColor="@color/vl_text_dim"
+                android:textSize="11.5sp" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/fp_refresh"
+            android:layout_width="@dimen/vl_round_btn"
+            android:layout_height="@dimen/vl_round_btn"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/bg_vl_round_btn"
+            android:contentDescription="@string/friends_refresh"
+            android:padding="9dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_vl_refresh" />
+
+        <ImageButton
+            android:id="@+id/fp_close"
+            android:layout_width="@dimen/vl_round_btn"
+            android:layout_height="@dimen/vl_round_btn"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/bg_vl_round_btn"
+            android:contentDescription="@string/friends_close"
+            android:padding="9dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_vl_close"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <ScrollView
+        android:id="@+id/fp_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:overScrollMode="never"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/fp_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="8dp" />
+    </ScrollView>
+
+    <!-- Chat composer (chat mode only) -->
+    <LinearLayout
+        android:id="@+id/fp_composer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingTop="8dp"
+        android:visibility="gone">
+
+        <EditText
+            android:id="@+id/fp_input"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/vl_field_height"
+            android:layout_weight="1"
+            android:background="@drawable/bg_vl_field"
+            android:hint="@string/friends_chat_hint"
+            android:imeOptions="actionSend"
+            android:importantForAutofill="no"
+            android:inputType="textShortMessage|textCapSentences"
+            android:maxLength="500"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:singleLine="true"
+            android:textColor="@color/vl_text"
+            android:textColorHint="@color/vl_text_faint"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/fp_send"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/vl_field_height"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_vl_btn_primary"
+            android:gravity="center"
+            android:paddingStart="18dp"
+            android:paddingEnd="18dp"
+            android:text="@string/friends_send"
+            android:textColor="@color/vl_text"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+</LinearLayout>

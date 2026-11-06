@@ -46,9 +46,18 @@ for abi in "${ABIS[@]}"; do
     echo "[horizon] no library for $abi in this release"
   fi
 done
+# Launcher-side e4mc tunnel (JNI, built by the engine CI): optional per ABI.
+for abi in "${ABIS[@]}"; do
+  if curl -fsSL -o "$WORK/libcs_e4mc-$abi.so" "$BASE/libcs_e4mc-$abi.so"; then
+    echo "[horizon] e4mc library for $abi"
+  else
+    rm -f "$WORK/libcs_e4mc-$abi.so"
+    echo "[horizon] no e4mc library for $abi in this release"
+  fi
+done
 [[ "$got_any" == "1" ]] || fail "no engine library found in release $TAG"
 
-( cd "$WORK" && grep -E "engine-data.zip|LICENSE.txt|THIRD_PARTY_NOTICES.md|libcs_engine-" SHA256SUMS.txt | while read -r sum name; do
+( cd "$WORK" && grep -E "engine-data.zip|LICENSE.txt|THIRD_PARTY_NOTICES.md|libcs_engine-|libcs_e4mc-" SHA256SUMS.txt | while read -r sum name; do
     [[ -f "$name" ]] || continue
     echo "$sum  $name" | sha256sum -c - >/dev/null || { echo "[horizon] checksum mismatch: $name"; exit 1; }
   done ) || fail "checksum verification failed"
@@ -60,6 +69,11 @@ for abi in "${ABIS[@]}"; do
     mkdir -p "$JNI_DIR/$abi"
     cp "$WORK/libcs_engine-$abi.so" "$JNI_DIR/$abi/libcs_engine.so"
     echo "[horizon] $abi: $(stat -c %s "$JNI_DIR/$abi/libcs_engine.so") bytes"
+  fi
+  if [[ -f "$WORK/libcs_e4mc-$abi.so" ]]; then
+    mkdir -p "$JNI_DIR/$abi"
+    cp "$WORK/libcs_e4mc-$abi.so" "$JNI_DIR/$abi/libcs_e4mc.so"
+    echo "[horizon] $abi e4mc: $(stat -c %s "$JNI_DIR/$abi/libcs_e4mc.so") bytes"
   fi
 done
 echo "[horizon] engine: $(python3 -c "import json;d=json.load(open('$ASSET_DIR/BUILD.json'));print(d.get('version'),d.get('commit'))" 2>/dev/null)"

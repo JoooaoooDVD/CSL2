@@ -218,6 +218,8 @@ public final class HorizonProfile {
         launch.renderer = instance.renderer == null || !rendererIds().contains(instance.renderer) ? "" : instance.renderer;
         launch.renderScale = instance.horizonRenderScale;
         launch.controlsPath = instance.getLaunchControls();
+        // "Join World" from a launcher CS Friends invite: the engine connects at once
+        launch.server = com.craftstudio.cslauncher.friends.JoinWorld.consume();
         return launch.intent(context, account);
     }
 

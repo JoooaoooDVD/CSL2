@@ -135,11 +135,11 @@
                             android:layout_width="@dimen/top_dock_item_width"
                             android:layout_height="@dimen/top_dock_item_height"
                             android:background="@drawable/bg_top_dock_item"
-                            android:contentDescription="@string/vlan_nav"
+                            android:contentDescription="@string/friends_nav"
                             android:padding="8dp"
                             android:scaleType="fitCenter"
                             android:src="@drawable/ic_dock_multiplayer"
-                            android:tooltipText="@string/vlan_nav" />
+                            android:tooltipText="@string/friends_nav" />
 
                         <ImageButton
                             android:id="@+id/nav_skins"
@@ -189,6 +189,44 @@
             </LinearLayout>
         </HorizontalScrollView>
 
+        <!-- CS Friends notifications (invites, requests, messages). The badge shows unread count -->
+        <FrameLayout
+            android:id="@+id/friends_bell"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/bg_icon_button_home"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="@string/friends_notifications">
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:importantForAccessibility="no"
+                android:padding="10dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_friends_bell" />
+            <TextView
+                android:id="@+id/friends_bell_badge"
+                android:layout_width="wrap_content"
+                android:layout_height="16dp"
+                android:layout_gravity="top|end"
+                android:layout_marginTop="2dp"
+                android:layout_marginEnd="2dp"
+                android:background="@drawable/bg_friends_badge"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:minWidth="16dp"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp"
+                android:textColor="#FFFFFF"
+                android:textSize="9sp"
+                android:textStyle="bold"
+                android:visibility="gone"
+                tools:text="3"
+                tools:visibility="visible" />
+        </FrameLayout>
+
         <!-- Account selector (existing AccountSpinner, restyled) -->
         <com.kdt.mcgui.AccountSpinner
             android:id="@+id/account_spinner"
@@ -215,19 +253,6 @@
             android:src="@drawable/ic_partners"
             android:tooltipText="@string/partners_title" />
 
-        <!-- Settings -->
-        <ImageButton
-            android:id="@+id/setting_button"
-            android:layout_width="38dp"
-            android:layout_height="38dp"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/bg_icon_button_home"
-            android:contentDescription="@string/home_settings"
-            android:padding="10dp"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_px_sliders"
-            android:tooltipText="@string/home_settings" />
-
         <!-- Contextual help: opens the tutorial of the visible screen (TutorialManager) -->
         <ImageButton
             android:id="@+id/help_button"
@@ -240,6 +265,19 @@
             android:scaleType="fitCenter"
             android:src="@drawable/ic_tut_help"
             android:tooltipText="@string/tut_help_button" />
+
+        <!-- Settings: always the last button, top-right corner on every device -->
+        <ImageButton
+            android:id="@+id/setting_button"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_icon_button_home"
+            android:contentDescription="@string/home_settings"
+            android:padding="10dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_px_sliders"
+            android:tooltipText="@string/home_settings" />
     </LinearLayout>
 
     <!-- ══════════════ CONTENT ══════════════ -->

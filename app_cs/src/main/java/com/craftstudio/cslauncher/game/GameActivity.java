@@ -123,7 +123,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
 
     private QuickSettingSideDialog mQuickSettingSideDialog;
     private ResourceBrowserPopup mResourceBrowser;
-    private com.craftstudio.cslauncher.multiplayer.ui.VirtualLanPopup mVirtualLan;
+    private com.craftstudio.cslauncher.friends.ui.FriendsPopup mVirtualLan;
     private String mLaunchVersionId;
 
     public static int mForcedPanningHeight = 0;
@@ -145,6 +145,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         } catch (Throwable ignored) {}
         // Route the native game log through the tap so the Virtual LAN host can see "Started serving on"
         com.craftstudio.cslauncher.multiplayer.LogTap.install();
+        com.craftstudio.cslauncher.e4mc.E4mcPublisher.get().install();
         instance = Instances.loadSelectedInstance();
         // The launcher hands the account file over: this process may hold a stale preference
         // cache (separate process) and must never start the game with a null account.
@@ -605,10 +606,10 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         mResourceBrowser = ResourceBrowserPopup.show(this, instance, mLaunchVersionId);
     }
 
-    /** In-game "Virtual LAN Multiplayer" popup: create / join a cross-network LAN session. */
+    /** In-game "CS Friends" popup: e4mc sharing of the LAN world, invites, friends and chat. */
     private void openVirtualLan() {
         if (mVirtualLan != null && mVirtualLan.isShowing()) return;
-        mVirtualLan = com.craftstudio.cslauncher.multiplayer.ui.VirtualLanPopup.show(this, () -> mVirtualLan = null);
+        mVirtualLan = com.craftstudio.cslauncher.friends.ui.FriendsPopup.show(this, () -> mVirtualLan = null);
     }
 
     @Override
