@@ -74,6 +74,19 @@ public final class E4mcPublisher {
         notifyChanged();
     }
 
+    /** Plain game version of the running profile ("1.21.1"), or null when unknown. */
+    @Nullable
+    public static String hostedVersion() {
+        try {
+            com.craftstudio.cslauncher.instances.Instance i = com.craftstudio.cslauncher.instances.Instances.loadSelectedInstance();
+            if (i == null || i.versionId == null) return null;
+            String v = com.craftstudio.cslauncher.fragments.InstanceVersionResolver.shortVersion(i.versionId);
+            return v == null || v.isEmpty() ? null : v;
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
     private void onLogLine(String text) {
         if (text == null) return;
         Matcher lv = LEVEL.matcher(text);
@@ -133,7 +146,7 @@ public final class E4mcPublisher {
             mPhase = Phase.PUBLISHED;
             changed = true;
             Log.i(TAG, "published " + domain + " -> 127.0.0.1:" + mPort);
-            FriendsClient.get().setHosting(domain, mWorld, "java");
+            FriendsClient.get().setHosting(domain, mWorld, "java", hostedVersion());
         }
         if (problem != null && !problem.equals(mProblem)) {
             mProblem = problem;

@@ -76,7 +76,7 @@ public final class FriendsBanner {
                 card.addView(button(activity, activity.getString(R.string.friends_join), R.drawable.bg_friends_btn_join, v -> {
                     dismiss();
                     FriendsClient.get().dismiss(note.key);
-                    JoinWorld.join(activity, note.address, note.engine);
+                    JoinWorld.join(activity, note.address, note.engine, note.version);
                 }));
             }
             card.addView(button(activity, activity.getString(R.string.friends_decline), R.drawable.bg_vl_btn_danger, v -> {

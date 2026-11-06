@@ -91,6 +91,57 @@
             android:paddingBottom="8dp" />
     </ScrollView>
 
+    <!-- Reply strip (chat mode, while quoting a message) -->
+    <LinearLayout
+        android:id="@+id/fp_reply_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/bg_vl_pill"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="12dp"
+        android:paddingEnd="4dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/fp_reply_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/vl_text"
+                android:textSize="11.5sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/fp_reply_body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/vl_text_dim"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/fp_reply_close"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@android:string/cancel"
+            android:padding="6dp"
+            android:src="@drawable/ic_vl_close" />
+    </LinearLayout>
+
     <!-- Chat composer (chat mode only) -->
     <LinearLayout
         android:id="@+id/fp_composer"
@@ -100,6 +151,16 @@
         android:orientation="horizontal"
         android:paddingTop="8dp"
         android:visibility="gone">
+
+        <ImageButton
+            android:id="@+id/fp_attach"
+            android:layout_width="@dimen/vl_field_height"
+            android:layout_height="@dimen/vl_field_height"
+            android:layout_marginEnd="6dp"
+            android:background="@drawable/bg_vl_btn_ghost"
+            android:contentDescription="@string/chat_attach"
+            android:padding="11dp"
+            android:src="@drawable/ic_pe_image" />
 
         <EditText
             android:id="@+id/fp_input"

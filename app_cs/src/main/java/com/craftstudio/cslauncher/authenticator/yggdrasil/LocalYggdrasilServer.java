@@ -107,7 +107,7 @@ public final class LocalYggdrasilServer {
                                                           @Nullable byte[] skinPng, boolean slim,
                                                           @Nullable byte[] capePng) throws IOException, GeneralSecurityException {
         if (sRunning != null) sRunning.stop();
-        sRunning = new LocalYggdrasilServer(loadOrCreateKeys(keyDir), name, uuid, skinPng, slim, capePng);
+        sRunning = new LocalYggdrasilServer(loadKeys(keyDir), name, uuid, skinPng, slim, capePng);
         return sRunning;
     }
 
@@ -166,6 +166,21 @@ public final class LocalYggdrasilServer {
     }
 
     // ------------------------------------------------------------------ keys
+
+    /**
+     * The signing key: shared across installs ({@link CsSkinKey}) so texture properties signed on one
+     * phone verify on another (the host signs guests' profiles in {@code hasJoined}, guests receive
+     * the host's own profile). A per-install key is only generated if the embedded one fails to load.
+     */
+    @NonNull
+    private static KeyPair loadKeys(@NonNull File dir) throws IOException, GeneralSecurityException {
+        try {
+            return CsSkinKey.load();
+        } catch (GeneralSecurityException | RuntimeException e) {
+            Log.w(TAG, "Embedded signing key unusable, falling back to a local key", e);
+            return loadOrCreateKeys(dir);
+        }
+    }
 
     @NonNull
     private static KeyPair loadOrCreateKeys(@NonNull File dir) throws IOException, GeneralSecurityException {
@@ -236,6 +251,7 @@ public final class LocalYggdrasilServer {
         JsonArray domains = new JsonArray();
         domains.add("127.0.0.1");
         domains.add("localhost");
+        domains.add(com.craftstudio.cslauncher.friends.RemoteSkins.TEXTURE_DOMAIN);
         root.add("skinDomains", domains);
         root.addProperty("signaturePublickey", publicKeyPem());
         return root;
@@ -254,22 +270,52 @@ public final class LocalYggdrasilServer {
             profile.addProperty("name", mName);
             return profile;
         }
-        return profile(id, mName, mSkinHash, mSlim, mCapeHash, signed);
+        // Published through the CS account → public URLs, so the profile the integrated server
+        // forwards to guests resolves on their phones too (127.0.0.1 would be *their* phone).
+        String skinUrl = publishedUrl(mSkinHash, com.craftstudio.cslauncher.friends.RemoteSkins.mySkinHash());
+        String capeUrl = publishedUrl(mCapeHash, com.craftstudio.cslauncher.friends.RemoteSkins.myCapeHash());
+        return profile(id, mName, skinUrl, mSlim, capeUrl, signed);
     }
 
-    /** A textured profile for any player whose textures are in {@link #mTextures}. */
+    /** Texture URL for a local hash: the public copy when it is the one published, else this server. */
+    @Nullable
+    private String publishedUrl(@Nullable String localHash, @Nullable String publishedHash) {
+        if (localHash == null) return null;
+        if (publishedHash != null && publishedHash.equalsIgnoreCase(localHash)) {
+            return com.craftstudio.cslauncher.friends.RemoteSkins.textureUrl(localHash);
+        }
+        return "http://127.0.0.1:" + getPort() + "/textures/" + localHash;
+    }
+
+    /** A textured profile for another CS Launcher player (public texture URLs; local copy as fallback). */
     @NonNull
-    private JsonObject profile(@NonNull String id, @NonNull String name, @Nullable String skinHash, boolean slim,
-                               @Nullable String capeHash, boolean signed) {
+    private JsonObject remoteProfile(@NonNull String id, @NonNull com.craftstudio.cslauncher.friends.RemoteSkins.Skin remote) throws GeneralSecurityException {
+        String skinUrl = null, capeUrl = null;
+        if (remote.skinPng != null) {
+            String h = putTexture(remote.skinPng);
+            skinUrl = remote.skinHash != null && remote.skinHash.equalsIgnoreCase(h)
+                    ? com.craftstudio.cslauncher.friends.RemoteSkins.textureUrl(h) : "http://127.0.0.1:" + getPort() + "/textures/" + h;
+        }
+        if (remote.capePng != null) {
+            String h = putTexture(remote.capePng);
+            capeUrl = remote.capeHash != null && remote.capeHash.equalsIgnoreCase(h)
+                    ? com.craftstudio.cslauncher.friends.RemoteSkins.textureUrl(h) : "http://127.0.0.1:" + getPort() + "/textures/" + h;
+        }
+        return profile(id, remote.name, skinUrl, remote.slim, capeUrl, true);
+    }
+
+    /** A textured profile: {@code skinUrl}/{@code capeUrl} are full texture URLs (or null). */
+    @NonNull
+    private JsonObject profile(@NonNull String id, @NonNull String name, @Nullable String skinUrl, boolean slim,
+                               @Nullable String capeUrl, boolean signed) {
         JsonObject profile = new JsonObject();
         profile.addProperty("id", id);
         profile.addProperty("name", name);
 
         JsonObject textures = new JsonObject();
-        String base = "http://127.0.0.1:" + getPort() + "/textures/";
-        if (skinHash != null) {
+        if (skinUrl != null) {
             JsonObject skin = new JsonObject();
-            skin.addProperty("url", base + skinHash);
+            skin.addProperty("url", skinUrl);
             if (slim) {
                 JsonObject metadata = new JsonObject();
                 metadata.addProperty("model", "slim");
@@ -277,9 +323,9 @@ public final class LocalYggdrasilServer {
             }
             textures.add("SKIN", skin);
         }
-        if (capeHash != null) {
+        if (capeUrl != null) {
             JsonObject cape = new JsonObject();
-            cape.addProperty("url", base + capeHash);
+            cape.addProperty("url", capeUrl);
             textures.add("CAPE", cape);
         }
         JsonObject payload = new JsonObject();
@@ -431,9 +477,26 @@ public final class LocalYggdrasilServer {
         // --- session server
         if (post && path.equals("/sessionserver/session/minecraft/join")) return Response.noContent();
         if (get && path.equals("/sessionserver/session/minecraft/hasJoined")) {
-            if (!isOurName(r.query.get("username"))) return Response.noContent();
-            logOnce("hasJoined", "[CS Skins] Server checked the player, sent the signed skin profile");
-            return Response.json(profile(true, true));
+            String username = r.query.get("username");
+            if (isOurName(username)) {
+                logOnce("hasJoined", "[CS Skins] Server checked the player, sent the signed skin profile");
+                return Response.json(profile(true, true));
+            }
+            // A guest joining the world we host (LAN worlds verify players; their launcher's
+            // session server already accepted the join). Answer with the guest's profile — with
+            // the CS Launcher skin when that player published one — so the join succeeds and
+            // everybody in the world sees the skin.
+            if (username == null || username.isEmpty() || username.length() > 16) return Response.noContent();
+            String guestId = offlineUuid(username).replace("-", "");
+            com.craftstudio.cslauncher.friends.RemoteSkins.Skin remote = com.craftstudio.cslauncher.friends.RemoteSkins.lookupByName(username);
+            if (remote != null) {
+                try {
+                    logOnce("hasJoined-" + username.toLowerCase(Locale.ROOT), "[CS Skins] " + username + " joined, sent their CS Launcher skin");
+                    return Response.json(remoteProfile(guestId, remote));
+                } catch (GeneralSecurityException ignored) {}
+            }
+            logOnce("hasJoined-" + username.toLowerCase(Locale.ROOT), "[CS Skins] " + username + " joined (no shared skin, default)");
+            return Response.json(profile(guestId, username, null, false, null, true));
         }
         if (get && path.startsWith("/sessionserver/session/minecraft/profile/")) {
             String uuid = path.substring("/sessionserver/session/minecraft/profile/".length())
@@ -449,10 +512,8 @@ public final class LocalYggdrasilServer {
                         ? com.craftstudio.cslauncher.friends.RemoteSkins.lookupByUuid(uuid) : null;
                 if (remote != null) {
                     try {
-                        String skinHash = remote.skinPng == null ? null : putTexture(remote.skinPng);
-                        String capeHash = remote.capePng == null ? null : putTexture(remote.capePng);
                         logOnce("profile-cs-" + uuid, "[CS Skins] Sent the CS Launcher skin of " + remote.name);
-                        return Response.json(profile(uuid, remote.name, skinHash, remote.slim, capeHash, true));
+                        return Response.json(remoteProfile(uuid, remote));
                     } catch (GeneralSecurityException ignored) {}
                 }
                 logOnce("profile-other", "[CS Skins] Game asked for another player's profile (" + uuid + "), not ours");

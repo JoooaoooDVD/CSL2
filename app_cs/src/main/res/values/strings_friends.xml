@@ -66,4 +66,25 @@
     <string name="friends_working">Please wait…</string>
     <string name="friends_offline_hint">Offline — showing the last known state.</string>
     <string name="lib_subtitle_cs_engine">CS Engine registry · built-in mods, .hmod mods and resource packs for this profile</string>
+    <!-- Round 96: cross-version join, chat media -->
+    <string name="cross_version_preparing">Preparing to join a %1$s world…</string>
+    <string name="cross_version_ready">%1$s installed — joining the %2$s world</string>
+    <string name="cross_version_failed">Could not prepare the cross-version join (%1$s). Joining anyway.</string>
+    <string name="cross_version_forge_newer">The host runs %1$s, newer than this profile. Forge can only join older versions — use a Fabric profile or match the version.</string>
+    <string name="cross_version_vanilla">The host runs %1$s. Cross-version joining needs a Fabric or Forge profile; joining anyway.</string>
+    <string name="friends_you">You</string>
+    <string name="chat_copy">Copy</string>
+    <string name="chat_reply">Reply</string>
+    <string name="chat_copied">Message copied</string>
+    <string name="chat_replying_to">Replying to %1$s</string>
+    <string name="chat_photo">Photo</string>
+    <string name="chat_attach">Send a photo</string>
+    <string name="chat_attach_screenshots">Screenshots</string>
+    <string name="chat_attach_gallery">Gallery</string>
+    <string name="chat_no_screenshots">No screenshots yet — take one in game first.</string>
+    <string name="chat_sending_photo">Sending photo…</string>
+    <string name="chat_photo_failed">Photo could not be sent</string>
+    <string name="chat_photo_too_large">That image could not be read</string>
+    <string name="chat_save_photo">Save</string>
+    <string name="chat_photo_saved">Saved to Pictures</string>
 </resources>

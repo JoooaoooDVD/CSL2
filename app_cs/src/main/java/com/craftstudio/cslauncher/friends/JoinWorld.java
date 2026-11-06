@@ -25,11 +25,17 @@ import java.util.List;
 public final class JoinWorld {
     private static final String K_ADDR = "cs.join.address";
     private static final String K_AT = "cs.join.at";
+    private static final String K_VERSION = "cs.join.version";
     private static final long TTL = 3 * 60 * 1000L;
 
     private JoinWorld() {}
 
     public static void join(@NonNull Activity activity, @NonNull String address, @Nullable String engine) {
+        join(activity, address, engine, null);
+    }
+
+    /** @param hostVersion the host's game version when the invite carried one (Java cross-version join) */
+    public static void join(@NonNull Activity activity, @NonNull String address, @Nullable String engine, @Nullable String hostVersion) {
         boolean horizon = "horizon".equalsIgnoreCase(engine);
         Instance target = null;
         try {
@@ -45,9 +51,19 @@ public final class JoinWorld {
             return;
         }
         Instances.setSelectedInstance(target);
-        LauncherPreferences.DEFAULT_PREF.edit().putString(K_ADDR, address).putLong(K_AT, System.currentTimeMillis()).apply();
+        LauncherPreferences.DEFAULT_PREF.edit().putString(K_ADDR, address).putLong(K_AT, System.currentTimeMillis())
+                .putString(K_VERSION, horizon || hostVersion == null || hostVersion.trim().isEmpty() ? null : hostVersion.trim()).apply();
         Toast.makeText(activity, activity.getString(R.string.friends_joining, address), Toast.LENGTH_SHORT).show();
         ExtraCore.setValue(ExtraConstants.LAUNCH_GAME, true);
+    }
+
+    /** The host's game version of the pending join (not cleared; valid while the address is), or null. */
+    @Nullable
+    public static String pendingHostVersion() {
+        if (LauncherPreferences.DEFAULT_PREF.getString(K_ADDR, null) == null) return null;
+        long at = LauncherPreferences.DEFAULT_PREF.getLong(K_AT, 0);
+        if (System.currentTimeMillis() - at > TTL) return null;
+        return LauncherPreferences.DEFAULT_PREF.getString(K_VERSION, null);
     }
 
     /** The pending address for the launch happening now (cleared), or null. */
@@ -56,7 +72,7 @@ public final class JoinWorld {
         String a = LauncherPreferences.DEFAULT_PREF.getString(K_ADDR, null);
         long at = LauncherPreferences.DEFAULT_PREF.getLong(K_AT, 0);
         if (a == null) return null;
-        LauncherPreferences.DEFAULT_PREF.edit().remove(K_ADDR).remove(K_AT).apply();
+        LauncherPreferences.DEFAULT_PREF.edit().remove(K_ADDR).remove(K_AT).remove(K_VERSION).apply();
         if (System.currentTimeMillis() - at > TTL) return null;
         return a.trim().isEmpty() ? null : a.trim();
     }

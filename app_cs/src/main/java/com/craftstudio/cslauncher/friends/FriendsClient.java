@@ -37,13 +37,20 @@ public final class FriendsClient {
     private static final String K_INBOX = "cs.friends.inbox";
 
     public static final class Friend {
-        public String id, name, code, status, address, world, engine;
+        public String id, name, code, status, address, world, engine, version;
         public boolean online() { return status != null && !"offline".equals(status) && !status.isEmpty(); }
         public boolean hosting() { return address != null && !address.isEmpty(); }
     }
     public static final class Request { public String id, name, code; public boolean incoming; public long at; }
-    public static final class Invite { public String id, from, fromId, address, world, engine; public long at; }
-    public static final class Message { public String id, from, to, body; public long at; public boolean mine; }
+    public static final class Invite { public String id, from, fromId, address, world, engine, version; public long at; }
+    public static final class Message {
+        public String id, from, to, body; public long at; public boolean mine;
+        /** Photo URL (public cs-chat object) or null. */
+        @Nullable public String image;
+        /** Quoted message: id, sender id and a short snippet; null when not a reply. */
+        @Nullable public String replyTo, replyFrom, replyBody;
+        public boolean hasText() { return body != null && !body.isEmpty(); }
+    }
 
     /** Immutable snapshot of the last successful sync. */
     public static final class Snapshot {
@@ -66,7 +73,7 @@ public final class FriendsClient {
     /** One line of the bell inbox (persisted, newest first). */
     public static final class Note {
         public static final int INVITE = 0, REQUEST = 1, MESSAGE = 2, INFO = 3;
-        public int kind; public String key, title, body, fromId, address, engine, world; public long at; public boolean read;
+        public int kind; public String key, title, body, fromId, address, engine, world, version; public long at; public boolean read;
     }
 
     public interface Listener {
@@ -89,7 +96,7 @@ public final class FriendsClient {
     private final List<Note> mInbox = new ArrayList<>();
     private final List<Message> mHistory = new ArrayList<>();
     @NonNull private volatile Snapshot mSnapshot = new Snapshot();
-    private volatile String mStatus = "online", mAddress, mWorld, mEngine;
+    private volatile String mStatus = "online", mAddress, mWorld, mEngine, mVersion;
     private volatile boolean mRunning, mFast, mLoaded;
     private int mWatchers;
     private long mSince;
@@ -155,6 +162,12 @@ public final class FriendsClient {
 
     /** Publishes "hosting" with the public address (game process, e4mc published). */
     public void setHosting(@NonNull String address, @Nullable String world, @NonNull String engine) {
+        setHosting(address, world, engine, null);
+    }
+
+    /** Same, with the game version hosted (Java: lets guests prepare a cross-version join). */
+    public void setHosting(@NonNull String address, @Nullable String world, @NonNull String engine, @Nullable String version) {
+        mVersion = version;
         mStatus = "hosting";
         mAddress = address;
         mWorld = world;
@@ -169,6 +182,7 @@ public final class FriendsClient {
         mAddress = null;
         mWorld = null;
         mEngine = null;
+        mVersion = null;
         if (was) {
             refreshNow();
             if (mWatchers == 0) mMain.postDelayed(this::stopPolling, 4000);
@@ -199,6 +213,7 @@ public final class FriendsClient {
             a.put("p_world", mWorld == null ? JSONObject.NULL : mWorld);
             a.put("p_engine", mEngine == null ? "launcher" : mEngine);
             a.put("p_since", mSince);
+            a.put("p_version", mVersion == null ? JSONObject.NULL : mVersion);
         } catch (JSONException ignored) {}
         return a;
     }
@@ -252,6 +267,7 @@ public final class FriendsClient {
             f.address = o.isNull("address") ? null : o.optString("address", null);
             f.world = o.isNull("world") ? null : o.optString("world", null);
             f.engine = o.isNull("engine") ? null : o.optString("engine", null);
+            f.version = o.isNull("version") ? null : o.optString("version", null);
             s.friends.add(f);
         }
         a = r.optJSONArray("requests");
@@ -271,6 +287,7 @@ public final class FriendsClient {
             v.id = o.optString("id"); v.from = o.optString("from"); v.fromId = o.optString("from_id");
             v.address = o.optString("address"); v.world = o.isNull("world") ? null : o.optString("world", null);
             v.engine = o.optString("engine", "java"); v.at = when(o.opt("at"));
+            v.version = o.isNull("version") ? null : o.optString("version", null);
             s.invites.add(v);
         }
         a = r.optJSONArray("messages");
@@ -280,6 +297,12 @@ public final class FriendsClient {
             Message m = new Message();
             m.id = o.optString("id"); m.from = o.optString("from"); m.to = o.optString("to");
             m.body = o.optString("body"); m.at = when(o.opt("at")); m.mine = m.from.equals(myId);
+            m.image = o.isNull("image") ? null : o.optString("image", null);
+            if (!o.isNull("reply_to")) {
+                m.replyTo = String.valueOf(o.optLong("reply_to"));
+                m.replyFrom = o.isNull("reply_from") ? null : o.optString("reply_from", null);
+                m.replyBody = o.isNull("reply_body") ? null : o.optString("reply_body", null);
+            }
             s.messages.add(m);
         }
         s.now = when(r.opt("now"));
@@ -311,7 +334,7 @@ public final class FriendsClient {
                 Note n = new Note();
                 n.kind = Note.INVITE; n.key = key; n.title = v.from;
                 n.body = v.world == null || v.world.isEmpty() ? "invited you to play" : "invited you to \"" + v.world + "\"";
-                n.fromId = v.fromId; n.address = v.address; n.engine = v.engine; n.world = v.world; n.at = v.at;
+                n.fromId = v.fromId; n.address = v.address; n.engine = v.engine; n.world = v.world; n.version = v.version; n.at = v.at;
                 push(n); inboxChanged = true;
             }
         }
@@ -330,7 +353,8 @@ public final class FriendsClient {
             if (mSeen.add(key)) {
                 Friend f = merged.friend(m.from);
                 Note n = new Note();
-                n.kind = Note.MESSAGE; n.key = key; n.title = f == null ? "Friend" : f.name; n.body = m.body; n.fromId = m.from; n.at = m.at;
+                n.kind = Note.MESSAGE; n.key = key; n.title = f == null ? "Friend" : f.name;
+                n.body = m.hasText() ? m.body : (m.image != null ? "sent a photo" : ""); n.fromId = m.from; n.at = m.at;
                 push(n); inboxChanged = true;
             }
         }
@@ -484,6 +508,7 @@ public final class FriendsClient {
             a.put("p_address", address);
             a.put("p_world", world == null ? JSONObject.NULL : world);
             a.put("p_engine", engine);
+            a.put("p_version", mVersion == null ? JSONObject.NULL : mVersion);
         } catch (JSONException ignored) {}
         rpc("cs_invite", a, cb);
     }
@@ -507,8 +532,17 @@ public final class FriendsClient {
     }
 
     public void send(@NonNull String toId, @NonNull String text, @Nullable Result cb) {
+        send(toId, text, null, null, cb);
+    }
+
+    /** Text and/or photo URL, optionally quoting {@code replyToId}. */
+    public void send(@NonNull String toId, @NonNull String text, @Nullable String replyToId, @Nullable String imageUrl, @Nullable Result cb) {
         JSONObject a = kv("p_to", toId);
-        try { a.put("p_text", text); } catch (JSONException ignored) {}
+        try {
+            a.put("p_text", text);
+            if (replyToId != null) { try { a.put("p_reply_to", Long.parseLong(replyToId)); } catch (NumberFormatException ignored) {} }
+            if (imageUrl != null) a.put("p_image", imageUrl);
+        } catch (JSONException ignored) {}
         rpc("cs_send", a, cb);
     }
 

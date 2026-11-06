@@ -135,7 +135,7 @@ public final class FriendsBell implements FriendsClient.Listener {
                 actions.addView(button(mActivity.getString(R.string.friends_join), R.drawable.bg_friends_btn_join, v -> {
                     mPopup.dismiss();
                     mClient.dismiss(key);
-                    JoinWorld.join(mActivity, n.address, n.engine);
+                    JoinWorld.join(mActivity, n.address, n.engine, n.version);
                 }));
                 actions.addView(gap());
                 actions.addView(button(mActivity.getString(R.string.friends_decline), R.drawable.bg_vl_btn_danger, v -> {

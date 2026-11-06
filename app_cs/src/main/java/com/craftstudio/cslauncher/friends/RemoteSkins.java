@@ -55,8 +55,25 @@ public final class RemoteSkins {
     public static final class Skin {
         public String name;
         @Nullable public byte[] skinPng, capePng;
+        /** SHA-256 of the PNGs as published (public texture URLs), or null. */
+        @Nullable public String skinHash, capeHash;
         public boolean slim;
     }
+
+    /** Public, cacheable texture URL for a published hash (served by the cs-skin edge function). */
+    @NonNull
+    public static String textureUrl(@NonNull String hash) {
+        return "https://ygteavpkursyeyfthlxm.supabase.co/functions/v1/cs-skin/" + hash + ".png";
+    }
+
+    /** Host name of {@link #textureUrl} (authlib-injector texture domain whitelist). */
+    public static final String TEXTURE_DOMAIN = "ygteavpkursyeyfthlxm.supabase.co";
+
+    @Nullable private static volatile String sMySkinHash, sMyCapeHash;
+
+    /** SHA-256 of the local player's skin as last published (null when not published / default). */
+    @Nullable public static String mySkinHash() { return sMySkinHash; }
+    @Nullable public static String myCapeHash() { return sMyCapeHash; }
 
     public interface HeadListener { void onHeadsChanged(); }
 
@@ -74,8 +91,20 @@ public final class RemoteSkins {
 
     /** Uploads the player's skin/cape once per content change (no-op without a CS account). */
     public static void publish(@NonNull String mcName, @Nullable byte[] skinPng, boolean slim, @Nullable byte[] capePng) {
+        publish(mcName, null, skinPng, slim, capePng);
+    }
+
+    /**
+     * Same, with the UUID the game plays under so other players' session lookups by that UUID
+     * resolve too (the integrated server hands the host's real profile id to guests).
+     * The upload is synchronous when called off the main thread so the hashes are known before
+     * the game starts; on the main thread it runs in the background.
+     */
+    public static void publish(@NonNull String mcName, @Nullable String uuid, @Nullable byte[] skinPng, boolean slim, @Nullable byte[] capePng) {
         final String token = CsAccount.token();
-        if (token == null) return;
+        if (token == null) { sMySkinHash = null; sMyCapeHash = null; return; }
+        sMySkinHash = skinPng == null ? null : sha256(skinPng);
+        sMyCapeHash = capePng == null ? null : sha256(capePng);
         final String skin = skinPng == null ? null : Base64.encodeToString(skinPng, Base64.NO_WRAP);
         final String cape = capePng == null ? null : Base64.encodeToString(capePng, Base64.NO_WRAP);
         final String fingerprint = mcName + "|" + (skin == null ? 0 : skin.hashCode()) + "|" + (cape == null ? 0 : cape.hashCode()) + "|" + slim;
@@ -83,7 +112,7 @@ public final class RemoteSkins {
             if (fingerprint.equals(sLastPublished)) return;
             sLastPublished = fingerprint;
         }
-        IO.execute(() -> {
+        Runnable upload = () -> {
             try {
                 JSONObject a = new JSONObject();
                 a.put("p_token", token);
@@ -91,13 +120,57 @@ public final class RemoteSkins {
                 a.put("p_model", slim ? "slim" : "classic");
                 a.put("p_cape", cape == null ? JSONObject.NULL : cape);
                 a.put("p_mc_name", mcName);
-                FriendsApi.call("cs_set_skin2", a);
+                a.put("p_uuid", uuid == null ? JSONObject.NULL : uuid.replace("-", "").toLowerCase(Locale.ROOT));
+                FriendsApi.call("cs_set_skin3", a);
                 Log.i(TAG, "published skin for " + mcName);
             } catch (IOException | JSONException e) {
                 synchronized (RemoteSkins.class) { sLastPublished = null; }
                 Log.w(TAG, "publish failed: " + e.getMessage());
             }
-        });
+        };
+        if (Looper.myLooper() == Looper.getMainLooper()) IO.execute(upload); else upload.run();
+    }
+
+    @NonNull
+    static String sha256(@NonNull byte[] data) {
+        try {
+            byte[] d = java.security.MessageDigest.getInstance("SHA-256").digest(data);
+            StringBuilder sb = new StringBuilder(64);
+            for (byte b : d) sb.append(String.format(Locale.ROOT, "%02x", b));
+            return sb.toString();
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    // ---------------------------------------------------------------- lookup by name (hasJoined)
+
+    private static final Map<String, Skin> sByName = new HashMap<>();
+    private static final Map<String, Long> sMissName = new HashMap<>();
+
+    /** Blocking: the published skin of a CS Launcher player by in-game name, or null. Cached. */
+    @Nullable
+    public static Skin lookupByName(@NonNull String name) {
+        String key = name.trim().toLowerCase(Locale.ROOT);
+        if (key.isEmpty()) return null;
+        synchronized (RemoteSkins.class) {
+            Skin s = sByName.get(key);
+            if (s != null) return s;
+            Long miss = sMissName.get(key);
+            if (miss != null && System.currentTimeMillis() - miss < NEGATIVE_TTL) return null;
+        }
+        Skin s = null;
+        try {
+            JSONObject r = FriendsApi.call("cs_skin_by_name", new JSONObject().put("p_name", name.trim()));
+            if (r.has("name")) s = parse(r);
+        } catch (IOException | JSONException e) {
+            Log.w(TAG, "lookup name " + key + ": " + e.getMessage());
+        }
+        synchronized (RemoteSkins.class) {
+            if (s != null) sByName.put(key, s);
+            else sMissName.put(key, System.currentTimeMillis());
+        }
+        return s;
     }
 
     // ---------------------------------------------------------------- lookup by uuid (session server)
@@ -134,6 +207,8 @@ public final class RemoteSkins {
         s.slim = "slim".equals(o.optString("model"));
         s.skinPng = decode(o.isNull("skin") ? null : o.optString("skin", null));
         s.capePng = decode(o.isNull("cape") ? null : o.optString("cape", null));
+        s.skinHash = o.isNull("skin_hash") ? null : o.optString("skin_hash", null);
+        s.capeHash = o.isNull("cape_hash") ? null : o.optString("cape_hash", null);
         if (s.skinPng == null && s.capePng == null) return null;
         return s;
     }

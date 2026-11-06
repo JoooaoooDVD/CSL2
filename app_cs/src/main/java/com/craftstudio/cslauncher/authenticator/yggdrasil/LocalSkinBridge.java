@@ -50,28 +50,32 @@ public final class LocalSkinBridge {
             if (skin == null && cape == null) {
                 gameLog("[CS Skins] No skin or cape picked for " + account.username
                         + ", using the default skin (pick one in the launcher: account, edit skin)");
-                return; // nothing custom: launch exactly like before
+                // The server still runs: friends need it to join a hosted world (see below)
             }
 
             byte[] skinPng = skin == null ? null : cleanSkin(SkinLibrary.readBytes(skin));
             byte[] capePng = cape == null ? null : cleanCape(LocalSkinStore.readBytes(LocalSkinStore.capeFile(cape)));
             // CS Friends: share this skin with other CS Launcher players (needs a CS account)
-            com.craftstudio.cslauncher.friends.RemoteSkins.publish(account.username, skinPng, skinPng != null && skin.slim, capePng);
             if (skin != null && skinPng == null) gameLog("[CS Skins] ERROR the skin \"" + skin.name + "\" is not a valid 64x64 or 64x32 PNG, skipped");
             if (cape != null && capePng == null) gameLog("[CS Skins] ERROR the cape \"" + cape.name + "\" is not a valid cape PNG, skipped");
-            if (skinPng == null && capePng == null) return;
 
             if (account.profileId == null || NIL_UUID.equals(account.profileId)) {
                 // In memory only (the game process never saves the account)
                 account.profileId = LocalYggdrasilServer.offlineUuid(account.username);
             }
+            // CS Friends: share this skin with other CS Launcher players (needs a CS account).
+            // Synchronous here (worker thread) so the public texture URLs are known before the game asks.
+            com.craftstudio.cslauncher.friends.RemoteSkins.publish(account.username, account.profileId, skinPng, skinPng != null && skin != null && skin.slim, capePng);
+            // The session server always runs for local accounts — even with the default skin — because
+            // it is also what lets friends join a hosted world (LAN worlds verify every guest through
+            // the host's session server) and what shows their shared skins.
             LocalYggdrasilServer.setEventLog(LocalSkinBridge::gameLog);
             sServer = LocalYggdrasilServer.start(new File(Tools.DIR_DATA, "yggdrasil"), account.username,
-                    account.profileId, skinPng, skinPng != null && skin.slim, capePng);
+                    account.profileId, skinPng, skinPng != null && skin != null && skin.slim, capePng);
             gameLog("[CS Skins] Skin server ready on port " + sServer.getPort() + " for " + account.username
                     + " (" + account.profileId + ")"
-                    + " | skin: " + (skinPng == null ? "default" : "\"" + skin.name + "\" " + (skin.slim ? "slim" : "classic"))
-                    + " | cape: " + (capePng == null ? "none" : "\"" + cape.name + "\""));
+                    + " | skin: " + (skinPng == null || skin == null ? "default" : "\"" + skin.name + "\" " + (skin.slim ? "slim" : "classic"))
+                    + " | cape: " + (capePng == null || cape == null ? "none" : "\"" + cape.name + "\""));
         } catch (Throwable t) {
             Log.w(TAG, "Local skin server not started, the default skin will be used", t);
             gameLog("[CS Skins] ERROR skin server failed to start, using the default skin: " + t);

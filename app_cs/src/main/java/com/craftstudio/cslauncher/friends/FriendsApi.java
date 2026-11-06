@@ -16,8 +16,10 @@ import java.nio.charset.StandardCharsets;
 
 /** Thin RPC client for the CS friends backend (Supabase PostgREST, anon role, token in the body). */
 public final class FriendsApi {
-    private static final String BASE = "https://ygteavpkursyeyfthlxm.supabase.co/rest/v1/rpc/";
-    private static final String ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+    /** Project origin (REST, storage and edge functions hang off it). */
+    public static final String BASE = "https://ygteavpkursyeyfthlxm.supabase.co";
+    private static final String RPC = BASE + "/rest/v1/rpc/";
+    public static final String ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
             + "eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlndGVhdnBrdXJzeWV5ZnRobHhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2ODk5NjksImV4cCI6MjEwODI2NTk2OX0."
             + "wqCioElyk_GlIkeaiRHlls7hk-WDABhigwb1EGy8iJU";
 
@@ -44,7 +46,7 @@ public final class FriendsApi {
 
     @Nullable
     private static String post(String fn, String body) throws IOException {
-        HttpURLConnection c = (HttpURLConnection) new URL(BASE + fn).openConnection();
+        HttpURLConnection c = (HttpURLConnection) new URL(RPC + fn).openConnection();
         try {
             c.setConnectTimeout(12000);
             c.setReadTimeout(15000);

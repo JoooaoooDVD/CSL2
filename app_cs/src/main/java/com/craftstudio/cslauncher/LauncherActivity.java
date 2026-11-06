@@ -174,14 +174,34 @@ public class LauncherActivity extends BaseActivity {
         com.craftstudio.cslauncher.discord.DiscordPresenceManager.getInstance(this).setMinecraftLaunching(this, selectedInstance, normalizedVersionId);
         com.craftstudio.cslauncher.progresskeeper.ProgressKeeper.markLaunching();
         com.craftstudio.cslauncher.tutorial.TutorialEvents.emit(com.craftstudio.cslauncher.tutorial.TutorialEvents.GAME_LAUNCHING);
+        // "Join World" into a friend's world of another version: put the protocol translator in
+        // place first (network, worker thread), then download/launch as usual.
+        final String hostVersion = com.craftstudio.cslauncher.friends.JoinWorld.pendingHostVersion();
+        if (hostVersion != null) {
+            final Instance joinInstance = selectedInstance;
+            CSLauncherApplication.sExecutorService.execute(() -> {
+                com.craftstudio.cslauncher.friends.CrossVersion.Outcome o =
+                        com.craftstudio.cslauncher.friends.CrossVersion.prepare(getApplicationContext(), joinInstance, hostVersion);
+                runOnUiThread(() -> {
+                    if (isFinishing() || isDestroyed()) return;
+                    if (o.message != null) Toast.makeText(this, o.message, Toast.LENGTH_LONG).show();
+                    startJavaDownload(mcVersion, normalizedVersionId);
+                });
+            });
+            return false;
+        }
+        startJavaDownload(mcVersion, normalizedVersionId);
+        return false;
+    };
+
+    private void startJavaDownload(JVersionList.Version mcVersion, String normalizedVersionId) {
         new MoJsonDownloader().start(
                 this.getAssets(),
                 mcVersion,
                 normalizedVersionId,
                 new ContextAwareDoneListener(this, normalizedVersionId)
         );
-        return false;
-    };
+    }
 
     /**
      * PLAY for a Horizon Engine profile. The shared engine must be installed and verified; otherwise the
@@ -465,6 +485,7 @@ public class LauncherActivity extends BaseActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable android.content.Intent data) {
         if (com.craftstudio.cslauncher.update.UpdateManager.onActivityResult(this, requestCode, resultCode, data)) return;
+        if (com.craftstudio.cslauncher.friends.ui.FriendsPanel.onActivityResult(requestCode, resultCode, data)) return;
         super.onActivityResult(requestCode, resultCode, data);
     }
 

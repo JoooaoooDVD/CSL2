@@ -62,6 +62,13 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
     @Nullable private String mChatWith, mChatName;
     private boolean mShown, mBusy;
     private int mLastChatCount = -1;
+    private final View mReplyBar, mAttach;
+    private final TextView mReplyTitle, mReplyBody;
+    @Nullable private FriendsClient.Message mReplyTo;
+    private boolean mSendingPhoto;
+    /** Photo picker result code (activities forward their onActivityResult here). */
+    public static final int REQ_PHOTO = 0x5C50;
+    @Nullable private static java.lang.ref.WeakReference<FriendsPanel> sActive;
     private final float mDp;
 
     public FriendsPanel(@NonNull View root, @NonNull Host host) {
@@ -85,6 +92,12 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
             mClient.refreshNow();
             render();
         });
+        mReplyBar = root.findViewById(R.id.fp_reply_bar);
+        mReplyTitle = root.findViewById(R.id.fp_reply_title);
+        mReplyBody = root.findViewById(R.id.fp_reply_body);
+        mAttach = root.findViewById(R.id.fp_attach);
+        root.findViewById(R.id.fp_reply_close).setOnClickListener(v -> setReply(null));
+        mAttach.setOnClickListener(v -> showAttachMenu());
         mSend.setOnClickListener(v -> sendChat());
         mInput.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEND || (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN)) {
@@ -173,9 +186,20 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
             card.addView(body(mCtx.getString(mHost.inGame() ? R.string.friends_sign_in_game : R.string.friends_account_hint)));
             if (!mHost.inGame()) {
                 LinearLayout row = hrow();
-                row.addView(button(mCtx.getString(R.string.friends_sign_in), R.drawable.bg_vl_btn_primary, v -> AccountDialog.show(mHost.activity(), false, this::render)));
+                TextView signIn = button(mCtx.getString(R.string.friends_sign_in), R.drawable.bg_vl_btn_primary, v -> AccountDialog.show(mHost.activity(), false, this::render));
+                TextView create = button(mCtx.getString(R.string.friends_create_account), R.drawable.bg_vl_btn_ghost, v -> AccountDialog.show(mHost.activity(), true, this::render));
+                // Two equal columns: the labels never clip on narrow panels (the ghost button used to)
+                for (TextView b : new TextView[]{signIn, create}) {
+                    LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(0, dp(40), 1f);
+                    b.setLayoutParams(blp);
+                    b.setPadding(dp(8), 0, dp(8), 0);
+                    b.setMaxLines(1);
+                    b.setEllipsize(TextUtils.TruncateAt.END);
+                    b.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12.5f);
+                }
+                row.addView(signIn);
                 row.addView(gap());
-                row.addView(button(mCtx.getString(R.string.friends_create_account), R.drawable.bg_vl_btn_ghost, v -> AccountDialog.show(mHost.activity(), true, this::render)));
+                row.addView(create);
                 card.addView(row);
             }
             mContent.addView(card);
@@ -293,7 +317,7 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
             } else {
                 row.addView(smallButton(mCtx.getString(R.string.friends_join), R.drawable.bg_friends_btn_join, b -> {
                     mClient.declineInvite(v); // consumed
-                    JoinWorld.join(mHost.activity(), v.address, v.engine);
+                    JoinWorld.join(mHost.activity(), v.address, v.engine, v.version);
                 }));
                 row.addView(gap());
                 row.addView(smallButton(mCtx.getString(R.string.friends_decline), R.drawable.bg_vl_btn_danger, b -> mClient.declineInvite(v)));
@@ -382,7 +406,7 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
             text.addView(dim(status));
             row.addView(text);
             if (f.hosting() && !mHost.inGame()) {
-                row.addView(smallButton(mCtx.getString(R.string.friends_join), R.drawable.bg_friends_btn_join, b -> JoinWorld.join(mHost.activity(), f.address, f.engine)));
+                row.addView(smallButton(mCtx.getString(R.string.friends_join), R.drawable.bg_friends_btn_join, b -> JoinWorld.join(mHost.activity(), f.address, f.engine, f.version)));
                 row.addView(gap());
             }
             if (hosting && f.online()) {
@@ -416,6 +440,7 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
         mChatWith = id;
         mChatName = name;
         mLastChatCount = -1;
+        setReply(null);
         mClient.markConversationRead(id);
         mClient.setFast(true);
         renderChat();
@@ -429,6 +454,7 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
     private void closeChat() {
         if (mChatWith == null) return;
         mChatWith = null;
+        setReply(null);
         mClient.setFast(false);
         hideKeyboard(mInput);
         render();
@@ -450,21 +476,146 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
         mLastChatCount = msgs.size();
         mClient.markConversationRead(mChatWith);
         mContent.removeAllViews();
-        for (FriendsClient.Message m : msgs) {
+        int maxWidth = (int) (mRoot.getWidth() * 0.78f) > 0 ? (int) (mRoot.getWidth() * 0.78f) : dp(280);
+        for (FriendsClient.Message m : msgs) mContent.addView(bubble(m, maxWidth), bubbleParams(m));
+        if (msgs.isEmpty()) mContent.addView(body(mCtx.getString(R.string.friends_chat_hint)));
+        mScroll.post(() -> mScroll.fullScroll(View.FOCUS_DOWN));
+    }
+
+    private LinearLayout.LayoutParams bubbleParams(FriendsClient.Message m) {
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp.gravity = m.mine ? Gravity.END : Gravity.START;
+        lp.topMargin = dp(4);
+        return lp;
+    }
+
+    /** One message: optional quoted reply, optional photo, text. Long-press → Copy / Reply (/ Save). */
+    private View bubble(FriendsClient.Message m, int maxWidth) {
+        LinearLayout box = new LinearLayout(mCtx);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setBackgroundResource(m.mine ? R.drawable.bg_friends_bubble_out : R.drawable.bg_friends_bubble_in);
+        box.setPadding(dp(10), dp(6), dp(10), dp(7));
+        int textColor = color(m.mine ? R.color.vl_platinum_text : R.color.vl_text);
+        if (m.replyTo != null) {
+            LinearLayout quote = new LinearLayout(mCtx);
+            quote.setOrientation(LinearLayout.VERTICAL);
+            quote.setBackgroundResource(R.drawable.bg_vl_pill);
+            quote.setPadding(dp(10), dp(5), dp(10), dp(5));
+            TextView who = new TextView(mCtx);
+            who.setText(replyAuthor(m.replyFrom));
+            who.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
+            who.setTypeface(null, Typeface.BOLD);
+            who.setTextColor(color(R.color.vl_text));
+            TextView what = new TextView(mCtx);
+            what.setText(m.replyBody == null || m.replyBody.isEmpty() ? mCtx.getString(R.string.chat_photo) : m.replyBody);
+            what.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+            what.setMaxLines(2);
+            what.setEllipsize(TextUtils.TruncateAt.END);
+            what.setTextColor(color(R.color.vl_text_dim));
+            quote.addView(who);
+            quote.addView(what);
+            LinearLayout.LayoutParams qlp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            qlp.bottomMargin = dp(6);
+            box.addView(quote, qlp);
+            quote.setOnClickListener(v -> scrollToMessage(m.replyTo));
+        }
+        if (m.image != null) {
+            ImageView iv = new ImageView(mCtx);
+            iv.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            iv.setBackgroundResource(R.drawable.bg_vl_pill);
+            iv.setAdjustViewBounds(true);
+            int w = Math.min(maxWidth - dp(20), dp(240));
+            LinearLayout.LayoutParams ilp = new LinearLayout.LayoutParams(w, (int) (w * 0.62f));
+            ilp.bottomMargin = m.hasText() ? dp(6) : 0;
+            box.addView(iv, ilp);
+            com.craftstudio.cslauncher.friends.ChatMedia.into(m.image, iv);
+            iv.setOnClickListener(v -> showPhoto(m.image));
+            iv.setOnLongClickListener(v -> { showMessageMenu(m, v); return true; });
+        }
+        if (m.hasText()) {
             TextView t = new TextView(mCtx);
             t.setText(m.body);
             t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-            t.setTextColor(color(m.mine ? R.color.vl_platinum_text : R.color.vl_text));
-            t.setBackgroundResource(m.mine ? R.drawable.bg_friends_bubble_out : R.drawable.bg_friends_bubble_in);
-            t.setPadding(dp(12), dp(8), dp(12), dp(8));
-            t.setMaxWidth((int) (mRoot.getWidth() * 0.78f) > 0 ? (int) (mRoot.getWidth() * 0.78f) : dp(280));
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            lp.gravity = m.mine ? Gravity.END : Gravity.START;
-            lp.topMargin = dp(4);
-            mContent.addView(t, lp);
+            t.setTextColor(textColor);
+            t.setMaxWidth(maxWidth - dp(20));
+            box.addView(t);
         }
-        if (msgs.isEmpty()) mContent.addView(body(mCtx.getString(R.string.friends_chat_hint)));
-        mScroll.post(() -> mScroll.fullScroll(View.FOCUS_DOWN));
+        box.setOnLongClickListener(v -> { showMessageMenu(m, v); return true; });
+        box.setMinimumWidth(dp(48));
+        return box;
+    }
+
+    private String replyAuthor(@Nullable String id) {
+        if (id == null) return "";
+        if (id.equals(CsAccount.id())) return mCtx.getString(R.string.friends_you);
+        FriendsClient.Friend f = mClient.snapshot().friend(id);
+        return f != null ? f.name : (mChatName == null ? "" : mChatName);
+    }
+
+    private void scrollToMessage(String id) {
+        List<FriendsClient.Message> msgs = mClient.conversation(mChatWith);
+        for (int i = 0; i < msgs.size() && i < mContent.getChildCount(); i++) {
+            if (id.equals(msgs.get(i).id)) {
+                View v = mContent.getChildAt(i);
+                mScroll.smoothScrollTo(0, Math.max(0, v.getTop() - dp(24)));
+                if (Motion.content(mRoot)) v.animate().alpha(0.4f).setDuration(120).withEndAction(() -> v.animate().alpha(1f).setDuration(240).start()).start();
+                return;
+            }
+        }
+    }
+
+    private void showMessageMenu(FriendsClient.Message m, View anchor) {
+        android.widget.PopupMenu menu = new android.widget.PopupMenu(mCtx, anchor, Gravity.END);
+        final int COPY = 1, REPLY = 2, SAVE = 3;
+        if (m.hasText()) menu.getMenu().add(0, COPY, 0, R.string.chat_copy);
+        menu.getMenu().add(0, REPLY, 1, R.string.chat_reply);
+        if (m.image != null) menu.getMenu().add(0, SAVE, 2, R.string.chat_save_photo);
+        menu.setOnMenuItemClickListener(item -> {
+            switch (item.getItemId()) {
+                case COPY: copy(m.body, R.string.chat_copied); return true;
+                case REPLY: setReply(m); return true;
+                case SAVE:
+                    if (m.image != null) com.craftstudio.cslauncher.friends.ChatMedia.save(mCtx, m.image, (url, err) ->
+                            toast(err == null ? R.string.chat_photo_saved : R.string.chat_photo_failed));
+                    return true;
+                default: return false;
+            }
+        });
+        menu.show();
+    }
+
+    private void setReply(@Nullable FriendsClient.Message m) {
+        mReplyTo = m;
+        if (m == null) { mReplyBar.setVisibility(View.GONE); return; }
+        mReplyTitle.setText(mCtx.getString(R.string.chat_replying_to, m.mine ? mCtx.getString(R.string.friends_you) : (mChatName == null ? "" : mChatName)));
+        mReplyBody.setText(m.hasText() ? m.body : mCtx.getString(R.string.chat_photo));
+        if (mReplyBar.getVisibility() != View.VISIBLE) {
+            mReplyBar.setVisibility(View.VISIBLE);
+            if (Motion.content(mRoot)) {
+                mReplyBar.setAlpha(0f);
+                mReplyBar.setTranslationY(dp(8));
+                mReplyBar.animate().alpha(1f).translationY(0f).setDuration(Motion.SHORT).setInterpolator(Motion.ENTER).start();
+            }
+        }
+        mInput.requestFocus();
+    }
+
+    /** Full-size view of a received photo. */
+    private void showPhoto(String url) {
+        ImageView iv = new ImageView(mCtx);
+        iv.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        iv.setAdjustViewBounds(true);
+        iv.setBackgroundColor(0xFF0B0B0E);
+        int pad = dp(8);
+        iv.setPadding(pad, pad, pad, pad);
+        com.craftstudio.cslauncher.friends.ChatMedia.into(url, iv);
+        AlertDialog d = new AlertDialog.Builder(mHost.activity()).setView(iv)
+                .setPositiveButton(R.string.chat_save_photo, (dlg, w) -> com.craftstudio.cslauncher.friends.ChatMedia.save(mCtx, url, (u, err) ->
+                        toast(err == null ? R.string.chat_photo_saved : R.string.chat_photo_failed)))
+                .setNegativeButton(android.R.string.cancel, null)
+                .create();
+        d.show();
+        iv.setOnClickListener(v -> d.dismiss());
     }
 
     private void sendChat() {
@@ -473,9 +624,111 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
         if (text.isEmpty()) return;
         mInput.setText("");
         final String to = mChatWith;
-        mClient.send(to, text, e -> {
+        final String reply = mReplyTo == null ? null : mReplyTo.id;
+        setReply(null);
+        mClient.send(to, text, reply, null, e -> {
             if (e != null) toast(e);
         });
+    }
+
+    // ------------------------------------------------------------------ photos
+
+    private void showAttachMenu() {
+        if (mChatWith == null || mSendingPhoto) return;
+        android.widget.PopupMenu menu = new android.widget.PopupMenu(mCtx, mAttach, Gravity.START);
+        menu.getMenu().add(0, 1, 0, R.string.chat_attach_screenshots);
+        menu.getMenu().add(0, 2, 1, R.string.chat_attach_gallery);
+        menu.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == 1) showScreenshotPicker(); else pickFromGallery();
+            return true;
+        });
+        menu.show();
+    }
+
+    private void pickFromGallery() {
+        android.content.Intent intent;
+        if (android.os.Build.VERSION.SDK_INT >= 33) {
+            intent = new android.content.Intent(android.provider.MediaStore.ACTION_PICK_IMAGES);
+        } else {
+            intent = new android.content.Intent(android.content.Intent.ACTION_GET_CONTENT);
+            intent.addCategory(android.content.Intent.CATEGORY_OPENABLE);
+            intent.setType("image/*");
+        }
+        sActive = new java.lang.ref.WeakReference<>(this);
+        try {
+            mHost.activity().startActivityForResult(intent, REQ_PHOTO);
+        } catch (android.content.ActivityNotFoundException e) {
+            toast(R.string.chat_photo_failed);
+        }
+    }
+
+    /** Activities forward {@code onActivityResult} here; true when consumed. */
+    public static boolean onActivityResult(int requestCode, int resultCode, @Nullable android.content.Intent data) {
+        if (requestCode != REQ_PHOTO) return false;
+        FriendsPanel p = sActive == null ? null : sActive.get();
+        sActive = null;
+        if (p == null || resultCode != Activity.RESULT_OK || data == null || data.getData() == null) return true;
+        p.sendPhoto(data.getData(), null);
+        return true;
+    }
+
+    private void showScreenshotPicker() {
+        final List<java.io.File> shots = com.craftstudio.cslauncher.friends.ChatMedia.screenshots(60);
+        if (shots.isEmpty()) { toast(R.string.chat_no_screenshots); return; }
+        final int cell = dp(96);
+        final int columns = Math.max(3, Math.min(6, (mRoot.getWidth() > 0 ? mRoot.getWidth() : dp(360)) / (cell + dp(8))));
+        android.widget.GridView grid = new android.widget.GridView(mCtx);
+        grid.setNumColumns(columns);
+        grid.setColumnWidth(cell);
+        grid.setStretchMode(android.widget.GridView.STRETCH_COLUMN_WIDTH);
+        grid.setHorizontalSpacing(dp(6));
+        grid.setVerticalSpacing(dp(6));
+        grid.setPadding(dp(12), dp(8), dp(12), dp(8));
+        grid.setClipToPadding(false);
+        grid.setAdapter(new android.widget.BaseAdapter() {
+            @Override public int getCount() { return shots.size(); }
+            @Override public Object getItem(int i) { return shots.get(i); }
+            @Override public long getItemId(int i) { return i; }
+            @Override public View getView(int i, View convert, ViewGroup parent) {
+                ImageView iv = convert instanceof ImageView ? (ImageView) convert : new ImageView(mCtx);
+                iv.setLayoutParams(new android.widget.AbsListView.LayoutParams(cell, (int) (cell * 0.62f)));
+                iv.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                iv.setBackgroundResource(R.drawable.bg_vl_pill);
+                iv.setImageDrawable(null);
+                final java.io.File f = shots.get(i);
+                iv.setTag(f);
+                com.craftstudio.cslauncher.friends.ChatMedia.thumbnailAsync(f, cell, b -> { if (f.equals(iv.getTag()) && b != null) iv.setImageBitmap(b); });
+                return iv;
+            }
+        });
+        AlertDialog d = new AlertDialog.Builder(mHost.activity())
+                .setTitle(R.string.chat_attach_screenshots)
+                .setView(grid)
+                .setNegativeButton(android.R.string.cancel, null)
+                .create();
+        grid.setOnItemClickListener((parent, view, position, id) -> { d.dismiss(); sendPhoto(null, shots.get(position)); });
+        d.show();
+    }
+
+    private void sendPhoto(@Nullable android.net.Uri uri, @Nullable java.io.File file) {
+        if (mChatWith == null || mSendingPhoto) return;
+        final String to = mChatWith;
+        final String reply = mReplyTo == null ? null : mReplyTo.id;
+        final String caption = mInput.getText().toString().trim();
+        mSendingPhoto = true;
+        mAttach.setAlpha(0.4f);
+        toast(R.string.chat_sending_photo);
+        com.craftstudio.cslauncher.friends.ChatMedia.Callback cb = (url, err) -> {
+            mSendingPhoto = false;
+            mAttach.setAlpha(1f);
+            if (url == null) { toast("unreadable".equals(err) ? R.string.chat_photo_too_large : R.string.chat_photo_failed); return; }
+            mInput.setText("");
+            setReply(null);
+            mClient.send(to, caption, reply, url, e -> { if (e != null) toast(e); });
+        };
+        if (uri != null) com.craftstudio.cslauncher.friends.ChatMedia.send(mCtx, uri, cb);
+        else if (file != null) com.craftstudio.cslauncher.friends.ChatMedia.send(file, cb);
+        else { mSendingPhoto = false; mAttach.setAlpha(1f); }
     }
 
     // ------------------------------------------------------------------ actions
