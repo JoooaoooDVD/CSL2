@@ -562,6 +562,31 @@ public class HorizonGameActivity extends NativeActivity implements ControlButton
         mControlLayout.toggleControlVisible();
     }
 
+    /*
+     * ANR defence (seen on HyperOS 3 as a looping "CS Launcher Plus not responding"): several
+     * NativeActivity callbacks park the UI thread until the engine thread has processed a glue
+     * command — onSaveInstanceState (SaveState), the synchronous surface redraw and the lifecycle
+     * transitions. While the engine is busy for a few seconds (startup hand-off, chunk burst,
+     * world save) that wait trips the 5 s watchdog, and the system's own dialog then triggers the
+     * next blocking callback. Nothing here needs the engine's answer: the engine keeps no Java
+     * saved state and renders continuously, so these two are answered immediately on this thread.
+     */
+    @Override
+    protected void onSaveInstanceState(@NonNull android.os.Bundle outState) {
+        // Not calling NativeActivity.onSaveInstanceState: it blocks on the engine thread for a
+        // save-state blob the engine never produces. The activity is recreated from its intent.
+    }
+
+    @Override
+    public void surfaceRedrawNeeded(android.view.SurfaceHolder holder) {
+        // Not calling super: no synchronous redraw round-trip to the engine thread.
+    }
+
+    @Override
+    public void surfaceRedrawNeededAsync(android.view.SurfaceHolder holder, @NonNull Runnable drawingFinished) {
+        drawingFinished.run();
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
