@@ -158,6 +158,9 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         // A guest the hosting settings turned away: a short notice for the host.
         com.craftstudio.cslauncher.e4mc.E4mcPublisher.get().addRefusalListener((name, reason) ->
                 runOnUiThread(() -> android.widget.Toast.makeText(this, getString(R.string.host_refused, name + " — " + reason), android.widget.Toast.LENGTH_LONG).show()));
+        // Guests arriving and leaving: the host sees it without opening the Friends panel.
+        com.craftstudio.cslauncher.e4mc.E4mcPublisher.get().addGuestListener((name, joined) ->
+                runOnUiThread(() -> android.widget.Toast.makeText(this, getString(joined ? R.string.host_guest_joined : R.string.host_guest_left, name), android.widget.Toast.LENGTH_SHORT).show()));
         com.craftstudio.cslauncher.friends.FriendsClient.get().addListener(mFriendsListener);
         instance = Instances.loadSelectedInstance();
         // The launcher hands the account file over: this process may hold a stale preference

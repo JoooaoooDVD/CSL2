@@ -186,17 +186,65 @@ public final class HostSettings {
         E4mcPublisher.get().applyPolicy();
     }
 
-    /** Every online friend was invited. */
+    /** Every friend was invited (offline friends get it when they open the launcher). */
     public static void noteInvitedAll() {
         for (FriendsClient.Friend f : FriendsClient.get().snapshot().friends) {
-            if (f.online() && f.name != null) sInvited.add(f.name.trim());
+            if (f.name != null) sInvited.add(f.name.trim());
         }
         E4mcPublisher.get().applyPolicy();
     }
 
     public static int invitedCount() { return sInvited.size(); }
 
-    public static void clearInvited() { sInvited.clear(); }
+    public static void clearInvited() { sInvited.clear(); sBlocked.clear(); }
+
+    // ---- players who joined before (like Bedrock: they can come back without a new invite) ----
+
+    private static final String K_KNOWN = "cs.host.known_players";
+
+    /** Names that completed a login to one of this player's worlds; "invited only" lets them back in. */
+    @NonNull
+    public static Set<String> knownPlayers() {
+        Set<String> s = prefs().getStringSet(K_KNOWN, null);
+        return s == null ? new LinkedHashSet<String>() : new LinkedHashSet<>(s);
+    }
+
+    public static void noteJoined(@Nullable String name) {
+        if (name == null || name.trim().isEmpty()) return;
+        Set<String> known = knownPlayers();
+        if (known.add(name.trim())) prefs().edit().putStringSet(K_KNOWN, known).apply();
+    }
+
+    public static void forgetPlayer(@Nullable String name) {
+        if (name == null) return;
+        Set<String> known = knownPlayers();
+        if (known.remove(name)) prefs().edit().putStringSet(K_KNOWN, known).apply();
+        E4mcPublisher.get().applyPolicy();
+    }
+
+    public static void clearKnownPlayers() {
+        prefs().edit().remove(K_KNOWN).apply();
+        E4mcPublisher.get().applyPolicy();
+    }
+
+    // ---- kicked players (this hosting session) ----
+
+    private static final Set<String> sBlocked = Collections.synchronizedSet(new LinkedHashSet<String>());
+
+    /** The host removed this player: their stream ends and they can't come back this session. */
+    public static void kick(@NonNull String name) {
+        sBlocked.add(name.trim());
+        sInvited.remove(name.trim());
+        forgetPlayer(name.trim());
+        E4mcPublisher.get().kick(name.trim());
+    }
+
+    public static void unblock(@NonNull String name) {
+        sBlocked.remove(name.trim());
+        E4mcPublisher.get().applyPolicy();
+    }
+
+    @NonNull public static List<String> blocked() { return new ArrayList<>(sBlocked); }
 
     /** The names the relay admits under the current access setting; null = anyone. */
     @Nullable
@@ -209,8 +257,13 @@ public final class HostSettings {
                 }
                 return out;
             }
-            case ACCESS_INVITED:
-                synchronized (sInvited) { return new ArrayList<>(sInvited); }
+            case ACCESS_INVITED: {
+                // Invited this session, plus everyone who joined one of this player's worlds before
+                List<String> out;
+                synchronized (sInvited) { out = new ArrayList<>(sInvited); }
+                for (String known : knownPlayers()) if (!out.contains(known)) out.add(known);
+                return out;
+            }
             default:
                 return null;
         }

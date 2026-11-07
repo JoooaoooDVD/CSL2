@@ -34,6 +34,36 @@ public final class JoinWorld {
         join(activity, address, engine, null);
     }
 
+    private static final String K_KNOWN_HOSTS = "cs.friends.known_hosts";
+
+    /** Hosts (friend ids) whose world the player joined before: joinable again without an invite. */
+    public static boolean isKnownHost(@Nullable String friendId) {
+        if (friendId == null) return false;
+        java.util.Set<String> known = LauncherPreferences.DEFAULT_PREF.getStringSet(K_KNOWN_HOSTS, null);
+        return known != null && known.contains(friendId);
+    }
+
+    public static void rememberHost(@Nullable String friendId) {
+        if (friendId == null || friendId.isEmpty()) return;
+        java.util.Set<String> known = LauncherPreferences.DEFAULT_PREF.getStringSet(K_KNOWN_HOSTS, null);
+        java.util.Set<String> next = known == null ? new java.util.HashSet<String>() : new java.util.HashSet<>(known);
+        if (next.add(friendId)) LauncherPreferences.DEFAULT_PREF.edit().putStringSet(K_KNOWN_HOSTS, next).apply();
+    }
+
+    public static void forgetHost(@Nullable String friendId) {
+        java.util.Set<String> known = LauncherPreferences.DEFAULT_PREF.getStringSet(K_KNOWN_HOSTS, null);
+        if (known == null || friendId == null || !known.contains(friendId)) return;
+        java.util.Set<String> next = new java.util.HashSet<>(known);
+        next.remove(friendId);
+        LauncherPreferences.DEFAULT_PREF.edit().putStringSet(K_KNOWN_HOSTS, next).apply();
+    }
+
+    /** Join a friend's world and remember the host (Bedrock-like: next time, no invite needed). */
+    public static void joinFriend(@NonNull Activity activity, @Nullable String friendId, @NonNull String address, @Nullable String engine, @Nullable String hostVersion) {
+        rememberHost(friendId);
+        join(activity, address, engine, hostVersion);
+    }
+
     /** @param hostVersion the host's game version when the invite carried one (Java cross-version join) */
     public static void join(@NonNull Activity activity, @NonNull String address, @Nullable String engine, @Nullable String hostVersion) {
         boolean horizon = "horizon".equalsIgnoreCase(engine);

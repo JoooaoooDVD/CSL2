@@ -80,6 +80,8 @@ public final class FriendsClient {
     /** One line of the bell inbox (persisted, newest first). */
     public static final class Note {
         public static final int INVITE = 0, REQUEST = 1, MESSAGE = 2, INFO = 3;
+        /** A friend whose world the player joined before is hosting again (joinable without an invite). */
+        public static final int HOSTING = 4;
         public int kind; public String key, title, body, fromId, address, engine, world, version; public long at; public boolean read;
     }
 
@@ -361,9 +363,26 @@ public final class FriendsClient {
             while (mHistory.size() > 600) mHistory.remove(0);
             merged.messages.addAll(mHistory);
         }
+        Snapshot before = mSnapshot;
         mSnapshot = merged;
         // New things since last time → inbox + onNote
         boolean inboxChanged = false;
+        // Like Bedrock: a host whose world the player joined before is joinable again without an
+        // invite — one note when they start hosting (per address).
+        for (Friend f : s.friends) {
+            if (!f.hosting() || !JoinWorld.isKnownHost(f.id)) continue;
+            Friend was = before.friend(f.id);
+            if (was != null && f.address.equals(was.address)) continue;
+            String key = "host:" + f.id + ":" + f.address;
+            if (mSeen.add(key)) {
+                Note n = new Note();
+                n.kind = Note.HOSTING; n.key = key; n.title = f.name;
+                n.body = f.world == null || f.world.isEmpty() ? "is hosting a world you played in before — you can join without an invite"
+                        : "is hosting \"" + f.world + "\" again — you can join without an invite";
+                n.fromId = f.id; n.address = f.address; n.engine = f.engine; n.world = f.world; n.version = f.version; n.at = System.currentTimeMillis();
+                push(n); inboxChanged = true;
+            }
+        }
         for (Invite v : s.invites) {
             String key = "inv:" + v.id;
             if (mSeen.add(key)) {
@@ -398,10 +417,11 @@ public final class FriendsClient {
         Set<String> live = new HashSet<>();
         for (Invite v : s.invites) live.add("inv:" + v.id);
         for (Request q : s.requests) if (q.incoming) live.add("req:" + q.id);
+        for (Friend f : s.friends) if (f.hosting()) live.add("host:" + f.id + ":" + f.address);
         synchronized (mInbox) {
             for (int i = mInbox.size() - 1; i >= 0; i--) {
                 Note n = mInbox.get(i);
-                if ((n.kind == Note.INVITE || n.kind == Note.REQUEST) && !live.contains(n.key)) { mInbox.remove(i); inboxChanged = true; }
+                if ((n.kind == Note.INVITE || n.kind == Note.REQUEST || n.kind == Note.HOSTING) && !live.contains(n.key)) { mInbox.remove(i); inboxChanged = true; }
             }
         }
         if (inboxChanged) save();

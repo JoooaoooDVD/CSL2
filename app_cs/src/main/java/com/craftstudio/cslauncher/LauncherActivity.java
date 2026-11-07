@@ -446,6 +446,18 @@ public class LauncherActivity extends BaseActivity {
 
     /** A CS Friends notification was tapped: open that friend's chat (or the Friends page). */
     private boolean openChatFromIntent(@Nullable android.content.Intent intent) {
+        if (intent != null && intent.hasExtra(com.craftstudio.cslauncher.friends.FriendsNotifier.EXTRA_JOIN_ADDRESS)) {
+            // "Join" on a notification: straight into the friend's world
+            String address = intent.getStringExtra(com.craftstudio.cslauncher.friends.FriendsNotifier.EXTRA_JOIN_ADDRESS);
+            String engine = intent.getStringExtra(com.craftstudio.cslauncher.friends.FriendsNotifier.EXTRA_JOIN_ENGINE);
+            String version = intent.getStringExtra(com.craftstudio.cslauncher.friends.FriendsNotifier.EXTRA_JOIN_VERSION);
+            String host = intent.getStringExtra(com.craftstudio.cslauncher.friends.FriendsNotifier.EXTRA_JOIN_HOST);
+            intent.removeExtra(com.craftstudio.cslauncher.friends.FriendsNotifier.EXTRA_JOIN_ADDRESS);
+            intent.removeExtra(com.craftstudio.cslauncher.friends.FriendsNotifier.EXTRA_CHAT);
+            if (!com.craftstudio.cslauncher.about.WelcomePolicy.isAccepted() || !StorageRoot.isSetupDone(this) || address == null) return false;
+            mFragmentView.post(() -> com.craftstudio.cslauncher.friends.JoinWorld.joinFriend(this, host, address, engine, version));
+            return true;
+        }
         if (intent == null || !intent.hasExtra(com.craftstudio.cslauncher.friends.FriendsNotifier.EXTRA_CHAT)) return false;
         String chat = intent.getStringExtra(com.craftstudio.cslauncher.friends.FriendsNotifier.EXTRA_CHAT);
         intent.removeExtra(com.craftstudio.cslauncher.friends.FriendsNotifier.EXTRA_CHAT);

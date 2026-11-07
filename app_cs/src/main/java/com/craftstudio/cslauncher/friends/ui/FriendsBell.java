@@ -130,12 +130,12 @@ public final class FriendsBell implements FriendsClient.Listener {
             body.setMaxLines(2);
             row.addView(body);
             final String key = n.key;
-            if (n.kind == FriendsClient.Note.INVITE && n.address != null) {
+            if ((n.kind == FriendsClient.Note.INVITE || n.kind == FriendsClient.Note.HOSTING) && n.address != null) {
                 LinearLayout actions = actions();
                 actions.addView(button(mActivity.getString(R.string.friends_join), R.drawable.bg_friends_btn_join, v -> {
                     mPopup.dismiss();
                     mClient.dismiss(key);
-                    JoinWorld.join(mActivity, n.address, n.engine, n.version);
+                    JoinWorld.joinFriend(mActivity, n.fromId, n.address, n.engine, n.version);
                 }));
                 actions.addView(gap());
                 actions.addView(button(mActivity.getString(R.string.friends_decline), R.drawable.bg_vl_btn_danger, v -> {

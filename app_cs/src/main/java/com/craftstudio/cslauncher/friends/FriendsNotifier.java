@@ -36,6 +36,9 @@ import java.util.Set;
 public final class FriendsNotifier implements FriendsClient.Listener {
     public static final String CHANNEL_ID = "cs_friends";
     public static final String EXTRA_CHAT = "cs.friends.chat";
+    /** A world to join right away (address / engine / version / host id), from a hosting or invite notification. */
+    public static final String EXTRA_JOIN_ADDRESS = "cs.friends.join.address", EXTRA_JOIN_ENGINE = "cs.friends.join.engine",
+            EXTRA_JOIN_VERSION = "cs.friends.join.version", EXTRA_JOIN_HOST = "cs.friends.join.host";
     private static final String K_PINNED = "cs.friends.pinned";
     public static final int PERMISSION_REQUEST = 7312;
 
@@ -98,6 +101,7 @@ public final class FriendsNotifier implements FriendsClient.Listener {
         switch (note.kind) {
             case FriendsClient.Note.INVITE:
             case FriendsClient.Note.REQUEST:
+            case FriendsClient.Note.HOSTING:
                 ring = true;
                 break;
             case FriendsClient.Note.MESSAGE:
@@ -128,6 +132,16 @@ public final class FriendsNotifier implements FriendsClient.Listener {
         if (Build.VERSION.SDK_INT >= 23) flags |= PendingIntent.FLAG_IMMUTABLE;
         int id = (note.fromId == null ? note.key : note.fromId).hashCode();
         PendingIntent pi = PendingIntent.getActivity(mApp, id, open, flags);
+        // Invites and "hosting again" notes get a Join action that starts the game straight away
+        PendingIntent joinPi = null;
+        if ((note.kind == FriendsClient.Note.INVITE || note.kind == FriendsClient.Note.HOSTING) && note.address != null) {
+            Intent join = new Intent(mApp, LauncherActivity.class);
+            join.setAction("cs.friends.JOIN");
+            join.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            join.putExtra(EXTRA_JOIN_ADDRESS, note.address).putExtra(EXTRA_JOIN_ENGINE, note.engine)
+                    .putExtra(EXTRA_JOIN_VERSION, note.version).putExtra(EXTRA_JOIN_HOST, note.fromId);
+            joinPi = PendingIntent.getActivity(mApp, id + 1, join, flags);
+        }
 
         String title = note.title == null ? mApp.getString(R.string.friends_title) : note.title;
         String body = note.body == null ? "" : note.body;
@@ -143,6 +157,7 @@ public final class FriendsNotifier implements FriendsClient.Listener {
                 .setContentIntent(pi)
                 .setWhen(note.at > 0 ? note.at : System.currentTimeMillis())
                 .setShowWhen(true);
+        if (joinPi != null) b.addAction(R.drawable.ic_friends_bell, mApp.getString(R.string.friends_join), joinPi);
         try {
             nm.notify(id, b.build());
         } catch (SecurityException ignored) {

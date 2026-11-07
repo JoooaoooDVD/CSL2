@@ -1,5 +1,6 @@
 package com.craftstudio.cslauncher.e4mc;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 /**
@@ -46,6 +47,12 @@ public final class E4mcNative {
      * others shown {@code reason}. Guests already playing stay.
      */
     public static native void nativeSetPolicy(long handle, int maxPlayers, @Nullable String allowedNamesOrNull, @Nullable String reason);
+    /** Names the host removed (newline separated, null = none): refused at the door however open the world is. */
+    public static native void nativeSetBlocked(long handle, @Nullable String blockedOrNull);
+    /** The guests connected right now, one name per line (login order); null when none. */
+    @Nullable public static native String nativeGuestNames(long handle);
+    /** Ends the connection of the guest logged in as {@code name}; how many streams were ended. */
+    public static native int nativeKick(long handle, @NonNull String name);
     /** Refused guests since the last call, one {@code name<TAB>reason} per line; null when none. */
     @Nullable public static native String nativePoll(long handle);
     @Nullable public static native String nativeError();

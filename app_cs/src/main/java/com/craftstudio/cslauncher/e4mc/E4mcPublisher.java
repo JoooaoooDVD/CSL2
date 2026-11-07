@@ -73,6 +73,29 @@ public final class E4mcPublisher {
     @Nullable public String problem() { return mProblem; }
     public int port() { return mPort; }
     public int guests() { return mGuests; }
+    /** The names of the guests connected through the tunnel right now (login order). */
+    @NonNull public java.util.List<String> guestNames() {
+        synchronized (mGuestNames) { return new java.util.ArrayList<>(mGuestNames); }
+    }
+    private final java.util.List<String> mGuestNames = new java.util.ArrayList<>();
+    /** A guest logged in / left (name, joined): the hosting card and the host's notifications listen. */
+    public interface GuestListener { void onGuest(@NonNull String name, boolean joined); }
+    private final CopyOnWriteArrayList<GuestListener> mGuestListeners = new CopyOnWriteArrayList<>();
+    public void addGuestListener(GuestListener l) { mGuestListeners.addIfAbsent(l); }
+    public void removeGuestListener(GuestListener l) { mGuestListeners.remove(l); }
+
+    /** Ends the guest's connection at the relay; they can't come back while blocked (see HostSettings.kick). */
+    public boolean kick(@NonNull String name) {
+        long h = mHandle;
+        if (h == 0) return false;
+        applyPolicy();
+        try {
+            return E4mcNative.nativeKick(h, name) > 0;
+        } catch (UnsatisfiedLinkError e) {
+            Log.w(TAG, "this e4mc library has no kick", e);
+            return false;
+        }
+    }
     public boolean isPublished() { return mPhase == Phase.PUBLISHED && mAddress != null; }
     public boolean isActive() { return mHandle != 0; }
     /** When false the LAN line is ignored (player turned sharing off for this session). */
@@ -167,6 +190,25 @@ public final class E4mcPublisher {
             changed = true;
         }
         if (guests != mGuests) { mGuests = guests; changed = true; }
+        // Who is in: the list of names drives the hosting card, the "joined before" memory and the notes
+        try {
+            String names = E4mcNative.nativeGuestNames(h);
+            java.util.List<String> now = new java.util.ArrayList<>();
+            if (names != null) for (String n : names.split("\n")) if (!n.isEmpty()) now.add(n);
+            java.util.List<String> before;
+            synchronized (mGuestNames) { before = new java.util.ArrayList<>(mGuestNames); mGuestNames.clear(); mGuestNames.addAll(now); }
+            for (String n : now) if (!before.remove(n)) {
+                HostSettings.noteJoined(n);
+                for (GuestListener l : mGuestListeners) { try { l.onGuest(n, true); } catch (RuntimeException e) { Log.w(TAG, "guest listener", e); } }
+                changed = true;
+            }
+            for (String n : before) {
+                for (GuestListener l : mGuestListeners) { try { l.onGuest(n, false); } catch (RuntimeException e) { Log.w(TAG, "guest listener", e); } }
+                changed = true;
+            }
+        } catch (UnsatisfiedLinkError ignored) {
+            // Older e4mc library without the names: the count above still works
+        }
         String news = E4mcNative.nativePoll(h);
         if (news != null) {
             for (String line : news.split("\n")) {
@@ -209,6 +251,16 @@ public final class E4mcPublisher {
             E4mcNative.nativeSetPolicy(h, guests, allowed, HostSettings.closedReason());
         } catch (Throwable t) {
             Log.w(TAG, "policy", t);
+        }
+        try {
+            java.util.List<String> blocked = HostSettings.blocked();
+            StringBuilder sb = new StringBuilder();
+            for (String n : blocked) { if (sb.length() > 0) sb.append('\n'); sb.append(n); }
+            E4mcNative.nativeSetBlocked(h, sb.length() == 0 ? null : sb.toString());
+        } catch (UnsatisfiedLinkError ignored) {
+            // Older e4mc library: no block list at the door
+        } catch (Throwable t) {
+            Log.w(TAG, "blocked", t);
         }
     }
 

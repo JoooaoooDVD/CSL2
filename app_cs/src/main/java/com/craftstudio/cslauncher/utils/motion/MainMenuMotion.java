@@ -25,14 +25,15 @@ public final class MainMenuMotion {
     // ─── Dock ────────────────────────────────────────────────────────────────
 
     /** Slides the dock highlight to {@code x} (left edge inside the dock frame) */
-    public static void dockIndicatorTo(@NonNull View indicator, float x, boolean animate) {
-        float targetX = x - indicator.getLeft();
+    public static void dockIndicatorTo(@NonNull View indicator, float y, boolean animate) {
+        // The dock is a vertical rail: the highlight travels along Y
+        float targetY = y - indicator.getTop();
         indicator.animate().cancel();
         indicator.animate().setUpdateListener(null);
         boolean wasHidden = indicator.getVisibility() != View.VISIBLE || indicator.getAlpha() < 0.05f;
         indicator.setVisibility(View.VISIBLE);
         if (!animate || !Motion.buttons(indicator)) {
-            indicator.setTranslationX(targetX);
+            indicator.setTranslationY(targetY);
             indicator.setAlpha(1f);
             indicator.setScaleX(1f);
             indicator.setScaleY(1f);
@@ -40,7 +41,7 @@ public final class MainMenuMotion {
         }
         if (wasHidden) {
             // Appears in place with a pop
-            indicator.setTranslationX(targetX);
+            indicator.setTranslationY(targetY);
             indicator.setAlpha(0f);
             indicator.setScaleX(0.6f);
             indicator.setScaleY(0.6f);
@@ -48,18 +49,18 @@ public final class MainMenuMotion {
                     .setDuration(Motion.MEDIUM).setInterpolator(Motion.SPRING).setListener(null).start();
             return;
         }
-        if (Math.abs(indicator.getTranslationX() - targetX) < 1f) return;
-        // Glide with a slight horizontal stretch while moving
-        indicator.setScaleY(1f);
-        indicator.animate().translationX(targetX).scaleX(1f).alpha(1f).setStartDelay(0)
+        if (Math.abs(indicator.getTranslationY() - targetY) < 1f) return;
+        // Glide with a slight vertical stretch while moving
+        indicator.setScaleX(1f);
+        indicator.animate().translationY(targetY).scaleY(1f).alpha(1f).setStartDelay(0)
                 .setDuration(Motion.MEDIUM + 40).setInterpolator(Motion.SPRING).setListener(null)
                 .setUpdateListener(animation -> {
                     float f = animation.getAnimatedFraction();
-                    indicator.setScaleX(1f + 0.18f * (float) Math.sin(Math.PI * Math.min(1f, f)));
+                    indicator.setScaleY(1f + 0.18f * (float) Math.sin(Math.PI * Math.min(1f, f)));
                 })
                 .withEndAction(() -> {
                     indicator.animate().setUpdateListener(null);
-                    indicator.setScaleX(1f);
+                    indicator.setScaleY(1f);
                 })
                 .start();
     }

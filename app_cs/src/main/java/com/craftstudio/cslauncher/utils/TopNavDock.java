@@ -11,8 +11,8 @@ import com.craftstudio.cslauncher.R;
 import com.craftstudio.cslauncher.utils.motion.MainMenuMotion;
 
 /**
- * The navigation dock of the launcher top bar (Home, Browse, Manage, Controls, Logs).
- * It replaced the old left sidebar, so every screen gets the full width of the window.
+ * The navigation dock of the launcher: a vertical rail on the left edge, top to bottom
+ * (Home, Browse, Manage, Friends, Skins, Play time, Controls, Logs).
  * <p>
  * A highlight slides behind the active button; inactive icons are dimmed. The dock itself only
  * shows state, clicks are routed by the activity to {@code MainMenuFragment.navigate}.
@@ -43,9 +43,9 @@ public final class TopNavDock {
                 navigator.onDockItemClicked(v.getId());
             });
         }
-        // Narrow phones: the brand name makes room for the dock, the logo stays
+        // Narrow phones: the brand name makes room for the account cluster, the logo stays on the rail
         View brandText = activity.findViewById(R.id.brand_text);
-        if (brandText != null && activity.getResources().getConfiguration().screenWidthDp < 720) {
+        if (brandText != null && activity.getResources().getConfiguration().screenWidthDp < 600) {
             brandText.setVisibility(View.GONE);
         }
     }
@@ -76,11 +76,11 @@ public final class TopNavDock {
             return;
         }
         final View target = active;
-        if (items.getWidth() == 0) {
+        if (items.getHeight() == 0) {
             // First layout pass not done yet: place it once the dock is measured
-            items.post(() -> MainMenuMotion.dockIndicatorTo(indicator, items.getLeft() + target.getLeft(), false));
+            items.post(() -> MainMenuMotion.dockIndicatorTo(indicator, items.getTop() + target.getTop(), false));
             return;
         }
-        MainMenuMotion.dockIndicatorTo(indicator, items.getLeft() + target.getLeft(), true);
+        MainMenuMotion.dockIndicatorTo(indicator, items.getTop() + target.getTop(), true);
     }
 }

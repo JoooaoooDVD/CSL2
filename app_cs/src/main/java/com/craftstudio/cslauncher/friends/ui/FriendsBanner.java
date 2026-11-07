@@ -71,12 +71,12 @@ public final class FriendsBanner {
         text.addView(body);
         card.addView(text);
 
-        if (note.kind == FriendsClient.Note.INVITE && note.address != null) {
+        if ((note.kind == FriendsClient.Note.INVITE || note.kind == FriendsClient.Note.HOSTING) && note.address != null) {
             if (canJoin) {
                 card.addView(button(activity, activity.getString(R.string.friends_join), R.drawable.bg_friends_btn_join, v -> {
                     dismiss();
                     FriendsClient.get().dismiss(note.key);
-                    JoinWorld.join(activity, note.address, note.engine, note.version);
+                    JoinWorld.joinFriend(activity, note.fromId, note.address, note.engine, note.version);
                 }));
             }
             card.addView(button(activity, activity.getString(R.string.friends_decline), R.drawable.bg_vl_btn_danger, v -> {
@@ -100,7 +100,7 @@ public final class FriendsBanner {
             card.animate().translationY(0f).alpha(1f).setDuration(Motion.MEDIUM).setInterpolator(Motion.ENTER).start();
         }
         final View me = card;
-        card.postDelayed(() -> { if (sCurrent == me) dismiss(); }, note.kind == FriendsClient.Note.INVITE ? 12000 : 6000);
+        card.postDelayed(() -> { if (sCurrent == me) dismiss(); }, note.kind == FriendsClient.Note.INVITE || note.kind == FriendsClient.Note.HOSTING ? 12000 : 6000);
     }
 
     public static void dismiss() {

@@ -280,6 +280,23 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
                 lp.topMargin = dp(6);
                 card.addView(addr, lp);
                 card.addView(dim(mCtx.getString(R.string.friends_sharing_guests, p.guests())));
+                for (String name : p.guestNames()) {
+                    LinearLayout grow = listRow();
+                    grow.setClickable(false);
+                    grow.addView(iconTile(R.drawable.ic_vl_player));
+                    grow.addView(gap());
+                    LinearLayout gtext = vcol();
+                    gtext.addView(strong(name));
+                    gtext.addView(dim(mCtx.getString(R.string.host_guest_in_world)));
+                    grow.addView(gtext);
+                    grow.addView(gap());
+                    grow.addView(smallButton(mCtx.getString(R.string.host_kick), R.drawable.bg_vl_btn_danger, v -> {
+                        HostSettings.kick(name);
+                        toast(mCtx.getString(R.string.host_kicked, name));
+                        render();
+                    }));
+                    card.addView(grow);
+                }
                 for (String line : p.recentRefusals()) card.addView(statusLine(mCtx.getString(R.string.host_refused, line), R.color.vl_warn));
                 LinearLayout row = hrow();
                 row.addView(button(mCtx.getString(R.string.friends_invite_all), R.drawable.bg_friends_btn_join, v -> inviteAll()));
@@ -311,53 +328,74 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
     private void renderHostSettings() {
         LinearLayout card = card();
         card.addView(heading(mCtx.getString(R.string.host_settings_title)));
-        // Who can join.
+        card.addView(eyebrow(mCtx.getString(R.string.host_section_access)));
+        // Who can join: a settings row with the current value as a pill and Change on the right.
         int access = HostSettings.access();
-        LinearLayout accessRow = hrow();
-        LinearLayout accessText = vcol();
-        accessText.addView(strong(mCtx.getString(R.string.host_access)));
-        accessText.addView(dim(HostSettings.accessLabel(access)));
-        accessRow.addView(accessText);
-        accessRow.addView(gap());
-        accessRow.addView(smallButton(mCtx.getString(R.string.host_change), R.drawable.bg_vl_btn_ghost, v -> {
-            HostSettings.setAccess((HostSettings.access() + 1) % 3);
-            render();
-        }));
-        card.addView(accessRow);
+        String accessHint;
         if (access == HostSettings.ACCESS_INVITED) {
             int n = HostSettings.invitedCount();
-            card.addView(dim(n == 0 ? mCtx.getString(R.string.host_invited_none) : mCtx.getString(R.string.host_invited_count, n)));
+            int known = HostSettings.knownPlayers().size();
+            accessHint = (n == 0 ? mCtx.getString(R.string.host_invited_none) : mCtx.getString(R.string.host_invited_count, n))
+                    + (known == 0 ? "" : " " + mCtx.getString(R.string.host_known_auto, known));
         } else if (access == HostSettings.ACCESS_FRIENDS) {
-            card.addView(dim(mCtx.getString(R.string.host_friends_hint)));
+            accessHint = mCtx.getString(R.string.host_friends_hint);
+        } else {
+            accessHint = mCtx.getString(R.string.host_anyone_hint);
         }
+        card.addView(settingRow(R.drawable.ic_vl_shield, mCtx.getString(R.string.host_access), HostSettings.accessLabel(access), accessHint,
+                smallButton(mCtx.getString(R.string.host_change), R.drawable.bg_vl_btn_ghost, v -> {
+                    HostSettings.setAccess((HostSettings.access() + 1) % 3);
+                    render();
+                })));
         // Player limit (the Java integrated server stops at 8).
-        LinearLayout playersRow = hrow();
-        LinearLayout playersText = vcol();
-        playersText.addView(strong(mCtx.getString(R.string.host_players, HostSettings.maxPlayersLabel())));
-        playersText.addView(dim(mCtx.getString(R.string.host_players_java_cap)));
-        playersRow.addView(playersText);
-        playersRow.addView(gap());
-        playersRow.addView(smallButton("−", R.drawable.bg_vl_btn_ghost, v -> { HostSettings.setMaxPlayers(HostSettings.stepMaxPlayers(-1)); render(); }));
-        playersRow.addView(gap());
-        playersRow.addView(smallButton("+", R.drawable.bg_vl_btn_ghost, v -> { HostSettings.setMaxPlayers(HostSettings.stepMaxPlayers(1)); render(); }));
-        card.addView(playersRow);
+        LinearLayout stepper = new LinearLayout(mCtx);
+        stepper.setOrientation(LinearLayout.HORIZONTAL);
+        stepper.setGravity(Gravity.CENTER_VERTICAL);
+        stepper.addView(smallButton("−", R.drawable.bg_vl_btn_ghost, v -> { HostSettings.setMaxPlayers(HostSettings.stepMaxPlayers(-1)); render(); }));
+        stepper.addView(gap());
+        stepper.addView(smallButton("+", R.drawable.bg_vl_btn_ghost, v -> { HostSettings.setMaxPlayers(HostSettings.stepMaxPlayers(1)); render(); }));
+        card.addView(settingRow(R.drawable.ic_vl_player, mCtx.getString(R.string.host_players_title), HostSettings.maxPlayersLabel(),
+                mCtx.getString(R.string.host_players_java_cap), stepper));
+
+        card.addView(eyebrow(mCtx.getString(R.string.host_section_world)));
         // Server icon (server-icon.png in the game folder, written at game start).
-        LinearLayout iconRow = hrow();
-        LinearLayout iconText = vcol();
-        iconText.addView(strong(mCtx.getString(R.string.host_icon)));
-        iconText.addView(dim(HostSettings.iconLabel(HostSettings.icon()) + (HostSettings.icon() == HostSettings.ICON_CUSTOM ? "\n" + mCtx.getString(R.string.host_icon_custom_hint) : "")));
-        iconRow.addView(iconText);
-        iconRow.addView(gap());
-        iconRow.addView(smallButton(mCtx.getString(R.string.host_change), R.drawable.bg_vl_btn_ghost, v -> {
-            HostSettings.setIcon((HostSettings.icon() + 1) % 3);
-            render();
-        }));
-        card.addView(iconRow);
+        card.addView(settingRow(R.drawable.ic_vl_world, mCtx.getString(R.string.host_icon), HostSettings.iconLabel(HostSettings.icon()),
+                HostSettings.icon() == HostSettings.ICON_CUSTOM ? mCtx.getString(R.string.host_icon_custom_hint) : null,
+                smallButton(mCtx.getString(R.string.host_change), R.drawable.bg_vl_btn_ghost, v -> {
+                    HostSettings.setIcon((HostSettings.icon() + 1) % 3);
+                    render();
+                })));
         // Cheats: the game decides at Open to LAN.
-        card.addView(strong(mCtx.getString(R.string.host_cheats)));
-        card.addView(dim(mCtx.getString(R.string.host_cheats_java)));
+        card.addView(settingRow(R.drawable.ic_vl_settings, mCtx.getString(R.string.host_cheats), mCtx.getString(R.string.host_cheats_value),
+                mCtx.getString(R.string.host_cheats_java), null));
+
+        // Players who joined before: they get back in under "Invited players only" without a new invite.
+        java.util.Set<String> known = HostSettings.knownPlayers();
+        card.addView(eyebrow(mCtx.getString(R.string.host_section_known)));
+        if (known.isEmpty()) {
+            card.addView(dim(mCtx.getString(R.string.host_known_none)));
+        } else {
+            card.addView(dim(mCtx.getString(R.string.host_known_hint)));
+            for (String name : known) {
+                LinearLayout row = listRow();
+                row.addView(iconTile(R.drawable.ic_vl_history));
+                row.addView(gap());
+                LinearLayout text = vcol();
+                text.addView(strong(name));
+                row.addView(text);
+                row.addView(gap());
+                row.addView(smallButton(mCtx.getString(R.string.host_forget), R.drawable.bg_vl_btn_ghost, v -> { HostSettings.forgetPlayer(name); render(); }));
+                card.addView(row);
+            }
+            LinearLayout clearRow = hrow();
+            clearRow.addView(smallButton(mCtx.getString(R.string.host_known_clear), R.drawable.bg_vl_btn_danger, v -> { HostSettings.clearKnownPlayers(); render(); }));
+            card.addView(clearRow);
+        }
+
         // The relay.
-        card.addView(strong(mCtx.getString(R.string.host_relay)));
+        card.addView(eyebrow(mCtx.getString(R.string.host_section_relay)));
+        card.addView(settingRow(R.drawable.ic_vl_signal, mCtx.getString(R.string.host_relay),
+                HostSettings.relay().isEmpty() ? mCtx.getString(R.string.host_relay_auto) : HostSettings.relay(), null, null));
         LinearLayout relayRow = hrow();
         relayRow.setPadding(0, dp(2), 0, 0);
         EditText relay = new EditText(mCtx);
@@ -390,6 +428,52 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
         mContent.addView(card);
     }
 
+    /** A settings row: icon tile, title + optional hint, the value as a pill, and an action on the right. */
+    private LinearLayout settingRow(int icon, String title, String value, @Nullable String hint, @Nullable View action) {
+        LinearLayout row = listRow();
+        row.setClickable(false);
+        row.addView(iconTile(icon));
+        row.addView(gap());
+        LinearLayout text = vcol();
+        text.addView(strong(title));
+        TextView val = pill(value);
+        LinearLayout.LayoutParams plp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        plp.topMargin = dp(4);
+        val.setLayoutParams(plp);
+        text.addView(val);
+        if (hint != null && !hint.isEmpty()) text.addView(dim(hint));
+        row.addView(text);
+        if (action != null) {
+            row.addView(gap());
+            row.addView(action);
+        }
+        return row;
+    }
+
+    /** The small rounded tile that holds a row's icon. */
+    private View iconTile(int icon) {
+        android.widget.ImageView iv = new android.widget.ImageView(mCtx);
+        iv.setImageResource(icon);
+        iv.setBackgroundResource(R.drawable.bg_vl_tile);
+        iv.setScaleType(android.widget.ImageView.ScaleType.CENTER_INSIDE);
+        iv.setPadding(dp(8), dp(8), dp(8), dp(8));
+        iv.setImageTintList(android.content.res.ColorStateList.valueOf(color(R.color.vl_text)));
+        iv.setLayoutParams(new LinearLayout.LayoutParams(dp(36), dp(36)));
+        return iv;
+    }
+
+    /** A small uppercase section label inside a card. */
+    private TextView eyebrow(String text) {
+        TextView t = dim(text.toUpperCase(java.util.Locale.ROOT));
+        t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
+        t.setLetterSpacing(0.08f);
+        t.setTypeface(Typeface.DEFAULT_BOLD);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp.topMargin = dp(14);
+        t.setLayoutParams(lp);
+        return t;
+    }
+
     private static boolean isHostPort(String text) {
         int i = text.lastIndexOf(':');
         if (i <= 0 || i == text.length() - 1) return false;
@@ -420,7 +504,7 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
             } else {
                 row.addView(smallButton(mCtx.getString(R.string.friends_join), R.drawable.bg_friends_btn_join, b -> {
                     mClient.declineInvite(v); // consumed
-                    JoinWorld.join(mHost.activity(), v.address, v.engine, v.version);
+                    JoinWorld.joinFriend(mHost.activity(), v.fromId, v.address, v.engine, v.version);
                 }));
                 row.addView(gap());
                 row.addView(smallButton(mCtx.getString(R.string.friends_decline), R.drawable.bg_vl_btn_danger, b -> mClient.declineInvite(v)));
@@ -509,10 +593,10 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
             text.addView(dim(status));
             row.addView(text);
             if (f.hosting() && !mHost.inGame()) {
-                row.addView(smallButton(mCtx.getString(R.string.friends_join), R.drawable.bg_friends_btn_join, b -> JoinWorld.join(mHost.activity(), f.address, f.engine, f.version)));
+                row.addView(smallButton(mCtx.getString(R.string.friends_join), R.drawable.bg_friends_btn_join, b -> JoinWorld.joinFriend(mHost.activity(), f.id, f.address, f.engine, f.version)));
                 row.addView(gap());
             }
-            if (hosting && f.online()) {
+            if (hosting) {
                 row.addView(smallButton(mCtx.getString(R.string.friends_invite), R.drawable.bg_vl_btn_primary, b -> act(() -> mClient.invite(f.id, p.address(), null, "java", e -> {
                     done(e);
                     if (e == null) { HostSettings.noteInvited(f.name); toast(R.string.friends_invite_sent); }
@@ -651,7 +735,10 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
             box.addView(title);
             TextView sub = new TextView(mCtx);
             String engine = isHorizon(m.inviteEngine) ? "CS Engine" : (m.inviteVersion == null || m.inviteVersion.isEmpty() ? "Java" : "Java " + m.inviteVersion);
-            boolean live = m.inviteLive(System.currentTimeMillis());
+            // Live while the invite is fresh, or for as long as the friend still hosts that address
+            FriendsClient.Friend inviter = m.mine ? null : FriendsClient.get().snapshot().friend(m.from);
+            boolean live = m.inviteLive(System.currentTimeMillis())
+                    || (inviter != null && inviter.hosting() && m.inviteAddress != null && m.inviteAddress.equals(inviter.address));
             sub.setText(live ? engine : mCtx.getString(R.string.chat_invite_expired, engine));
             sub.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
             sub.setTextColor(m.mine ? color(R.color.vl_platinum_text) : color(R.color.vl_text_dim));
@@ -659,7 +746,7 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
             box.addView(sub);
             if (!m.mine && live) {
                 TextView join = smallButton(mCtx.getString(R.string.friends_join), R.drawable.bg_friends_btn_join,
-                        v -> JoinWorld.join(mHost.activity(), m.inviteAddress, m.inviteEngine == null ? "java" : m.inviteEngine, m.inviteVersion));
+                        v -> JoinWorld.joinFriend(mHost.activity(), m.from, m.inviteAddress, m.inviteEngine == null ? "java" : m.inviteEngine, m.inviteVersion));
                 LinearLayout.LayoutParams jlp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(34));
                 jlp.topMargin = dp(8);
                 box.addView(join, jlp);
