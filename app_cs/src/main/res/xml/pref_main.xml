@@ -51,6 +51,14 @@
             android:widgetLayout="@layout/view_chevron" />
 
         <Preference android:layout="@layout/item_setting_row"
+            android:key="storage_screen_setting"
+            android:title="@string/preference_storage_title"
+            android:summary="@string/preference_storage_description"
+            android:fragment="com.craftstudio.cslauncher.prefs.screens.LauncherPreferenceStorageFragment"
+            android:icon="@drawable/ic_px_folder"
+            android:widgetLayout="@layout/view_chevron" />
+
+        <Preference android:layout="@layout/item_setting_row"
             android:key="misc_screen_setting"
             android:title="@string/preference_misc_title"
             android:summary="@string/preference_misc_description"

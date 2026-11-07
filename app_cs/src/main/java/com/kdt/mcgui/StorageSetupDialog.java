@@ -45,6 +45,14 @@ public class StorageSetupDialog extends CSPopupDialog {
         return this;
     }
 
+    private boolean mPreselectCustom;
+
+    /** Start on the "Default storage" option (Settings → Storage → Default storage). */
+    public StorageSetupDialog preselectCustom() {
+        mPreselectCustom = true;
+        return this;
+    }
+
     private View mOptDefault, mOptCustom, mSteps, mPermBtn, mPickBtn, mContinue;
     private TextView mPermDesc, mPickDesc, mCustomPath, mError, mContinueText, mPermNum, mPickNum;
 
@@ -110,6 +118,10 @@ public class StorageSetupDialog extends CSPopupDialog {
         } else if (pendingError != 0) {
             select(true);
             showError(pendingError);
+        } else if (mPreselectCustom || StorageRoot.isUsingCustomRoot(getContext())) {
+            String current = StorageRoot.getCustomRoot(getContext());
+            if (current != null) mPickedDir = new File(current);
+            select(true);
         } else {
             select(false);
         }

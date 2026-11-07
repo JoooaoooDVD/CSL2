@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <com.craftstudio.cslauncher.prefs.BackButtonPreference />
+
+    <PreferenceCategory android:layout="@layout/item_settings_section" android:title="@string/preference_storage_mode_title">
+        <Preference android:layout="@layout/item_setting_row"
+            android:key="storage_mode_scoped"
+            android:icon="@drawable/ic_px_folder"
+            android:title="@string/ss_default_title"
+            android:summary="@string/ss_default_desc" />
+        <Preference android:layout="@layout/item_setting_row"
+            android:key="storage_mode_default"
+            android:icon="@drawable/ic_px_data_import"
+            android:title="@string/ss_custom_title"
+            android:summary="@string/ss_custom_desc" />
+        <Preference android:layout="@layout/item_setting_row"
+            android:key="storage_current_folder"
+            android:icon="@drawable/ic_px_file"
+            android:title="@string/preference_storage_folder_title"
+            android:widgetLayout="@layout/view_chevron" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:layout="@layout/item_settings_section" android:title="@string/preference_storage_import_section">
+        <Preference android:layout="@layout/item_setting_row"
+            android:key="storage_import_controls"
+            android:icon="@drawable/ic_px_gamepad"
+            android:title="@string/preference_import_controls_title"
+            android:summary="@string/preference_import_controls_summary"
+            android:widgetLayout="@layout/view_chevron" />
+        <Preference android:layout="@layout/item_setting_row"
+            android:key="storage_import_data"
+            android:icon="@drawable/ic_px_migrate"
+            android:title="@string/preference_data_migration_title"
+            android:summary="@string/preference_data_migration_summary"
+            android:widgetLayout="@layout/view_chevron" />
+    </PreferenceCategory>
+</PreferenceScreen>

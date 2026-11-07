@@ -514,6 +514,16 @@
     <string name="preference_download_source_title">Game download source</string>
     <string name="preference_download_source_description">Select a download mirror instead of using the official download server</string>
     <string name="preference_verify_manifest_title">Verify game version manifest</string>
+    <string name="preference_storage_title">Storage</string>
+    <string name="preference_storage_description">Scoped or default storage, game folder, import controls and data</string>
+    <string name="preference_storage_mode_active">✓ In use</string>
+    <string name="preference_storage_mode_already">Already in use</string>
+    <string name="preference_storage_folder_title">Game folder</string>
+    <string name="preference_storage_import_section">Import</string>
+    <string name="preference_import_controls_title">Import control layout</string>
+    <string name="preference_import_controls_summary">Pick a .json control layout from your phone; it is added to your layouts</string>
+    <string name="preference_storage_switch_confirm">Switch to scoped storage (%1$s)? Your files stay where they are and are not moved; the launcher restarts and uses the new folder.</string>
+    <string name="preference_storage_switch_restart">Switch and restart</string>
     <string name="preference_storage_mode_title">Storage mode</string>
     <string name="preference_storage_mode_description">Scoped storage (Android/data, no permission) or default storage (a folder you choose)</string>
     <string name="preference_storage_mode_scoped">Scoped storage · %1$s</string>
