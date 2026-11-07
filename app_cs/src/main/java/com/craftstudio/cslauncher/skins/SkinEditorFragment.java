@@ -91,6 +91,7 @@ public class SkinEditorFragment extends Fragment {
     private Account mAccount;
     /** Local (offline) account: nothing is uploaded, the launcher's Yggdrasil server serves the textures */
     private boolean mLocal;
+    private boolean mCapeOnly;
     private boolean mLoaded;
     private int mTab = TAB_SKINS;
     private int mBusy;
@@ -173,6 +174,10 @@ public class SkinEditorFragment extends Fragment {
         Throwable error;
         boolean notMicrosoft;
         boolean local;
+        /** Ely.by / custom-server account: skin from the server (shown, read-only), capes from the launcher */
+        boolean capeOnly;
+        Bitmap serverSkin;
+        boolean serverSlim;
         final List<MinecraftSkinApi.Cape> localCapes = new ArrayList<>();
         String selectedCapeId;
     }
@@ -188,6 +193,18 @@ public class SkinEditorFragment extends Fragment {
                 if (result.account != null && result.account.authType == AuthType.LOCAL) {
                     result.local = true;
                     loadLocal(result);
+                } else if (result.account != null && com.craftstudio.cslauncher.authenticator.yggdrasil.LocalSkinBridge.isUpstreamAccount(result.account)) {
+                    // Skin lives on the account's server; capes are equipped client-side like for local accounts
+                    result.local = true;
+                    result.capeOnly = true;
+                    loadLocal(result);
+                    result.skins = new ArrayList<>();
+                    com.craftstudio.cslauncher.authenticator.yggdrasil.LocalSkinBridge.UpstreamSkin upstream =
+                            com.craftstudio.cslauncher.authenticator.yggdrasil.LocalSkinBridge.fetchUpstreamSkin(result.account);
+                    if (upstream != null && upstream.png != null) {
+                        result.serverSkin = BitmapFactory.decodeByteArray(upstream.png, 0, upstream.png.length);
+                        result.serverSlim = upstream.slim;
+                    }
                 } else if (result.account == null || result.account.authType != AuthType.MICROSOFT) {
                     result.notMicrosoft = true;
                 } else {
@@ -305,7 +322,19 @@ public class SkinEditorFragment extends Fragment {
         }
         if (result.account != null) mAccount = result.account;
         mLocal = result.local;
+        mCapeOnly = result.capeOnly;
         mLoaded = true;
+        if (mCapeOnly) {
+            // Capes tab only: the skin comes from the server and is shown as it is
+            View root = getView();
+            if (root != null) {
+                root.findViewById(R.id.skin_tab_skins).setVisibility(View.GONE);
+                root.findViewById(R.id.skin_import_player).setVisibility(View.GONE);
+                ((com.google.android.material.button.MaterialButtonToggleGroup) root.findViewById(R.id.skin_tab_group)).check(R.id.skin_tab_capes);
+            }
+            mSlimSwitch.setVisibility(View.GONE);
+            mTab = TAB_CAPES;
+        }
 
         mSkins.clear();
         mSkins.addAll(result.skins);
@@ -326,7 +355,12 @@ public class SkinEditorFragment extends Fragment {
             Toast.makeText(requireContext(), R.string.skin_editor_load_failed, Toast.LENGTH_LONG).show();
         }
 
-        showSkinInPreview(selectedSkin());
+        if (mCapeOnly) {
+            mPreview.setSkin(result.serverSkin, result.serverSlim);
+            if (result.serverSkin != null) result.serverSkin.recycle();
+        } else {
+            showSkinInPreview(selectedSkin());
+        }
         mPreview.setCape(mCapeTextures.get(mSelectedCapeId));
         mAdapter.notifyDataSetChanged();
         updateHint();
@@ -341,6 +375,11 @@ public class SkinEditorFragment extends Fragment {
     }
 
     private void updateHint() {
+        if (mCapeOnly) {
+            mHint.setText(R.string.skin_editor_cape_only_hint);
+            mHint.setVisibility(mLoaded ? View.VISIBLE : View.GONE);
+            return;
+        }
         if (mLocal) {
             // Local accounts: a short note on where the skin shows up instead of "no capes owned"
             mHint.setText(R.string.skin_editor_local_hint);

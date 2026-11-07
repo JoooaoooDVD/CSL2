@@ -42,13 +42,16 @@ public class SelectAuthFragment extends Fragment {
         View microsoft = view.findViewById(R.id.button_microsoft_authentication);
         View local = view.findViewById(R.id.button_local_authentication);
         View elyBy = view.findViewById(R.id.button_elyby_authentication);
+        View custom = view.findViewById(R.id.button_custom_authentication);
         View discord = view.findViewById(R.id.button_discord_link);
-        mOptions = new View[]{microsoft, elyBy, local};
+        mOptions = new View[]{microsoft, elyBy, local, custom};
         View[] tiles = {view.findViewById(R.id.auth_microsoft_tile), view.findViewById(R.id.auth_elyby_tile),
-                view.findViewById(R.id.auth_local_tile)};
-        View[] badges = {view.findViewById(R.id.ac_badge_ms), view.findViewById(R.id.ac_badge_ely), view.findViewById(R.id.ac_badge_local)};
+                view.findViewById(R.id.auth_local_tile), view.findViewById(R.id.auth_custom_tile)};
+        View[] badges = {view.findViewById(R.id.ac_badge_ms), view.findViewById(R.id.ac_badge_ely), view.findViewById(R.id.ac_badge_local),
+                view.findViewById(R.id.ac_badge_custom)};
         View[] shines = {view.findViewById(R.id.button_microsoft_authentication_shine),
-                view.findViewById(R.id.button_elyby_authentication_shine), view.findViewById(R.id.button_local_authentication_shine)};
+                view.findViewById(R.id.button_elyby_authentication_shine), view.findViewById(R.id.button_local_authentication_shine),
+                view.findViewById(R.id.button_custom_authentication_shine)};
 
         for (View option : mOptions) {
             option.setClipToOutline(true);
@@ -61,6 +64,7 @@ public class SelectAuthFragment extends Fragment {
         bind(microsoft, tiles[0], MicrosoftLoginFragment.class, MicrosoftLoginFragment.TAG);
         bind(elyBy, tiles[1], ElyByLoginFragment.class, ElyByLoginFragment.TAG);
         bind(local, tiles[2], LocalLoginFragment.class, LocalLoginFragment.TAG);
+        bind(custom, tiles[3], CustomLoginFragment.class, CustomLoginFragment.TAG);
         discord.setOnClickListener(v -> {
             Motion.bounce(view.findViewById(R.id.auth_discord_tile));
             com.craftstudio.cslauncher.discord.CSDiscordRpcSheet.show(requireActivity());

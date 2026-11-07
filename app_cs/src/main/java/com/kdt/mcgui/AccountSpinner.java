@@ -80,6 +80,7 @@ public class AccountSpinner extends AppCompatSpinner implements LoginListener, A
     /* Login listeners */
     private final ExtraListener<String> mMicrosoftLoginListener = new LoginExtraListener(AuthType.MICROSOFT);
     private final ExtraListener<String> mElyByLoginListener = new LoginExtraListener(AuthType.ELY_BY);
+    private final ExtraListener<String> mCustomLoginListener = new LoginExtraListener(AuthType.CUSTOM);
     private final ExtraListener<String[]> mMojangLoginListener = (key, value) -> {
         try {
             Account account = Accounts.create(acc-> acc.username = value[0]);
@@ -172,6 +173,7 @@ public class AccountSpinner extends AppCompatSpinner implements LoginListener, A
         ExtraCore.addExtraListener(ExtraConstants.MOJANG_LOGIN_TODO, mMojangLoginListener);
         ExtraCore.addExtraListener(ExtraConstants.MICROSOFT_LOGIN_TODO, mMicrosoftLoginListener);
         ExtraCore.addExtraListener(ExtraConstants.ELYBY_LOGIN_TODO, mElyByLoginListener);
+        ExtraCore.addExtraListener(ExtraConstants.CUSTOM_LOGIN_TODO, mCustomLoginListener);
         ExtraCore.addExtraListener(ExtraConstants.REFRESH_ACCOUNT_SPINNER, mRefreshAccountsListener);
     }
 
@@ -428,7 +430,7 @@ public class AccountSpinner extends AppCompatSpinner implements LoginListener, A
 
             // Microsoft: skins/capes live on the Minecraft account. Local: kept in the launcher and
             // given to the game by the local Yggdrasil server (authlib-injector). Ely.by uses its site.
-            if(account.authType == AuthType.MICROSOFT || account.authType == AuthType.LOCAL) {
+            if(account.authType != null) {
                 editButton.setVisibility(View.VISIBLE);
                 editButton.setOnClickListener(v -> openSkinEditor(account));
             }else {

@@ -36,9 +36,51 @@ public final class LocalSkinBridge {
 
     private LocalSkinBridge() {}
 
+    /** Ely.by / custom-server accounts: the real server stays in charge, the launcher only adds a cape */
+    public static boolean isUpstreamAccount(@NonNull Account account) {
+        return account.authType == AuthType.ELY_BY || account.authType == AuthType.CUSTOM;
+    }
+
+    /** The account's authlib-injector API root (Ely.by resolved through its ALI header), or null */
+    @Nullable
+    public static String upstreamApiRoot(@NonNull Account account) {
+        String url = account.injectorUrl();
+        if (url == null) return null;
+        try {
+            return YggdrasilClient.resolveApiRoot(url).apiRoot;
+        } catch (Exception e) {
+            Log.w(TAG, "Could not resolve the API root of " + url, e);
+            return null;
+        }
+    }
+
+    public static final class UpstreamSkin {
+        @Nullable public byte[] png;
+        public boolean slim;
+        @Nullable public byte[] capePng;
+    }
+
+    /** Downloads the skin (and the server's own cape) of an Ely.by / custom account. Blocking. */
+    @Nullable
+    public static UpstreamSkin fetchUpstreamSkin(@NonNull Account account) {
+        String root = upstreamApiRoot(account);
+        if (root == null) return null;
+        YggdrasilClient.Textures textures = YggdrasilClient.profileTextures(root, account.profileId);
+        if (textures == null) return null;
+        UpstreamSkin skin = new UpstreamSkin();
+        skin.slim = textures.slim;
+        if (textures.skinUrl != null) skin.png = YggdrasilClient.download(textures.skinUrl);
+        if (textures.capeUrl != null) skin.capePng = YggdrasilClient.download(textures.capeUrl);
+        return skin;
+    }
+
     /** Starts the local skin server when it is needed. Never throws: the game starts either way. */
     public static void prepare(@NonNull Account account) {
         sServer = null;
+        if (isUpstreamAccount(account)) {
+            prepareUpstream(account);
+            return;
+        }
         if (account.authType != AuthType.LOCAL) return;
         if (!LauncherPreferences.PREF_LOCAL_SKINS) {
             gameLog("[CS Skins] Launcher skins for local accounts are turned off in Settings, using the default skin");
@@ -79,6 +121,44 @@ public final class LocalSkinBridge {
         } catch (Throwable t) {
             Log.w(TAG, "Local skin server not started, the default skin will be used", t);
             gameLog("[CS Skins] ERROR skin server failed to start, using the default skin: " + t);
+            sServer = null;
+        }
+    }
+
+    /**
+     * Ely.by / custom server account with a cape picked in the launcher: the CS skin server runs as a
+     * proxy in front of the real server — joins and other players' profiles are forwarded to it, the
+     * player's own profile is the server's skin plus the launcher cape. Without a cape picked, the
+     * game talks to the real server directly (nothing to add).
+     */
+    private static void prepareUpstream(@NonNull Account account) {
+        try {
+            LocalSkinStore.Cape cape = LocalSkinStore.selectedCape(account);
+            if (cape == null) return;
+            byte[] capePng = cleanCape(LocalSkinStore.readBytes(LocalSkinStore.capeFile(cape)));
+            if (capePng == null) {
+                gameLog("[CS Skins] ERROR the cape \"" + cape.name + "\" is not a valid cape PNG, skipped");
+                return;
+            }
+            String root = upstreamApiRoot(account);
+            if (root == null) {
+                gameLog("[CS Skins] ERROR the account's server did not answer, the cape can't be added this time");
+                return;
+            }
+            UpstreamSkin upstream = fetchUpstreamSkin(account);
+            byte[] skinPng = upstream == null ? null : cleanSkin(upstream.png);
+            boolean slim = upstream != null && upstream.slim;
+            com.craftstudio.cslauncher.friends.RemoteSkins.publish(account.username, account.profileId, skinPng, slim, capePng);
+            LocalYggdrasilServer.setEventLog(LocalSkinBridge::gameLog);
+            sServer = LocalYggdrasilServer.start(new File(Tools.DIR_DATA, "yggdrasil"), account.username,
+                    account.profileId, skinPng, slim, capePng, root);
+            gameLog("[CS Skins] Skin server ready on port " + sServer.getPort() + " for " + account.username
+                    + " (" + account.profileId + ") in front of " + root
+                    + " | skin: " + (skinPng == null ? "server default" : "from the server, " + (slim ? "slim" : "classic"))
+                    + " | cape: \"" + cape.name + "\"");
+        } catch (Throwable t) {
+            Log.w(TAG, "Skin proxy not started, the account's server is used directly", t);
+            gameLog("[CS Skins] ERROR skin server failed to start, the cape is skipped this time: " + t);
             sServer = null;
         }
     }

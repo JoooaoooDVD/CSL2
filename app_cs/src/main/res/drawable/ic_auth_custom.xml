@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Custom auth server: a server rack with a key -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#1F4FB4"
+        android:pathData="M3,3h18v8H3zM3,13h18v8H3z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M5,5h8v2H5zM5,15h8v2H5zM16,6a1.5,1.5 0,1 1,3 0a1.5,1.5 0,0 1,-3 0zM16,16a1.5,1.5 0,1 1,3 0a1.5,1.5 0,0 1,-3 0z" />
+</vector>

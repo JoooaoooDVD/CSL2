@@ -590,10 +590,8 @@ public class LauncherActivity extends BaseActivity {
         InstanceInstaller.postInstallCheck(this);
         if (mStorageSetupDialog != null) mStorageSetupDialog.onHostResumed();
         com.craftstudio.cslauncher.discord.DiscordPresenceManager.getInstance(this).setLauncherIdle(this);
-        // Did the game process vanish without a crash report since we last looked? Ask Android why.
-        if (StorageRoot.isSetupDone(this)) {
-            try { com.craftstudio.cslauncher.game.crash.GameExitPostmortem.checkAndShow(this); } catch (Throwable ignored) {}
-        }
+        // Game-process deaths without a crash report (force close, memory pressure) are recorded for
+        // the crash page but no longer shown as a popup: for the player it was just "I closed the game".
         // New announcements / notifications published while the launcher was in the background
         if (com.craftstudio.cslauncher.about.WelcomePolicy.isAccepted()) {
             try {

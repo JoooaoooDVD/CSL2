@@ -31,14 +31,36 @@ public class Account {
     public String refreshToken = "0";
     public String xuid;
     public long expiresAt;
+    /** Custom Yggdrasil (authlib-injector) accounts: the API root the account was created on */
+    public String authServer;
+    /** Custom Yggdrasil accounts: the client token used for authenticate / refresh */
+    public String clientToken;
+    /** Custom Yggdrasil accounts: display name of the server (from its metadata), for the UI */
+    public String authServerName;
+
+    /** authlib-injector API root for this account, or null when the account has none (local / Microsoft) */
+    public String injectorUrl() {
+        if (authType == AuthType.CUSTOM) return authServer;
+        return authType.injectorUrl;
+    }
     private transient Bitmap mFaceCache;
 
     protected Account() {}
 
     public void updateSkinFace() {
-        String skinFaceUrlTemplate = authType.skinUrl;
-        if(skinFaceUrlTemplate == null) return;
-        String skinFaceUrl = String.format(skinFaceUrlTemplate, username);
+        String skinFaceUrl;
+        if (authType == AuthType.CUSTOM) {
+            // The skin lives on the account's own server: ask its session server for the profile
+            if (authServer == null) return;
+            com.craftstudio.cslauncher.authenticator.yggdrasil.YggdrasilClient.Textures textures =
+                    com.craftstudio.cslauncher.authenticator.yggdrasil.YggdrasilClient.profileTextures(authServer, profileId);
+            if (textures == null || textures.skinUrl == null) return;
+            skinFaceUrl = textures.skinUrl;
+        } else {
+            String skinFaceUrlTemplate = authType.skinUrl;
+            if(skinFaceUrlTemplate == null) return;
+            skinFaceUrl = String.format(skinFaceUrlTemplate, username);
+        }
         try {
             Log.i("SkinLoader", "Updating skin face...");
             File skinFile = getSkinFaceFile();

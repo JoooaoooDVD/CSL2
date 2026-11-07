@@ -418,12 +418,13 @@ public class GameRunner {
     }
 
     private static void addAuthlibInjectorArgs(List<String> javaArgList, Account account) {
-        String injectorUrl = account.authType.injectorUrl;
-        if(injectorUrl == null) {
-            com.craftstudio.cslauncher.authenticator.yggdrasil.LocalSkinBridge.appendJvmArgs(javaArgList);
-            return;
-        }
+        // Local accounts, and Ely.by / custom-server accounts with a cape picked in the launcher, go
+        // through the CS skin server (it proxies the real server and adds the cape).
+        if (com.craftstudio.cslauncher.authenticator.yggdrasil.LocalSkinBridge.appendJvmArgs(javaArgList)) return;
+        String injectorUrl = account.injectorUrl();
+        if(injectorUrl == null) return;
         javaArgList.add("-javaagent:"+Tools.DIR_DATA+"/authlib-injector/authlib-injector.jar="+injectorUrl);
+        javaArgList.add("-Dauthlibinjector.noShowServerName");
     }
 
     // Skip setting essential flags from the version JSON as we already override them

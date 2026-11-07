@@ -91,6 +91,8 @@ public class AccountPickerDialog extends CSPopupDialog {
         ImageView typeIcon = row.findViewById(R.id.ac_type_icon);
         if (account.authType == AuthType.MICROSOFT) type.setText(R.string.ap_type_microsoft);
         else if (account.authType == AuthType.ELY_BY) type.setText(R.string.ap_type_elyby);
+        else if (account.authType == AuthType.CUSTOM) type.setText(account.authServerName != null && !account.authServerName.isEmpty()
+                ? account.authServerName : getContext().getString(R.string.ap_type_custom));
         else type.setText(R.string.ap_type_local);
         if (account.authType.iconResource != 0) {
             typeIcon.setImageResource(account.authType.iconResource);
@@ -101,7 +103,7 @@ public class AccountPickerDialog extends CSPopupDialog {
         row.setActivated(selected);
 
         View skin = row.findViewById(R.id.ac_skin);
-        boolean canEditSkin = account.authType == AuthType.MICROSOFT || account.authType == AuthType.LOCAL;
+        boolean canEditSkin = true; // Ely.by / custom servers: capes are equipped client-side
         skin.setVisibility(canEditSkin ? View.VISIBLE : View.GONE);
         skin.setOnClickListener(v -> { if (!isClosing()) close(() -> mCallback.onSkinEditor(account)); });
         CSAnimationEngine.attachPressFeedback(skin);

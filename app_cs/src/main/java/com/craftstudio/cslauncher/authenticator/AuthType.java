@@ -22,6 +22,13 @@ public enum AuthType {
             "ely.by",
             "http://skinsystem.ely.by/skins/%s.png"
     ),
+    @SerializedName("custom")
+    CUSTOM(
+            com.craftstudio.cslauncher.authenticator.impl.CustomYggdrasilLogin.CREATOR,
+            R.drawable.ic_auth_custom,
+            null,   // per account: Account.authServer
+            null    // skin face comes from the server's session profile, see CustomYggdrasilLogin
+    ),
     @SerializedName("local")
     LOCAL(null, 0, null, null);
 

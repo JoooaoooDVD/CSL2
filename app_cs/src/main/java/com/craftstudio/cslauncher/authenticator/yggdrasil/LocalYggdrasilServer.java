@@ -106,8 +106,20 @@ public final class LocalYggdrasilServer {
     public static synchronized LocalYggdrasilServer start(@NonNull File keyDir, @NonNull String name, @NonNull String uuid,
                                                           @Nullable byte[] skinPng, boolean slim,
                                                           @Nullable byte[] capePng) throws IOException, GeneralSecurityException {
+        return start(keyDir, name, uuid, skinPng, slim, capePng, null);
+    }
+
+    /**
+     * Same, in front of a real Yggdrasil server ({@code upstreamApiRoot}, ending with "/"): joins,
+     * other players' profiles and name lookups are forwarded to it; only this player's own profile
+     * is answered here (the server's skin plus the launcher cape).
+     */
+    @NonNull
+    public static synchronized LocalYggdrasilServer start(@NonNull File keyDir, @NonNull String name, @NonNull String uuid,
+                                                          @Nullable byte[] skinPng, boolean slim,
+                                                          @Nullable byte[] capePng, @Nullable String upstreamApiRoot) throws IOException, GeneralSecurityException {
         if (sRunning != null) sRunning.stop();
-        sRunning = new LocalYggdrasilServer(loadKeys(keyDir), name, uuid, skinPng, slim, capePng);
+        sRunning = new LocalYggdrasilServer(loadKeys(keyDir), name, uuid, skinPng, slim, capePng, upstreamApiRoot);
         return sRunning;
     }
 
@@ -117,8 +129,41 @@ public final class LocalYggdrasilServer {
         return UUID.nameUUIDFromBytes(("OfflinePlayer:" + name).getBytes(StandardCharsets.UTF_8)).toString();
     }
 
+    @Nullable private final String mUpstream; // API root of the real server, or null (plain local account)
+    private final java.util.List<String> mUpstreamSkinDomains = new java.util.ArrayList<>();
+
+    private static byte[] readAllBytes(@NonNull InputStream in) throws IOException {
+        try (InputStream s = in) {
+            ByteArrayOutputStream buf = new ByteArrayOutputStream();
+            byte[] chunk = new byte[8192];
+            int n;
+            while ((n = s.read(chunk)) > 0) buf.write(chunk, 0, n);
+            return buf.toByteArray();
+        }
+    }
+
     private LocalYggdrasilServer(@NonNull KeyPair keys, @NonNull String name, @NonNull String uuid,
-                                 @Nullable byte[] skinPng, boolean slim, @Nullable byte[] capePng) throws IOException, GeneralSecurityException {
+                                 @Nullable byte[] skinPng, boolean slim, @Nullable byte[] capePng,
+                                 @Nullable String upstreamApiRoot) throws IOException, GeneralSecurityException {
+        mUpstream = upstreamApiRoot;
+        if (upstreamApiRoot != null) {
+            try {
+                java.net.HttpURLConnection conn = (java.net.HttpURLConnection) new java.net.URL(upstreamApiRoot).openConnection();
+                conn.setConnectTimeout(10000);
+                conn.setReadTimeout(10000);
+                conn.connect();
+                if (conn.getResponseCode() == 200) {
+                    String text = new String(readAllBytes(conn.getInputStream()), StandardCharsets.UTF_8);
+                    JsonElement parsed = JsonParser.parseString(text);
+                    if (parsed.isJsonObject() && parsed.getAsJsonObject().has("skinDomains")) {
+                        for (JsonElement d : parsed.getAsJsonObject().getAsJsonArray("skinDomains")) mUpstreamSkinDomains.add(d.getAsString());
+                    }
+                }
+                conn.disconnect();
+            } catch (IOException | RuntimeException e) {
+                Log.w(TAG, "Upstream metadata unavailable, forwarded skins may not load", e);
+            }
+        }
         mKeys = keys;
         mName = name;
         mUuid = uuid.replace("-", "").toLowerCase(Locale.ROOT);
@@ -252,6 +297,9 @@ public final class LocalYggdrasilServer {
         domains.add("127.0.0.1");
         domains.add("localhost");
         domains.add(com.craftstudio.cslauncher.friends.RemoteSkins.TEXTURE_DOMAIN);
+        // In front of a real server: its texture domains too, so forwarded profiles of other
+        // players keep their skins (authlib-injector only loads textures from listed domains)
+        for (String d : mUpstreamSkinDomains) domains.add(d);
         root.add("skinDomains", domains);
         root.addProperty("signaturePublickey", publicKeyPem());
         return root;
@@ -444,6 +492,60 @@ public final class LocalYggdrasilServer {
     }
 
     @NonNull
+    /**
+     * Replays the request on the real server. Returns null when it could not be reached (the caller
+     * then answers locally, so a hosted LAN world keeps working offline).
+     */
+    @Nullable
+    private Response forward(@NonNull Request r, @NonNull String upstreamPath) {
+        if (mUpstream == null) return null;
+        try {
+            StringBuilder url = new StringBuilder(mUpstream).append(upstreamPath);
+            if (!r.query.isEmpty()) {
+                char sep = '?';
+                for (Map.Entry<String, String> e : r.query.entrySet()) {
+                    url.append(sep).append(java.net.URLEncoder.encode(e.getKey(), "UTF-8"))
+                       .append('=').append(java.net.URLEncoder.encode(e.getValue(), "UTF-8"));
+                    sep = '&';
+                }
+            }
+            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) new java.net.URL(url.toString()).openConnection();
+            conn.setConnectTimeout(10000);
+            conn.setReadTimeout(15000);
+            conn.setUseCaches(false);
+            conn.setRequestMethod("HEAD".equals(r.method) ? "GET" : r.method);
+            conn.setRequestProperty("Accept", "application/json");
+            conn.setRequestProperty("User-Agent", "CS-Launcher-Plus");
+            if ("POST".equals(r.method)) {
+                conn.setDoOutput(true);
+                conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+                conn.setFixedLengthStreamingMode(r.body.length);
+                try (OutputStream out = conn.getOutputStream()) { out.write(r.body); }
+            }
+            int code = conn.getResponseCode();
+            InputStream in = code >= 400 ? conn.getErrorStream() : conn.getInputStream();
+            byte[] body = new byte[0];
+            if (in != null) {
+                java.io.ByteArrayOutputStream buf = new java.io.ByteArrayOutputStream();
+                byte[] chunk = new byte[8192];
+                int n;
+                while ((n = in.read(chunk)) > 0) buf.write(chunk, 0, n);
+                in.close();
+                body = buf.toByteArray();
+            }
+            String type = conn.getContentType();
+            conn.disconnect();
+            Response response = new Response();
+            response.code = code;
+            response.body = body;
+            if (type != null && !type.isEmpty()) response.type = type;
+            return response;
+        } catch (IOException e) {
+            Log.w(TAG, "Upstream " + upstreamPath + " unreachable", e);
+            return null;
+        }
+    }
+
     private Response route(@NonNull Request r) {
         String path = r.path;
         if (path.length() > 1 && path.endsWith("/")) path = path.substring(0, path.length() - 1);
@@ -475,9 +577,28 @@ public final class LocalYggdrasilServer {
         }
 
         // --- session server
-        if (post && path.equals("/sessionserver/session/minecraft/join")) return Response.noContent();
+        if (post && path.equals("/sessionserver/session/minecraft/join")) {
+            if (mUpstream != null) {
+                // The real server must know about the join, or its online-mode servers refuse us
+                Response forwarded = forward(r, "sessionserver/session/minecraft/join");
+                if (forwarded != null) {
+                    logOnce("join-upstream", "[CS Skins] Join forwarded to the account's server (" + forwarded.code + ")");
+                    return forwarded;
+                }
+                logOnce("join-upstream-fail", "[CS Skins] The account's server did not answer the join, accepted locally");
+            }
+            return Response.noContent();
+        }
         if (get && path.equals("/sessionserver/session/minecraft/hasJoined")) {
             String username = r.query.get("username");
+            if (mUpstream != null && !isOurName(username)) {
+                // A guest with an account on the same server (e.g. another Ely.by player)
+                Response forwarded = forward(r, "sessionserver/session/minecraft/hasJoined");
+                if (forwarded != null && forwarded.code == 200) {
+                    logOnce("hasJoined-up-" + String.valueOf(username).toLowerCase(Locale.ROOT), "[CS Skins] " + username + " verified by the account's server");
+                    return forwarded;
+                }
+            }
             if (isOurName(username)) {
                 logOnce("hasJoined", "[CS Skins] Server checked the player, sent the signed skin profile");
                 return Response.json(profile(true, true));
@@ -505,6 +626,11 @@ public final class LocalYggdrasilServer {
             // game (or a mod) asks with one of those. Always signed: newer authlib versions
             // ignore unsigned textures.
             boolean ours = uuid.equals(mUuid) || uuid.equals(mOfflineUuid) || uuid.matches("0{32}");
+            if (!ours && mUpstream != null) {
+                // Other players on the real server keep their real skins
+                Response forwarded = forward(r, "sessionserver/session/minecraft/profile/" + uuid);
+                if (forwarded != null && forwarded.code == 200) return forwarded;
+            }
             if (!ours) {
                 // Another player: CS Launcher players share their skin through the CS friends
                 // backend (offline-mode UUIDs derive from the name, so the backend can map them)
@@ -525,6 +651,10 @@ public final class LocalYggdrasilServer {
         }
 
         // --- name lookups (api.mojang.com / api.minecraftservices.com namespaces)
+        if (mUpstream != null && (post || get) && (path.startsWith("/api/") || path.startsWith("/minecraftservices/minecraft/profile/lookup/"))) {
+            Response forwarded = forward(r, path.substring(1));
+            if (forwarded != null && forwarded.code == 200) return forwarded;
+        }
         if (post && (path.equals("/api/profiles/minecraft")
                 || path.equals("/minecraftservices/minecraft/profile/lookup/bulk/byname"))) {
             JsonArray result = new JsonArray();
