@@ -436,11 +436,30 @@ public class LauncherActivity extends BaseActivity {
     protected void onNewIntent(android.content.Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
+        if (openChatFromIntent(intent)) return;
         if (com.craftstudio.cslauncher.notify.NotificationSync.handleIntent(this, intent)) return;
         if (com.craftstudio.cslauncher.utils.ProfileShortcuts.profileFrom(intent) != null) {
             if (!com.craftstudio.cslauncher.about.WelcomePolicy.isAccepted() || !StorageRoot.isSetupDone(this)) return;
             handleProfileShortcut(intent);
         }
+    }
+
+    /** A CS Friends notification was tapped: open that friend's chat (or the Friends page). */
+    private boolean openChatFromIntent(@Nullable android.content.Intent intent) {
+        if (intent == null || !intent.hasExtra(com.craftstudio.cslauncher.friends.FriendsNotifier.EXTRA_CHAT)) return false;
+        String chat = intent.getStringExtra(com.craftstudio.cslauncher.friends.FriendsNotifier.EXTRA_CHAT);
+        intent.removeExtra(com.craftstudio.cslauncher.friends.FriendsNotifier.EXTRA_CHAT);
+        if (!com.craftstudio.cslauncher.about.WelcomePolicy.isAccepted() || !StorageRoot.isSetupDone(this)) return false;
+        final String friendId = chat;
+        mFragmentView.post(() -> {
+            Bundle args = new Bundle();
+            if (friendId != null) args.putString(com.craftstudio.cslauncher.friends.ui.FriendsFragment.ARG_CHAT, friendId);
+            com.craftstudio.cslauncher.fragments.MainMenuFragment menu = (com.craftstudio.cslauncher.fragments.MainMenuFragment)
+                    getSupportFragmentManager().findFragmentByTag(com.craftstudio.cslauncher.fragments.MainMenuFragment.TAG);
+            if (menu != null && menu.isAdded()) menu.openPane(com.craftstudio.cslauncher.friends.ui.FriendsFragment.class, com.craftstudio.cslauncher.friends.ui.FriendsFragment.TAG, args);
+            else Tools.swapFragment(this, com.craftstudio.cslauncher.friends.ui.FriendsFragment.class, com.craftstudio.cslauncher.friends.ui.FriendsFragment.TAG, args);
+        });
+        return true;
     }
 
     /**
@@ -709,6 +728,8 @@ public class LauncherActivity extends BaseActivity {
         mProgressLayout = findViewById(R.id.progress_layout);
         View bell = findViewById(R.id.friends_bell);
         if (bell != null) mFriendsBell = new com.craftstudio.cslauncher.friends.ui.FriendsBell(this, bell, findViewById(R.id.friends_bell_badge));
+        com.craftstudio.cslauncher.friends.FriendsNotifier.install(this);
+        openChatFromIntent(getIntent());
         TopNavDock.bind(this, this::onDockItemClicked);
     }
 

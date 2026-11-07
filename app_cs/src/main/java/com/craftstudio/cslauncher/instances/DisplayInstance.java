@@ -23,7 +23,7 @@ public class DisplayInstance {
     protected DisplayInstance() {
     }
 
-    protected File getInstanceIconLocation() {
+    public File getInstanceIconLocation() {
         return new File(mInstanceRoot, "icon.webp");
     }
 

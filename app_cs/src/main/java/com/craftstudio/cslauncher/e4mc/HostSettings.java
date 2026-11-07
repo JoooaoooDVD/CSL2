@@ -25,8 +25,17 @@ import java.util.Set;
  */
 public final class HostSettings {
     public static final int ACCESS_ANYONE = 0, ACCESS_FRIENDS = 1, ACCESS_INVITED = 2;
-    /** The integrated server's own player list size (IntegratedPlayerList): the Java ceiling. */
-    public static final int JAVA_MAX_PLAYERS = 8;
+    /** The game's own LAN limit (IntegratedPlayerList passes 8): what applies without the host agent. */
+    public static final int JAVA_DEFAULT_MAX = 8;
+    /**
+     * The ceiling the CS host agent lifts a Java world to. "No limit" is this number: the game needs a
+     * number, the relay carries 512 streams at most, and nobody brings more friends than that.
+     */
+    public static final int JAVA_MAX_PLAYERS = 512;
+    /** The system property the host agent reads at game start ({@code -Dcs.host.maxPlayers}). */
+    public static final String JAVA_PROPERTY = "cs.host.maxPlayers";
+    /** The value {@link #maxPlayers()} stores for "no limit". */
+    public static final int NO_LIMIT = 0;
 
     private static final String K_MAX = "cs.host.max_players";
     private static final String K_ACCESS = "cs.host.access";
@@ -39,15 +48,99 @@ public final class HostSettings {
 
     private static SharedPreferences prefs() { return LauncherPreferences.DEFAULT_PREF; }
 
-    /** Players the world takes, host included (2..8 for Java). */
+    /** Server icon friends see in their server list: the CS Launcher mark, the profile's icon, or a custom PNG. */
+    public static final int ICON_CS = 0, ICON_PROFILE = 1, ICON_CUSTOM = 2;
+    private static final String K_ICON = "cs.host.icon";
+    /** A 64x64 PNG with this name in the profile's game folder is the custom server icon (same as CS Engine). */
+    public static final String CUSTOM_ICON = "cs-server-icon-custom.png";
+
+    public static int icon() {
+        int i = prefs().getInt(K_ICON, ICON_CS);
+        return i < ICON_CS || i > ICON_CUSTOM ? ICON_CS : i;
+    }
+
+    public static void setIcon(int mode) { prefs().edit().putInt(K_ICON, mode).apply(); }
+
+    @NonNull
+    public static String iconLabel(int mode) {
+        switch (mode) {
+            case ICON_PROFILE: return "Profile icon";
+            case ICON_CUSTOM: return "Custom (" + CUSTOM_ICON + ")";
+            default: return "CS Launcher";
+        }
+    }
+
+    /**
+     * Writes {@code server-icon.png} (64x64) into the game folder before the game starts: the
+     * integrated server reads it from there for the icon in friends' server lists.
+     */
+    public static void writeServerIcon(@NonNull android.content.Context context, @NonNull java.io.File gameDir, @Nullable java.io.File profileIcon) {
+        java.io.File out = new java.io.File(gameDir, "server-icon.png");
+        android.graphics.Bitmap src = null;
+        try {
+            int mode = icon();
+            if (mode == ICON_CUSTOM) {
+                java.io.File custom = new java.io.File(gameDir, CUSTOM_ICON);
+                if (custom.isFile()) src = android.graphics.BitmapFactory.decodeFile(custom.getAbsolutePath());
+            } else if (mode == ICON_PROFILE && profileIcon != null && profileIcon.isFile()) {
+                src = android.graphics.BitmapFactory.decodeFile(profileIcon.getAbsolutePath());
+            }
+            if (src == null) {
+                android.graphics.drawable.Drawable d = androidx.core.content.ContextCompat.getDrawable(context, com.craftstudio.cslauncher.R.mipmap.ic_launcher);
+                if (d != null) {
+                    src = android.graphics.Bitmap.createBitmap(64, 64, android.graphics.Bitmap.Config.ARGB_8888);
+                    android.graphics.Canvas c = new android.graphics.Canvas(src);
+                    d.setBounds(0, 0, 64, 64);
+                    d.draw(c);
+                }
+            }
+            if (src == null) return;
+            android.graphics.Bitmap scaled = src.getWidth() == 64 && src.getHeight() == 64 ? src : android.graphics.Bitmap.createScaledBitmap(src, 64, 64, true);
+            try (java.io.FileOutputStream fo = new java.io.FileOutputStream(out)) {
+                scaled.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, fo);
+            }
+        } catch (java.io.IOException | RuntimeException e) {
+            android.util.Log.w("HostSettings", "server icon: " + e);
+        }
+    }
+
+    /** The stops the +/- buttons walk; 0 is "no limit". */
+    public static final int[] STEPS = {2, 4, 6, 8, 10, 12, 16, 20, 24, 32, 48, 64, 100, 200, NO_LIMIT};
+
+    /** Players the world takes, host included: 2..512, or {@link #NO_LIMIT}. */
     public static int maxPlayers() {
-        int n = prefs().getInt(K_MAX, JAVA_MAX_PLAYERS);
+        int n = prefs().getInt(K_MAX, JAVA_DEFAULT_MAX);
+        if (n == NO_LIMIT) return NO_LIMIT;
         return Math.max(2, Math.min(JAVA_MAX_PLAYERS, n));
     }
 
+    /** What the game is told at start: the limit, or the ceiling for "no limit". */
+    public static int javaMaxPlayers() {
+        int n = maxPlayers();
+        return n == NO_LIMIT ? JAVA_MAX_PLAYERS : n;
+    }
+
     public static void setMaxPlayers(int n) {
-        prefs().edit().putInt(K_MAX, Math.max(2, Math.min(JAVA_MAX_PLAYERS, n))).apply();
+        prefs().edit().putInt(K_MAX, n == NO_LIMIT ? NO_LIMIT : Math.max(2, Math.min(JAVA_MAX_PLAYERS, n))).apply();
         E4mcPublisher.get().applyPolicy();
+    }
+
+    /** The next stop up ({@code +1}) or down ({@code -1}) from the current limit. */
+    public static int stepMaxPlayers(int direction) {
+        int cur = maxPlayers();
+        int i = STEPS.length - 1;
+        if (cur != NO_LIMIT) {
+            i = STEPS.length - 2;
+            for (int k = 0; k < STEPS.length - 1; k++) if (STEPS[k] >= cur) { i = k; break; }
+        }
+        i = Math.max(0, Math.min(STEPS.length - 1, i + direction));
+        return STEPS[i];
+    }
+
+    @NonNull
+    public static String maxPlayersLabel() {
+        int n = maxPlayers();
+        return n == NO_LIMIT ? "No limit" : String.valueOf(n);
     }
 
     /** {@link #ACCESS_ANYONE}, {@link #ACCESS_FRIENDS} or {@link #ACCESS_INVITED}. */

@@ -219,19 +219,21 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
 
         mEngineContainer = view.findViewById(R.id.library_engine_container);
         mHorizonProfile = selectedProfileIsHorizon();
-        if (mHorizonProfile) {
-            // CS Engine profile: this page shows the Horizon registry instead of Modrinth /
-            // CurseForge (which only know Java content). Same page, same tabs, no extra screen.
-            mInitialized = true;
+        if (mHorizonProfile && !mInitialized) {
             applyPresetArgs();
-            ContentType type = mFilters.contentType == ContentType.RESOURCE_PACK ? ContentType.RESOURCE_PACK : ContentType.MOD;
-            enterEngineMode(type);
-            return;
+            if (mFilters.contentType == ContentType.MOD) {
+                // CS Engine profile: only the Mods tab is different, it shows the Horizon registry
+                // (Modrinth / CurseForge only know Java mods). Resource packs, shaders, worlds and
+                // modpacks are the normal pages with the normal version picker.
+                mInitialized = true;
+                enterEngineMode(ContentType.MOD);
+                return;
+            }
         }
         if (!mInitialized) {
             mInitialized = true;
             applyPresetArgs();
-            if (mFilters.contentType == ContentType.MOD && !modsSupported()) {
+            if (mFilters.contentType == ContentType.MOD && !modsSupported() && !mHorizonProfile) {
                 // Vanilla / OptiFine profile: land on resource packs instead of a tab that can't be used
                 mFilters.contentType = ContentType.RESOURCE_PACK;
             }
@@ -333,7 +335,7 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
      * resource packs, shaders and worlds stay available.
      */
     private boolean modsSupported() {
-        return LibraryCatalog.isModLoader(mProfileLoader);
+        return mHorizonProfile || LibraryCatalog.isModLoader(mProfileLoader);
     }
 
     private void applyModsAvailability() {
@@ -349,8 +351,16 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
             ContentType type = v == mTabResourcePacks ? ContentType.RESOURCE_PACK
                     : v == mTabShaders ? ContentType.SHADER_PACK
                     : v == mTabWorlds ? ContentType.WORLD : ContentType.MOD;
-            if (mHorizonProfile) {
-                if (type == ContentType.MOD || type == ContentType.RESOURCE_PACK) enterEngineMode(type);
+            if (mHorizonProfile && type == ContentType.MOD) {
+                if (!mEngineMode) enterEngineMode(ContentType.MOD);
+                return;
+            }
+            if (mEngineMode) {
+                leaveEngineMode();
+                mItems.clear();
+                applyContentType(type, true);
+                startSearch();
+                refreshInstalled();
                 return;
             }
             if (type == ContentType.MOD && !modsSupported()) {
@@ -838,6 +848,8 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
     // ── CS Engine (Horizon) profiles ─────────────────────────────────────────
 
     private boolean mHorizonProfile;
+    /** True while the Mods tab of a CS Engine profile shows the Horizon registry. */
+    private boolean mEngineMode;
     private View mEngineContainer;
 
     private boolean selectedProfileIsHorizon() {
@@ -854,32 +866,31 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
      * source switcher, search toolbar and the Modrinth/CurseForge grid go away, the tabs stay.
      */
     private void enterEngineMode(ContentType type) {
+        mEngineMode = true;
         mFilters.contentType = type;
+        if (mSearchTask != null) mSearchTask.cancel(true);
         if (mSourceFrame != null) mSourceFrame.setVisibility(View.GONE);
         if (mToolbar != null) mToolbar.setVisibility(View.GONE);
         mProgress.setVisibility(View.GONE);
-        View gridHost = (View) mGrid.getParent();
-        if (gridHost != null && gridHost.getParent() instanceof View) ((View) gridHost.getParent()).setVisibility(View.GONE);
+        View gridHost = gridHost();
+        if (gridHost != null) gridHost.setVisibility(View.GONE);
         mStateContainer.setVisibility(View.GONE);
         mEngineContainer.setVisibility(View.VISIBLE);
         mTypeTabsFrame.setVisibility(View.VISIBLE);
-        // Shaders and worlds are not in the Horizon registry
-        mTabShaders.setEnabled(false); mTabShaders.setAlpha(0.38f);
-        mTabWorlds.setEnabled(false); mTabWorlds.setAlpha(0.38f);
-        mTabMods.setEnabled(true); mTabMods.setAlpha(1f);
-        mTabMods.setSelected(type == ContentType.MOD);
-        mTabResourcePacks.setSelected(type == ContentType.RESOURCE_PACK);
+        for (TextView tab : new TextView[]{mTabMods, mTabResourcePacks, mTabShaders, mTabWorlds}) { tab.setEnabled(true); tab.setAlpha(1f); }
+        mTabMods.setSelected(true);
+        mTabResourcePacks.setSelected(false);
         mTabShaders.setSelected(false);
         mTabWorlds.setSelected(false);
         tintTab(mTabMods, false); tintTab(mTabResourcePacks, false); tintTab(mTabShaders, false); tintTab(mTabWorlds, false);
-        LibraryMotion.moveIndicator(mTabIndicator, type == ContentType.RESOURCE_PACK ? mTabResourcePacks : mTabMods, false);
-        mTitle.setText(type == ContentType.RESOURCE_PACK ? R.string.lib_title_resourcepacks : R.string.lib_title_mods);
+        LibraryMotion.moveIndicator(mTabIndicator, mTabMods, false);
+        mTitle.setText(R.string.lib_title_mods);
         mSubtitle.setText(R.string.lib_subtitle_cs_engine);
         if (mContextPill != null) mContextPill.setVisibility(View.GONE);
         String tag = "engine:" + type.name();
         if (getChildFragmentManager().findFragmentByTag(tag) != null) return;
         Bundle args = new Bundle();
-        args.putString(CsEngineModsFragment.ARG_TAB, type == ContentType.RESOURCE_PACK ? "packs" : "mods");
+        args.putString(CsEngineModsFragment.ARG_TAB, "mods");
         args.putBoolean(CsEngineModsFragment.ARG_EMBEDDED, true);
         getChildFragmentManager().beginTransaction()
                 .setReorderingAllowed(true)
@@ -887,8 +898,32 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
                 .commitAllowingStateLoss();
     }
 
+    /** Back to the normal Modrinth / CurseForge page (resource packs, shaders, worlds). */
+    private void leaveEngineMode() {
+        mEngineMode = false;
+        androidx.fragment.app.Fragment engine = getChildFragmentManager().findFragmentByTag("engine:" + ContentType.MOD.name());
+        if (engine != null) {
+            getChildFragmentManager().beginTransaction().setReorderingAllowed(true).remove(engine).commitAllowingStateLoss();
+        }
+        mEngineContainer.setVisibility(View.GONE);
+        if (mSourceFrame != null) mSourceFrame.setVisibility(View.VISIBLE);
+        if (mToolbar != null) mToolbar.setVisibility(View.VISIBLE);
+        View gridHost = gridHost();
+        if (gridHost != null) gridHost.setVisibility(View.VISIBLE);
+        if (mContextPill != null) mContextPill.setVisibility(View.VISIBLE);
+        mFilters.engine = restoreSource();
+        applySource(mFilters.engine, false);
+    }
+
+    @Nullable
+    private View gridHost() {
+        View gridHost = (View) mGrid.getParent();
+        if (gridHost != null && gridHost.getParent() instanceof View) return (View) gridHost.getParent();
+        return null;
+    }
+
     private void startSearch() {
-        if (mHorizonProfile) return;
+        if (mEngineMode) return;
         // A new result set starts at the top: bring the header back so the user sees the context
         View root = getView();
         if (root != null) {

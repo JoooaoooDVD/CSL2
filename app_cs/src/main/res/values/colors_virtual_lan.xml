@@ -19,6 +19,9 @@
     <color name="vl_platinum_text">#FF0E0E11</color>
     <color name="vl_platinum_pressed">#FFC9CDD6</color>
     <color name="vl_divider">#FF24242B</color>
+    <color name="vl_btn">#FF2C2C34</color>
+    <color name="vl_btn_stroke">#FF4E4E5A</color>
+    <color name="vl_btn_pressed">#FF3A3A44</color>
     <color name="vl_ok">#FF5FD38D</color>
     <color name="vl_ok_bg">#1F5FD38D</color>
     <color name="vl_warn">#FFF2C14E</color>

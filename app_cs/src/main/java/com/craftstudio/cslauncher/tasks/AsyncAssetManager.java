@@ -83,6 +83,7 @@ public class AsyncAssetManager {
 
             tryUnpackComponent(ctx, "security", true);
             tryUnpackComponent(ctx, "forge_installer", true);
+            tryUnpackComponent(ctx, "cs_host_agent", true);
             tryUnpackComponent(ctx, "authlib-injector", true);
             tryUnpackComponent(ctx, "e4mc-agent", true);
             ProgressLayout.clearProgress(ProgressLayout.EXTRACT_COMPONENTS);

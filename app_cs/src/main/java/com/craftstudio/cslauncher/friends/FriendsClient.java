@@ -49,7 +49,14 @@ public final class FriendsClient {
         @Nullable public String image;
         /** Quoted message: id, sender id and a short snippet; null when not a reply. */
         @Nullable public String replyTo, replyFrom, replyBody;
+        /** "invite" for a world invite sent as a chat message; null for an ordinary message. */
+        @Nullable public String kind;
+        /** Invite details (kind == "invite"): where to join. */
+        @Nullable public String inviteAddress, inviteWorld, inviteEngine, inviteVersion;
         public boolean hasText() { return body != null && !body.isEmpty(); }
+        public boolean isInvite() { return "invite".equals(kind) && inviteAddress != null && !inviteAddress.isEmpty(); }
+        /** Invites are good for ten minutes (the server's invite lifetime). */
+        public boolean inviteLive(long now) { return isInvite() && now - at < 10 * 60_000L; }
     }
 
     /** Immutable snapshot of the last successful sync. */
@@ -120,6 +127,26 @@ public final class FriendsClient {
 
     public void removeListener(@NonNull Listener l) {
         if (mListeners.remove(l)) mWatchers = Math.max(0, mWatchers - 1);
+        if (mWatchers == 0 && mAddress == null && !mBackground) stopPolling();
+    }
+
+    private volatile boolean mBackground;
+
+    /**
+     * A listener that keeps a slow poll (every {@link #POLL_SLOW} ms) alive while no page is
+     * open, so pinned friends' messages and invites reach the system notifications while the
+     * launcher sits in the background or the game is running. Not counted as a watcher.
+     */
+    public void addBackgroundListener(@NonNull Listener l) {
+        load();
+        mListeners.addIfAbsent(l);
+        mBackground = true;
+        ensureRunning();
+    }
+
+    public void removeBackgroundListener(@NonNull Listener l) {
+        mListeners.remove(l);
+        mBackground = false;
         if (mWatchers == 0 && mAddress == null) stopPolling();
     }
 
@@ -156,6 +183,7 @@ public final class FriendsClient {
         if (CsAccount.isSignedIn()) { mRunning = false; ensureRunning(); }
         else stopPolling();
         notifySnapshot();
+        FriendsNotifier.onAccountChanged();
     }
 
     // --- presence -------------------------------------------------------------------------
@@ -185,7 +213,7 @@ public final class FriendsClient {
         mVersion = null;
         if (was) {
             refreshNow();
-            if (mWatchers == 0) mMain.postDelayed(this::stopPolling, 4000);
+            if (mWatchers == 0 && !mBackground) mMain.postDelayed(this::stopPolling, 4000);
         }
     }
 
@@ -298,6 +326,14 @@ public final class FriendsClient {
             m.id = o.optString("id"); m.from = o.optString("from"); m.to = o.optString("to");
             m.body = o.optString("body"); m.at = when(o.opt("at")); m.mine = m.from.equals(myId);
             m.image = o.isNull("image") ? null : o.optString("image", null);
+            m.kind = o.isNull("kind") ? null : o.optString("kind", null);
+            JSONObject meta = o.optJSONObject("meta");
+            if (meta != null) {
+                m.inviteAddress = meta.isNull("address") ? null : meta.optString("address", null);
+                m.inviteWorld = meta.isNull("world") ? null : meta.optString("world", null);
+                m.inviteEngine = meta.isNull("engine") ? null : meta.optString("engine", "java");
+                m.inviteVersion = meta.isNull("version") ? null : meta.optString("version", null);
+            }
             if (!o.isNull("reply_to")) {
                 m.replyTo = String.valueOf(o.optLong("reply_to"));
                 m.replyFrom = o.isNull("reply_from") ? null : o.optString("reply_from", null);
@@ -348,7 +384,7 @@ public final class FriendsClient {
             }
         }
         for (Message m : s.messages) {
-            if (m.mine) continue;
+            if (m.mine || m.isInvite()) continue;
             String key = "msg:" + m.id;
             if (mSeen.add(key)) {
                 Friend f = merged.friend(m.from);

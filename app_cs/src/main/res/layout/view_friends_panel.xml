@@ -190,7 +190,7 @@
             android:paddingStart="18dp"
             android:paddingEnd="18dp"
             android:text="@string/friends_send"
-            android:textColor="@color/vl_text"
+            android:textColor="@color/vl_platinum_text"
             android:textSize="13sp"
             android:textStyle="bold" />
     </LinearLayout>

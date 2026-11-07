@@ -261,11 +261,19 @@ public class MainMenuFragment extends Fragment {
 
         // Nothing saved for this instance yet: default to the version/loader it runs, so the
         // results are already relevant without a filter-then-apply step
-        if (version.isEmpty() && loader.isEmpty()) {
+        boolean horizon = false;
+        try {
+            com.craftstudio.cslauncher.instances.Instance selected = Instances.loadSelectedInstance();
+            horizon = selected != null && selected.isHorizon();
+        } catch (Exception ignored) {}
+        if (version.isEmpty() && loader.isEmpty() && !horizon) {
             InstanceVersionResolver.Info info = InstanceVersionResolver.resolve(instanceKey);
             if (info.mcVersion != null) version = info.mcVersion;
             loader = info.loader;
         }
+        // A CS Engine profile has no Java game version: resource packs, shaders and worlds are
+        // searched across all versions until the player picks one in the filter.
+        if (horizon) { version = ""; loader = ""; }
 
         args.putString(ModsSearchFragment.ARG_CONTENT_TYPE, contentType.name());
         if (!version.isEmpty()) args.putString(ModsSearchFragment.ARG_PRESET_MC_VERSION, version);

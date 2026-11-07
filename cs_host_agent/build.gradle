@@ -1,0 +1,31 @@
+plugins {
+    id 'java-library'
+}
+
+// The CS host agent: a -javaagent for the Java edition that lifts the integrated server's
+// hard-coded LAN player limit (IntegratedPlayerList passes 8 to PlayerList) to the value of
+// -Dcs.host.maxPlayers. Pure ASM, mapping-free: it recognises the class by shape, so it works
+// on obfuscated vanilla, Fabric intermediary and Forge/NeoForge official names alike.
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+dependencies {
+    implementation 'org.ow2.asm:asm:9.7.1'
+    implementation 'org.ow2.asm:asm-tree:9.7.1'
+}
+
+jar {
+    archiveBaseName = 'cs-host-agent'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA', 'module-info.class'
+    manifest {
+        attributes("Manifest-Version": "1.0",
+                "Premain-Class": "com.craftstudio.hostagent.HostAgent",
+                "Can-Retransform-Classes": "false")
+    }
+}

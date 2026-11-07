@@ -230,7 +230,7 @@
         <!-- Account selector (existing AccountSpinner, restyled) -->
         <com.kdt.mcgui.AccountSpinner
             android:id="@+id/account_spinner"
-            android:layout_width="@dimen/top_account_width"
+            android:layout_width="wrap_content"
             android:layout_height="38dp"
             android:background="@drawable/bg_account_pill"
             android:dropDownVerticalOffset="40dp"

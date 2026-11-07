@@ -128,6 +128,34 @@ public class AccountSpinner extends AppCompatSpinner implements LoginListener, A
 
 
 
+    /**
+     * The pill is as wide as the selected account's name (head + name + chevron), between the
+     * layout's minWidth and {@code top_account_width}: a short name does not sit in a long empty
+     * pill, a long name is ellipsised at the usual width. Plain Spinner measurement would size the
+     * pill to the widest of all accounts instead.
+     */
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        if (View.MeasureSpec.getMode(widthMeasureSpec) == View.MeasureSpec.EXACTLY) return;
+        android.widget.SpinnerAdapter adapter = getAdapter();
+        int position = getSelectedItemPosition();
+        if (adapter == null || position < 0 || position >= adapter.getCount()) return;
+        View item = adapter.getView(position, mMeasureView, this);
+        mMeasureView = item;
+        int heightSpec = View.MeasureSpec.makeMeasureSpec(getMeasuredHeight(), View.MeasureSpec.EXACTLY);
+        item.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED), heightSpec);
+        int want = item.getMeasuredWidth() + getPaddingLeft() + getPaddingRight();
+        int max = getResources().getDimensionPixelSize(R.dimen.top_account_width);
+        if (View.MeasureSpec.getMode(widthMeasureSpec) == View.MeasureSpec.AT_MOST) {
+            max = Math.min(max, View.MeasureSpec.getSize(widthMeasureSpec));
+        }
+        int width = Math.max(getSuggestedMinimumWidth(), Math.min(want, max));
+        setMeasuredDimension(width, getMeasuredHeight());
+    }
+
+    private View mMeasureView;
+
     private void init() {
         mAdapter = new Adapter(getContext());
         setAdapter(mAdapter);

@@ -3,7 +3,7 @@
 <resources>
     <dimen name="top_dock_item_width">38dp</dimen>
     <dimen name="top_dock_item_height">36dp</dimen>
-    <dimen name="top_account_min_width">104dp</dimen>
+    <dimen name="top_account_min_width">72dp</dimen>
     <!-- The account pill has one width whatever the name: long names ellipsize -->
     <dimen name="top_account_width">132dp</dimen>
 </resources>

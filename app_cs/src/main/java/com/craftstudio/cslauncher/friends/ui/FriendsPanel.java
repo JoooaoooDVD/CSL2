@@ -124,6 +124,7 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
         E4mcPublisher.get().addListener(this);
         com.craftstudio.cslauncher.friends.RemoteSkins.addHeadListener(this);
         if (mChatWith != null) mClient.setFast(true);
+        com.craftstudio.cslauncher.friends.FriendsNotifier.setOpenChat(mChatWith);
         render();
     }
 
@@ -133,6 +134,7 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
         mClient.setFast(false);
         mClient.removeListener(this);
         E4mcPublisher.get().removeListener(this);
+        com.craftstudio.cslauncher.friends.FriendsNotifier.setOpenChat(null);
         com.craftstudio.cslauncher.friends.RemoteSkins.removeHeadListener(this);
     }
 
@@ -331,14 +333,26 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
         // Player limit (the Java integrated server stops at 8).
         LinearLayout playersRow = hrow();
         LinearLayout playersText = vcol();
-        playersText.addView(strong(mCtx.getString(R.string.host_players, HostSettings.maxPlayers())));
+        playersText.addView(strong(mCtx.getString(R.string.host_players, HostSettings.maxPlayersLabel())));
         playersText.addView(dim(mCtx.getString(R.string.host_players_java_cap)));
         playersRow.addView(playersText);
         playersRow.addView(gap());
-        playersRow.addView(smallButton("−", R.drawable.bg_vl_btn_ghost, v -> { HostSettings.setMaxPlayers(HostSettings.maxPlayers() - 1); render(); }));
+        playersRow.addView(smallButton("−", R.drawable.bg_vl_btn_ghost, v -> { HostSettings.setMaxPlayers(HostSettings.stepMaxPlayers(-1)); render(); }));
         playersRow.addView(gap());
-        playersRow.addView(smallButton("+", R.drawable.bg_vl_btn_ghost, v -> { HostSettings.setMaxPlayers(HostSettings.maxPlayers() + 1); render(); }));
+        playersRow.addView(smallButton("+", R.drawable.bg_vl_btn_ghost, v -> { HostSettings.setMaxPlayers(HostSettings.stepMaxPlayers(1)); render(); }));
         card.addView(playersRow);
+        // Server icon (server-icon.png in the game folder, written at game start).
+        LinearLayout iconRow = hrow();
+        LinearLayout iconText = vcol();
+        iconText.addView(strong(mCtx.getString(R.string.host_icon)));
+        iconText.addView(dim(HostSettings.iconLabel(HostSettings.icon()) + (HostSettings.icon() == HostSettings.ICON_CUSTOM ? "\n" + mCtx.getString(R.string.host_icon_custom_hint) : "")));
+        iconRow.addView(iconText);
+        iconRow.addView(gap());
+        iconRow.addView(smallButton(mCtx.getString(R.string.host_change), R.drawable.bg_vl_btn_ghost, v -> {
+            HostSettings.setIcon((HostSettings.icon() + 1) % 3);
+            render();
+        }));
+        card.addView(iconRow);
         // Cheats: the game decides at Open to LAN.
         card.addView(strong(mCtx.getString(R.string.host_cheats)));
         card.addView(dim(mCtx.getString(R.string.host_cheats_java)));
@@ -509,6 +523,8 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
             TextView chat = smallButton(mCtx.getString(R.string.friends_chat) + (unread > 0 ? " (" + unread + ")" : ""), R.drawable.bg_vl_btn_ghost, b -> openChat(f.id, f.name));
             if (unread > 0) chat.setTextColor(color(R.color.vl_ok));
             row.addView(chat);
+            row.addView(gap());
+            row.addView(pinButton(f.id));
             row.setOnLongClickListener(v -> {
                 new AlertDialog.Builder(mHost.activity())
                         .setTitle(R.string.friends_remove)
@@ -528,6 +544,7 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
     private void openChat(String id, String name) {
         mChatWith = id;
         mChatName = name;
+        com.craftstudio.cslauncher.friends.FriendsNotifier.setOpenChat(id);
         mLastChatCount = -1;
         setReply(null);
         mClient.markConversationRead(id);
@@ -543,6 +560,7 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
     private void closeChat() {
         if (mChatWith == null) return;
         mChatWith = null;
+        com.craftstudio.cslauncher.friends.FriendsNotifier.setOpenChat(null);
         setReply(null);
         mClient.setFast(false);
         hideKeyboard(mInput);
@@ -621,7 +639,32 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
             iv.setOnClickListener(v -> showPhoto(m.image));
             iv.setOnLongClickListener(v -> { showMessageMenu(m, v); return true; });
         }
-        if (m.hasText()) {
+        if (m.isInvite()) {
+            // A world invite in the chat: who / which world, and Join while it is still good
+            TextView title = new TextView(mCtx);
+            String world = m.inviteWorld == null || m.inviteWorld.isEmpty() ? mCtx.getString(R.string.friends_a_world) : m.inviteWorld;
+            title.setText(m.mine ? mCtx.getString(R.string.chat_invite_sent, world) : mCtx.getString(R.string.chat_invite_received, world));
+            title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+            title.setTypeface(null, Typeface.BOLD);
+            title.setTextColor(textColor);
+            title.setMaxWidth(maxWidth - dp(20));
+            box.addView(title);
+            TextView sub = new TextView(mCtx);
+            String engine = isHorizon(m.inviteEngine) ? "CS Engine" : (m.inviteVersion == null || m.inviteVersion.isEmpty() ? "Java" : "Java " + m.inviteVersion);
+            boolean live = m.inviteLive(System.currentTimeMillis());
+            sub.setText(live ? engine : mCtx.getString(R.string.chat_invite_expired, engine));
+            sub.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+            sub.setTextColor(m.mine ? color(R.color.vl_platinum_text) : color(R.color.vl_text_dim));
+            sub.setAlpha(m.mine ? 0.72f : 1f);
+            box.addView(sub);
+            if (!m.mine && live) {
+                TextView join = smallButton(mCtx.getString(R.string.friends_join), R.drawable.bg_friends_btn_join,
+                        v -> JoinWorld.join(mHost.activity(), m.inviteAddress, m.inviteEngine == null ? "java" : m.inviteEngine, m.inviteVersion));
+                LinearLayout.LayoutParams jlp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(34));
+                jlp.topMargin = dp(8);
+                box.addView(join, jlp);
+            }
+        } else if (m.hasText()) {
             TextView t = new TextView(mCtx);
             t.setText(m.body);
             t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
@@ -632,6 +675,30 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
         box.setOnLongClickListener(v -> { showMessageMenu(m, v); return true; });
         box.setMinimumWidth(dp(48));
         return box;
+    }
+
+    /**
+     * Pin: this friend's messages become phone notifications (invites and requests always do).
+     * Shown as a small pin that is filled when active.
+     */
+    private TextView pinButton(String friendId) {
+        boolean pinned = com.craftstudio.cslauncher.friends.FriendsNotifier.isPinned(friendId);
+        TextView pin = smallButton(pinned ? "\uD83D\uDCCC" : "\uD83D\uDCCD", R.drawable.bg_vl_btn_ghost, null);
+        pin.setPadding(dp(8), 0, dp(8), 0);
+        pin.setAlpha(pinned ? 1f : 0.55f);
+        pin.setContentDescription(mCtx.getString(pinned ? R.string.friends_unpin : R.string.friends_pin));
+        pin.setOnClickListener(v -> {
+            boolean now = !com.craftstudio.cslauncher.friends.FriendsNotifier.isPinned(friendId);
+            com.craftstudio.cslauncher.friends.FriendsNotifier.setPinned(friendId, now);
+            if (now) com.craftstudio.cslauncher.friends.FriendsNotifier.ensurePermission(mHost.activity());
+            toast(now ? R.string.friends_pinned : R.string.friends_unpinned);
+            if (Motion.buttons(v)) {
+                v.animate().rotation(now ? -20f : 0f).scaleX(1.15f).scaleY(1.15f).setDuration(90).withEndAction(() ->
+                        v.animate().scaleX(1f).scaleY(1f).setDuration(160).setInterpolator(Motion.SPRING).start()).start();
+            }
+            render();
+        });
+        return pin;
     }
 
     private String replyAuthor(@Nullable String id) {
@@ -956,10 +1023,14 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
         TextView t = new TextView(mCtx);
         t.setText(text);
         t.setGravity(Gravity.CENTER);
-        t.setTextColor(color(R.color.vl_text));
+        // Platinum buttons take dark text; every other button is light text on a raised tile
+        boolean platinum = bg == R.drawable.bg_vl_btn_primary;
+        t.setTextColor(color(platinum ? R.color.vl_platinum_text : R.color.vl_text));
         t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
         t.setTypeface(null, Typeface.BOLD);
         t.setBackgroundResource(bg);
+        t.setMinWidth(dp(44));
+        com.craftstudio.cslauncher.utils.CSAnimationEngine.attachPressFeedback(t);
         t.setPadding(dp(16), 0, dp(16), 0);
         t.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(40)));
         t.setOnClickListener(l);

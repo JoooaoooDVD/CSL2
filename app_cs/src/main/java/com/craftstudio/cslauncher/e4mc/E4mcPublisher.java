@@ -203,7 +203,8 @@ public final class E4mcPublisher {
             for (String n : names) { if (sb.length() > 0) sb.append('\n'); sb.append(n); }
             allowed = sb.toString();
         }
-        int guests = Math.max(1, HostSettings.maxPlayers() - 1);
+        int max = HostSettings.maxPlayers();
+        int guests = max == HostSettings.NO_LIMIT ? 0 : Math.max(1, max - 1);
         try {
             E4mcNative.nativeSetPolicy(h, guests, allowed, HostSettings.closedReason());
         } catch (Throwable t) {

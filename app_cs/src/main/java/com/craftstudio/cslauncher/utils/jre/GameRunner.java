@@ -205,6 +205,8 @@ public class GameRunner {
                 }
             }
         File gamedir = instance.getGameDirectory();
+        // The icon friends see next to this world in their server list (World hosting settings)
+        com.craftstudio.cslauncher.e4mc.HostSettings.writeServerIcon(activity, gamedir, instance.getInstanceIconLocation());
         JVersionList.Version versionInfo = Tools.getVersionInfo(versionId);
         // We don't need the library list, the asset index, client download info for the code below
         versionInfo.libraries = null;
@@ -311,6 +313,7 @@ public class GameRunner {
         javaArgList.add("-Dorg.lwjgl.system.SharedLibraryExtractPath="+lwjglExtractDir.getAbsolutePath());
 
         addAuthlibInjectorArgs(javaArgList, account);
+        addHostAgentArgs(javaArgList);
 
         mergeMoJsonArgs(javaArgList, getMoJsonJvmArgs(versionId));
 
@@ -396,6 +399,22 @@ public class GameRunner {
         } else {
             Log.w(Tools.APP_NAME, "Failed to create the configuration directory");
         }
+    }
+
+    /**
+     * World hosting settings for the Java edition: the integrated server's hard-coded LAN limit of 8
+     * players is lifted by the CS host agent (components/cs_host_agent) to the limit the player chose;
+     * the value is read when the LAN world opens, so it applies from this game start.
+     */
+    private static void addHostAgentArgs(List<String> javaArgList) {
+        File agent = new File(Tools.DIR_DATA, "cs_host_agent/cs-host-agent.jar");
+        int max = com.craftstudio.cslauncher.e4mc.HostSettings.javaMaxPlayers();
+        if (!agent.isFile()) {
+            Log.w(Tools.APP_NAME, "CS host agent missing, LAN worlds keep the game's limit of 8");
+            return;
+        }
+        javaArgList.add("-javaagent:" + agent.getAbsolutePath());
+        javaArgList.add("-D" + com.craftstudio.cslauncher.e4mc.HostSettings.JAVA_PROPERTY + "=" + max);
     }
 
     private static void addAuthlibInjectorArgs(List<String> javaArgList, Account account) {

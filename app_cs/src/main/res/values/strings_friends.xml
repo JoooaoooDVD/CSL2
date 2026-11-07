@@ -60,8 +60,10 @@
     <string name="host_invited_none">Nobody is invited yet — use Invite next to a friend or Invite All while hosting.</string>
     <string name="host_invited_count">%1$d invited this session.</string>
     <string name="host_friends_hint">Only players on your CS friends list get past the relay; everyone else sees the reason on their login screen.</string>
-    <string name="host_players">Players (you included): %1$d</string>
-    <string name="host_players_java_cap">Java worlds take up to 8 players (the game\'s own LAN limit). CS Engine worlds can go higher or have no limit — set it on its Host page.</string>
+    <string name="host_icon">Server icon</string>
+    <string name="host_icon_custom_hint">Put a 64×64 cs-server-icon-custom.png in this profile\'s game folder. Applies at the next game start.</string>
+    <string name="host_players">Players (you included): %1$s</string>
+    <string name="host_players_java_cap">The game\'s own LAN limit is 8; CS Launcher lifts it at game start (the CS host agent), so a change here applies when the game is next started. CS Engine worlds set theirs on the in-game Host page.</string>
     <string name="host_cheats">Allow cheats</string>
     <string name="host_cheats_java">Java: choose it on the game\'s Open to LAN screen. CS Engine: a switch on its Host page.</string>
     <string name="host_relay">Relay (e4mc)</string>
@@ -85,6 +87,16 @@
     <string name="friends_offline_hint">Offline — showing the last known state.</string>
     <string name="lib_subtitle_cs_engine">CS Engine registry · built-in mods, .hmod mods and resource packs for this profile</string>
     <!-- Round 96: cross-version join, chat media -->
+    <string name="friends_a_world">a world</string>
+    <string name="friends_pin">Pin: notify me about this friend\'s messages</string>
+    <string name="friends_unpin">Unpin: stop notifying about this friend\'s messages</string>
+    <string name="friends_pinned">Pinned — their messages will show as notifications</string>
+    <string name="friends_unpinned">Unpinned — no notifications for their messages</string>
+    <string name="friends_channel_name">CS Friends</string>
+    <string name="friends_channel_desc">Messages from pinned friends, world invites and friend requests</string>
+    <string name="chat_invite_received">Invited you to %1$s</string>
+    <string name="chat_invite_sent">You invited them to %1$s</string>
+    <string name="chat_invite_expired">%1$s · invite expired</string>
     <string name="cross_version_preparing">Preparing to join a %1$s world…</string>
     <string name="cross_version_ready">%1$s installed — joining the %2$s world</string>
     <string name="cross_version_failed">Could not prepare the cross-version join (%1$s). Joining anyway.</string>

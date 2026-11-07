@@ -18,6 +18,7 @@ rootProject.name='CSLauncherPlus'
 include ':app_cs'
 
 include ':forge_installer'
+include ':cs_host_agent'
 include ':glfw:jni_bindings'
 include ':jreexec:jni_bindings'
 include ':sdl:jni_bindings'
