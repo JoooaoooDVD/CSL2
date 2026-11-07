@@ -46,8 +46,37 @@ public class CsgeRenderSpec extends MobileGluesRenderSpec {
     public String tag() {
         return Renderers.CSGE_RENDERER;
     }
+    /**
+     * The engine's GLSL cache stores translated shaders keyed by their source. When the
+     * shipped engine library changes, a translation fix would otherwise be shadowed by
+     * the cache written by the previous build, so the cache is dropped once per library.
+     */
+    private static void dropStaleGlslCache(File dir) {
+        File lib = new File(Tools.NATIVE_LIB_DIR, "libcsge.so");
+        String stamp = lib.length() + ":" + lib.lastModified() + ":" + BuildConfig.VERSION_CODE;
+        File stampFile = new File(dir, ".lib_stamp");
+        String previous = null;
+        if (stampFile.isFile()) {
+            try {
+                previous = Tools.read(stampFile.getAbsolutePath()).trim();
+            } catch (IOException ignored) {
+            }
+        }
+        if (stamp.equals(previous)) return;
+        File cache = new File(dir, "glsl_cache.tmp");
+        if (cache.exists() && cache.delete()) Log.i(TAG, "CSGE library changed, dropped GLSL cache");
+        new File(dir, "glsl_cache.tmp.new").delete();
+        try {
+            dir.mkdirs();
+            Tools.write(stampFile.getAbsolutePath(), stamp);
+        } catch (IOException e) {
+            Log.w(TAG, "Could not record CSGE library stamp", e);
+        }
+    }
+
     public void setupEnvironment(Context context, Map<String, String> envMap) {
         File dir = dir();
+        dropStaleGlslCache(dir);
         try {
             LauncherPreferences.writeMGRendererSettings(new File(dir, "config.json"));
         } catch (IOException e) {
