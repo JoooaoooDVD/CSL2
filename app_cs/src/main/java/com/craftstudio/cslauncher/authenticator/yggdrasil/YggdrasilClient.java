@@ -44,7 +44,7 @@ public final class YggdrasilClient {
         @Nullable public final String homepage; // links.homepage
         @Nullable public final String register; // links.register
 
-        Server(@NonNull String apiRoot, @NonNull String name, @Nullable String homepage, @Nullable String register) {
+        public Server(@NonNull String apiRoot, @NonNull String name, @Nullable String homepage, @Nullable String register) {
             this.apiRoot = apiRoot;
             this.name = name;
             this.homepage = homepage;

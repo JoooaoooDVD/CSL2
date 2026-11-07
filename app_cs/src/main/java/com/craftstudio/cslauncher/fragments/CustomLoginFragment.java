@@ -40,6 +40,20 @@ import com.craftstudio.cslauncher.utils.motion.Motion;
  */
 public class CustomLoginFragment extends Fragment {
     public static final String TAG = "CUSTOM_LOGIN_FRAGMENT";
+    /** Arguments: a server picked on the Add-account page (the field is then not shown) */
+    public static final String ARG_API_ROOT = "api_root";
+    public static final String ARG_NAME = "name";
+    public static final String ARG_HOMEPAGE = "homepage";
+    public static final String ARG_REGISTER = "register";
+
+    public static Bundle argsFor(@NonNull com.craftstudio.cslauncher.authenticator.yggdrasil.AuthServers.Entry entry) {
+        Bundle b = new Bundle();
+        b.putString(ARG_API_ROOT, entry.apiRoot);
+        b.putString(ARG_NAME, entry.name);
+        b.putString(ARG_HOMEPAGE, entry.homepage);
+        b.putString(ARG_REGISTER, entry.register);
+        return b;
+    }
 
     /** Well-known servers, shown as quick picks */
     private static final String[][] PRESETS = {
@@ -95,6 +109,7 @@ public class CustomLoginFragment extends Fragment {
             @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
             @Override public void onTextChanged(CharSequence s, int a, int b, int c) {}
             @Override public void afterTextChanged(Editable s) {
+                if (getArguments() != null && getArguments().getString(ARG_API_ROOT) != null) return;
                 mResolved = null;
                 mRegister.setVisibility(View.GONE);
                 hideError();
@@ -136,6 +151,25 @@ public class CustomLoginFragment extends Fragment {
                 startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
             } catch (Exception ignored) {}
         });
+
+        Bundle args = getArguments();
+        String lockedRoot = args == null ? null : args.getString(ARG_API_ROOT);
+        if (lockedRoot != null) {
+            String name = args.getString(ARG_NAME, lockedRoot);
+            mResolved = new YggdrasilClient.Server(lockedRoot, name, args.getString(ARG_HOMEPAGE), args.getString(ARG_REGISTER));
+            view.findViewById(R.id.cl_server_block).setVisibility(View.GONE);
+            View locked = view.findViewById(R.id.cl_server_locked);
+            locked.setVisibility(View.VISIBLE);
+            ((TextView) view.findViewById(R.id.cl_locked_name)).setText(name);
+            ((TextView) view.findViewById(R.id.cl_locked_host)).setText(
+                    new com.craftstudio.cslauncher.authenticator.yggdrasil.AuthServers.Entry(lockedRoot, name, null, null).host());
+            ((TextView) view.findViewById(R.id.cl_locked_initial)).setText(name.isEmpty() ? "?" : name.substring(0, 1).toUpperCase());
+            ((TextView) view.findViewById(R.id.cl_title)).setText(getString(R.string.cl_sign_in_on, name));
+            mServer.setText(lockedRoot);
+            mRegister.setVisibility(mResolved.register != null || mResolved.homepage != null ? View.VISIBLE : View.GONE);
+            mUsername.requestFocus();
+            Motion.riseIn(locked, 60L, 14f);
+        }
 
         // Phones in portrait: the explainer goes under the form
         view.post(() -> {

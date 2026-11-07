@@ -58,7 +58,13 @@ public class CustomYggdrasilLogin implements BackgroundLogin {
                 Tools.runOnUiThread(() -> loginListener.onLoginDone(account));
             } catch (YggdrasilClient.ServerException e) {
                 Log.w(TAG, "Server refused the login: " + e.error + " " + e.getMessage());
-                PresentableException shown = new PresentableException(e, R.string.auth_custom_error_server, e.getMessage());
+                String message = e.getMessage() == null ? "" : e.getMessage();
+                String lower = message.toLowerCase(java.util.Locale.ROOT);
+                boolean noProfile = "NoProfile".equals(e.error) || lower.contains("missing player")
+                        || lower.contains("create a player") || lower.contains("no profile") || message.contains("角色");
+                PresentableException shown = noProfile
+                        ? new PresentableException(e, R.string.cl_no_profile_hint, serverLabel(typedServerOf(code)))
+                        : new PresentableException(e, R.string.auth_custom_error_server, message);
                 Tools.runOnUiThread(() -> loginListener.onLoginError(shown));
             } catch (Exception e) {
                 Log.w(TAG, "Login failed", e);
@@ -66,6 +72,24 @@ public class CustomYggdrasilLogin implements BackgroundLogin {
             }
             ProgressLayout.clearProgress(ProgressLayout.AUTHENTICATE);
         });
+    }
+
+    private static String typedServerOf(String code) {
+        try {
+            return JsonParser.parseString(code).getAsJsonObject().get("server").getAsString();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    /** "littleskin.cn" for a typed or resolved address */
+    private static String serverLabel(String typed) {
+        com.craftstudio.cslauncher.authenticator.yggdrasil.AuthServers.Entry saved =
+                com.craftstudio.cslauncher.authenticator.yggdrasil.AuthServers.find(typed);
+        if (saved != null) return saved.name;
+        String s = typed.replaceFirst("^authlib-injector:", "").replaceFirst("^https?://", "");
+        int slash = s.indexOf('/');
+        return slash > 0 ? s.substring(0, slash) : s;
     }
 
     @Override
