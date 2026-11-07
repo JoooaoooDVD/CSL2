@@ -76,9 +76,15 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
             android:background="@drawable/bg_st_panel"
-            android:baselineAligned="false"
-            android:orientation="horizontal"
+            android:orientation="vertical"
             android:padding="@dimen/st_card_gap">
+
+          <LinearLayout
+            android:id="@+id/st_columns"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:baselineAligned="false"
+            android:orientation="horizontal">
 
             <LinearLayout
                 android:id="@+id/st_col_left"
@@ -136,6 +142,14 @@
                     android:layout_height="@dimen/st_card_height"
                     android:layout_marginTop="@dimen/st_card_gap" />
             </LinearLayout>
+          </LinearLayout>
+
+            <include
+                android:id="@+id/st_card_storage"
+                layout="@layout/item_settings_hub_card"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/st_card_height"
+                android:layout_marginTop="@dimen/st_card_gap" />
         </LinearLayout>
 
         <LinearLayout

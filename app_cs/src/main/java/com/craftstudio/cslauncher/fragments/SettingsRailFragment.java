@@ -29,7 +29,8 @@ public class SettingsRailFragment extends Fragment {
             R.id.rail_control,
             R.id.rail_java,
             R.id.rail_misc,
-            R.id.rail_experimental
+            R.id.rail_experimental,
+            R.id.rail_storage
     };
 
     @Nullable
@@ -42,6 +43,7 @@ public class SettingsRailFragment extends Fragment {
             case 4: return "com.craftstudio.cslauncher.prefs.screens.LauncherPreferenceJavaFragment";
             case 5: return "com.craftstudio.cslauncher.prefs.screens.LauncherPreferenceMiscellaneousFragment";
             case 6: return "com.craftstudio.cslauncher.prefs.screens.LauncherPreferenceExperimentalFragment";
+            case 7: return "com.craftstudio.cslauncher.prefs.screens.LauncherPreferenceStorageFragment";
             default: return null;
         }
     }

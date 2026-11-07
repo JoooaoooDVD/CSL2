@@ -129,5 +129,20 @@
             android:src="@drawable/ic_px_experiment"
             android:tint="#FFFFFFFF"
             android:tooltipText="@string/preference_experimental_title" />
+
+        <ImageView
+            android:id="@+id/rail_storage"
+            android:layout_width="@dimen/st_tab_size"
+            android:layout_height="@dimen/st_tab_size"
+            android:layout_marginLeft="6dp"
+            android:background="@drawable/bg_st_tab"
+            android:clickable="true"
+            android:contentDescription="@string/preference_storage_title"
+            android:focusable="true"
+            android:padding="9dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_px_folder"
+            android:tint="#FFFFFFFF"
+            android:tooltipText="@string/preference_storage_title" />
     </LinearLayout>
 </HorizontalScrollView>

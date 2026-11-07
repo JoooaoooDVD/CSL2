@@ -296,6 +296,11 @@ public class SettingsHostFragment extends Fragment
             icon = R.drawable.ic_px_experiment;
             title = R.string.preference_experimental_title;
             subtitle = R.string.preference_experimental_description;
+        } else if (fragmentClassName.endsWith("LauncherPreferenceStorageFragment")) {
+            art = R.drawable.settings_art_storage;
+            icon = R.drawable.ic_px_folder;
+            title = R.string.preference_storage_title;
+            subtitle = R.string.preference_storage_description;
         } else if (fragmentClassName.endsWith("LauncherPreferenceRendererSettingsFragment")) {
             art = R.drawable.settings_art_video;
             icon = R.drawable.ic_mg_renderer;
