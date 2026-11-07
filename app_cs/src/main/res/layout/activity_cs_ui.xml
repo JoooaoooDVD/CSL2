@@ -16,51 +16,62 @@
     <!-- ══════════════ LEFT RAIL ══════════════ -->
     <LinearLayout
         android:id="@+id/cs_side_rail"
-        android:layout_width="64dp"
+        android:layout_width="@dimen/side_rail_width"
         android:layout_height="match_parent"
         android:background="@drawable/bg_side_rail"
         android:gravity="center_horizontal"
         android:orientation="vertical"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp">
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp">
 
-        <ImageView
-            android:id="@+id/brand_logo"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:contentDescription="@string/app_short_name"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_cs_full" />
+        <FrameLayout
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_side_rail_logo">
+
+            <ImageView
+                android:id="@+id/brand_logo"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="center"
+                android:contentDescription="@string/app_short_name"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_cs_full" />
+        </FrameLayout>
+
+        <View
+            android:layout_width="28dp"
+            android:layout_height="1dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="6dp"
+            android:background="?attr/colorOutlineVariant" />
 
         <ScrollView
             android:id="@+id/top_nav_scroll"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_marginTop="10dp"
             android:layout_weight="1"
             android:fillViewport="true"
             android:overScrollMode="never"
             android:scrollbars="none">
 
             <LinearLayout
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
                 android:orientation="vertical">
 
                 <FrameLayout
                     android:id="@+id/top_nav_dock"
-                    android:layout_width="44dp"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_top_dock"
-                    android:padding="3dp">
+                    android:layout_width="@dimen/side_rail_item_width"
+                    android:layout_height="wrap_content">
 
                     <View
                         android:id="@+id/top_nav_indicator"
-                        android:layout_width="@dimen/top_dock_item_width"
-                        android:layout_height="@dimen/top_dock_item_height"
+                        android:layout_width="@dimen/side_rail_item_width"
+                        android:layout_height="@dimen/side_rail_item_height"
                         android:layout_gravity="center_horizontal"
-                        android:background="@drawable/bg_top_dock_indicator"
+                        android:background="@drawable/bg_side_rail_indicator"
                         android:visibility="invisible" />
 
                     <LinearLayout
@@ -68,92 +79,94 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_horizontal"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:showDividers="middle"
+                        android:divider="@drawable/divider_side_rail_gap">
 
                 <ImageButton
                     android:id="@+id/nav_home"
-                    android:layout_width="@dimen/top_dock_item_width"
-                    android:layout_height="@dimen/top_dock_item_height"
-                    android:background="@drawable/bg_top_dock_item"
+                    android:layout_width="@dimen/side_rail_item_width"
+                    android:layout_height="@dimen/side_rail_item_height"
+                    android:background="@drawable/bg_side_rail_item"
                     android:contentDescription="@string/home_nav_home"
-                    android:padding="8dp"
+                    android:padding="12dp"
                     android:scaleType="fitCenter"
                     android:src="@drawable/ic_nav_home"
                     android:tooltipText="@string/home_nav_home" />
 
                 <ImageButton
                     android:id="@+id/mod_store_button"
-                    android:layout_width="@dimen/top_dock_item_width"
-                    android:layout_height="@dimen/top_dock_item_height"
-                    android:background="@drawable/bg_top_dock_item"
+                    android:layout_width="@dimen/side_rail_item_width"
+                    android:layout_height="@dimen/side_rail_item_height"
+                    android:background="@drawable/bg_side_rail_item"
                     android:contentDescription="@string/home_nav_browser"
-                    android:padding="8dp"
+                    android:padding="12dp"
                     android:scaleType="fitCenter"
                     android:src="@drawable/ic_dock_download"
                     android:tooltipText="@string/home_nav_browser" />
 
                 <ImageButton
                     android:id="@+id/open_files_button"
-                    android:layout_width="@dimen/top_dock_item_width"
-                    android:layout_height="@dimen/top_dock_item_height"
-                    android:background="@drawable/bg_top_dock_item"
+                    android:layout_width="@dimen/side_rail_item_width"
+                    android:layout_height="@dimen/side_rail_item_height"
+                    android:background="@drawable/bg_side_rail_item"
                     android:contentDescription="@string/home_nav_manager"
-                    android:padding="8dp"
+                    android:padding="12dp"
                     android:scaleType="fitCenter"
                     android:src="@drawable/ic_dock_manager"
                     android:tooltipText="@string/home_nav_manager" />
 
                 <ImageButton
                     android:id="@+id/nav_multiplayer"
-                    android:layout_width="@dimen/top_dock_item_width"
-                    android:layout_height="@dimen/top_dock_item_height"
-                    android:background="@drawable/bg_top_dock_item"
+                    android:layout_width="@dimen/side_rail_item_width"
+                    android:layout_height="@dimen/side_rail_item_height"
+                    android:background="@drawable/bg_side_rail_item"
                     android:contentDescription="@string/friends_nav"
-                    android:padding="8dp"
+                    android:padding="12dp"
                     android:scaleType="fitCenter"
                     android:src="@drawable/ic_dock_multiplayer"
                     android:tooltipText="@string/friends_nav" />
 
                 <ImageButton
                     android:id="@+id/nav_skins"
-                    android:layout_width="@dimen/top_dock_item_width"
-                    android:layout_height="@dimen/top_dock_item_height"
-                    android:background="@drawable/bg_top_dock_item"
+                    android:layout_width="@dimen/side_rail_item_width"
+                    android:layout_height="@dimen/side_rail_item_height"
+                    android:background="@drawable/bg_side_rail_item"
                     android:contentDescription="@string/home_nav_skins"
-                    android:padding="8dp"
+                    android:padding="12dp"
                     android:scaleType="fitCenter"
                     android:src="@drawable/ic_dock_skins"
                     android:tooltipText="@string/home_nav_skins" />
 
                 <ImageButton
                     android:id="@+id/nav_playtime"
-                    android:layout_width="@dimen/top_dock_item_width"
-                    android:layout_height="@dimen/top_dock_item_height"
-                    android:background="@drawable/bg_top_dock_item"
+                    android:layout_width="@dimen/side_rail_item_width"
+                    android:layout_height="@dimen/side_rail_item_height"
+                    android:background="@drawable/bg_side_rail_item"
                     android:contentDescription="@string/home_nav_playtime"
-                    android:padding="8dp"
+                    android:padding="12dp"
                     android:scaleType="fitCenter"
                     android:src="@drawable/ic_dock_playtime"
                     android:tooltipText="@string/home_nav_playtime" />
 
                 <ImageButton
                     android:id="@+id/nav_controls"
-                    android:layout_width="@dimen/top_dock_item_width"
-                    android:layout_height="@dimen/top_dock_item_height"
-                    android:background="@drawable/bg_top_dock_item"
+                    android:layout_width="@dimen/side_rail_item_width"
+                    android:layout_height="@dimen/side_rail_item_height"
+                    android:background="@drawable/bg_side_rail_item"
                     android:contentDescription="@string/home_nav_controls"
-                    android:padding="8dp"
+                    android:padding="12dp"
                     android:scaleType="fitCenter"
                     android:src="@drawable/ic_dock_controls"
                     android:tooltipText="@string/home_nav_controls" />
 
                 <ImageButton
                     android:id="@+id/nav_logs"
-                    android:layout_width="@dimen/top_dock_item_width"
-                    android:layout_height="@dimen/top_dock_item_height"
-                    android:background="@drawable/bg_top_dock_item"
+                    android:layout_width="@dimen/side_rail_item_width"
+                    android:layout_height="@dimen/side_rail_item_height"
+                    android:background="@drawable/bg_side_rail_item"
                     android:contentDescription="@string/home_nav_logs"
-                    android:padding="8dp"
+                    android:padding="12dp"
                     android:scaleType="fitCenter"
                     android:src="@drawable/ic_dock_logs"
                     android:tooltipText="@string/home_nav_logs" />

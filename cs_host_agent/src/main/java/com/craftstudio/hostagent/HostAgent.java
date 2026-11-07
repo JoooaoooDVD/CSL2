@@ -39,6 +39,10 @@ public final class HostAgent {
             public byte[] transform(ClassLoader loader, String name, Class<?> redefined, ProtectionDomain pd, byte[] bytes) {
                 try {
                     if (name == null || name.startsWith("java/") || name.startsWith("sun/") || name.startsWith("jdk/")) return null;
+                    if (contains(bytes, PUBLISH_NEEDLE)) {
+                        byte[] out = patchPublish(name, bytes);
+                        if (out != null) return out;
+                    }
                     if (!contains(bytes, NEEDLE)) return null;
                     return patch(name, bytes);
                 } catch (Throwable t) {
@@ -48,6 +52,75 @@ public final class HostAgent {
             }
         }, false);
         System.out.println("[cs-host-agent] ready, " + PROPERTY + "=" + System.getProperty(PROPERTY, "(unset: 8)"));
+    }
+
+    // ---- 26.x: the Multiplayer Options screen opens the world without a log line ----
+    //
+    // Up to 25.x "Open to LAN" logged "Started serving on <port>" and echoed "Local game hosted on
+    // port <port>" in chat; the launcher reads that line to start e4mc. Since 26.2 the Multiplayer
+    // Options screen shows the port on the screen itself (a text widget) and the server logs
+    // nothing, so the launcher never learned the port. The 26.x client is unobfuscated: the
+    // integrated server declares an int field "publishedPort" and boolean methods named
+    // "publishServer"; this patch appends one line to stdout when they return, and one when the
+    // world is unpublished:
+    //     [cs-host] published=true port=25565
+    //     [cs-host] Stopping server publish
+    private static final byte[] PUBLISH_NEEDLE = "publishedPort".getBytes(StandardCharsets.US_ASCII);
+    public static final String PUBLISH_LINE = "[cs-host] published=";
+    public static final String UNPUBLISH_LINE = "[cs-host] Stopping server publish";
+
+    /** The patched integrated server, or null when {@code bytes} is some other class. */
+    static byte[] patchPublish(String name, byte[] bytes) {
+        ClassNode cn = new ClassNode();
+        new ClassReader(bytes).accept(cn, 0);
+        boolean portField = false;
+        for (org.objectweb.asm.tree.FieldNode f : cn.fields) if ("publishedPort".equals(f.name) && "I".equals(f.desc)) portField = true;
+        if (!portField) return null;
+        boolean hasGetPort = false;
+        for (MethodNode m : cn.methods) if ("getPort".equals(m.name) && "()I".equals(m.desc)) hasGetPort = true;
+        int patched = 0;
+        for (MethodNode m : cn.methods) {
+            if ((m.access & Opcodes.ACC_STATIC) != 0 || (m.access & Opcodes.ACC_ABSTRACT) != 0) continue;
+            if ("publishServer".equals(m.name) && m.desc.endsWith(")Z")) {
+                InsnList insns = m.instructions;
+                for (AbstractInsnNode n = insns.getFirst(); n != null; n = n.getNext()) {
+                    if (n.getOpcode() != Opcodes.IRETURN) continue;
+                    // stack: [Z] -> "[cs-host] published=" + Z + " port=" + getPort()  (no branches: no new frames)
+                    InsnList add = new InsnList();
+                    add.add(new InsnNode(Opcodes.DUP));
+                    add.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "java/lang/String", "valueOf", "(Z)Ljava/lang/String;", false));
+                    add.add(new LdcInsnNode(PUBLISH_LINE));
+                    add.add(new InsnNode(Opcodes.SWAP));
+                    add.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/String", "concat", "(Ljava/lang/String;)Ljava/lang/String;", false));
+                    add.add(new LdcInsnNode(" port="));
+                    add.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/String", "concat", "(Ljava/lang/String;)Ljava/lang/String;", false));
+                    add.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 0));
+                    add.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, cn.name, "getPort", "()I", false));
+                    add.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "java/lang/Integer", "toString", "(I)Ljava/lang/String;", false));
+                    add.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/String", "concat", "(Ljava/lang/String;)Ljava/lang/String;", false));
+                    add.add(new org.objectweb.asm.tree.FieldInsnNode(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;"));
+                    add.add(new InsnNode(Opcodes.SWAP));
+                    add.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false));
+                    insns.insertBefore(n, add);
+                    patched++;
+                }
+            } else if ("unpublishServer".equals(m.name) || "teardownPublishedState".equals(m.name)) {
+                InsnList add = new InsnList();
+                add.add(new org.objectweb.asm.tree.FieldInsnNode(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;"));
+                add.add(new LdcInsnNode(UNPUBLISH_LINE));
+                add.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false));
+                m.instructions.insert(add);
+                patched++;
+            }
+        }
+        if (patched == 0 || !hasGetPort) {
+            if (patched > 0) System.out.println("[cs-host-agent] " + name + " has publishServer but no getPort(): left alone");
+            return null;
+        }
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        cn.accept(cw);
+        System.out.println("[cs-host-agent] publish hook installed in " + name);
+        return cw.toByteArray();
     }
 
     /** The patched class, or null when {@code bytes} is not the integrated player list. */

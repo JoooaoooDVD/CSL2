@@ -316,14 +316,14 @@
         </FrameLayout>
 
         <!-- EDIT card -->
+        <!-- Fixed width: the label is never cut; the profile and PLAY cards share what is left -->
         <FrameLayout
             android:id="@+id/home_edit_card"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_marginStart="9dp"
-            android:layout_weight="12"
             android:background="@drawable/bg_home_card_navy"
-            android:minWidth="84dp"
+            android:minWidth="112dp"
             android:padding="7dp">
 
             <LinearLayout
@@ -335,7 +335,7 @@
                 android:focusable="true"
                 android:gravity="center"
                 android:orientation="horizontal"
-                android:paddingHorizontal="8dp"
+                android:paddingHorizontal="14dp"
                 android:tooltipText="@string/home_edit">
 
                 <ImageView
@@ -348,6 +348,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
+                    android:letterSpacing="0.06"
                     android:singleLine="true"
                     android:text="@string/home_edit"
                     android:textColor="@color/hm_text"

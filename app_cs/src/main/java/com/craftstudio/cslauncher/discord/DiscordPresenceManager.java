@@ -427,7 +427,7 @@ public final class DiscordPresenceManager {
 
     private static final Pattern LOG_CONNECTING = Pattern.compile("Connecting to ([^,\\s]+), (\\d{1,5})");
     private static final Pattern LOG_PREPARING_LEVEL = Pattern.compile("Preparing level \"(.+?)\"");
-    private static final Pattern LOG_LAN = Pattern.compile("(?:Started serving on|Local game hosted on port|Published LAN server on port)\\s+\\d{2,5}");
+    private static final Pattern LOG_LAN = Pattern.compile("(?:Started serving on|Local game hosted on port|Published LAN server on port|\\[cs-host\\] published=true port=)\\s*\\d{2,5}");
     private static final Pattern LOG_MENU_READY = Pattern.compile("Sound engine started|OpenAL initialized|Created: \\d+x\\d+(?:x\\d+)? [a-z_:/]*atlas");
     private static final Pattern LOG_LEAVE_WORLD = Pattern.compile("Stopping singleplayer server|Stopping server$|Disconnected from server|Lost connection|Connection reset|Internal Exception|Timed out|Server closed|Disconnected:");
     /**

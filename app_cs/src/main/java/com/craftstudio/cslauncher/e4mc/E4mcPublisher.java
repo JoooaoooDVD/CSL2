@@ -24,7 +24,11 @@ import java.util.regex.Pattern;
 public final class E4mcPublisher {
     private static final String TAG = "E4mcPublisher";
     private static final E4mcPublisher INSTANCE = new E4mcPublisher();
-    private static final Pattern PORT = Pattern.compile("(?:Local game hosted on port|Started serving on)\\s+(\\d{2,5})");
+    // Up to 25.x the game logs "Started serving on N" and echoes "Local game hosted on port N" in
+    // chat. 26.x's Multiplayer Options screen logs "Published LAN server on port N" instead (the
+    // old two lines are gone), and the CS host agent adds "[cs-host] published=true port=N" plus
+    // an unpublish line so closing the world to multiplayer without leaving it is seen too.
+    private static final Pattern PORT = Pattern.compile("(?:Local game hosted on port|Started serving on|Published LAN server on port|open to LAN\\. The port number is|\\[cs-host\\] published=true port=)\\s*(\\d{2,5})");
     private static final Pattern LEVEL = Pattern.compile("Preparing level \"(.+?)\"");
 
     public enum Phase { IDLE, STARTING, PUBLISHED, FAILED }
@@ -137,7 +141,7 @@ public final class E4mcPublisher {
             if (mEnabled) mMain.post(() -> start(port));
             return;
         }
-        if (mHandle != 0 && (text.contains("Stopping server") || text.contains("Stopping singleplayer server"))) {
+        if (mHandle != 0 && (text.contains("Stopping server") || text.contains("Stopping singleplayer server") || text.contains("[cs-host] Stopping server publish"))) {
             mMain.post(this::stop);
         }
     }

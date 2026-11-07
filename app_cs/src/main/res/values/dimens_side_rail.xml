@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The left navigation rail -->
+<resources>
+    <dimen name="side_rail_width">72dp</dimen>
+    <dimen name="side_rail_item_width">48dp</dimen>
+    <dimen name="side_rail_item_height">44dp</dimen>
+</resources>
