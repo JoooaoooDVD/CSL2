@@ -89,7 +89,23 @@ public class LauncherPreferenceMiscellaneousFragment extends LauncherPreferenceF
 
     private void updateVisibility(){
         requirePreference("microphoneAccessRequest").setVisible(!getLauncherActivity().checkForPermissionRationale(33, Manifest.permission.RECORD_AUDIO));
+        setupStorageModePreference();
         requirePreference("clearMetadataCache").setVisible(new File(Tools.DIR_CACHE, "string_cache").exists());
+    }
+
+    /** Storage mode: scoped (Android/data, no permission) or default (a folder of the user's choice). */
+    private void setupStorageModePreference() {
+        Preference pref = requirePreference("storageMode");
+        Activity activity = getActivity();
+        if (activity == null) return;
+        boolean custom = com.craftstudio.cslauncher.utils.storage.StorageRoot.isUsingCustomRoot(activity);
+        String where = custom ? com.craftstudio.cslauncher.utils.storage.StorageRoot.getCustomRoot(activity)
+                : com.craftstudio.cslauncher.utils.storage.StorageRoot.defaultRootLabel(activity);
+        pref.setSummary(getString(custom ? R.string.preference_storage_mode_default : R.string.preference_storage_mode_scoped, where));
+        pref.setOnPreferenceClickListener(p -> {
+            if (activity instanceof LauncherActivity) ((LauncherActivity) activity).reopenStorageSetup();
+            return true;
+        });
     }
 
     private void setupMicrophoneRequestPreference() {

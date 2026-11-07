@@ -514,6 +514,10 @@
     <string name="preference_download_source_title">Game download source</string>
     <string name="preference_download_source_description">Select a download mirror instead of using the official download server</string>
     <string name="preference_verify_manifest_title">Verify game version manifest</string>
+    <string name="preference_storage_mode_title">Storage mode</string>
+    <string name="preference_storage_mode_description">Scoped storage (Android/data, no permission) or default storage (a folder you choose)</string>
+    <string name="preference_storage_mode_scoped">Scoped storage · %1$s</string>
+    <string name="preference_storage_mode_default">Default storage · %1$s</string>
     <string name="preference_verify_manifest_description">When enabled, the launcher will check the game version manifest along with the libraries.</string>
     <string name="notif_download_finished">The game is ready to launch</string>
     <string name="notif_download_finished_desc">Click here to start it!</string>
@@ -1170,10 +1174,10 @@
     <!-- First-launch storage setup -->
     <string name="ss_eyebrow">FIRST-TIME SETUP</string>
     <string name="ss_title">Where should your game files live?</string>
-    <string name="ss_subtitle">Minecraft versions, mods, worlds and resource packs are stored in one folder. You can\'t change this later without starting over, so pick what suits you.</string>
-    <string name="ss_default_title">App folder</string>
+    <string name="ss_subtitle">Game versions, mods, worlds and resource packs are stored in one folder. You can switch later in Settings → Storage mode (files are not moved, so pick what suits you).</string>
+    <string name="ss_default_title">Scoped storage</string>
     <string name="ss_default_desc">Private app storage. Works instantly, no extra permission. Removed when the app is uninstalled.</string>
-    <string name="ss_custom_title">Custom folder</string>
+    <string name="ss_custom_title">Default storage</string>
     <string name="ss_custom_desc">Pick any folder on your phone or SD card. Easy to browse with a file manager and survives reinstalling.</string>
     <string name="ss_step_perm_title">Allow all files access</string>
     <string name="ss_step_perm_desc">Android blocks the game from writing in this folder without it. Tip: a folder inside Download or Documents usually needs no permission.</string>

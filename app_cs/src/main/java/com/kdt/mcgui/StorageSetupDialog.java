@@ -36,6 +36,14 @@ public class StorageSetupDialog extends CSPopupDialog {
     @Nullable private File mPickedDir;
     private int mErrorColor;
     private boolean mFinishing;
+    /** Opened again from Settings (Storage mode): a choice already exists, so Back just closes. */
+    private boolean mReopened;
+
+    public StorageSetupDialog allowCancel() {
+        mReopened = true;
+        setCancelable(true);
+        return this;
+    }
 
     private View mOptDefault, mOptCustom, mSteps, mPermBtn, mPickBtn, mContinue;
     private TextView mPermDesc, mPickDesc, mCustomPath, mError, mContinueText, mPermNum, mPickNum;
@@ -111,6 +119,7 @@ public class StorageSetupDialog extends CSPopupDialog {
     /** Back / scrim: a choice is required, just nudge. */
     @Override
     protected void onDismissRequested() {
+        if (mReopened && !mFinishing) { close(null); return; }
         if (mCard != null) CreatePopupMotion.nudge(mCard);
     }
 
@@ -214,9 +223,17 @@ public class StorageSetupDialog extends CSPopupDialog {
         if (mFinishing) return;
         if (!mCustom) {
             mFinishing = true;
+            boolean moved = StorageRoot.isUsingCustomRoot(getContext());
             StorageRoot.useDefaultRoot(getContext());
             StorageRoot.setPendingPick(getContext(), null);
-            CreatePopupMotion.optionChosen(mOptDefault, () -> close(null));
+            if (moved) {
+                // Back to scoped storage from a custom folder: paths are fixed at start, restart
+                Motion.swapText(mContinueText, getContext().getString(R.string.ss_restarting));
+                mContinue.setEnabled(false);
+                CreatePopupMotion.optionChosen(mOptDefault, () -> close(() -> StorageRoot.restartLauncher(getContext())));
+            } else {
+                CreatePopupMotion.optionChosen(mOptDefault, () -> close(null));
+            }
             return;
         }
         if (mPickedDir == null) {

@@ -528,6 +528,16 @@ public class LauncherActivity extends BaseActivity {
 
     private void showStorageSetup() {
         if (isFinishing() || isDestroyed() || StorageRoot.isSetupDone(this)) return;
+        showStorageSetup(false);
+    }
+
+    /** Settings → Storage mode: the same chooser as the first launch, but it can be closed. */
+    public void reopenStorageSetup() {
+        if (isFinishing() || isDestroyed()) return;
+        showStorageSetup(true);
+    }
+
+    private void showStorageSetup(boolean reopened) {
         if (mStorageSetupDialog != null && mStorageSetupDialog.isShowing()) return;
         mStorageSetupDialog = new com.kdt.mcgui.StorageSetupDialog(this, new com.kdt.mcgui.StorageSetupDialog.Host() {
             @Override
@@ -553,8 +563,10 @@ public class LauncherActivity extends BaseActivity {
                 }
             }
         });
+        if (reopened) mStorageSetupDialog.allowCancel();
         mStorageSetupDialog.setOnDismissListener(d -> {
             mStorageSetupDialog = null;
+            if (reopened) return;
             if (StorageRoot.isSetupDone(this)) {
                 View root = findViewById(android.R.id.content);
                 if (root != null) root.postDelayed(com.craftstudio.cslauncher.tutorial.FirstLaunchSetup.isPending(this)

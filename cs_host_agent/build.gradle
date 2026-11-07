@@ -1,11 +1,17 @@
 plugins {
     id 'java-library'
+    id 'com.gradleup.shadow' version '8.3.6'
 }
 
 // The CS host agent: a -javaagent for the Java edition that lifts the integrated server's
 // hard-coded LAN player limit (IntegratedPlayerList passes 8 to PlayerList) to the value of
 // -Dcs.host.maxPlayers. Pure ASM, mapping-free: it recognises the class by shape, so it works
 // on obfuscated vanilla, Fabric intermediary and Forge/NeoForge official names alike.
+//
+// A -javaagent jar is appended to the system class path, and the game ships its own ASM
+// (Fabric Loader refuses to start when it finds a second org.objectweb.asm.ClassReader:
+// "duplicate ASM classes found on classpath"). So ASM is RELOCATED into this agent's own
+// package: the jar contains no org/objectweb/asm classes at all.
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
@@ -16,16 +22,26 @@ dependencies {
     implementation 'org.ow2.asm:asm-tree:9.7.1'
 }
 
-jar {
+shadowJar {
     archiveBaseName = 'cs-host-agent'
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-    }
-    exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA', 'module-info.class'
+    archiveClassifier = ''
+    archiveVersion = ''
+    relocate 'org.objectweb.asm', 'com.craftstudio.hostagent.shaded.asm'
+    exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA', 'META-INF/maven/**', 'module-info.class', 'META-INF/versions/**'
     manifest {
         attributes("Manifest-Version": "1.0",
                 "Premain-Class": "com.craftstudio.hostagent.HostAgent",
                 "Can-Retransform-Classes": "false")
     }
+    doLast {
+        // Guard: the agent must never carry ASM under its original package.
+        def leaked = zipTree(archiveFile.get().asFile).matching { include 'org/objectweb/asm/**' }.files
+        if (!leaked.isEmpty()) throw new GradleException("cs-host-agent leaks ASM classes: " + leaked)
+    }
+}
+
+// The plain jar (what app_cs copies as an asset) IS the shaded jar.
+jar {
+    enabled = false
+    dependsOn shadowJar
 }
