@@ -765,6 +765,8 @@
     <string name="preference_show_memory_warning_summary">If enabled, displays the warning dialog that is shown during game launch if the amount of free memory is less than allocated to the game</string>
     <string name="option_do_not_show_again">Don\'t show again</string>
     <string name="loading_screen_title">Starting the game engine…</string>
+    <string name="ls_ad_tag">ADVERTISEMENT</string>
+    <string name="ls_ad_sub">Closes by itself when the game appears</string>
     <string name="loading_screen_launching">Launching Minecraft %1$s</string>
     <string name="loading_screen_launching_profile">Launching Minecraft %1$s \u2022 %2$s</string>
     <string name="loading_screen_booted">Ready - running on %1$s!</string>

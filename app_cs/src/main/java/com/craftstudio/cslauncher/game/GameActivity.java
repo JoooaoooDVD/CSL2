@@ -688,7 +688,11 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
             mLaunchBarAnimator.cancel();
             mLaunchBarAnimator = null;
         }
+        final View adCard = screen.findViewById(R.id.ls_ad_card);
+        if (adCard != null) adCard.animate().alpha(0f).setDuration(180L).start();
+        final com.craftstudio.cslauncher.ads.AdsterraBannerView adBanner = screen.findViewById(R.id.ls_ad_banner);
         final Runnable remove = () -> {
+            if (adBanner != null) adBanner.destroy();
             ViewGroup parent = (ViewGroup) screen.getParent();
             if (parent != null) parent.removeView(screen);
         };
@@ -761,6 +765,19 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
             pill.setTranslationY(18f * getResources().getDisplayMetrics().density);
             pill.animate().alpha(1f).translationY(0f).setDuration(360L)
                     .setInterpolator(com.craftstudio.cslauncher.utils.motion.Motion.ENTER).start();
+        }
+        // Advertisement card on the right: shown only once the banner has rendered, gone with the layer
+        final View adCard = mLoadingScreen.findViewById(R.id.ls_ad_card);
+        final com.craftstudio.cslauncher.ads.AdsterraBannerView adBanner = mLoadingScreen.findViewById(R.id.ls_ad_banner);
+        if (adCard != null && adBanner != null && adBanner.isAvailable()) {
+            adBanner.setListener(() -> {
+                if (mLoadingScreen == null || adCard.getVisibility() == View.VISIBLE) return;
+                adCard.setAlpha(0f);
+                adCard.setTranslationX(18f * getResources().getDisplayMetrics().density);
+                adCard.setVisibility(View.VISIBLE);
+                adCard.animate().alpha(1f).translationX(0f).setDuration(320L)
+                        .setInterpolator(com.craftstudio.cslauncher.utils.motion.Motion.ENTER).start();
+            });
         }
         final View warning = mLoadingScreen.findViewById(R.id.main_loading_screen_warning);
         if (warning != null) {
