@@ -141,6 +141,13 @@
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/st_card_height"
                     android:layout_marginTop="@dimen/st_card_gap" />
+
+                <include
+                    android:id="@+id/st_card_cursor"
+                    layout="@layout/item_settings_hub_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/st_card_height"
+                    android:layout_marginTop="@dimen/st_card_gap" />
             </LinearLayout>
           </LinearLayout>
 
@@ -150,6 +157,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/st_card_height"
                 android:layout_marginTop="@dimen/st_card_gap" />
+
+                <include
+                    android:id="@+id/st_card_updates"
+                    layout="@layout/item_settings_hub_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/st_card_height"
+                    android:layout_marginTop="@dimen/st_card_gap" />
         </LinearLayout>
 
         <LinearLayout

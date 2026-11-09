@@ -301,6 +301,16 @@ public class SettingsHostFragment extends Fragment
             icon = R.drawable.ic_px_folder;
             title = R.string.preference_storage_title;
             subtitle = R.string.preference_storage_description;
+        } else if (fragmentClassName.endsWith("CursorSettingsFragment")) {
+            art = R.drawable.settings_art_cursor;
+            icon = R.drawable.ic_px_mouse;
+            title = R.string.preference_cursor_title;
+            subtitle = R.string.preference_cursor_description;
+        } else if (fragmentClassName.endsWith("UpdatesFragment")) {
+            art = R.drawable.settings_art_updates;
+            icon = R.drawable.ic_cs_update;
+            title = R.string.preference_updates_title;
+            subtitle = R.string.preference_updates_description;
         } else if (fragmentClassName.endsWith("LauncherPreferenceRendererSettingsFragment")) {
             art = R.drawable.settings_art_video;
             icon = R.drawable.ic_mg_renderer;

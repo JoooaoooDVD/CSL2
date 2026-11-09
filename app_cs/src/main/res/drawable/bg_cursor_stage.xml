@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Preview stage of the cursor page: a dark in-game-like backdrop so a light cursor reads well -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient android:angle="270" android:startColor="#2B3140" android:endColor="#14171E" />
+            <corners android:radius="16dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#00000000" />
+            <corners android:radius="16dp" />
+            <stroke android:width="1dp" android:color="#3A4152" />
+        </shape>
+    </item>
+</layer-list>

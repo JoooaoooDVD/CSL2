@@ -42,6 +42,32 @@ public class GameCursorView extends View implements PlatformCursorImplementor {
         cursorDrawable = ContextCompat.getDrawable(context, R.drawable.ic_mouse_pointer);
         assert cursorDrawable != null;
         cursorDrawable.setBounds(0, 0, 36, 54);
+        customCursorPaint.setFilterBitmap(true);
+        loadCustomPointer(context);
+    }
+
+    // The player's own pointer (Settings → Cursor): drawn in place of the launcher's arrow when
+    // the game shows the arrow cursor. Fitted into the same 54 px box as the default pointer so
+    // the Cursor size setting means the same thing for both.
+    private static final int CUSTOM_BOX = 54;
+    private android.graphics.Bitmap customPointer;
+    private final android.graphics.Rect customSrc = new android.graphics.Rect();
+    private final android.graphics.RectF customDst = new android.graphics.RectF();
+
+    private void loadCustomPointer(Context context) {
+        try {
+            android.graphics.Bitmap bmp = com.craftstudio.cslauncher.utils.cursor.CursorStore.load(context);
+            if (bmp == null) return;
+            float f = Math.min(CUSTOM_BOX / (float) bmp.getWidth(), CUSTOM_BOX / (float) bmp.getHeight());
+            float w = bmp.getWidth() * f, h = bmp.getHeight() * f;
+            float hx = com.craftstudio.cslauncher.utils.cursor.CursorStore.hotX(context) * w;
+            float hy = com.craftstudio.cslauncher.utils.cursor.CursorStore.hotY(context) * h;
+            customSrc.set(0, 0, bmp.getWidth(), bmp.getHeight());
+            customDst.set(-hx, -hy, w - hx, h - hy);
+            customPointer = bmp;
+        } catch (Throwable t) {
+            customPointer = null;
+        }
     }
 
     @Override
@@ -54,7 +80,8 @@ public class GameCursorView extends View implements PlatformCursorImplementor {
         PlatformCursor cursor = Platform.getCursor();
         canvas.scale(mouseScale, mouseScale);
         if (cursor == null) {
-            cursorDrawable.draw(canvas);
+            if (customPointer != null) canvas.drawBitmap(customPointer, customSrc, customDst, customCursorPaint);
+            else cursorDrawable.draw(canvas);
         } else {
             canvas.drawBitmap(cursor.bitmap, -cursor.hotX, -cursor.hotY, customCursorPaint);
         }

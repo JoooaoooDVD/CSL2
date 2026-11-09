@@ -38,6 +38,8 @@ public class SettingsHubFragment extends Fragment {
     public static final String APPEARANCE = PKG + "LauncherPreferenceAppearanceFragment";
     public static final String CONTROL = PKG + "LauncherPreferenceControlFragment";
     public static final String STORAGE = PKG + "LauncherPreferenceStorageFragment";
+    public static final String CURSOR = "com.craftstudio.cslauncher.fragments.CursorSettingsFragment";
+    public static final String UPDATES = "com.craftstudio.cslauncher.fragments.UpdatesFragment";
 
     private boolean mEntrancePlayed;
     private boolean mOpening;
@@ -65,13 +67,18 @@ public class SettingsHubFragment extends Fragment {
         View storage = bindCard(view, R.id.st_card_storage, R.drawable.ic_px_folder, R.string.preference_storage_title,
                 R.string.preference_storage_description, R.drawable.settings_art_storage, STORAGE);
 
+        View cursor = bindCard(view, R.id.st_card_cursor, R.drawable.ic_px_mouse, R.string.preference_cursor_title,
+                R.string.preference_cursor_description, R.drawable.settings_art_cursor, CURSOR);
+        View updates = bindCard(view, R.id.st_card_updates, R.drawable.ic_cs_update, R.string.preference_updates_title,
+                R.string.preference_updates_description, R.drawable.settings_art_updates, UPDATES);
+
         bindGeneral(view);
 
         if (!mEntrancePlayed) {
             mEntrancePlayed = true;
             SettingsMotion.playHubEntrance(view.findViewById(R.id.st_header_tile), view.findViewById(R.id.st_title),
                     view.findViewById(R.id.st_subtitle), view.findViewById(R.id.st_panel),
-                    new View[][]{{java, video, appearance, storage}, {misc, experimental, control}},
+                    new View[][]{{java, video, appearance, storage, updates}, {misc, experimental, control, cursor}},
                     view.findViewById(R.id.st_general));
         }
     }

@@ -554,6 +554,49 @@
     <string name="preference_download_source_title">Game download source</string>
     <string name="preference_download_source_description">Select a download mirror instead of using the official download server</string>
     <string name="preference_verify_manifest_title">Verify game version manifest</string>
+
+    <!-- Settings → Cursor -->
+    <string name="preference_cursor_title">Cursor</string>
+    <string name="preference_cursor_description">Your own pointer for the game: any image, click point and size</string>
+    <string name="cursor_stage_hint">Tap the pointer to set where it clicks</string>
+    <string name="cursor_badge_default">Default pointer</string>
+    <string name="cursor_badge_custom">Your pointer</string>
+    <string name="cursor_pick">Choose image</string>
+    <string name="cursor_reset">Reset</string>
+    <string name="cursor_reset_done">Back to the default pointer</string>
+    <string name="cursor_file_line">Stored as a %1$d × %2$d PNG. Used by Java and CS Engine the next time a game starts.</string>
+    <string name="cursor_file_none">No image chosen — the launcher\'s own arrow is in use.</string>
+    <string name="cursor_import_failed">Could not use that image: %1$s</string>
+    <string name="cursor_size">Cursor size</string>
+    <string name="cursor_size_value">%1$d%%</string>
+    <string name="cursor_size_note">The same size setting as Controls → Mouse. Applies to the default pointer and to yours.</string>
+    <string name="cursor_hot_title">Click point</string>
+    <string name="cursor_hot_value">%1$d%% across, %2$d%% down from the top-left of the image.</string>
+    <string name="cursor_hot_top_left">Top-left</string>
+    <string name="cursor_hot_top">Top centre</string>
+    <string name="cursor_hot_center">Centre</string>
+    <string name="cursor_formats_title">Supported images</string>
+    <string name="cursor_formats_body">PNG, JPG, WEBP, BMP, GIF, HEIC and every other still image your phone can open. Transparent PNGs look best. Animated cursors (.ani, .cur, animated GIF/WEBP) are not supported: the pointer is always a still image, so only the first frame is used.</string>
+
+    <!-- Settings → Updates -->
+    <string name="preference_updates_title">Updates</string>
+    <string name="preference_updates_description">Installed build, where new builds are posted, and what CS Launcher Pro brings</string>
+    <string name="updates_version">v%1$s</string>
+    <string name="updates_installed">This is the installed build</string>
+    <string name="updates_discord_body">New builds, fixes and beta tests are announced on the Craft Studio Discord first. Join to get them as soon as they are out.</string>
+    <string name="updates_join_discord">Join the Discord</string>
+    <string name="updates_releases">All releases on GitHub</string>
+    <string name="updates_pro_eyebrow">Coming next</string>
+    <string name="updates_pro_title">CS LAUNCHER PRO</string>
+    <string name="updates_pro_body">The next step of CS Launcher Plus. In development; dates are announced on Discord.</string>
+    <string name="pro_feature_recorder">In-game recorder</string>
+    <string name="pro_feature_recorder_body">Record your gameplay from inside the game, no third-party app.</string>
+    <string name="pro_feature_cursor">Dynamic cursor</string>
+    <string name="pro_feature_cursor_body">A pointer that reacts to what is under it and to your clicks.</string>
+    <string name="pro_feature_core">CS Core</string>
+    <string name="pro_feature_core_body">A faster core for launching, downloading and running the game.</string>
+    <string name="pro_feature_more">And many more</string>
+    <string name="pro_feature_more_body">More is on the way — follow the Discord for the full list.</string>
     <string name="preference_storage_title">Storage</string>
     <string name="preference_storage_description">Scoped or default storage, game folder, import controls and data</string>
     <string name="preference_storage_mode_active">✓ In use</string>
