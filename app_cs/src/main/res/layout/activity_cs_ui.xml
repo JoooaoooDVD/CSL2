@@ -331,5 +331,14 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1" />
+
+        <!-- Adsterra 320×50 banner under the content column; GONE until the ad has rendered -->
+        <com.craftstudio.cslauncher.ads.AdsterraBannerView
+            android:id="@+id/cs_banner_ad"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
+            android:visibility="gone" />
     </LinearLayout>
 </LinearLayout>

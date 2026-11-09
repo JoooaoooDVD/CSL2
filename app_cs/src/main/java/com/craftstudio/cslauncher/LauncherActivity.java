@@ -62,6 +62,7 @@ import com.craftstudio.cslauncher.utils.NotificationUtils;
 import com.craftstudio.cslauncher.utils.TopNavDock;
 
 public class LauncherActivity extends BaseActivity {
+    @Nullable private com.craftstudio.cslauncher.ads.AdsterraBannerView mBannerAd;
     public static final String SETTING_FRAGMENT_TAG = "SETTINGS_FRAGMENT";
 
     private FragmentContainerView mFragmentView;
@@ -301,6 +302,7 @@ public class LauncherActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cs_ui);
+        mBannerAd = findViewById(R.id.cs_banner_ad);
         MoJsonDownloader.prepareSubstitutionMap(getAssets());
 
         try {
@@ -599,6 +601,7 @@ public class LauncherActivity extends BaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        if (mBannerAd != null) mBannerAd.onResume();
         if (StorageRoot.isSetupDone(this)) com.craftstudio.cslauncher.utils.ProfileShortcuts.refreshDynamic(this);
         ContextExecutor.setActivity(this);
         InstanceInstaller.postInstallCheck(this);
@@ -618,6 +621,7 @@ public class LauncherActivity extends BaseActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        if (mBannerAd != null) mBannerAd.onPause();
         ContextExecutor.clearActivity(this);
     }
 
@@ -642,6 +646,7 @@ public class LauncherActivity extends BaseActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (mBannerAd != null) { mBannerAd.destroy(); mBannerAd = null; }
         mProgressLayout.cleanUpObservers();
         ProgressKeeper.removeTaskCountListener(mProgressLayout);
         ProgressKeeper.removeTaskCountListener(mProgressServiceKeeper);
