@@ -1825,6 +1825,7 @@
     <string name="horizon_install_failed">CS Engine install failed</string>
     <string name="horizon_install_cancelled">CS Engine install cancelled</string>
     <string name="horizon_install_incomplete">The install finished but some files are missing. Try again.</string>
+    <string name="horizon_not_bundled">This build of CS Launcher Plus was made without CS Engine. Install the latest build to play CS Engine profiles.</string>
     <string name="horizon_not_available">CS Engine is not available in this build or on this device (needs Android 9+ and a 64-bit processor).</string>
     <string name="horizon_menu_title">CS Engine</string>
     <string name="horizon_menu_subtitle">Powered by Craft Studio</string>

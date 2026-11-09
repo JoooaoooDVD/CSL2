@@ -8,8 +8,8 @@
 # Minecraft resources are never bundled: the engine downloads them on the device from Mojang.
 #
 #   usage: scripts/fetch_horizon_engine.sh [release-tag]     (default: cs-engine-latest)
-# The build keeps working without the engine (the Horizon card is hidden) if the download fails
-# and HORIZON_REQUIRED is not set to 1.
+# HORIZON_REQUIRED=1 (the CI default) fails the build when the engine cannot be fetched, so no
+# APK ever ships without CS Engine; unset it for local builds that do not need the engine.
 set -uo pipefail
 
 TAG="${1:-cs-engine-latest}"
@@ -18,10 +18,16 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 JNI_DIR="$ROOT/app_cs/src/main/jniLibs"
 ASSET_DIR="$ROOT/app_cs/src/main/assets/horizon"
 BASE="https://github.com/${REPO}/releases/download/${TAG}"
-ABIS=("arm64-v8a" "x86_64")
+ABIS=("arm64-v8a")
 
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
+
+# GitHub's release CDN answers 5xx now and then: every download retries before the build gives
+# up, so a hiccup never produces an APK without the engine.
+dl() {
+  curl -fSL --connect-timeout 20 --max-time 600 --retry 8 --retry-delay 6 --retry-all-errors --retry-max-time 240 -o "$1" "$2"
+}
 
 fail() {
   echo "[horizon] $1"
@@ -31,15 +37,15 @@ fail() {
 }
 
 echo "[horizon] fetching ${REPO} ${TAG}"
-curl -fsSL -o "$WORK/SHA256SUMS.txt" "$BASE/SHA256SUMS.txt" || fail "no SHA256SUMS.txt at $BASE (engine release not published yet?)"
+dl "$WORK/SHA256SUMS.txt" "$BASE/SHA256SUMS.txt" || fail "no SHA256SUMS.txt at $BASE (engine release not published yet?)"
 for f in BUILD.json engine-data.zip LICENSE.txt THIRD_PARTY_NOTICES.md; do
-  curl -fsSL -o "$WORK/$f" "$BASE/$f" || fail "download failed: $f"
+  dl "$WORK/$f" "$BASE/$f" || fail "download failed: $f"
 done
 # List of registry native mods compiled into this engine (drives the launcher's CS Engine mod browser).
-curl -fsSL -o "$WORK/cs-native-mods.json" "$BASE/cs-native-mods.json" || echo '{"built":[],"skipped":[]}' > "$WORK/cs-native-mods.json"
+dl "$WORK/cs-native-mods.json" "$BASE/cs-native-mods.json" || echo '{"built":[],"skipped":[]}' > "$WORK/cs-native-mods.json"
 got_any=0
 for abi in "${ABIS[@]}"; do
-  if curl -fsSL -o "$WORK/libcs_engine-$abi.so" "$BASE/libcs_engine-$abi.so"; then
+  if dl "$WORK/libcs_engine-$abi.so" "$BASE/libcs_engine-$abi.so"; then
     got_any=1
   else
     rm -f "$WORK/libcs_engine-$abi.so"
@@ -48,7 +54,7 @@ for abi in "${ABIS[@]}"; do
 done
 # Launcher-side e4mc tunnel (JNI, built by the engine CI): optional per ABI.
 for abi in "${ABIS[@]}"; do
-  if curl -fsSL -o "$WORK/libcs_e4mc-$abi.so" "$BASE/libcs_e4mc-$abi.so"; then
+  if dl "$WORK/libcs_e4mc-$abi.so" "$BASE/libcs_e4mc-$abi.so"; then
     echo "[horizon] e4mc library for $abi"
   else
     rm -f "$WORK/libcs_e4mc-$abi.so"

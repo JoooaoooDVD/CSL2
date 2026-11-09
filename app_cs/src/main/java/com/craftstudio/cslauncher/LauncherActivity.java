@@ -211,7 +211,9 @@ public class LauncherActivity extends BaseActivity {
      */
     private void launchHorizon(@NonNull Instance instance) {
         if (!com.craftstudio.cslauncher.engine.horizon.HorizonEngine.isSupported(this)) {
-            Toast.makeText(this, R.string.horizon_not_available, Toast.LENGTH_LONG).show();
+            // Say which it is: a build without the engine is not the phone's fault
+            boolean bundled = com.craftstudio.cslauncher.engine.horizon.HorizonEngine.isBundled(this);
+            Toast.makeText(this, bundled ? R.string.horizon_not_available : R.string.horizon_not_bundled, Toast.LENGTH_LONG).show();
             return;
         }
         if (!com.craftstudio.cslauncher.engine.horizon.HorizonProfile.isReady(this, instance)) {
