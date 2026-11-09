@@ -1,4 +1,4 @@
-<H1 align="center">CS Launcher Plus 1.4</H1>
+<H1 align="center">CS Launcher Plus 1.6</H1>
 
 <H3 align="center">by CRAFT STUDIO</H3>
 

@@ -2,10 +2,10 @@
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
     <!-- App name part -->
     <string name="app_short_name">CS Launcher Plus</string>
-    <!-- Branding: CS Launcher Plus 1.4 by CRAFT STUDIO -->
-    <string name="brand_full_name">CS LAUNCHER PLUS 1.4</string>
+    <!-- Branding: CS Launcher Plus 1.6 by CRAFT STUDIO -->
+    <string name="brand_full_name">CS LAUNCHER PLUS 1.6</string>
     <string name="brand_short_name">CS LAUNCHER PLUS</string>
-    <string name="brand_version">1.4</string>
+    <string name="brand_version">1.6</string>
     <string name="brand_team_name">CRAFT STUDIO</string>
     <string name="brand_team_tag">by CRAFT STUDIO</string>
     <string name="brand_tagline">Your Minecraft. Your way.</string>
@@ -52,14 +52,14 @@
     <string name="home_overflow_share_logs">Share logs</string>
     <string name="home_overflow_gamepad">Gamepad mapper</string>
     <string name="home_overflow_about">About</string>
-    <string name="home_about_text">CS Launcher Plus 1.4\nby CRAFT STUDIO\n\nA Minecraft: Java Edition launcher for Android.</string>
+    <string name="home_about_text">CS Launcher Plus 1.6\nby CRAFT STUDIO\n\nA Minecraft: Java Edition launcher for Android.</string>
     <string name="home_servers_soon">Servers are coming soon</string>
     <string name="home_logs_title">Launcher Logs</string>
     <string name="home_logs_empty">No log output yet</string>
     <string name="home_logs_share">Share log</string>
     <string name="home_version_subtitle_fmt">%1$s • %2$s</string>
     <string name="preference_category_about">About</string>
-    <string name="preference_about_title">CS Launcher Plus 1.4</string>
+    <string name="preference_about_title">CS Launcher Plus 1.6</string>
     <string name="preference_about_summary">Developed by CRAFT STUDIO — a Minecraft: Java Edition launcher for Android</string>
 
     <!-- Action bar part -->

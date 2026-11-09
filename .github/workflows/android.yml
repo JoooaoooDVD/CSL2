@@ -128,7 +128,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
-          name: CS Launcher Plus 1.4 - latest build
+          name: CS Launcher Plus 1.6 - latest build
           prerelease: true
           body_path: out/release-body.md
           files: |
