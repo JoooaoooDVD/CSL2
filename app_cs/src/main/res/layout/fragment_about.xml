@@ -352,5 +352,12 @@
             android:text="@string/about_footer"
             android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="12sp" />
+
+        <FrameLayout
+            android:id="@+id/about_ad"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:visibility="gone" />
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

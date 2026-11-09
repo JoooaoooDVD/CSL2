@@ -28,6 +28,7 @@ import com.google.android.material.materialswitch.MaterialSwitch;
  * Cards open their category through {@link SettingsHostFragment#openCategory}.
  */
 public class SettingsHubFragment extends Fragment {
+    @androidx.annotation.Nullable private com.craftstudio.cslauncher.ads.CsAds.Loaded mAd;
     public static final String TAG = "SettingsHubFragment";
 
     private static final String PKG = "com.craftstudio.cslauncher.prefs.screens.";
@@ -50,6 +51,7 @@ public class SettingsHubFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        mAd = com.craftstudio.cslauncher.ads.CsAds.loadNative(view.getContext(), view.findViewById(R.id.st_ad));
         mOpening = false;
         View java = bindCard(view, R.id.st_card_java, R.drawable.ic_pe_java, R.string.preference_java_title,
                 R.string.preference_java_description, R.drawable.settings_art_java, JAVA);
@@ -183,5 +185,10 @@ public class SettingsHubFragment extends Fragment {
         row.setVisibility(needed ? View.VISIBLE : View.INVISIBLE);
         ViewGroup general = view.findViewById(R.id.st_general);
         if (general != null) general.setVisibility(View.VISIBLE);
+    }
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (mAd != null) { mAd.destroy(); mAd = null; }
     }
 }

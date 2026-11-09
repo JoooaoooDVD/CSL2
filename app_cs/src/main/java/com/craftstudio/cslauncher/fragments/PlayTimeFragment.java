@@ -41,6 +41,7 @@ import java.util.Map;
  * while a game is running so the live numbers tick.
  */
 public class PlayTimeFragment extends Fragment {
+    @androidx.annotation.Nullable private com.craftstudio.cslauncher.ads.CsAds.Loaded mAd;
     public static final String TAG = "PlayTimeFragment";
 
     private static final int SESSIONS_PAGE = 12;
@@ -66,6 +67,7 @@ public class PlayTimeFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        mAd = com.craftstudio.cslauncher.ads.CsAds.loadNative(view.getContext(), view.findViewById(R.id.pt_ad));
         mTotal = view.findViewById(R.id.pt_total);
         mTotalSub = view.findViewById(R.id.pt_total_sub);
         mChipStreak = view.findViewById(R.id.pt_chip_streak);
@@ -146,6 +148,7 @@ public class PlayTimeFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        if (mAd != null) { mAd.destroy(); mAd = null; }
         mHandler.removeCallbacks(mTick);
         mStatValues.clear();
         mTotal = mTotalSub = mLiveText = mShowMore = null;

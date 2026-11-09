@@ -25,6 +25,7 @@ import com.craftstudio.cslauncher.utils.motion.Motion;
  * (PojavLauncher, Amethyst), every open source component and the legal bits.
  */
 public class AboutFragment extends Fragment {
+    @androidx.annotation.Nullable private com.craftstudio.cslauncher.ads.CsAds.Loaded mAd;
     public static final String TAG = "AboutFragment";
 
     public static final String URL_DISCORD = "https://discord.gg/dmteYqZZyY";
@@ -104,6 +105,7 @@ public class AboutFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        mAd = com.craftstudio.cslauncher.ads.CsAds.loadNative(view.getContext(), view.findViewById(R.id.about_ad));
         View back = view.findViewById(R.id.about_back);
         back.setOnClickListener(v -> Tools.removeCurrentFragment(requireActivity()));
         CSAnimationEngine.attachPressFeedback(back);
@@ -267,5 +269,10 @@ public class AboutFragment extends Fragment {
 
     private void open(String url) {
         if (getActivity() != null) Tools.openURL(requireActivity(), url);
+    }
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (mAd != null) { mAd.destroy(); mAd = null; }
     }
 }

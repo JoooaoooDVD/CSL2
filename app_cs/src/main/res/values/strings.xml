@@ -597,6 +597,7 @@
     <string name="pro_feature_core_body">A faster core for launching, downloading and running the game.</string>
     <string name="pro_feature_more">And many more</string>
     <string name="pro_feature_more_body">More Pro-only features — the full list is on the Discord.</string>
+    <string name="ad_tag" translatable="false">AD</string>
     <string name="preference_storage_title">Storage</string>
     <string name="preference_storage_description">Scoped or default storage, game folder, import controls and data</string>
     <string name="preference_storage_mode_active">✓ In use</string>
