@@ -579,16 +579,16 @@
     <string name="cursor_formats_body">PNG, JPG, WEBP, BMP, GIF, HEIC and every other still image your phone can open. Transparent PNGs look best. Animated cursors (.ani, .cur, animated GIF/WEBP) are not supported: the pointer is always a still image, so only the first frame is used.</string>
 
     <!-- Settings → Updates -->
-    <string name="preference_updates_title">Updates</string>
-    <string name="preference_updates_description">Installed build, where new builds are posted, and what CS Launcher Pro brings</string>
+    <string name="preference_updates_title">Update to Pro</string>
+    <string name="preference_updates_description">Upgrade CS Launcher Plus to CS Launcher Pro — get it on our Discord</string>
     <string name="updates_version">v%1$s</string>
-    <string name="updates_installed">This is the installed build</string>
-    <string name="updates_discord_body">New builds, fixes and beta tests are announced on the Craft Studio Discord first. Join to get them as soon as they are out.</string>
-    <string name="updates_join_discord">Join the Discord</string>
-    <string name="updates_releases">All releases on GitHub</string>
-    <string name="updates_pro_eyebrow">Coming next</string>
+    <string name="updates_installed">You are on CS Launcher Plus</string>
+    <string name="updates_discord_body">CS Launcher Pro is sold through the Craft Studio Discord. Join, open the Pro channel and the team upgrades you there.</string>
+    <string name="updates_join_discord">Join Discord to get Pro</string>
+    <string name="updates_releases">Free builds on GitHub</string>
+    <string name="updates_pro_eyebrow">Upgrade available</string>
     <string name="updates_pro_title">CS LAUNCHER PRO</string>
-    <string name="updates_pro_body">The next step of CS Launcher Plus. In development; dates are announced on Discord.</string>
+    <string name="updates_pro_body">Everything in CS Launcher Plus, plus the features below. To upgrade, join the Discord and ask for Pro.</string>
     <string name="pro_feature_recorder">In-game recorder</string>
     <string name="pro_feature_recorder_body">Record your gameplay from inside the game, no third-party app.</string>
     <string name="pro_feature_cursor">Dynamic cursor</string>
@@ -596,7 +596,7 @@
     <string name="pro_feature_core">CS Core</string>
     <string name="pro_feature_core_body">A faster core for launching, downloading and running the game.</string>
     <string name="pro_feature_more">And many more</string>
-    <string name="pro_feature_more_body">More is on the way — follow the Discord for the full list.</string>
+    <string name="pro_feature_more_body">More Pro-only features — the full list is on the Discord.</string>
     <string name="preference_storage_title">Storage</string>
     <string name="preference_storage_description">Scoped or default storage, game folder, import controls and data</string>
     <string name="preference_storage_mode_active">✓ In use</string>

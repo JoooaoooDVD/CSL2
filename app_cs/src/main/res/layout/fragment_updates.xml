@@ -21,12 +21,84 @@
         android:paddingEnd="16dp"
         android:paddingBottom="20dp">
 
-        <!-- LEFT: installed build + Discord -->
+        <!-- LEFT: upgrade to CS Launcher Pro, with the Discord call to action -->
+        <LinearLayout
+            android:id="@+id/up_card_pro"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="12"
+            android:background="@drawable/bg_st_card"
+            android:orientation="vertical"
+            android:padding="18dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.14"
+                android:text="@string/updates_pro_eyebrow"
+                android:textColor="@color/pe_text_secondary"
+                android:textSize="10.5sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:fontFamily="@font/minecraft_ten"
+                android:text="@string/updates_pro_title"
+                android:textColor="@color/pe_text_primary"
+                android:textSize="20sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/updates_pro_body"
+                android:textColor="@color/pe_text_secondary"
+                android:textSize="12.5sp" />
+
+            <LinearLayout
+                android:id="@+id/up_pro_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="vertical" />
+
+            <LinearLayout
+                android:id="@+id/up_discord"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_ac_discord"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_discord_mark" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:text="@string/updates_join_discord"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        <!-- RIGHT: installed build -->
         <LinearLayout
             android:id="@+id/up_card_build"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="10"
+            android:layout_marginStart="14dp"
+            android:layout_weight="9"
             android:background="@drawable/bg_st_card"
             android:orientation="vertical"
             android:padding="18dp">
@@ -95,34 +167,7 @@
                 android:textColor="@color/pe_text_secondary"
                 android:textSize="12.5sp" />
 
-            <LinearLayout
-                android:id="@+id/up_discord"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="14dp"
-                android:background="@drawable/bg_ac_discord"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp">
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_discord_mark" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
-                    android:text="@string/updates_join_discord"
-                    android:textColor="#FFFFFF"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
+        </LinearLayout>
 
             <TextView
                 android:id="@+id/up_github"
@@ -137,49 +182,5 @@
                 android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- RIGHT: coming in CS Launcher Pro -->
-        <LinearLayout
-            android:id="@+id/up_card_pro"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="14dp"
-            android:layout_weight="11"
-            android:background="@drawable/bg_st_card"
-            android:orientation="vertical"
-            android:padding="18dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:letterSpacing="0.14"
-                android:text="@string/updates_pro_eyebrow"
-                android:textColor="@color/pe_text_secondary"
-                android:textSize="10.5sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:fontFamily="@font/minecraft_ten"
-                android:text="@string/updates_pro_title"
-                android:textColor="@color/pe_text_primary"
-                android:textSize="20sp" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="@string/updates_pro_body"
-                android:textColor="@color/pe_text_secondary"
-                android:textSize="12.5sp" />
-
-            <LinearLayout
-                android:id="@+id/up_pro_list"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:orientation="vertical" />
-        </LinearLayout>
     </LinearLayout>
 </ScrollView>

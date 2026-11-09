@@ -20,8 +20,8 @@ import com.craftstudio.cslauncher.utils.CSAnimationEngine;
 import com.craftstudio.cslauncher.utils.motion.Motion;
 
 /**
- * Settings → Updates: the installed build, the Discord where builds are announced, the releases
- * page, and the features coming in CS Launcher Pro. Nothing is downloaded or checked here.
+ * Settings → Update to Pro: what CS Launcher Pro adds and how to get it (through the Craft
+ * Studio Discord), plus the installed Plus build. Nothing is downloaded or checked here.
  */
 public class UpdatesFragment extends Fragment {
     public static final String TAG = "UpdatesFragment";
