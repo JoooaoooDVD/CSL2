@@ -532,13 +532,6 @@
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
-
-        <FrameLayout
-            android:id="@+id/pt_ad"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:visibility="gone" />
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

@@ -54,12 +54,6 @@
         android:enableOnBackInvokedCallback="false"
         android:requestLegacyExternalStorage="true"
         tools:ignore="UnusedAttribute">
-
-        <!-- AdMob app id (CS Launcher Plus) -->
-        <meta-data
-            android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-1749761881436810~4504376190" />
-
         <activity
             android:name=".MissingStorageActivity"
             android:exported="false"
