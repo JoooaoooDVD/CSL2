@@ -30,8 +30,6 @@ import androidx.annotation.Nullable;
  */
 public class AdsterraBannerView extends FrameLayout {
     private static final String TAG = "AdsterraBanner";
-    /** Second Adsterra tag the publisher pairs with the banner (czernik.org/14/…) */
-    public static final String EXTRA_KEY = "d09380749359e2856751c3edd060a386";
     public static final String KEY = "8bcf937dc8a942c535f14d59f5093246";
     private static final String SCRIPT_HOST = "https://czernik.org/";
     public static final int AD_WIDTH = 320, AD_HEIGHT = 50;
@@ -39,8 +37,7 @@ public class AdsterraBannerView extends FrameLayout {
     private static final String HTML = "<!doctype html><html><head><meta name=\"viewport\" content=\"width=320\">"
             + "<style>html,body{margin:0;padding:0;background:transparent;overflow:hidden;width:320px;height:50px}"
             + "iframe{display:block}</style></head>"
-            + "<body><script data-cfasync=\"false\" src=\"" + SCRIPT_HOST + "14/" + EXTRA_KEY + "\"></script>"
-            + "<script>atOptions={'key':'" + KEY + "','format':'iframe','height':" + AD_HEIGHT + ",'width':" + AD_WIDTH + ",'params':{}};</script>"
+            + "<body><script>atOptions={'key':'" + KEY + "','format':'iframe','height':" + AD_HEIGHT + ",'width':" + AD_WIDTH + ",'params':{}};</script>"
             + "<script src=\"" + SCRIPT_HOST + "22/" + KEY + "\"></script></body></html>";
 
     public interface Listener { void onAdRendered(); }
