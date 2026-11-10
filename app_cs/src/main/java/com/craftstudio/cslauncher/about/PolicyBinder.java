@@ -25,6 +25,8 @@ public final class PolicyBinder {
             {R.string.policy_s4_title, R.string.policy_s4_body},
             {R.string.policy_s5_title, R.string.policy_s5_body},
             {R.string.policy_s8_title, R.string.policy_s8_body},
+            {R.string.policy_s9_title, R.string.policy_s9_body},
+            {R.string.policy_s10_title, R.string.policy_s10_body},
     };
     private static final int[][] TERMS = {
             {R.string.policy_t1_title, R.string.policy_t1_body},

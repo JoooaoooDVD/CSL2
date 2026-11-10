@@ -63,10 +63,24 @@ public class AboutFragment extends Fragment {
                     "LGPL-3.0", "https://github.com/PojavLauncherTeam/PojavLauncher"),
             new Project(R.drawable.about_logo_amethyst, "Amethyst", R.string.about_role_successor, R.string.about_amethyst_desc,
                     "LGPL-3.0", "https://github.com/AngelAuraMC/Amethyst-Android"),
+            new Project(R.drawable.ic_horizon, "Horizon", R.string.about_role_engine, R.string.about_horizon_desc,
+                    "MIT", "https://github.com/horizon-rust/horizon"),
+    };
+
+    /** Everything inside CS Engine (CS Rust Edition), credited one by one as its MIT / permissive licenses ask */
+    private static final Credit[] ENGINE = {
+            new Credit("Horizon", "The Rust engine for Minecraft: Java Edition that CS Engine derives from. By Ludovic Marie and the Horizon contributors.", "MIT", "https://github.com/horizon-rust/horizon"),
+            new Credit("Horizon Android", "The Android port of Horizon by Vasysik and contributors; CS Engine's direct upstream.", "MIT", "https://github.com/Vasysik/horizon-android"),
+            new Credit("CS Rust Edition", "Craft Studio's fork: cs-host mode, branding, friends, voice, e4mc hosting and Android fixes. Source, NOTICE and policies published.", "MIT", "https://github.com/craftstudioteam/cs-rust-edition-"),
+            new Credit("wgpu / wgpu-hal", "Cross-platform GPU API from the gfx-rs developers; Vulkan rendering on Android.", "MIT / Apache-2.0", "https://github.com/gfx-rs/wgpu"),
+            new Credit("winit", "Window and input handling from rust-windowing.", "Apache-2.0", "https://github.com/rust-windowing/winit"),
+            new Credit("e4mc (Rust port)", "Hosting for friends over the public e4mc relay. Protocol by Skye, Rust port by sambukuper.", "MIT", "https://github.com/sambukuper/e4mc-minecraft-rust"),
+            new Credit("AMD FidelityFX SDK", "Optical-flow shaders ported to WGSL for frame generation. AMD and FidelityFX are AMD trademarks.", "MIT", "https://github.com/GPUOpen-LibrariesAndSDKs/FidelityFX-SDK"),
+            new Credit("Pixelify Sans", "Pixel font by The Pixelify Sans Project Authors.", "OFL-1.1", "https://github.com/eifetx/Pixelify-Sans"),
+            new Credit("Pixelarticons", "Pixel icon set by Gerrit Halfmann.", "MIT", "https://github.com/halfmage/pixelarticons"),
     };
 
     private static final Credit[] LIBRARIES = {
-            new Credit("Horizon Android", "CS Engine (Powered by Craft Studio) is built on Horizon Android, a native Rust engine for Minecraft: Java Edition.", "MIT", "https://github.com/Vasysik/horizon-android"),
             new Credit("Boardwalk", "The project that first ran Minecraft: Java Edition on Android — the ancestor of every Pojav-based launcher.", "Apache-2.0", "https://github.com/zhuowei/Boardwalk"),
             new Credit("OpenJDK (multiarch)", "Java runtimes 8, 17 and 21 built for Android by the PojavLauncher team.", "GPL-2.0 + CE", "https://github.com/PojavLauncherTeam/android-openjdk-build-multiarch"),
             new Credit("GLFW (Android)", "Window, input and EGL context backend for LWJGL 3.", "zlib", "https://github.com/MojoLauncher/glfw"),
@@ -140,12 +154,23 @@ public class AboutFragment extends Fragment {
             projects.addView(card);
         }
 
+        fillCredits(inflater, view.findViewById(R.id.about_engine), ENGINE, R.drawable.ic_horizon);
         fillCredits(inflater, view.findViewById(R.id.about_libraries), LIBRARIES, R.drawable.ic_about_code);
         fillCredits(inflater, view.findViewById(R.id.about_services), SERVICES, R.drawable.ic_about_link);
 
         ViewGroup legal = view.findViewById(R.id.about_legal);
         addLegal(inflater, legal, R.drawable.ic_about_shield, R.string.about_legal_license, R.string.about_legal_license_desc,
                 "LGPL-3.0", () -> open("https://www.gnu.org/licenses/lgpl-3.0.html"));
+        addLegal(inflater, legal, R.drawable.ic_about_shield, R.string.about_legal_mit, R.string.about_legal_mit_desc,
+                "MIT", () -> Tools.swapFragment(requireActivity(), NoticesFragment.class, NoticesFragment.TAG,
+                        NoticesFragment.args("LICENSE-horizon", getString(R.string.about_legal_mit), getString(R.string.about_notices_sub_mit),
+                                "https://github.com/craftstudioteam/cs-rust-edition-/blob/main/LICENSE")));
+        addLegal(inflater, legal, R.drawable.ic_about_code, R.string.about_legal_notices, R.string.about_legal_notices_desc,
+                null, () -> Tools.swapFragment(requireActivity(), NoticesFragment.class, NoticesFragment.TAG,
+                        NoticesFragment.args("NOTICES.txt", getString(R.string.about_legal_notices), getString(R.string.about_notices_sub_all),
+                                "https://github.com/craftstudioteam/cs-rust-edition-/blob/main/THIRD_PARTY_NOTICES.md")));
+        addLegal(inflater, legal, R.drawable.ic_about_link, R.string.about_legal_source, R.string.about_legal_source_desc,
+                null, () -> open("https://github.com/craftstudioteam/cs-rust-edition-"));
         addLegal(inflater, legal, R.drawable.ic_about_shield, R.string.about_legal_privacy, R.string.about_legal_privacy_desc,
                 null, () -> Tools.swapFragment(requireActivity(), PolicyFragment.class, PolicyFragment.TAG, null));
         addLegal(inflater, legal, R.drawable.ic_about_heart, R.string.about_legal_mojang, R.string.about_legal_mojang_desc,
@@ -163,6 +188,7 @@ public class AboutFragment extends Fragment {
         View hero = view.findViewById(R.id.about_hero);
         View logo = view.findViewById(R.id.about_logo);
         ScrollReveal reveal = new ScrollReveal(scroll);
+        reveal.track(view.findViewById(R.id.about_engine));
         reveal.track(view.findViewById(R.id.about_libraries));
         reveal.track(view.findViewById(R.id.about_services));
         reveal.track(legal);

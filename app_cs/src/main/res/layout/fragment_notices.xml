@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Open source notices / license text viewer (About > Legal). Light settings palette. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/pe_field_bg"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="10dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="18dp"
+        android:paddingBottom="6dp">
+
+        <ImageView
+            android:id="@+id/nt_back"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/about_back"
+            android:padding="9dp"
+            android:src="@drawable/ic_pe_back"
+            android:tint="@color/pe_text_primary" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/nt_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/noto_sans_bold"
+                android:includeFontPadding="false"
+                android:textColor="@color/pe_text_primary"
+                android:textSize="17sp" />
+
+            <TextView
+                android:id="@+id/nt_sub"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:includeFontPadding="false"
+                android:textColor="@color/pe_text_secondary"
+                android:textSize="11.5sp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/nt_open"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_pe_chip"
+            android:fontFamily="@font/noto_sans_bold"
+            android:includeFontPadding="false"
+            android:paddingStart="12dp"
+            android:paddingTop="7dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="7dp"
+            android:text="@string/about_notices_open"
+            android:textColor="@color/pe_text_primary"
+            android:textSize="11.5sp" />
+    </LinearLayout>
+
+    <ScrollView
+        android:id="@+id/nt_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="16dp"
+        android:scrollbars="none">
+
+        <TextView
+            android:id="@+id/nt_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_pe_card"
+            android:fontFamily="@font/jetbrains_mono"
+            android:lineSpacingExtra="2dp"
+            android:padding="16dp"
+            android:textColor="@color/pe_text_primary"
+            android:textIsSelectable="true"
+            android:textSize="11.5sp" />
+    </ScrollView>
+</LinearLayout>

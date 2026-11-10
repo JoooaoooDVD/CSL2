@@ -293,6 +293,22 @@
             android:layout_marginTop="10dp"
             android:orientation="vertical" />
 
+        <!-- CS Engine (Horizon derivative) credits -->
+        <TextView
+            style="@style/About.Section"
+            android:text="@string/about_section_engine" />
+
+        <TextView
+            style="@style/About.SectionSub"
+            android:text="@string/about_section_engine_sub" />
+
+        <LinearLayout
+            android:id="@+id/about_engine"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="vertical" />
+
         <!-- Open source components -->
         <TextView
             style="@style/About.Section"

@@ -1,0 +1,86 @@
+CS LAUNCHER PLUS — OPEN SOURCE NOTICES
+======================================
+
+CS Launcher Plus is free software under the GNU Lesser General Public License
+v3.0 (LGPL-3.0). It is a fork of the PojavLauncher family (PojavLauncher,
+Amethyst, MojoLauncher), all LGPL-3.0. Source: github.com/craftstudioteam.
+
+The launcher ships two game engines:
+
+  1. The Java engine — the classic PojavLauncher pipeline (OpenJDK, LWJGL,
+     GLFW/SDL, GL translation layers). Licenses below.
+  2. CS Engine ("CS Rust Edition — Powered by Craft Studio") — a Rust engine
+     derived from Horizon. Source: github.com/craftstudioteam/cs-rust-edition-
+
+
+CS ENGINE — MIT
+---------------
+CS Engine is a derivative work of:
+  * Horizon — Ludovic Marie and the Horizon contributors — MIT
+    github.com/horizon-rust/horizon
+  * Horizon Android — Vasysik and contributors — MIT
+    github.com/Vasysik/horizon-android
+Craft Studio's changes are released under the same MIT license.
+Full text: LICENSE-horizon (this folder / About > Legal > MIT License).
+
+The MIT license requires that the copyright notice and permission notice be
+kept in all copies or substantial portions of the software. This file and the
+About page of the launcher are that notice. No GPL/LGPL code is part of the
+CS Engine binary.
+
+Third-party components inside CS Engine:
+  * wgpu / wgpu-hal 30 — gfx-rs developers — MIT OR Apache-2.0
+  * winit 0.30 — rust-windowing — Apache-2.0
+  * e4mc-minecraft-rust — sambukuper (Rust port), Skye (e4mc) — MIT
+    The *.e4mc.link relay is Skye's free public service.
+  * Pixelify Sans — The Pixelify Sans Project Authors — SIL OFL 1.1
+  * Pixelarticons — Gerrit Halfmann — MIT
+  * AMD FidelityFX SDK 1.1.4 (optical flow shaders) — Advanced Micro
+    Devices, Inc. — MIT. AMD and FidelityFX are AMD trademarks.
+  * Quilt icon — QuiltMC — CC0 1.0; NeoForge icon — NeoForged — CC BY 4.0
+  * Rust crates as declared in Cargo.lock (MIT / Apache-2.0 / BSD / Zlib)
+
+
+JAVA ENGINE AND LAUNCHER COMPONENTS
+-----------------------------------
+  * PojavLauncher — PojavLauncherTeam — LGPL-3.0
+  * Amethyst — AngelAuraMC — LGPL-3.0
+  * Boardwalk — zhuowei — Apache-2.0
+  * OpenJDK (multiarch builds) — PojavLauncherTeam — GPL-2.0 with
+    Classpath Exception
+  * GLFW (Android) — zlib;  SDL3 / MojoSDL — zlib
+  * LWJGL 3 — BSD-3-Clause;  LWJGL2-GLFW — BSD-3-Clause
+  * Holy GL4ES — MIT (LICENSE-gl4es)
+  * LTW — artdeell — LGPL-3.0
+  * MobileGlues — MobileGL-Dev — LGPL-2.1
+  * Craft Studio Graphics Engine (CSGE) — Craft Studio build of MobileGlues
+    — LGPL-2.1; source published, see csge-README.txt
+  * Mesa 3D (Zink / Virgl) — MIT (LICENSE-mesa, LICENSE-mesa-c11threads)
+  * jreexec — MIT (LICENSE-jreexec);  bhook — MIT (LICENSE-bytehook)
+  * authlib-injector — yushijinhun — AGPL-3.0 (separate program, downloaded
+    and run unmodified alongside the game)
+  * OpenAL Soft — LGPL-2.0;  Oboe — Apache-2.0;  pffft — BSD (LICENSE-pffft)
+  * pro-grade — Apache-2.0
+  * AndroidX, Material Components, Gson, Apache Commons — Apache-2.0
+  * JetBrains Mono — SIL OFL 1.1 (JetBrainsMono-OFL.txt)
+  * Minecraft Ten / Noto Sans — their respective licenses
+
+
+MINECRAFT
+---------
+Minecraft is a trademark of Mojang Synergies AB / Microsoft. CS Launcher Plus
+and CS Engine are independent projects, not affiliated with, endorsed by or
+supported by Mojang or Microsoft. No Minecraft code, assets or data are
+shipped in the app; the game is downloaded on your device from Mojang's
+official servers and verified. You need your own Minecraft: Java Edition
+account to play online. The Minecraft EULA and Usage Guidelines apply.
+
+
+CRAFT STUDIO
+------------
+"Craft Studio", "CS Launcher Plus", "CS Engine", "CS Rust Edition", "CSGE" and
+the Craft Studio logo belong to Craft Studio and are not covered by the open
+source licenses above. Forks are welcome under the LGPL/MIT terms; please use
+your own name and artwork.
+
+Discord: discord.gg/dmteYqZZyY · Web: official.craftstudios.site
