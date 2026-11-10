@@ -29,7 +29,7 @@ public class InstanceIconProvider {
         sStaticIcons.put("quilt", R.drawable.ic_quilt);
         sStaticIcons.put("forge", R.drawable.ic_forge);
         sStaticIcons.put("neoforge", R.drawable.ic_neoforge);
-        sStaticIcons.put("horizon", R.drawable.ic_horizon);
+        sStaticIcons.put("horizon", R.drawable.ic_cs_rust);
         // Pixel art icons of the profile editor strip
         sStaticIcons.put("fox", R.drawable.ic_pe_px_fox);
         sStaticIcons.put("grass", R.drawable.ic_pe_px_grass);

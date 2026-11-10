@@ -71,6 +71,19 @@ public class SettingsHubFragment extends Fragment {
                 R.string.preference_cursor_description, R.drawable.settings_art_cursor, CURSOR);
         View updates = bindCard(view, R.id.st_card_updates, R.drawable.ic_cs_update, R.string.preference_updates_title,
                 R.string.preference_updates_description, R.drawable.settings_art_updates, UPDATES);
+        View about = bindCard(view, R.id.st_card_about, R.drawable.ic_cs_full, R.string.st_about_title,
+                R.string.st_about_desc, R.drawable.settings_art_about, null);
+        about.setOnClickListener(v -> {
+            if (mOpening) return;
+            mOpening = true;
+            SettingsMotion.cardTapped(v, () -> {
+                mOpening = false;
+                if (getActivity() != null) {
+                    com.craftstudio.cslauncher.Tools.swapFragmentFullScreen(requireActivity(),
+                            AboutFragment.class, AboutFragment.TAG, null);
+                }
+            });
+        });
 
         bindGeneral(view);
 
@@ -78,7 +91,7 @@ public class SettingsHubFragment extends Fragment {
             mEntrancePlayed = true;
             SettingsMotion.playHubEntrance(view.findViewById(R.id.st_header_tile), view.findViewById(R.id.st_title),
                     view.findViewById(R.id.st_subtitle), view.findViewById(R.id.st_panel),
-                    new View[][]{{java, video, appearance, storage, updates}, {misc, experimental, control, cursor}},
+                    new View[][]{{java, video, appearance, storage, about}, {misc, experimental, control, cursor, updates}},
                     view.findViewById(R.id.st_general));
         }
     }
@@ -160,16 +173,6 @@ public class SettingsHubFragment extends Fragment {
         CSAnimationEngine.attachPressFeedback(notificationRow);
         updateNotificationRow();
 
-        View aboutRow = view.findViewById(R.id.st_about_row);
-        if (aboutRow != null) {
-            aboutRow.setOnClickListener(v -> {
-                if (getActivity() != null) {
-                    com.craftstudio.cslauncher.Tools.swapFragmentFullScreen(requireActivity(),
-                            AboutFragment.class, AboutFragment.TAG, null);
-                }
-            });
-            CSAnimationEngine.attachPressFeedback(aboutRow);
-        }
     }
 
     /** The permission row only shows while notifications are not allowed */
@@ -180,7 +183,7 @@ public class SettingsHubFragment extends Fragment {
         Activity activity = getActivity();
         boolean needed = activity instanceof LauncherActivity
                 && !((LauncherActivity) activity).checkForPermission(33, Manifest.permission.POST_NOTIFICATIONS);
-        row.setVisibility(needed ? View.VISIBLE : View.INVISIBLE);
+        row.setVisibility(needed ? View.VISIBLE : View.GONE);
         ViewGroup general = view.findViewById(R.id.st_general);
         if (general != null) general.setVisibility(View.VISIBLE);
     }

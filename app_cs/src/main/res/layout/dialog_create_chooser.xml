@@ -548,9 +548,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:contentDescription="@null"
-                        android:padding="6dp"
+                        android:padding="2dp"
                         android:scaleType="fitCenter"
-                        android:src="@drawable/ic_horizon" />
+                        android:src="@drawable/ic_cs_rust" />
                         </FrameLayout>
 
                         <LinearLayout
