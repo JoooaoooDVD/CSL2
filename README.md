@@ -1,110 +1,191 @@
-<H1 align="center">CS Launcher Plus 1.6</H1>
+<div align="center">
 
-<H3 align="center">by CRAFT STUDIO</H3>
+<img src="assets/readme/logo.png" alt="CS Launcher Plus" width="140">
 
-<a href="./README_RU.md">Readme на русском</a>
+# CS Launcher Plus
 
-<img src="./app_cs/src/main/assets/cs_logo.png" align="left" width="150" height="150" alt="CS Launcher Plus logo">
+**Minecraft: Java Edition on Android — fast, modern, and now with two engines.**
 
-![GitHub commit activity](https://img.shields.io/github/commit-activity/m/CopperLauncher/Copper-Android)
-![GitHub Downloads](https://img.shields.io/github/downloads/CopperLauncher/Copper-Android/total)
-![Platform](https://img.shields.io/badge/platform-Android-green)
-![Min SDK](https://img.shields.io/badge/minSdk-26-blue)
-![Android CI](https://github.com/CopperLauncher/Copper-Android/workflows/Android%20CI/badge.svg)
-![Crowdin](https://badges.crowdin.net/pojavlauncher/localized.svg)
-[![Discord](https://img.shields.io/discord/1355213558631366897?color=5865F2&logo=discord&logoColor=white&label=&style=flat)](https://discord.gg/j8GTQv3YvY)
-[![CurseForge](https://img.shields.io/badge/curseforge-maxjubayeryt-orange?logo=curseforge)](https://www.curseforge.com/members/maxjubayeryt/projects)
-[![Modrinth](https://img.shields.io/badge/modrinth-maxjubayeryt-green?logo=modrinth)](https://modrinth.com/user/maxjubayeryt)
+<sub>by CRAFT STUDIO</sub>
 
-* CS Launcher Plus is a launcher, based on [PojavLauncher](https://github.com/PojavLauncherTeam/PojavLauncher) & [Upstream launcher](https://github.com/MojoLauncher/MojoLauncher), that allows you to play Minecraft: Java Edition on your Android device!
+<br>
 
-* It can run almost every version of Minecraft, allowing you to use .jar only installers to install modloaders such as [Forge](https://files.minecraftforge.net/) and [Fabric](http://fabricmc.net/) and mods like [OptiFine](https://optifine.net).
+<a href="https://github.com/craftstudioteam/CS-LAUNCHER-PLUS/releases/latest"><img src="https://img.shields.io/github/v/release/craftstudioteam/CS-LAUNCHER-PLUS?style=for-the-badge&label=Latest&color=C6C6CE" alt="Latest release"></a>
+&nbsp;
+<a href="https://github.com/craftstudioteam/CS-LAUNCHER-PLUS/releases"><img src="https://img.shields.io/github/downloads/craftstudioteam/CS-LAUNCHER-PLUS/total?style=for-the-badge&color=2ea043" alt="Downloads"></a>
+&nbsp;
+<img src="https://img.shields.io/badge/Android-5.0%2B-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android 5.0+">
+&nbsp;
+<img src="https://img.shields.io/badge/License-LGPL--3.0%20%2B%20MIT-6e7681?style=for-the-badge" alt="License">
 
-## Navigation
-- [Introduction](#introduction)
-- [Getting CS Launcher Plus](#getting-cs-launcher-plus)
-- [Building](#building) 
-- [Current roadmap](#current-roadmap) 
-- [License](#license) 
-- [Contributing](#contributing) 
-- [Credits & Third party components and their licenses](#credits--third-party-components-and-their-licenses-if-available)
+<br><br>
 
-## Introduction 
-* CS Launcher Plus is a Minecraft: Java Edition launcher for Android based on [PojavLauncher](https://github.com/PojavLauncherTeam/PojavLauncher) & [Upstream launcher](https://github.com/MojoLauncher/MojoLauncher)
-* This launcher can launch almost all available Minecraft versions ranging from rd-132211 to 26.x snapshots (including Combat Test versions). 
-* Modding via Forge and Fabric are also supported. 
+<a href="https://github.com/craftstudioteam/CS-LAUNCHER-PLUS/releases/latest"><img src="https://img.shields.io/badge/Download%20APK-Latest%20Release-1f6feb?style=for-the-badge&logo=github&logoColor=white" alt="Download APK"></a>
+&nbsp;
+<a href="https://discord.gg/dmteYqZZyY"><img src="https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
+&nbsp;
+<a href="https://youtube.com/@craft-studio-official"><img src="https://img.shields.io/badge/YouTube-Craft%20Studio-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="YouTube"></a>
+&nbsp;
+<a href="https://official.craftstudios.site"><img src="https://img.shields.io/badge/Website-craftstudios.site-16161A?style=for-the-badge" alt="Website"></a>
 
-## Getting CS Launcher Plus
+<br><br>
 
-You can get CS Launcher Plus via four methods:
+<img src="assets/readme/screenshots/home.png" alt="CS Launcher Plus — home" width="100%">
 
-1. You can get the prebuilt app from the [releases section](https://github.com/CopperLauncher/Copper-android/releases/).
+</div>
 
-2. You can get it from Google Play by clicking on this badge:
-[![Google Play](https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png)](https://play.google.com/store/apps/details?id=com.craftstudio.cslauncher)
+---
 
-3. You can get early builds from [Github Actions](https://github.com/CopperLauncher/Copper-android/actions).
+## What is CS Launcher Plus?
 
-4. You can [build](#building) from source.
-## Building   
-* Build the launcher (it will automatically download all required components)
-```
-./gradlew :app_cs:assembleDebug
-```
-If you are building on Windows:
-* Replace `./gradlew` with `.\gradlew.bat`
-* Make sure `jreexec`, `sdl`, `glfw` are symlinked into `app_cs/src/main/jni/`
+CS Launcher Plus lets you play **Minecraft: Java Edition** on your Android phone or tablet — every
+version from the earliest alphas to the newest **26.x** snapshots, with Forge, Fabric, NeoForge, Quilt,
+OptiFine, shaders, resource packs and modpacks from Modrinth and CurseForge.
 
-## Current roadmap
-- [x] Instance system in favor of profiles
-- [x] Out-of-the box 1.21.5 support
-- [x] mrpack/CurseForge zip import
-- [x] LTW: enable compute shader/image extensions
-- [x] Add Mod/Content manager & browser
-- [x] Add option to share logs to mclo.gs
-- [x] Make the launcher fully m3
-- [ ] MS skin manager
-- [ ] Ely.by skin manager (idk how ely.by api works but I will try)
-- [ ] LTW: resolve issues with Create
-- [ ] LTW: switch to a color-renderable format for framebuffers
-- [ ] Modpack management tool
-- [ ] MMC-compatible instance import
-- [ ] Vintage Story support
-- [ ] Implement common native library standard
+Version **1.6** is the biggest update so far: a second game engine written in Rust, a built-in friends
+system, one-tap multiplayer hosting and voice chat — all inside the launcher you already know.
 
-## Known Issues
-- Some physical mice may have very slow mouse speed
-- On Holy GL4ES, large texture atlases may be distorted (resulting in stretched/blocky textures in modpacks)
-- Probably more, that's why we have a bug tracker ;) 
+> You need your own Minecraft: Java Edition account to play online. CS Launcher Plus is not affiliated
+> with Mojang Studios or Microsoft and ships none of their code or assets.
 
-## License
-- CS Launcher Plus is licensed under [GNU LGPLv3](https://github.com/CopperLauncher/Copper-android/blob/v3_openjdk/LICENSE).
+---
 
-## Contributing
-Contributions are welcome! We welcome any type of contribution, not only code. For example, you can help the wiki shape up. You can help the [translation](https://crowdin.com/project/pojavlauncher) too!
+## What's new in 1.6
 
+### CS Rust Edition — a second engine
 
-Any code change to this repository should be submitted as a pull request. The description should explain what the code does and give steps to execute it.
+<img src="assets/readme/screenshots/cs-rust-edition.png" alt="CS Rust Edition" width="100%">
 
-## Third party components, licenses and sources (when applicable)
-- [PojavLauncher](https://github.com/PojavLauncherTeam/PojavLauncher): [GNU LGPLv3 License](https://github.com/PojavLauncherTeam/PojavLauncher/blob/v3_openjdk/LICENSE)
-- [Upstream launcher](https://github.com/MojoLauncher/MojoLauncher): [GNU LGPLv3 License](https://github.com/MojoLauncher/MojoLauncher/blob/v3_openjdk/LICENSE)
-- Android Support Libraries: [Apache License 2.0](https://android.googlesource.com/platform/prebuilts/maven_repo/android/+/master/NOTICE.txt).
-- [Holy GL4ES](https://github.com/artdeell/gl4es_extra_extra/): [MIT License](https://github.com/ptitSeb/gl4es/blob/master/LICENSE).<br>
-- [OpenJDK](https://github.com/PojavLauncherTeam/openjdk-multiarch-jdk8u): [GNU GPLv2 License](https://openjdk.java.net/legal/gplv2+ce.html).<br>
-- [GLFW](https://github.com/MojoLauncher/glfw): [zlib license](https://github.com/MojoLauncher/glfw/blob/glfw34/LICENSE.md)
-- [SDL](https://github.com/MojoLauncher/MojoSDL): [zlib license](https://github.com/MojoLauncher/MojoSDL/blob/main/LICENSE.txt)
-- [LWJGL2-GLFW](https://github.com/MojoLauncher/lwjgl2-glfw): 3-Clause BSD license
-- [LWJGL3](https://github.com/LWJGL/lwjgl3): [BSD-3 License](https://github.com/LWJGL/lwjgl3/blob/master/LICENSE.md).
-- [jreexec](https://github.com/MojoLauncher/jreexec): [MIT License](https://github.com/MojoLauncher/jreexec/blob/master/LICENSE)
-- [Mesa 3D Graphics Library](https://gitlab.freedesktop.org/mesa/mesa): [MIT License](https://docs.mesa3d.org/license.html).
-- [pro-grade](https://github.com/pro-grade/pro-grade) (Java sandboxing security manager): [Apache License 2.0](https://github.com/pro-grade/pro-grade/blob/master/LICENSE.txt).
-- [bhook](https://github.com/bytedance/bhook) (Used for exit code trapping): [MIT license](https://github.com/bytedance/bhook/blob/main/LICENSE).
-- [Authlib-Injector](https://github.com/yushijinhun/authlib-injector) (Used for authorisation via ely.by): [AGPL-3.0](https://github.com/yushijinhun/authlib-injector/blob/develop/LICENSE).
-- [alsoft](https://github.com/kcat/openal-soft/) (Audio output library): [GNU LIBRARY GENERAL PUBLIC LICENSE](https://github.com/kcat/openal-soft/blob/master/COPYING) and [modified PFFFT](https://github.com/kcat/openal-soft/blob/master/LICENSE-pffft).
-- [oboe](https://github.com/google/oboe): [Apache License 2.0](https://github.com/google/oboe/blob/main/LICENSE).
-- Thanks to [Mineskin](https://mineskin.eu/) for providing Minecraft avatars.
+**CS Rust Edition** (shown in the app as **CS Engine — Powered by Craft Studio**) is a complete Minecraft
+Java 26.3 client rewritten in Rust and rendered with Vulkan. No Java runtime, no translation layers,
+far less memory — it starts in seconds and runs smoothly on phones that struggle with the Java engine.
 
-## Special thanks
-- Thanks to [Upstream launcher](https://github.com/MojoLauncher/MojoLauncher/) for the android icons, Made by [Yarpopcat08](https://github.com/Yarpopcat08).
-- Thanks to [whynelo](https://github.com/whynelo) for the new copper icons.
+- Pick it when you create a profile: **Java engine** or **CS Rust Edition**, side by side.
+- Same CS controls, cursor, keyboard and settings in both engines.
+- Sandboxed `.hmod` mods, shaders and resource packs, a built-in mod browser.
+- Craft Studio title screen, loading screen and in-game menu with your 3D skin.
+- Android 9+ · 64-bit (arm64). Source: [craftstudioteam/cs-rust-edition-](https://github.com/craftstudioteam/cs-rust-edition-) (MIT).
+
+### CS Friends
+
+<img src="assets/readme/screenshots/friends.png" alt="CS Friends" width="100%">
+
+A friends system that lives in the launcher **and** in the game.
+
+- Create a free CS username and password (only needed for friends; a local account is enough to play).
+- Friend requests, online status, direct messages and a notification bell next to your account.
+- **Invites that work**: a friend hosts a world, you get a 🟢 *Join World* card, tap, and the launcher
+  installs the right version, starts the game and joins automatically.
+- Skin sharing between friends; chat bubbles above players in CS Rust Edition.
+- The launcher and the engine each have their own friends panel with the same features.
+
+### CS Multiplayer — host from your phone
+
+<img src="assets/readme/screenshots/multiplayer.png" alt="CS Multiplayer" width="100%">
+
+- **Host a world** with one tap. Your singleplayer world becomes a public server through the free
+  **e4mc** relay — no port forwarding, no VPN, no PC.
+- Works in both engines; host sees a guest list and can kick a guest.
+- Join a friend's host straight from an invite, or share the address with anyone.
+- Server icon for your hosted world; Discord Rich Presence shows the server you are on.
+
+### Built-in Voice Chat
+
+- Push-to-talk / open mic voice chat inside the game, no extra app.
+- Password-protected **voice groups** with invites and per-player mute — the same model as
+  Simple Voice Chat servers.
+
+### Everything else in 1.6
+
+| Area | What changed |
+|:--|:--|
+| **Renderers** | New **CSGE** renderer (Craft Studio Graphics Engine, a MobileGlues build with 26.3 shader fixes) next to Holy GL4ES, LTW, MobileGlues, Zink and Virgl. Per-renderer icons and a redesigned renderer picker. |
+| **Cursor** | Your own in-game pointer: any image, click point, size — for both engines. |
+| **Controls** | CS Control System on both engines; keybinds page; cursor behaves like PojavLauncher. |
+| **Accounts** | Local accounts by default; Microsoft, Ely.by and custom Yggdrasil servers (authlib-injector) with one-field "Add auth server". Animated account creation, Steve as default skin, skin editor. |
+| **Profiles** | New create-profile flow (engine choice, every loader version listed, Horizon install inside the same flow), edit profile with "Open folder", per-profile icons, home shortcuts that start the game directly. |
+| **Content** | Mod/modpack/shader/resource-pack browser (Modrinth + CurseForge), OptiFine profiles, Thorium recommended-mod card, native mods pipeline for CS Rust Edition. |
+| **Play** | "Downloading" only when something really downloads, rocket "Launching" animation, auto download + start, crash post-mortem with fixes. |
+| **Play Time & Discord** | Redesigned Play Time page (both engines count). Discord Rich Presence: home, launching, menu, world, LAN or server with the profile's icon; link/unlink optional. |
+| **Settings** | New Settings hub with uniform cards; redesigned sub-pages; Storage (scoped or default) front and centre; Updates → **Update to Pro**. |
+| **Languages** | English, Hinglish, Hindi and ten more. |
+| **Polish** | Premium dark design system, smooth animations everywhere, first-launch terms and tutorial, About page with full credits and licenses. |
+
+---
+
+## Screenshots
+
+| Home | Create profile |
+|:--:|:--:|
+| <img src="assets/readme/screenshots/home.png" width="100%"> | <img src="assets/readme/screenshots/create-profile.png" width="100%"> |
+
+| Friends | Host a world |
+|:--:|:--:|
+| <img src="assets/readme/screenshots/friends.png" width="100%"> | <img src="assets/readme/screenshots/multiplayer.png" width="100%"> |
+
+| CS Rust Edition in game | Settings |
+|:--:|:--:|
+| <img src="assets/readme/screenshots/cs-rust-edition.png" width="100%"> | <img src="assets/readme/screenshots/settings.png" width="100%"> |
+
+---
+
+## Install
+
+1. Download `CS-Launcher-Plus-release.apk` from the
+   [latest release](https://github.com/craftstudioteam/CS-LAUNCHER-PLUS/releases/latest).
+2. Allow installs from your browser / file manager if Android asks.
+3. Open the launcher, accept the terms, add an account (local is fine) and press **PLAY**.
+
+**Requirements**
+
+| | Java engine | CS Rust Edition |
+|:--|:--|:--|
+| Android | 5.0+ | 9.0+ |
+| CPU | arm64, arm32, x86_64 | arm64 |
+| RAM | 2 GB (4 GB for mods / 1.17+) | 2 GB |
+| Storage | ~1 GB + game files | ~300 MB + game files |
+
+---
+
+## Compatibility
+
+- **Game versions:** rd-132211 → 26.x snapshots (Java engine); 26.3 (CS Rust Edition).
+- **Mod loaders (Java engine):** Forge, NeoForge, Fabric, Quilt, OptiFine.
+- **CS Rust Edition** runs sandboxed `.hmod` mods only — Fabric/Forge/NeoForge Java mods do **not** run on it.
+- **Servers:** any Java Edition server; hosted worlds via e4mc. Third-party clients may be disallowed by
+  some servers' rules — check before you join.
+
+---
+
+## Community
+
+- **Discord:** <https://discord.gg/dmteYqZZyY> — support, Pro upgrade, announcements
+- **YouTube:** <https://youtube.com/@craft-studio-official> — tutorials and showcases
+- **Website:** <https://official.craftstudios.site>
+- **Issues:** use the GitHub issue tracker of this repository; share logs with the in-app **Share log** button.
+
+---
+
+## License and credits
+
+CS Launcher Plus is free software under the **GNU LGPL v3**, a fork of the
+[PojavLauncher](https://github.com/PojavLauncherTeam/PojavLauncher) family
+([Amethyst](https://github.com/AngelAuraMC/Amethyst-Android)).
+**CS Rust Edition** is **MIT** licensed, derived from [Horizon](https://github.com/horizon-rust/horizon)
+by Ludovic Marie and the Horizon contributors and [Horizon Android](https://github.com/Vasysik/horizon-android)
+by Vasysik; Craft Studio's changes are published under the same license at
+[craftstudioteam/cs-rust-edition-](https://github.com/craftstudioteam/cs-rust-edition-).
+
+Every bundled component, author and license is listed in the app under **About › Legal › Open source
+notices**, and in `NOTICE` / `assets/licenses` in this repository. Highlights: OpenJDK (GPL-2.0+CE),
+LWJGL (BSD-3), GLFW / SDL3 (zlib), Holy GL4ES, Mesa/Zink (MIT), LTW (LGPL-3), MobileGlues / CSGE (LGPL-2.1),
+wgpu, winit, e4mc (MIT/Apache-2.0), authlib-injector (AGPL-3, separate program).
+
+Minecraft is a trademark of Mojang Synergies AB / Microsoft. "Craft Studio", "CS Launcher Plus",
+"CS Engine" and "CS Rust Edition" are Craft Studio's. Privacy policy: in the app (About › Privacy
+policy) and in `PRIVACY_POLICY_en` / `PRIVACY_POLICY_hi`.
+
+<div align="center">
+<br>
+<sub>Made with ❤ by CRAFT STUDIO and the open source community.</sub>
+</div>
