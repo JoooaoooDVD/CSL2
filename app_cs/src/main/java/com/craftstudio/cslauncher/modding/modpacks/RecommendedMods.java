@@ -17,8 +17,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The "BASE OPTIMISE MOD" recommendation: Thorium Optimization (CurseForge 1753836) is pinned as
- * the first card of the Mods tab, looking like any other result plus a green Recommended badge.
+ * Pinned recommendations on top of the Mods tab: Thorium Optimization (CurseForge 1753836, "BASE
+ * OPTIMISE MOD") and Pojav Tagger (CurseForge 1672821, the OPTL partner mod). Each card looks like any
+ * other result plus a green badge, looking like any other result plus a green Recommended badge.
  * Install / details / compatibility go through the normal card code, so the version that gets
  * installed is picked for the selected profile exactly like for every other mod.
  */
@@ -26,14 +27,26 @@ public final class RecommendedMods {
     private static final String TAG = "RecommendedMods";
     /** Thorium Optimization on CurseForge (Fabric client performance mod) */
     public static final String THORIUM_CF_ID = "1753836";
+    /** Pojav Tagger on CurseForge (OPTL's tagger mod, Fabric client) */
+    public static final String POJAV_TAGGER_CF_ID = "1672821";
+
+    /** One pinned card: CurseForge project id + the badge text resource */
+    private static final class Pin {
+        final String id; final int label;
+        Pin(String id, int label) { this.id = id; this.label = label; }
+    }
+    private static final Pin[] PINS = {
+            new Pin(THORIUM_CF_ID, com.craftstudio.cslauncher.R.string.lib_recommended_badge),
+            new Pin(POJAV_TAGGER_CF_ID, com.craftstudio.cslauncher.R.string.lib_recommended_badge_optl),
+    };
 
     private static final long CACHE_MS = 10 * 60 * 1000L;
     private static final long FAILURE_RETRY_MS = 60 * 1000L;
 
     private static final Object LOCK = new Object();
-    @Nullable private static ModItem sCached;
-    private static long sFetchedAt;
-    private static long sFailedAt;
+    private static final java.util.Map<String, ModItem> sCached = new java.util.HashMap<>();
+    private static final java.util.Map<String, Long> sFetchedAt = new java.util.HashMap<>();
+    private static final java.util.Map<String, Long> sFailedAt = new java.util.HashMap<>();
 
     private RecommendedMods() {}
 
@@ -51,21 +64,28 @@ public final class RecommendedMods {
     @Nullable
     public static SearchResult decorate(@Nullable SearchResult page, @Nullable String curseforgeKey) {
         if (curseforgeKey == null) return page;
-        ModItem recommended = fetch(curseforgeKey);
-        if (recommended == null) return page;
+        List<ModItem> pinnedItems = new ArrayList<>();
+        java.util.Set<String> pinnedIds = new java.util.HashSet<>();
+        for (Pin pin : PINS) {
+            ModItem item = fetch(curseforgeKey, pin.id);
+            if (item == null) continue;
+            ModItem copy = copy(item);
+            copy.recommended = true;
+            copy.recommendedLabel = pin.label;
+            pinnedItems.add(copy);
+            pinnedIds.add(pin.id);
+        }
+        if (pinnedItems.isEmpty()) return page;
         if (page == null) {
-            // Search failed but the pinned card is known: show it alone rather than an empty error
+            // Search failed but the pinned cards are known: show them rather than an empty error
             page = new SearchResult();
             page.results = new ModItem[0];
         }
-        List<ModItem> merged = new ArrayList<>();
-        ModItem pinned = copy(recommended);
-        pinned.recommended = true;
-        merged.add(pinned);
+        List<ModItem> merged = new ArrayList<>(pinnedItems);
         if (page.results != null) {
             for (ModItem item : page.results) {
                 if (item == null) continue;
-                if (item.apiSource == Constants.SOURCE_CURSEFORGE && THORIUM_CF_ID.equals(item.id)) continue;
+                if (item.apiSource == Constants.SOURCE_CURSEFORGE && pinnedIds.contains(item.id)) continue;
                 merged.add(item);
             }
         }
@@ -74,27 +94,30 @@ public final class RecommendedMods {
     }
 
     @Nullable
-    private static ModItem fetch(@NonNull String curseforgeKey) {
+    private static ModItem fetch(@NonNull String curseforgeKey, @NonNull String id) {
         long now = SystemClock.elapsedRealtime();
         synchronized (LOCK) {
-            if (sCached != null && now - sFetchedAt < CACHE_MS) return sCached;
-            if (sCached == null && sFailedAt != 0 && now - sFailedAt < FAILURE_RETRY_MS) return null;
+            ModItem cached = sCached.get(id);
+            Long at = sFetchedAt.get(id);
+            Long failed = sFailedAt.get(id);
+            if (cached != null && at != null && now - at < CACHE_MS) return cached;
+            if (cached == null && failed != null && now - failed < FAILURE_RETRY_MS) return null;
         }
         ModItem item = null;
         try {
-            item = new CurseforgeApi(curseforgeKey).getMod(THORIUM_CF_ID);
+            item = new CurseforgeApi(curseforgeKey).getMod(id);
         } catch (Exception e) {
-            Log.w(TAG, "Recommended mod lookup failed", e);
+            Log.w(TAG, "Recommended mod lookup failed: " + id, e);
         }
         synchronized (LOCK) {
             if (item != null && !item.isRestricted) {
-                sCached = item;
-                sFetchedAt = now;
-                sFailedAt = 0;
+                sCached.put(id, item);
+                sFetchedAt.put(id, now);
+                sFailedAt.remove(id);
             } else {
-                sFailedAt = now;
+                sFailedAt.put(id, now);
             }
-            return sCached;
+            return sCached.get(id);
         }
     }
 

@@ -114,6 +114,17 @@ public class PartnerFragment extends Fragment {
         Motion.riseIn(view.findViewById(R.id.pn_benefits_card), 150L, 14f);
         Motion.popIn(highlight, 320L, 0.92f);
         Motion.cascadeChildren(list, 380L, 50L, 10f);
+        // OPTL: live tier list + test requests inside the launcher
+        View tierlist = view.findViewById(R.id.pn_tierlist_card);
+        if (Partners.OPTL.equals(p.id) && tierlist != null) {
+            tierlist.setVisibility(View.VISIBLE);
+            View.OnClickListener open = v -> com.craftstudio.cslauncher.partners.optl.OptlNav.open(this,
+                    com.craftstudio.cslauncher.partners.optl.OptlRankingsFragment.class,
+                    com.craftstudio.cslauncher.partners.optl.OptlRankingsFragment.TAG, null);
+            tierlist.setOnClickListener(open);
+            view.findViewById(R.id.pn_tierlist).setOnClickListener(open);
+            Motion.riseIn(tierlist, 220L, 14f);
+        }
         Motion.riseIn(view.findViewById(R.id.pn_join_card), 260L, 14f);
     }
 

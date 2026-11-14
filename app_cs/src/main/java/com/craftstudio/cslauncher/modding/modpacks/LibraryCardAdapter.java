@@ -278,7 +278,10 @@ public class LibraryCardAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             mTitle.setText(item.title);
             mDescription.setText(item.description);
             bindSourceBadge(context, item.apiSource);
-            if (mRecommended != null) mRecommended.setVisibility(item.recommended ? View.VISIBLE : View.GONE);
+            if (mRecommended != null) {
+                mRecommended.setVisibility(item.recommended ? View.VISIBLE : View.GONE);
+                if (item.recommended) mRecommended.setText(item.recommendedLabel != 0 ? item.recommendedLabel : R.string.lib_recommended_badge);
+            }
 
             mIcon.setImageDrawable(null);
             mIcon.animate().cancel();

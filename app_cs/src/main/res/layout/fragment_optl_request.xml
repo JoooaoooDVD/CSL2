@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- OPTL "Request a test": the player fills the form in the launcher; Craft Studio stores it and
+     OPTL's website pulls it. Dark partner palette. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/transparent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/oq_banner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="12dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_banner_card"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="6dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="8dp">
+
+        <ImageView
+            android:id="@+id/oq_back"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/about_back"
+            android:padding="9dp"
+            android:src="@drawable/ic_pe_back"
+            android:tint="?attr/colorOnSurface" />
+
+        <FrameLayout
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="4dp"
+            android:background="@drawable/bg_partner_logo_tile">
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null"
+                android:padding="5dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/partner_optl_logo" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/noto_sans_bold"
+                android:includeFontPadding="false"
+                android:text="@string/optl_request_title"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="15sp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:includeFontPadding="false"
+                android:text="@string/optl_request_sub"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="11sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/oq_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingHorizontal="12dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="16dp"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/oq_status_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/bg_optl_me"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="12dp"
+                android:visibility="gone">
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_check_circle"
+                    android:tint="#D9B356" />
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+                    <TextView
+                        android:id="@+id/oq_status_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/noto_sans_bold"
+                        android:includeFontPadding="false"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="13sp"
+                        tools:text="Request #12 · Pending" />
+                    <TextView
+                        android:id="@+id/oq_status_body"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:includeFontPadding="false"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="11sp"
+                        tools:text="OPTL testers will contact you on Discord." />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/oq_form"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_partner_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView style="@style/Optl.Label" android:text="@string/optl_q_username" />
+                <EditText
+                    android:id="@+id/oq_username"
+                    style="@style/Optl.Field"
+                    android:hint="@string/optl_q_username_hint"
+                    android:inputType="textVisiblePassword|textNoSuggestions"
+                    android:maxLength="16" />
+
+                <TextView style="@style/Optl.Label" android:text="@string/optl_q_discord" />
+                <EditText
+                    android:id="@+id/oq_discord"
+                    style="@style/Optl.Field"
+                    android:hint="@string/optl_q_discord_hint"
+                    android:inputType="textVisiblePassword|textNoSuggestions"
+                    android:maxLength="40" />
+
+                <TextView style="@style/Optl.Label" android:text="@string/optl_q_discord_id" />
+                <EditText
+                    android:id="@+id/oq_discord_id"
+                    style="@style/Optl.Field"
+                    android:hint="@string/optl_q_discord_id_hint"
+                    android:inputType="number"
+                    android:maxLength="22" />
+
+                <TextView style="@style/Optl.Label" android:text="@string/optl_q_region" />
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/oq_regions"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    app:chipSpacingHorizontal="6dp"
+                    app:chipSpacingVertical="4dp"
+                    app:selectionRequired="true"
+                    app:singleSelection="true" />
+
+                <TextView style="@style/Optl.Label" android:text="@string/optl_q_gamemodes" />
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/oq_gamemodes"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    app:chipSpacingHorizontal="6dp"
+                    app:chipSpacingVertical="4dp" />
+
+                <TextView style="@style/Optl.Label" android:text="@string/optl_q_previous" />
+                <EditText
+                    android:id="@+id/oq_previous"
+                    style="@style/Optl.Field"
+                    android:hint="@string/optl_q_previous_hint"
+                    android:inputType="textCapCharacters|textNoSuggestions"
+                    android:maxLength="32" />
+
+                <TextView style="@style/Optl.Label" android:text="@string/optl_q_experience" />
+                <EditText
+                    android:id="@+id/oq_experience"
+                    style="@style/Optl.Field"
+                    android:gravity="top"
+                    android:hint="@string/optl_q_experience_hint"
+                    android:inputType="textMultiLine|textCapSentences"
+                    android:maxLength="600"
+                    android:minLines="3" />
+
+                <CheckBox
+                    android:id="@+id/oq_consent"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/optl_q_consent"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="11.5sp" />
+
+                <TextView
+                    android:id="@+id/oq_error"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textColor="#FF8A80"
+                    android:textSize="11.5sp"
+                    android:visibility="gone"
+                    tools:text="Pick at least one gamemode." />
+
+                <TextView
+                    android:id="@+id/oq_submit"
+                    android:layout_width="match_parent"
+                    android:layout_height="46dp"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_optl_btn_gold"
+                    android:fontFamily="@font/noto_sans_bold"
+                    android:gravity="center"
+                    android:letterSpacing="0.04"
+                    android:stateListAnimator="?attr/csPressAnimator"
+                    android:text="@string/optl_submit"
+                    android:textColor="#17130A"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:gravity="center"
+                    android:lineSpacingExtra="1dp"
+                    android:text="@string/optl_q_footer"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="10.5sp" />
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

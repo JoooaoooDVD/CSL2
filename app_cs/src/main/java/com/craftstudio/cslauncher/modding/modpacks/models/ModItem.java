@@ -14,6 +14,8 @@ public class ModItem extends ModSource {
     public String websiteUrl;
     /** Pinned to the top of the Mods tab with a green "Recommended" badge (not serialized) */
     public transient boolean recommended;
+    /** Badge text for the pinned card (0 = the default "Recommended" text) */
+    public transient int recommendedLabel;
 
     /** Project slug, used to match manually installed jars by their mod id */
     public String slug;
