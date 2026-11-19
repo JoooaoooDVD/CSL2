@@ -35,8 +35,7 @@ public final class UpdateInfo {
 
     @Nullable
     public Apk apkNamed(@NonNull String name) {
-        String want = normalize(name);
-        for (Apk a : apks) if (normalize(a.file).equals(want)) return a;
+        for (Apk a : apks) if (a.file.equalsIgnoreCase(name)) return a;
         return null;
     }
 
@@ -44,10 +43,5 @@ public final class UpdateInfo {
     @NonNull
     public String label() {
         return versionName + " (build " + versionCode + ")";
-    }
-
-    /** GitHub rewrites spaces in asset names; compare ignoring space/dash/dot and case. */
-    private static String normalize(String n) {
-        return n == null ? "" : n.toLowerCase(java.util.Locale.ROOT).replace(" ", "").replace("-", "").replace(".", "").replace("_", "");
     }
 }

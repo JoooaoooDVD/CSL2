@@ -34,15 +34,6 @@ public class UpdatesFragment extends Fragment {
         TextView version = view.findViewById(R.id.up_version);
         version.setText(getString(R.string.updates_version, BuildConfig.VERSION_NAME));
 
-        TextView installed = view.findViewById(R.id.up_installed_line);
-        installed.setText(getString(R.string.upd_current_fmt, com.craftstudio.cslauncher.update.UpdateManager.currentLabel()));
-        View check = view.findViewById(R.id.up_check);
-        TextView channel = view.findViewById(R.id.up_channel);
-        CSAnimationEngine.attachPressFeedback(check);
-        refreshChannel(channel);
-        check.setOnClickListener(v -> { if (getActivity() != null) com.craftstudio.cslauncher.update.UpdateManager.manualCheck(getActivity()); });
-        channel.setOnClickListener(v -> showChannelPopup(channel));
-
         View discord = view.findViewById(R.id.up_discord);
         View github = view.findViewById(R.id.up_github);
         CSAnimationEngine.attachPressFeedback(discord);
@@ -78,32 +69,5 @@ public class UpdatesFragment extends Fragment {
         } catch (ActivityNotFoundException e) {
             Toast.makeText(requireContext(), url, Toast.LENGTH_LONG).show();
         }
-    }
-
-    private void refreshChannel(TextView line) {
-        if (getContext() == null) return;
-        boolean stable = com.craftstudio.cslauncher.update.UpdateManager.stableOnly(getContext());
-        line.setText(getString(R.string.upd_channel_line, getString(stable ? R.string.upd_channel_stable : R.string.upd_channel_latest)));
-    }
-
-    /** Stable releases (v* tags) or every build from main; picking a channel checks it right away. */
-    private void showChannelPopup(TextView line) {
-        final android.app.Activity act = getActivity();
-        if (act == null) return;
-        final android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(act);
-        boolean stable = com.craftstudio.cslauncher.update.UpdateManager.stableOnly(act);
-        CharSequence[] entries = { getString(R.string.upd_channel_stable), getString(R.string.upd_channel_latest) };
-        new com.craftstudio.cslauncher.prefs.SettingsPopup(act)
-                .title(R.string.upd_channel_title)
-                .subtitle(getString(R.string.upd_current_fmt, com.craftstudio.cslauncher.update.UpdateManager.currentLabel()))
-                .icon(androidx.core.content.ContextCompat.getDrawable(act, R.drawable.ic_cs_update))
-                .message(R.string.upd_channel_hint)
-                .singleChoice(entries, stable ? 0 : 1, which -> {
-                    prefs.edit().putString(com.craftstudio.cslauncher.update.UpdateManager.PREF_CHANNEL, which == 0 ? "stable" : "latest").apply();
-                    refreshChannel(line);
-                    com.craftstudio.cslauncher.update.UpdateManager.manualCheck(act);
-                })
-                .negative(android.R.string.cancel, null)
-                .show();
     }
 }

@@ -159,32 +159,9 @@
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/up_check"
-                android:layout_width="match_parent"
-                android:layout_height="44dp"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/bg_pe_btn_primary"
-                android:gravity="center"
-                android:text="@string/upd_check_now"
-                android:textColor="@color/pe_btn_primary_text"
-                android:textSize="13.5sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/up_channel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:background="?attr/selectableItemBackground"
-                android:paddingTop="6dp"
-                android:paddingBottom="6dp"
-                android:textColor="@color/pe_text_secondary"
-                android:textSize="12.5sp" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="4dp"
                 android:lineSpacingExtra="2dp"
                 android:text="@string/updates_discord_body"
                 android:textColor="@color/pe_text_secondary"
