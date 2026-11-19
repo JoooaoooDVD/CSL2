@@ -1392,7 +1392,14 @@ void android_notify_init(){
 JNIEXPORT void JNICALL
 Java_com_craftstudio_glfw_GLFW_nativeSurfaceCreated(JNIEnv *env, jclass clazz,
                                                                          jobject surface) {
-    ANativeWindow* window = ANativeWindow_fromSurface(env, surface);
+    ANativeWindow* window = surface ? ANativeWindow_fromSurface(env, surface) : NULL;
+    if (!window) {
+        // A Surface that was already released (the view went away while the JVM was starting):
+        // acquiring NULL is a SIGSEGV. Stay in the "destroyed" state; the next real surface
+        // callback brings a live one.
+        LOGI("Ignoring dead surface (no native window)");
+        return;
+    }
     ANativeWindow_acquire(window);
     LOGI("Acquired native window: %p", window);
     nativeWindow = window;

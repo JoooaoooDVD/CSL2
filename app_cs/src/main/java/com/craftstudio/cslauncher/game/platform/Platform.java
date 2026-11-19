@@ -255,6 +255,16 @@ public class Platform {
     }
 
     /**
+     * The surface is gone: forget it so a backend installed later (LWJGL init on a JVM thread)
+     * does not hand a dead Surface to the native side — ANativeWindow_fromSurface returns null
+     * for it and the game died with SIGSEGV in ANativeWindow_acquire.
+     */
+    public static void surfaceDestroyed() {
+        mPendingSurface = null;
+        if (PLATFORM != null) PLATFORM.surfaceDestroyed();
+    }
+
+    /**
      * Set platform implementation backend
      *
      * @param backend implementation backend

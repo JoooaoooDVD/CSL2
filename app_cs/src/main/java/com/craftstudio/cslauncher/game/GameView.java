@@ -361,8 +361,7 @@ public class GameView extends FrameLayout implements PlatformGrabListener, Surfa
 
     @Override
     public void onSurfaceDestroyed() {
-        if(PLATFORM != null)
-            PLATFORM.surfaceDestroyed();
+        Platform.surfaceDestroyed();
     }
 
     /** A small interface called when the listener is ready for the first time */
