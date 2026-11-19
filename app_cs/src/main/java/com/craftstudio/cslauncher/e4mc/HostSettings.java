@@ -40,6 +40,9 @@ public final class HostSettings {
     private static final String K_MAX = "cs.host.max_players";
     private static final String K_ACCESS = "cs.host.access";
     private static final String K_RELAY = "cs.host.relay";
+    private static final String K_TUNNEL = "cs.host.tunnel";
+    /** Which tunnel carries guests: e4mc (public relays, door policy) or the temporary CS test relay. */
+    public static final int TUNNEL_E4MC = 0, TUNNEL_CS_RELAY = 1;
 
     /** Names invited from this process while hosting ("invited only" lets them in). */
     private static final Set<String> sInvited = Collections.synchronizedSet(new LinkedHashSet<String>());
@@ -175,6 +178,13 @@ public final class HostSettings {
         }
         return r;
     }
+
+    public static int tunnel() {
+        int t = prefs().getInt(K_TUNNEL, TUNNEL_E4MC);
+        return t == TUNNEL_CS_RELAY ? TUNNEL_CS_RELAY : TUNNEL_E4MC;
+    }
+
+    public static void setTunnel(int tunnel) { prefs().edit().putInt(K_TUNNEL, tunnel).apply(); }
 
     public static void setRelay(@Nullable String relay) {
         prefs().edit().putString(K_RELAY, relay == null ? "" : relay.trim()).apply();

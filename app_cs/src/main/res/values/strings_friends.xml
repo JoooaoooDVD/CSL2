@@ -69,6 +69,12 @@
     <string name="host_relay">Relay (e4mc)</string>
     <string name="host_relay_hint">Automatic — or host:port</string>
     <string name="host_relay_note">Automatic picks the least loaded public relay. The relay only carries the connection; the world runs on this phone.</string>
+    <string name="host_tunnel">Tunnel</string>
+    <string name="host_tunnel_e4mc">e4mc</string>
+    <string name="host_tunnel_e4mc_hint">Public e4mc relays, your own address, door policy and kick.</string>
+    <string name="host_tunnel_cs">CS Relay · Mumbai (test)</string>
+    <string name="host_tunnel_cs_hint">Craft Studio\'s own relay. Temporary: one host at a time, no door policy.</string>
+    <string name="host_tunnel_cs_note">Guests join at %1$s. While the test relay runs in single mode only one world can be live on it at a time, and who-can-join, the player limit and Kick are not enforced — the world\'s own settings apply.</string>
     <string name="host_relay_bad">Enter the relay as host:port, or leave it empty for automatic.</string>
     <string name="host_save">Save</string>
     <string name="host_saved">Saved</string>

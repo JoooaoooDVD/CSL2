@@ -29,6 +29,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 
 import com.craftstudio.cslauncher.R;
+import com.craftstudio.cslauncher.e4mc.CsRelayClient;
 import com.craftstudio.cslauncher.e4mc.E4mcPublisher;
 import com.craftstudio.cslauncher.e4mc.HostSettings;
 import com.craftstudio.cslauncher.friends.CsAccount;
@@ -394,6 +395,19 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
 
         // The relay.
         card.addView(eyebrow(mCtx.getString(R.string.host_section_relay)));
+        // TEMPORARY: tunnel choice — e4mc (default) or the Craft Studio test relay in Mumbai.
+        boolean csRelay = HostSettings.tunnel() == HostSettings.TUNNEL_CS_RELAY;
+        card.addView(settingRow(R.drawable.ic_vl_signal, mCtx.getString(R.string.host_tunnel),
+                mCtx.getString(csRelay ? R.string.host_tunnel_cs : R.string.host_tunnel_e4mc),
+                mCtx.getString(csRelay ? R.string.host_tunnel_cs_hint : R.string.host_tunnel_e4mc_hint),
+                smallButton(mCtx.getString(R.string.host_change), R.drawable.bg_vl_btn_ghost, v -> {
+                    HostSettings.setTunnel(csRelay ? HostSettings.TUNNEL_E4MC : HostSettings.TUNNEL_CS_RELAY);
+                    if (mHost.inGame() && E4mcPublisher.get().isActive()) toast(R.string.host_relay_saved_next);
+                    render();
+                })));
+        if (csRelay) {
+            card.addView(dim(mCtx.getString(R.string.host_tunnel_cs_note, CsRelayClient.DEFAULT_HOST + ":" + CsRelayClient.DEFAULT_PORT)));
+        } else {
         card.addView(settingRow(R.drawable.ic_vl_signal, mCtx.getString(R.string.host_relay),
                 HostSettings.relay().isEmpty() ? mCtx.getString(R.string.host_relay_auto) : HostSettings.relay(), null, null));
         LinearLayout relayRow = hrow();
@@ -425,6 +439,7 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
         }));
         card.addView(relayRow);
         card.addView(dim(mCtx.getString(R.string.host_relay_note)));
+        }
         mContent.addView(card);
     }
 
