@@ -183,7 +183,7 @@ public final class E4mcPublisher {
 
     private void startCsRelay(int port) {
         final CsRelayClient[] self = new CsRelayClient[1];
-        final CsRelayClient relay = new CsRelayClient(CsRelayClient.DEFAULT_HOST, CsRelayClient.DEFAULT_PORT, port, new CsRelayClient.Listener() {
+        final CsRelayClient relay = new CsRelayClient(CsRelayClient.DEFAULT_HOST, CsRelayClient.DEFAULT_PORT, port, currentPlayerName(), new CsRelayClient.Listener() {
             @Override public void onConnected(@NonNull String joinAddress) {
                 mMain.post(() -> {
                     if (mCsRelay != self[0]) return;
@@ -217,6 +217,17 @@ public final class E4mcPublisher {
         HostSettings.clearInvited();
         notifyChanged();
         relay.start();
+    }
+
+    /** Name of the selected account: the relay derives the host's subdomain from it. */
+    @Nullable
+    private static String currentPlayerName() {
+        try {
+            com.craftstudio.cslauncher.authenticator.accounts.Account a = com.craftstudio.cslauncher.authenticator.accounts.Accounts.getCurrent();
+            return a == null ? null : a.username;
+        } catch (Throwable t) {
+            return null;
+        }
     }
 
     /** True while the temporary CS relay carries the world (no door policy, no kick). */

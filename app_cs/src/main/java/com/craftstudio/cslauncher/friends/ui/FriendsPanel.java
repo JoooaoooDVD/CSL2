@@ -265,7 +265,7 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
         card.addView(sw);
         switch (p.phase()) {
             case STARTING:
-                card.addView(statusLine(mCtx.getString(R.string.friends_sharing_connecting), R.color.vl_warn));
+                card.addView(statusLine(mCtx.getString(HostSettings.tunnel() == HostSettings.TUNNEL_CS_RELAY ? R.string.host_connecting_cs : R.string.friends_sharing_connecting), R.color.vl_warn));
                 break;
             case PUBLISHED: {
                 card.addView(statusLine(mCtx.getString(R.string.friends_sharing_live), R.color.vl_ok));
@@ -280,6 +280,10 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
                 LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
                 lp.topMargin = dp(6);
                 card.addView(addr, lp);
+                LinearLayout copyRow = hrow();
+                copyRow.addView(smallButton(mCtx.getString(R.string.host_copy_ip), R.drawable.bg_vl_btn_primary, v -> copy(p.address(), R.string.friends_address_copied)));
+                if (p.usesCsRelay()) { copyRow.addView(gap()); copyRow.addView(dim(mCtx.getString(R.string.host_tunnel_cs))); }
+                card.addView(copyRow);
                 card.addView(dim(mCtx.getString(R.string.friends_sharing_guests, p.guests())));
                 for (String name : p.guestNames()) {
                     LinearLayout grow = listRow();
@@ -307,7 +311,7 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
                 break;
             }
             case FAILED: {
-                card.addView(statusLine(p.problem() == null ? "e4mc failed" : p.problem(), R.color.vl_bad));
+                card.addView(statusLine(mCtx.getString(R.string.host_disconnected, p.problem() == null ? (HostSettings.tunnel() == HostSettings.TUNNEL_CS_RELAY ? "CS Relay" : "e4mc") : p.problem()), R.color.vl_bad));
                 if (p.port() > 0) {
                     LinearLayout row = hrow();
                     row.addView(button(mCtx.getString(R.string.friends_sharing_retry), R.drawable.bg_vl_btn_primary, v -> p.start(p.port())));

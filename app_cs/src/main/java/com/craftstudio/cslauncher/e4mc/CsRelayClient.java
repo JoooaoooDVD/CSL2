@@ -20,10 +20,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * TEMPORARY: the Craft Studio test relay ({@code in-mum01.altare.global:25210}) as an alternative
- * tunnel to e4mc. Zero dependencies: one TCP connection to the relay, {@code HOST\n} handshake,
- * then yamux v0 frames; every stream the relay opens is bridged to the local LAN world. The
- * relay runs in single mode, so the join address is the relay itself. No door policy (access,
+ * TEMPORARY: the Craft Studio relay ({@code play.craftstudios.site:25210}) as an alternative
+ * tunnel to e4mc. Zero dependencies: one TCP connection to the relay, {@code HOST <player>\n}
+ * handshake answered by {@code OK <joinAddress>\n} (e.g. {@code rohit.play.craftstudios.site:25210}),
+ * then yamux v0 frames; every stream the relay opens is bridged to the local LAN world. No door policy (access,
  * player limit, kick) is enforced here — that is e4mc's job and stays with e4mc. Will move
  * under the e4mc settings once the relay has domains and token authentication.
  *
@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public final class CsRelayClient {
     private static final String TAG = "CsRelay";
-    public static final String DEFAULT_HOST = "in-mum01.altare.global";
+    public static final String DEFAULT_HOST = "play.craftstudios.site";
     public static final int DEFAULT_PORT = 25210;
 
     private static final int TYPE_DATA = 0, TYPE_WINDOW_UPDATE = 1, TYPE_PING = 2, TYPE_GO_AWAY = 3;
@@ -65,6 +65,7 @@ public final class CsRelayClient {
 
     private final String mHost; private final int mPort; private final int mLocalPort;
     private final Listener mListener;
+    private final String mPlayerName;
     private final AtomicBoolean mRunning = new AtomicBoolean(false);
     private final Object mWriteLock = new Object();
     private final ConcurrentHashMap<Integer, RelayStream> mStreams = new ConcurrentHashMap<>();
@@ -92,7 +93,8 @@ public final class CsRelayClient {
     }
     private volatile String mJoinAddress;
 
-    public CsRelayClient(@Nullable String host, int port, int localMcPort, @NonNull Listener listener) {
+    public CsRelayClient(@Nullable String host, int port, int localMcPort, @Nullable String playerName, @NonNull Listener listener) {
+        mPlayerName = playerName == null ? "" : playerName.trim().replaceAll("\\s+", "");
         mHost = host == null || host.isEmpty() ? DEFAULT_HOST : host;
         mPort = port <= 0 ? DEFAULT_PORT : port;
         mLocalPort = localMcPort;
@@ -115,23 +117,16 @@ public final class CsRelayClient {
 
     private void mainLoop() {
         try {
-            Socket sock = new Socket();
-            sock.setTcpNoDelay(true);
-            sock.connect(new InetSocketAddress(mHost, mPort), 10_000);
-            mRelaySocket = sock;
+            String hello = mPlayerName.isEmpty() ? "HOST\n" : "HOST " + mPlayerName + "\n";
+            Socket sock = handshake(hello);
+            if (sock == null && !mPlayerName.isEmpty()) {
+                // Relay that does not take a name yet closes the socket: fall back to the anonymous form.
+                Log.w(TAG, "relay closed on named handshake; retrying anonymous");
+                sock = handshake("HOST\n");
+            }
+            if (sock == null) throw new EOFException("Relay closed before handshake");
             DataInputStream dis = new DataInputStream(sock.getInputStream());
-            SafeOut dos = new SafeOut(sock);
-            mRelayOut = dos;
-
-            byte[] hello = "HOST\n".getBytes(StandardCharsets.US_ASCII);
-            dos.write(hello, 0, hello.length);
-            String line = readAsciiLine(dis);
-            if (!line.startsWith("OK ")) throw new IllegalStateException("Unexpected relay response: " + line);
-            String addr = line.substring(3).trim();
-            // Single-mode relay: the answer carries no domain, guests join at the relay itself.
-            if (addr.isEmpty() || !addr.contains(":")) addr = relayAddress();
-            mJoinAddress = addr;
-            mListener.onConnected(addr);
+            mListener.onConnected(mJoinAddress);
 
             while (mRunning.get()) {
                 int version = dis.readUnsignedByte();
@@ -183,6 +178,44 @@ public final class CsRelayClient {
             if (mRunning.get()) Log.w(TAG, "relay: " + why);
             stopInternal(why);
         }
+    }
+
+    /**
+     * Connects, sends {@code hello}, reads the {@code OK <joinAddress>} line and stores the exact
+     * address. Returns null (socket closed) when the relay hung up without answering, so the
+     * caller can retry with another greeting; any other failure throws.
+     */
+    @Nullable
+    private Socket handshake(@NonNull String hello) throws IOException {
+        Socket sock = new Socket();
+        sock.setTcpNoDelay(true);
+        sock.connect(new InetSocketAddress(mHost, mPort), 10_000);
+        mRelaySocket = sock;
+        DataInputStream dis = new DataInputStream(sock.getInputStream());
+        SafeOut dos = new SafeOut(sock);
+        mRelayOut = dos;
+        byte[] h = hello.getBytes(StandardCharsets.US_ASCII);
+        dos.write(h, 0, h.length);
+        String line;
+        try {
+            line = readAsciiLine(dis);
+        } catch (EOFException e) {
+            mRelayOut = null; mRelaySocket = null;
+            dos.close();
+            try { sock.close(); } catch (IOException ignored) {}
+            return null;
+        }
+        if (!line.startsWith("OK")) {
+            mRelayOut = null; mRelaySocket = null;
+            dos.close();
+            try { sock.close(); } catch (IOException ignored) {}
+            throw new IllegalStateException(line.isEmpty() ? "Relay refused the host" : "Relay: " + line);
+        }
+        String addr = line.length() > 2 ? line.substring(2).trim() : "";
+        // An answer without an address means guests join at the relay itself.
+        if (addr.isEmpty() || !addr.contains(":")) addr = relayAddress();
+        mJoinAddress = addr;
+        return sock;
     }
 
     private void stopInternal(@NonNull String reason) {

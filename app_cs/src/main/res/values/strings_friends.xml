@@ -72,9 +72,12 @@
     <string name="host_tunnel">Tunnel</string>
     <string name="host_tunnel_e4mc">e4mc</string>
     <string name="host_tunnel_e4mc_hint">Public e4mc relays, your own address, door policy and kick.</string>
-    <string name="host_tunnel_cs">CS Relay · Mumbai (test)</string>
-    <string name="host_tunnel_cs_hint">Craft Studio\'s own relay. Temporary: one host at a time, no door policy.</string>
-    <string name="host_tunnel_cs_note">Guests join at %1$s. While the test relay runs in single mode only one world can be live on it at a time, and who-can-join, the player limit and Kick are not enforced — the world\'s own settings apply.</string>
+    <string name="host_tunnel_cs">CS Relay · Mumbai</string>
+    <string name="host_tunnel_cs_hint">Craft Studio\'s own relay. Your join address is named after your player. Who-can-join and Kick are not enforced yet.</string>
+    <string name="host_tunnel_cs_note">Relay %1$s. Guests join at an address like yourname.play.craftstudios.site:25210 — it is shown here and copied with one tap while the world is live. Who-can-join, the player limit and Kick are not enforced on this tunnel yet; the world\'s own settings apply.</string>
+    <string name="host_copy_ip">Copy IP</string>
+    <string name="host_connecting_cs">Connecting to CS Relay…</string>
+    <string name="host_disconnected">Disconnected: %1$s</string>
     <string name="host_relay_bad">Enter the relay as host:port, or leave it empty for automatic.</string>
     <string name="host_save">Save</string>
     <string name="host_saved">Saved</string>
