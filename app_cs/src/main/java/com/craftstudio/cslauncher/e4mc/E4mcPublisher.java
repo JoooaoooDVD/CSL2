@@ -101,7 +101,7 @@ public final class E4mcPublisher {
         }
     }
     public boolean isPublished() { return mPhase == Phase.PUBLISHED && mAddress != null; }
-    public boolean isActive() { return mHandle != 0 || mCsRelay != null; }
+    public boolean isActive() { return mHandle != 0 || mRelayHandle != 0; }
     /** When false the LAN line is ignored (player turned sharing off for this session). */
     public boolean isEnabled() { return mEnabled; }
 
@@ -178,45 +178,67 @@ public final class E4mcPublisher {
         mMain.postDelayed(mPoll, 400);
     }
 
-    // ---- TEMPORARY: CS test relay (yamux) instead of e4mc; see CsRelayClient ----
-    @Nullable private CsRelayClient mCsRelay;
+    // ---- CS relay (libcsrelay.so) instead of e4mc; polled from the main thread like e4mc ----
+    private volatile long mRelayHandle;
+    private final Runnable mRelayPoll = this::pollCsRelay;
 
     private void startCsRelay(int port) {
-        final CsRelayClient[] self = new CsRelayClient[1];
-        final CsRelayClient relay = new CsRelayClient(CsRelayClient.DEFAULT_HOST, CsRelayClient.DEFAULT_PORT, port, currentPlayerName(), new CsRelayClient.Listener() {
-            @Override public void onConnected(@NonNull String joinAddress) {
-                mMain.post(() -> {
-                    if (mCsRelay != self[0]) return;
-                    mAddress = joinAddress;
-                    mPhase = Phase.PUBLISHED;
-                    Log.i(TAG, "CS relay published " + joinAddress + " -> 127.0.0.1:" + mPort);
-                    FriendsClient.get().setHosting(joinAddress, mWorld, "java", hostedVersion());
-                    notifyChanged();
-                });
-            }
-            @Override public void onDisconnected(@NonNull String reason) {
-                mMain.post(() -> {
-                    if (mCsRelay != self[0]) return;
-                    boolean wasUp = mAddress != null;
-                    mCsRelay = null;
-                    mAddress = null;
-                    mGuests = 0;
-                    mPhase = wasUp && "Stopped by host".equals(reason) ? Phase.IDLE : Phase.FAILED;
-                    if (mPhase == Phase.FAILED) mProblem = reason;
-                    FriendsClient.get().clearHosting();
-                    notifyChanged();
-                });
-            }
-            @Override public void onStreams(int open) {
-                mMain.post(() -> { if (mCsRelay == self[0] && mGuests != open) { mGuests = open; notifyChanged(); } });
-            }
-        });
-        self[0] = relay;
-        mCsRelay = relay;
+        if (!CsRelayNative.load()) {
+            mPhase = Phase.FAILED;
+            mProblem = "This build has no CS relay library";
+            notifyChanged();
+            return;
+        }
+        long h = CsRelayNative.nativeStart(CsRelayNative.DEFAULT_HOST, CsRelayNative.DEFAULT_PORT, port, currentPlayerName());
+        if (h == 0) {
+            mPhase = Phase.FAILED;
+            mProblem = "CS relay could not start";
+            notifyChanged();
+            return;
+        }
+        mRelayHandle = h;
         mPhase = Phase.STARTING;
         HostSettings.clearInvited();
         notifyChanged();
-        relay.start();
+        mMain.removeCallbacks(mRelayPoll);
+        mMain.postDelayed(mRelayPoll, 300);
+    }
+
+    private void pollCsRelay() {
+        long h = mRelayHandle;
+        if (h == 0) return;
+        int state = CsRelayNative.nativeState(h);
+        boolean changed = false;
+        if (state == CsRelayNative.STATE_UP) {
+            String addr = CsRelayNative.nativeJoinAddress(h);
+            if (addr != null && !addr.equals(mAddress)) {
+                mAddress = addr;
+                mPhase = Phase.PUBLISHED;
+                Log.i(TAG, "CS relay published " + addr + " -> 127.0.0.1:" + mPort);
+                FriendsClient.get().setHosting(addr, mWorld, "java", hostedVersion());
+                changed = true;
+            }
+            int streams = CsRelayNative.nativeStreams(h);
+            if (streams != mGuests) { mGuests = streams; changed = true; }
+        } else if (state == CsRelayNative.STATE_FAILED || state == CsRelayNative.STATE_STOPPED) {
+            String problem = CsRelayNative.nativeProblem(h);
+            mRelayHandle = 0;
+            CsRelayNative.nativeStop(h);
+            mAddress = null;
+            mGuests = 0;
+            if (state == CsRelayNative.STATE_FAILED) {
+                mPhase = Phase.FAILED;
+                mProblem = problem == null ? "CS relay disconnected" : problem;
+                Log.w(TAG, "CS relay failed: " + mProblem);
+            } else {
+                mPhase = Phase.IDLE;
+            }
+            FriendsClient.get().clearHosting();
+            notifyChanged();
+            return;
+        }
+        if (changed) notifyChanged();
+        mMain.postDelayed(mRelayPoll, mPhase == Phase.PUBLISHED ? 1000 : 300);
     }
 
     /** Name of the selected account: the relay derives the host's subdomain from it. */
@@ -230,8 +252,8 @@ public final class E4mcPublisher {
         }
     }
 
-    /** True while the temporary CS relay carries the world (no door policy, no kick). */
-    public boolean usesCsRelay() { return mCsRelay != null; }
+    /** True while the CS relay carries the world (no door policy, no kick on this tunnel). */
+    public boolean usesCsRelay() { return mRelayHandle != 0; }
 
     private void poll() {
         long h = mHandle;
@@ -332,10 +354,11 @@ public final class E4mcPublisher {
 
     private void stopInternal(boolean notify) {
         mMain.removeCallbacks(mPoll);
-        CsRelayClient relay = mCsRelay;
-        if (relay != null) {
-            mCsRelay = null;
-            relay.stop();
+        mMain.removeCallbacks(mRelayPoll);
+        long rh = mRelayHandle;
+        if (rh != 0) {
+            mRelayHandle = 0;
+            try { CsRelayNative.nativeStop(rh); } catch (Throwable t) { Log.w(TAG, "relay stop", t); }
             FriendsClient.get().clearHosting();
         }
         long h = mHandle;
@@ -354,10 +377,10 @@ public final class E4mcPublisher {
     /** Game process is going away: synchronous best-effort shutdown (any thread). */
     public static void shutdownForProcessExit() {
         E4mcPublisher p = INSTANCE;
-        CsRelayClient relay = p.mCsRelay;
-        if (relay != null) {
-            p.mCsRelay = null;
-            try { relay.stop(); } catch (Throwable ignored) {}
+        long rh = p.mRelayHandle;
+        if (rh != 0) {
+            p.mRelayHandle = 0;
+            try { CsRelayNative.nativeStop(rh); } catch (Throwable ignored) {}
             FriendsClient.get().clearHostingBlocking();
         }
         long h = p.mHandle;

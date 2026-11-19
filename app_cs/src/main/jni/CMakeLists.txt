@@ -73,6 +73,10 @@ add_library(awt_xawt SHARED
 )
 target_link_libraries(awt_xawt PRIVATE awt_headless)
 
+# ------ CS Relay ------
+
+add_subdirectory(csrelay)
+
 # ------ Discord Partner SDK & Bridge ------
 
 add_library(discord_partner_prebuilt SHARED IMPORTED)

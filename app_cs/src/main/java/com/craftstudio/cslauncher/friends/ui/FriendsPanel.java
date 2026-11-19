@@ -29,7 +29,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 
 import com.craftstudio.cslauncher.R;
-import com.craftstudio.cslauncher.e4mc.CsRelayClient;
+import com.craftstudio.cslauncher.e4mc.CsRelayNative;
 import com.craftstudio.cslauncher.e4mc.E4mcPublisher;
 import com.craftstudio.cslauncher.e4mc.HostSettings;
 import com.craftstudio.cslauncher.friends.CsAccount;
@@ -410,7 +410,7 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
                     render();
                 })));
         if (csRelay) {
-            card.addView(dim(mCtx.getString(R.string.host_tunnel_cs_note, CsRelayClient.DEFAULT_HOST + ":" + CsRelayClient.DEFAULT_PORT)));
+            card.addView(dim(mCtx.getString(R.string.host_tunnel_cs_note, CsRelayNative.relayAddress())));
         } else {
         card.addView(settingRow(R.drawable.ic_vl_signal, mCtx.getString(R.string.host_relay),
                 HostSettings.relay().isEmpty() ? mCtx.getString(R.string.host_relay_auto) : HostSettings.relay(), null, null));
