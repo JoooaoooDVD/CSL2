@@ -108,7 +108,7 @@ public final class E4mcPublisher {
     public void setEnabled(boolean enabled) {
         mEnabled = enabled;
         if (!enabled) stop();
-        else if (mPort > 0 && mHandle == 0) start(mPort);
+        else if (mPort > 0 && !isActive()) start(mPort);
         notifyChanged();
     }
 
@@ -136,12 +136,12 @@ public final class E4mcPublisher {
             int port;
             try { port = Integer.parseInt(m.group(1)); } catch (NumberFormatException e) { return; }
             if (port <= 0 || port > 65535) return;
-            if (port == mPort && mHandle != 0) return;
+            if (port == mPort && isActive()) return;
             mPort = port;
             if (mEnabled) mMain.post(() -> start(port));
             return;
         }
-        if (mHandle != 0 && (text.contains("Stopping server") || text.contains("Stopping singleplayer server") || text.contains("[cs-host] Stopping server publish"))) {
+        if (isActive() && (text.contains("Stopping server") || text.contains("Stopping singleplayer server") || text.contains("[cs-host] Stopping server publish"))) {
             mMain.post(this::stop);
         }
     }
