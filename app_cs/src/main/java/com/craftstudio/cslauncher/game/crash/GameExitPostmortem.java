@@ -275,27 +275,40 @@ public final class GameExitPostmortem {
 
     @NonNull
     private static File writeReport(@NonNull Context ctx, @NonNull Record r) throws Exception {
+        return writeReport(ctx, r, "CS Launcher Plus - game process post-mortem", null, REPORT_FILE);
+    }
+
+    /**
+     * Same report for another of our processes (CS Rust Edition's {@code :horizon}), with an extra
+     * section the caller gathered (the engine's own panic / error files) placed before Android's trace.
+     * {@code r} may be null when only the engine's files say what happened (Android < 11 keeps no record).
+     */
+    @NonNull
+    public static File writeReport(@NonNull Context ctx, @Nullable Record r, @NonNull String title,
+                                   @Nullable String extras, @NonNull String fileName) throws Exception {
         StringBuilder sb = new StringBuilder();
-        sb.append("CS Launcher Plus - game process post-mortem\n");
+        sb.append(title).append('\n');
         sb.append("Written: ").append(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z", Locale.US).format(new Date())).append('\n');
         sb.append("Launcher: ").append(BuildConfig.VERSION_NAME).append(" (").append(BuildConfig.VERSION_CODE).append(", ").append(BuildConfig.BUILD_TYPE).append(")\n");
         sb.append("Device: ").append(Build.MANUFACTURER).append(' ').append(Build.MODEL).append(", Android ").append(Build.VERSION.RELEASE)
                 .append(" (API ").append(Build.VERSION.SDK_INT).append(")\n\n");
-        sb.append("==== What Android recorded for ").append(r.process).append(" ====\n");
-        sb.append("Time:        ").append(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(new Date(r.timestamp))).append('\n');
-        sb.append("Reason:      ").append(r.reasonName).append(" (").append(r.reason).append(")\n");
-        sb.append("Status:      ").append(r.statusText.isEmpty() ? String.valueOf(r.status) : r.statusText + " [" + r.status + "]").append('\n');
-        sb.append("Description: ").append(r.description.isEmpty() ? "-" : r.description.trim()).append('\n');
-        sb.append("Importance:  ").append(importanceName(r.importance)).append(" (").append(r.importance).append(")\n");
-        sb.append("Memory:      pss ").append(r.pssKb / 1024).append(" MB, rss ").append(r.rssKb / 1024).append(" MB\n");
-        sb.append("Meaning:     ").append(r.explanation).append("\n\n");
-        String trace = extractTrace(r, MAX_HIGHLIGHT_CHARS, MAX_STRINGS_CHARS);
-        if (!trace.isEmpty()) {
-            sb.append("==== Trace captured by Android (tombstone / ANR) ====\n").append(trace).append('\n');
-        } else {
-            sb.append("==== Trace ====\n(Android attached no trace to this record)\n");
+        if (extras != null && !extras.isEmpty()) sb.append(extras).append('\n');
+        if (r != null) {
+            sb.append("==== What Android recorded for ").append(r.process).append(" ====\n");
+            sb.append("Time:        ").append(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(new Date(r.timestamp))).append('\n');
+            sb.append("Reason:      ").append(r.reasonName).append(" (").append(r.reason).append(")\n");
+            sb.append("Status:      ").append(r.statusText.isEmpty() ? String.valueOf(r.status) : r.statusText + " [" + r.status + "]").append('\n');
+            sb.append("Description: ").append(r.description.isEmpty() ? "-" : r.description.trim()).append('\n');
+            sb.append("Memory:      pss ").append(r.pssKb / 1024).append(" MB, rss ").append(r.rssKb / 1024).append(" MB\n");
+            sb.append("Meaning:     ").append(r.explanation).append("\n\n");
+            String trace = extractTrace(r, MAX_HIGHLIGHT_CHARS, MAX_STRINGS_CHARS);
+            if (!trace.isEmpty()) {
+                sb.append("==== Trace captured by Android (tombstone / ANR) ====\n").append(trace).append('\n');
+            } else {
+                sb.append("==== Trace ====\n(Android attached no trace to this record)\n");
+            }
         }
-        File out = new File(Tools.DIR_GAME_HOME, REPORT_FILE);
+        File out = new File(Tools.DIR_GAME_HOME, fileName);
         //noinspection ResultOfMethodCallIgnored
         out.getParentFile().mkdirs();
         try (FileOutputStream fos = new FileOutputStream(out)) {

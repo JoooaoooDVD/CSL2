@@ -606,6 +606,9 @@ public class LauncherActivity extends BaseActivity {
         com.craftstudio.cslauncher.discord.DiscordPresenceManager.getInstance(this).setLauncherIdle(this);
         // Game-process deaths without a crash report (force close, memory pressure) are recorded for
         // the crash page but no longer shown as a popup: for the player it was just "I closed the game".
+        // CS Rust Edition is different: the engine leaves a panic / error file when it stops on its own,
+        // and the player saw only the launcher come back. Show the cause once, with the report.
+        try { com.craftstudio.cslauncher.engine.horizon.HorizonCrashNotice.checkAndShow(this); } catch (Throwable ignored) {}
         // New announcements / notifications published while the launcher was in the background
         if (com.craftstudio.cslauncher.about.WelcomePolicy.isAccepted()) {
             try {

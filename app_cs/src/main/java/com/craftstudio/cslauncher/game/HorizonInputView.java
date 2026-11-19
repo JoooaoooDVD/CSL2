@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.AttributeSet;
 
 import com.craftstudio.cslauncher.CallbackBridge;
+import com.craftstudio.cslauncher.Tools;
 
 /**
  * {@link GameView} without a rendering surface: the Horizon engine draws into the NativeActivity's
@@ -24,6 +25,31 @@ public class HorizonInputView extends GameView {
 
     public GameCursorView cursorView() {
         return mCursorView;
+    }
+
+    /**
+     * Physical mouse (USB / Bluetooth). The Java game sets pointer capture up in {@link #start},
+     * which this view never calls (the engine owns the surface): without it the system pointer stayed
+     * visible over the world, stopped at the screen edges and never turned into look deltas. Capture is
+     * requested here, when the view joins the control window (and again whenever that window gains focus, by
+     * {@code AndroidPointerCapture}'s focus listener)
+     * (same {@code AndroidPointerCapture} as the Java game, so relative mouse and touchpad behave the
+     * same in both editions: captured while playing, the CS cursor in menus).
+     */
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        if (Tools.isAndroid8OrHigher()) {
+            setFocusable(true);
+            setFocusableInTouchMode(true);
+            setUpPointerCapture();
+            requestFocus();
+            post(() -> {
+                if (hasWindowFocus()) {
+                    try { requestPointerCapture(); } catch (Throwable ignored) {}
+                }
+            });
+        }
     }
 
     /** A primary-pointer touch the hotbar took: its MOVE/UP are swallowed until it lifts. */

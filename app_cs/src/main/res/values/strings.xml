@@ -1598,6 +1598,9 @@
     <string name="pm_body_intro">The game process ended without a crash report. Android recorded why:</string>
     <string name="pm_view">View report</string>
     <string name="pm_dismiss">Dismiss</string>
+    <string name="rust_crash_title">CS Rust Edition stopped</string>
+    <string name="rust_crash_body">The engine stopped on its own last time. What it reported:</string>
+    <string name="rust_crash_unknown">The engine process ended without writing a reason.</string>
     <string name="gc_dx_unknown_title">No known cause found</string>
     <string name="gc_dx_unknown_advice">The log doesn\'t match a known problem. Share the logs with us \u2014 the link is all we need to look into it.</string>
 

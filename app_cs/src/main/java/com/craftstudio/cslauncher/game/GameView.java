@@ -98,7 +98,7 @@ public class GameView extends FrameLayout implements PlatformGrabListener, Surfa
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    private void setUpPointerCapture() {
+    protected void setUpPointerCapture() {
         if(mPointerCapture != null) mPointerCapture.detach();
         mPointerCapture = new AndroidPointerCapture(mCursorView, this);
     }
