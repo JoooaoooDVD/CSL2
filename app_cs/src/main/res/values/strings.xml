@@ -1499,6 +1499,12 @@
     <string name="upd_checking_title">Checking for updates</string>
     <string name="upd_checking_msg">Asking GitHub for the newest published build\u2026</string>
     <string name="upd_current_fmt">Installed: %1$s</string>
+    <string name="upd_channel_stable">Stable releases</string>
+    <string name="upd_channel_latest">Latest builds (every change, may be rough)</string>
+    <string name="upd_channel_title">Update channel</string>
+    <string name="upd_channel_hint">Pick a channel to check it right away.</string>
+    <string name="upd_channel_line">Channel: %1$s \u00b7 tap to change</string>
+    <string name="upd_check_now">Check for updates</string>
     <string name="upd_up_to_date_title">You\'re up to date</string>
     <string name="upd_up_to_date_msg">%1$s is the newest CS Launcher Plus build.</string>
     <string name="upd_none_published">No update information has been published yet. Check again after the next release.</string>

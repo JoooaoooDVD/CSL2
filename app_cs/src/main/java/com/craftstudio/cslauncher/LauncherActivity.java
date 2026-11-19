@@ -424,6 +424,18 @@ public class LauncherActivity extends BaseActivity {
                     com.craftstudio.cslauncher.notify.NotificationSync.handleIntent(this, getIntent());
             }, 800L);
         }
+        scheduleUpdateCheck(3000L);
+    }
+
+    /** Silent OTA check against GitHub Releases; throttled inside UpdateManager, waits for onboarding. */
+    private void scheduleUpdateCheck(long delayMs) {
+        View root = findViewById(android.R.id.content);
+        if (root == null) return;
+        root.postDelayed(() -> {
+            if (isFinishing() || isDestroyed()) return;
+            if (isOnboardingBusy()) { scheduleUpdateCheck(5000L); return; }
+            try { com.craftstudio.cslauncher.update.UpdateManager.autoCheck(this); } catch (Throwable ignored) {}
+        }, delayMs);
     }
 
     /** True while a first-launch dialog or the tutorial owns the screen (announcements wait) */
@@ -615,6 +627,7 @@ public class LauncherActivity extends BaseActivity {
                 com.craftstudio.cslauncher.notify.NotificationSync.runAsync(this);
                 com.craftstudio.cslauncher.notify.AnnouncementController.showWhenIdle(this, this::isOnboardingBusy);
             } catch (Throwable ignored) {}
+            scheduleUpdateCheck(1500L);
         }
     }
 

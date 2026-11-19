@@ -52,11 +52,11 @@ public final class UpdateManager {
     @NonNull
     public static String expectedApkName() {
         if ("debug".equals(BuildConfig.BUILD_TYPE)) return "app-debug-" + BuildConfig.FLAVOR + ".apk";
-        return "CS Launcher Plus-release.apk";
+        return "CS-Launcher-Plus-release.apk";
     }
 
     public static boolean stableOnly(Context c) {
-        return "stable".equals(prefs(c).getString(PREF_CHANNEL, "latest"));
+        return !"latest".equals(prefs(c).getString(PREF_CHANNEL, "stable"));
     }
 
     // ------------------------------------------------------------ scheduling
