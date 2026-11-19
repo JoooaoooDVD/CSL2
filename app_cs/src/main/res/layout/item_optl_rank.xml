@@ -4,7 +4,9 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="center_vertical"
+    android:background="?attr/selectableItemBackground"
     android:orientation="horizontal"
+    android:paddingHorizontal="4dp"
     android:paddingVertical="8dp">
 
     <TextView
@@ -19,10 +21,18 @@
         android:textSize="13sp"
         tools:text="1" />
 
+    <ImageView
+        android:id="@+id/or_head"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="10dp"
+        android:contentDescription="@null"
+        android:scaleType="fitCenter" />
+
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
+        android:layout_marginStart="10dp"
         android:layout_weight="1"
         android:orientation="vertical">
 

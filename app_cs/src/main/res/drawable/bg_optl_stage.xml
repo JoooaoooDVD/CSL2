@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Stage behind the 3D skin: soft radial light on the dark card -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#0E0E12" />
+            <corners android:radius="14dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <gradient android:type="radial" android:gradientRadius="60%p" android:centerX="0.5" android:centerY="0.45"
+                android:startColor="#33D9B356" android:centerColor="#14D9B356" android:endColor="#00000000" />
+            <corners android:radius="14dp" />
+        </shape>
+    </item>
+</layer-list>

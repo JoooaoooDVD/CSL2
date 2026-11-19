@@ -106,8 +106,21 @@ public class OptlRankingsFragment extends Fragment {
         }
     }
 
-    private void bindRow(@NonNull View row, int rank, @NonNull OptlApi.Player p) {
+    private void bindRow(@NonNull View row, final int rank, @NonNull final OptlApi.Player p) {
         ((TextView) row.findViewById(R.id.or_num)).setText(String.valueOf(rank));
+        // Head icon: cached at once, otherwise the default until the skin lands (rows are tagged by
+        // name so a late answer does not land on a recycled row)
+        final android.widget.ImageView head = row.findViewById(R.id.or_head);
+        head.setTag(p.username);
+        OptlSkins.Skin skin = OptlSkins.get(row.getContext(), p.username, (name, s) -> {
+            if (name.equals(head.getTag()) && s.head != null) {
+                head.setImageBitmap(s.head);
+                if (Motion.content(head)) { head.setAlpha(0f); head.animate().alpha(1f).setDuration(200L).start(); }
+            }
+        });
+        head.setImageBitmap(skin != null && skin.head != null ? skin.head : OptlSkins.defaultSkin(row.getContext()).head);
+        row.setOnClickListener(v -> OptlNav.open(this, OptlPlayerFragment.class, OptlPlayerFragment.TAG,
+                OptlPlayerFragment.args(p, rank)));
         ((TextView) row.findViewById(R.id.or_name)).setText(p.username);
         TextView region = row.findViewById(R.id.or_region);
         if (p.region.isEmpty() || "Unknown".equalsIgnoreCase(p.region)) {

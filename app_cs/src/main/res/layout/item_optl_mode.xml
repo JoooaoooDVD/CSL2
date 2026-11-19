@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_optl_tier_chip"
+    android:gravity="center_vertical"
+    android:layout_marginTop="6dp"
+    android:orientation="horizontal"
+    android:paddingHorizontal="12dp"
+    android:paddingVertical="9dp">
+
+    <TextView
+        android:id="@+id/om_mode"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:fontFamily="@font/noto_sans_bold"
+        android:includeFontPadding="false"
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="13sp"
+        tools:text="Sword" />
+
+    <TextView
+        android:id="@+id/om_tier"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_optl_rank_num"
+        android:fontFamily="@font/jetbrains_mono"
+        android:includeFontPadding="false"
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="4dp"
+        android:textColor="#D9B356"
+        android:textSize="12sp"
+        tools:text="HT3" />
+</LinearLayout>

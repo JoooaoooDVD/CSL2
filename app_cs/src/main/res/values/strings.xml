@@ -1852,6 +1852,20 @@
     <string name="optl_howto_note">The exact request format, waiting times and available gamemodes are set by the OPTL team on their Discord. Craft Studio only shows the public rankings.</string>
     <string name="optl_howto_discord">Join OPTL Discord</string>
     <string name="optl_howto_tagger">Get Pojav Tagger</string>
+    <string name="optl_player_sub">OPTL player profile</string>
+    <string name="optl_player_site">Open OPTL</string>
+    <string name="optl_player_overall">OVERALL TIER</string>
+    <string name="optl_player_rank">RANK</string>
+    <string name="optl_player_points">POINTS</string>
+    <string name="optl_player_modes">GAMEMODE TIERS</string>
+    <string name="optl_player_no_modes">No gamemode tiers recorded yet.</string>
+    <string name="optl_player_note">Points add up across every gamemode; the overall tier follows the total. Live from OPTL.</string>
+    <string name="optl_skin_hint">Drag to turn</string>
+    <string name="optl_skin_default">Default skin · player has not shared one</string>
+    <plurals name="optl_modes_count">
+        <item quantity="one">%d gamemode</item>
+        <item quantity="other">%d gamemodes</item>
+    </plurals>
     <string name="partner_optl_tierlist_title">OPTL Tier List</string>
     <string name="partner_optl_tierlist_sub">Top 10 players, your rank, and how to get tested — inside the launcher.</string>
     <string name="partner_optl_tierlist_btn">View rankings</string>
