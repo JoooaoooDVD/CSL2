@@ -6,11 +6,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import android.os.ParcelFileDescriptor;
+import android.system.ErrnoException;
+import android.system.Os;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -25,6 +26,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * relay runs in single mode, so the join address is the relay itself. No door policy (access,
  * player limit, kick) is enforced here — that is e4mc's job and stays with e4mc. Will move
  * under the e4mc settings once the relay has domains and token authentication.
+ *
+ * <p>All socket writes go through {@link SafeOut}: {@code sendto(MSG_NOSIGNAL)} instead of
+ * {@code write()}. The game runs in this very process and a plain write into a socket the peer
+ * already closed raises SIGPIPE, which kills the whole process without a Java trace (the old
+ * virtual-LAN tunnel died exactly like that on the first guest). With MSG_NOSIGNAL it is an
+ * ordinary EPIPE and the stream is simply closed.
  */
 public final class CsRelayClient {
     private static final String TAG = "CsRelay";
@@ -52,6 +59,7 @@ public final class CsRelayClient {
         final Object windowLock = new Object();
         int sendWindow = INITIAL_WINDOW;
         volatile Socket localSocket;
+        volatile SafeOut localOut;
         RelayStream(int id) { this.id = id; }
     }
 
@@ -61,7 +69,27 @@ public final class CsRelayClient {
     private final Object mWriteLock = new Object();
     private final ConcurrentHashMap<Integer, RelayStream> mStreams = new ConcurrentHashMap<>();
     private volatile Socket mRelaySocket;
-    private volatile DataOutputStream mRelayOut;
+    private volatile SafeOut mRelayOut;
+
+    /** Socket writer that can never raise SIGPIPE (sendto with MSG_NOSIGNAL). */
+    private static final class SafeOut {
+        private static final int MSG_NOSIGNAL = 0x4000; // same value on every Linux ABI
+        private final ParcelFileDescriptor pfd;
+        SafeOut(Socket s) throws IOException { pfd = ParcelFileDescriptor.fromSocket(s); }
+        void write(byte[] b, int off, int len) throws IOException {
+            while (len > 0) {
+                int n;
+                try {
+                    n = Os.sendto(pfd.getFileDescriptor(), b, off, len, MSG_NOSIGNAL, null, 0);
+                } catch (ErrnoException e) {
+                    throw new IOException("send: " + e.getMessage());
+                }
+                if (n <= 0) throw new IOException("send: no progress");
+                off += n; len -= n;
+            }
+        }
+        void close() { try { pfd.close(); } catch (IOException ignored) {} }
+    }
     private volatile String mJoinAddress;
 
     public CsRelayClient(@Nullable String host, int port, int localMcPort, @NonNull Listener listener) {
@@ -92,11 +120,11 @@ public final class CsRelayClient {
             sock.connect(new InetSocketAddress(mHost, mPort), 10_000);
             mRelaySocket = sock;
             DataInputStream dis = new DataInputStream(sock.getInputStream());
-            DataOutputStream dos = new DataOutputStream(sock.getOutputStream());
+            SafeOut dos = new SafeOut(sock);
             mRelayOut = dos;
 
-            dos.write("HOST\n".getBytes(StandardCharsets.US_ASCII));
-            dos.flush();
+            byte[] hello = "HOST\n".getBytes(StandardCharsets.US_ASCII);
+            dos.write(hello, 0, hello.length);
             String line = readAsciiLine(dis);
             if (!line.startsWith("OK ")) throw new IllegalStateException("Unexpected relay response: " + line);
             String addr = line.substring(3).trim();
@@ -163,8 +191,10 @@ public final class CsRelayClient {
         for (RelayStream s : mStreams.values()) closeStream(s, false);
         mStreams.clear();
         Socket s = mRelaySocket;
+        SafeOut o = mRelayOut;
         mRelaySocket = null;
         mRelayOut = null;
+        if (o != null) o.close();
         if (s != null) try { s.close(); } catch (IOException ignored) {}
         mListener.onDisconnected(reason);
     }
@@ -176,6 +206,8 @@ public final class CsRelayClient {
                 local.setTcpNoDelay(true);
                 local.connect(new InetSocketAddress("127.0.0.1", mLocalPort), 5_000);
                 stream.localSocket = local;
+                final SafeOut localOut = new SafeOut(local);
+                stream.localOut = localOut;
                 sendFrame(TYPE_WINDOW_UPDATE, FLAG_ACK, stream.id, null, 0, 0);
 
                 // Local world -> relay
@@ -208,7 +240,6 @@ public final class CsRelayClient {
                 out.start();
 
                 // Relay -> local world
-                OutputStream localOut = local.getOutputStream();
                 int unacked = 0;
                 while (!stream.closed.get() && mRunning.get()) {
                     byte[] chunk = stream.incoming.take();
@@ -216,8 +247,7 @@ public final class CsRelayClient {
                         try { local.shutdownOutput(); } catch (IOException ignored) {}
                         break;
                     }
-                    localOut.write(chunk);
-                    localOut.flush();
+                    localOut.write(chunk, 0, chunk.length);
                     unacked += chunk.length;
                     if (unacked >= 32 * 1024) {
                         sendFrame(TYPE_WINDOW_UPDATE, 0, stream.id, null, 0, unacked);
@@ -228,6 +258,8 @@ public final class CsRelayClient {
                 closeStream(stream, true);
             } finally {
                 if (mStreams.remove(stream.id) != null) mListener.onStreams(mStreams.size());
+                SafeOut lo = stream.localOut;
+                if (lo != null) lo.close();
                 Socket ls = stream.localSocket;
                 if (ls != null) try { ls.close(); } catch (IOException ignored) {}
             }
@@ -241,6 +273,8 @@ public final class CsRelayClient {
         if (mStreams.remove(stream.id) != null) mListener.onStreams(mStreams.size());
         stream.incoming.offer(EOF_SENTINEL);
         synchronized (stream.windowLock) { stream.windowLock.notifyAll(); }
+        SafeOut lo = stream.localOut;
+        if (lo != null) lo.close();
         Socket ls = stream.localSocket;
         if (ls != null) try { ls.close(); } catch (IOException ignored) {}
         if (sendRst && mRunning.get()) {
@@ -249,17 +283,17 @@ public final class CsRelayClient {
     }
 
     private void sendFrame(int type, int flags, int streamId, @Nullable byte[] data, int offset, int length) throws IOException {
-        DataOutputStream out = mRelayOut;
+        SafeOut out = mRelayOut;
         if (out == null) return;
-        synchronized (mWriteLock) {
-            out.writeByte(0);
-            out.writeByte(type);
-            out.writeShort(flags);
-            out.writeInt(streamId);
-            out.writeInt(length);
-            if (data != null && length > 0) out.write(data, offset, length);
-            out.flush();
-        }
+        int body = data != null && length > 0 ? length : 0;
+        byte[] frame = new byte[12 + body];
+        frame[0] = 0;
+        frame[1] = (byte) type;
+        frame[2] = (byte) (flags >>> 8); frame[3] = (byte) flags;
+        frame[4] = (byte) (streamId >>> 24); frame[5] = (byte) (streamId >>> 16); frame[6] = (byte) (streamId >>> 8); frame[7] = (byte) streamId;
+        frame[8] = (byte) (length >>> 24); frame[9] = (byte) (length >>> 16); frame[10] = (byte) (length >>> 8); frame[11] = (byte) length;
+        if (body > 0) System.arraycopy(data, offset, frame, 12, body);
+        synchronized (mWriteLock) { out.write(frame, 0, frame.length); }
     }
 
     private static String readAsciiLine(DataInputStream dis) throws IOException {
