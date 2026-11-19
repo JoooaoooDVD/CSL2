@@ -19,7 +19,7 @@ import com.craftstudio.cslauncher.utils.motion.Motion;
 import java.util.List;
 import java.util.Map;
 
-/** OPTL Tier List: Top 10 from the public feed, the current account's own rank, and the test-request entry. */
+/** OPTL Tier List: Top 10 from the public feed, the current account's own rank, and how to get tested (OPTL Discord). */
 public class OptlRankingsFragment extends Fragment {
     public static final String TAG = "OptlRankingsFragment";
 
@@ -35,20 +35,24 @@ public class OptlRankingsFragment extends Fragment {
         view.findViewById(R.id.ok_full).setOnClickListener(v -> {
             if (getActivity() != null) Tools.openURL(requireActivity(), OptlApi.WEBSITE_URL);
         });
-        view.findViewById(R.id.ok_request).setOnClickListener(v ->
-                OptlNav.open(this, OptlRequestFragment.class, OptlRequestFragment.TAG, null));
+        view.findViewById(R.id.ok_discord).setOnClickListener(v -> {
+            if (getActivity() != null) Tools.openURL(requireActivity(), OptlApi.DISCORD_URL);
+        });
+        // Pojav Tagger is the OPTL partner mod: the Mods browser opens with it pinned on top (recommended card)
+        view.findViewById(R.id.ok_tagger).setOnClickListener(v -> openMods());
 
         Motion.riseIn(view.findViewById(R.id.ok_banner), 0L, 8f);
-        Motion.riseIn(view.findViewById(R.id.ok_request_card), 80L, 14f);
+        Motion.riseIn(view.findViewById(R.id.ok_howto_card), 80L, 14f);
         Motion.riseIn(view.findViewById(R.id.ok_top_card), 140L, 14f);
         load(false);
-        refreshRequestCard();
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        refreshRequestCard();
+    private void openMods() {
+        if (getActivity() == null) return;
+        Bundle args = new Bundle();
+        args.putString(com.craftstudio.cslauncher.fragments.ModsSearchFragment.ARG_QUERY, "Pojav Tagger");
+        OptlNav.open(this, com.craftstudio.cslauncher.fragments.ModsSearchFragment.class,
+                com.craftstudio.cslauncher.fragments.ModsSearchFragment.TAG, args);
     }
 
     private void load(boolean force) {
@@ -87,16 +91,16 @@ public class OptlRankingsFragment extends Fragment {
         Account me = Accounts.getCurrent();
         OptlApi.Player mine = OptlApi.find(players, me == null ? null : me.username);
         View meCard = view.findViewById(R.id.ok_me_card);
-        View requestCard = view.findViewById(R.id.ok_request_card);
         if (mine != null) {
             bindRow(view.findViewById(R.id.ok_me_row), OptlApi.indexOf(players, mine) + 1, mine);
             if (meCard.getVisibility() != View.VISIBLE) {
                 meCard.setVisibility(View.VISIBLE);
                 Motion.riseIn(meCard, 0L, 12f);
             }
-            ((ViewGroup.MarginLayoutParams) requestCard.getLayoutParams()).topMargin =
+            View howto = view.findViewById(R.id.ok_howto_card);
+            ((ViewGroup.MarginLayoutParams) howto.getLayoutParams()).topMargin =
                     Math.round(8f * getResources().getDisplayMetrics().density);
-            requestCard.requestLayout();
+            howto.requestLayout();
         } else {
             meCard.setVisibility(View.GONE);
         }
@@ -123,21 +127,5 @@ public class OptlRankingsFragment extends Fragment {
         ((TextView) row.findViewById(R.id.or_kits)).setText(kits);
         ((TextView) row.findViewById(R.id.or_points)).setText(String.valueOf(p.points));
         ((TextView) row.findViewById(R.id.or_tier)).setText(p.overallTier);
-    }
-
-    /** The request card reflects a pending request sent from this device. */
-    private void refreshRequestCard() {
-        View view = getView();
-        if (view == null) return;
-        long id = OptlApi.lastRequestId(requireContext());
-        TextView title = view.findViewById(R.id.ok_request_title);
-        TextView sub = view.findViewById(R.id.ok_request_sub);
-        if (id > 0) {
-            title.setText(R.string.optl_request_card_pending);
-            sub.setText(getString(R.string.optl_request_card_pending_sub, id));
-        } else {
-            title.setText(R.string.optl_request_card_title);
-            sub.setText(R.string.optl_request_card_sub);
-        }
     }
 }

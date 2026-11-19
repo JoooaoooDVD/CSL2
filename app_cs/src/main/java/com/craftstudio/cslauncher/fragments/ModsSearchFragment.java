@@ -88,6 +88,8 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
     public static final String ARG_PRESET_LOADER = "preset_loader";
     /** Bundle key: which content type to open on, a ContentType name(). Defaults to MOD. */
     public static final String ARG_CONTENT_TYPE = "content_type";
+    /** Optional search text typed in on open (partner pages open the browser on a specific mod). */
+    public static final String ARG_QUERY = "query";
 
     private static final ExecutorService sLibraryExecutor = Executors.newFixedThreadPool(3);
     private static final float NARROW_TOOLBAR_DP = 640f;
@@ -238,6 +240,12 @@ public class ModsSearchFragment extends Fragment implements LibraryCardAdapter.L
                 mFilters.contentType = ContentType.RESOURCE_PACK;
             }
             mFilters.engine = restoreSource();
+            Bundle args = getArguments();
+            String query = args == null ? null : args.getString(ARG_QUERY, null);
+            if (!isEmpty(query)) {
+                mFilters.name = query.trim();
+                mSearchInput.setText(mFilters.name);
+            }
             applyContentType(mFilters.contentType, false);
             applySource(mFilters.engine, false);
             startSearch();
