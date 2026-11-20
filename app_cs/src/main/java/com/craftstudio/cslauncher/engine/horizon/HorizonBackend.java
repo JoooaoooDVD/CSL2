@@ -24,6 +24,7 @@ public final class HorizonBackend implements PlatformBackend, Choreographer.Fram
     private boolean mLastNotifiedGrab;
     private boolean mGrabbed;
     private boolean mKeyboard;
+    private boolean mTextField;
     private double mLastX = Double.NaN, mLastY = Double.NaN;
     // Input diagnostics: what the CS control system handed to the engine (see HorizonGameActivity).
     private long mSentCursor, mSentLook, mSentButton, mSentKey, mSentScroll, mSentText;
@@ -86,6 +87,9 @@ public final class HorizonBackend implements PlatformBackend, Choreographer.Fram
         int flags = HorizonNative.nativeHostPoll();
         boolean grabbed = (flags & 1) != 0;
         boolean keyboard = (flags & 2) != 0;
+        // Bit 32: a text field has the focus (server address, world name, chat...) even
+        // though no soft keyboard was requested: hardware-typed characters go in as text.
+        mTextField = (flags & 32) != 0;
         if (grabbed != mGrabbed) {
             mGrabbed = grabbed;
             mGrabChanges++;
@@ -172,8 +176,9 @@ public final class HorizonBackend implements PlatformBackend, Choreographer.Fram
             HorizonNative.nativeHostKey(token, state != 0);
         }
         // Printable characters typed on a hardware keyboard go to the open text editor as text
-        // (only while the engine asked for one, so the key that opens chat does not also type).
-        if (mKeyboard && state != 0 && codepoint >= ' ' && codepoint != 127
+        // (only while the engine has a text field focused or asked for a keyboard, so the key
+        // that opens chat does not also type).
+        if ((mKeyboard || mTextField) && state != 0 && codepoint >= ' ' && codepoint != 127
                 && (mods & LwjglGlfwKeycode.GLFW_MOD_CONTROL) == 0) {
             HorizonNative.nativeHostText(String.valueOf(codepoint));
         }
