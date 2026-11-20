@@ -151,6 +151,13 @@ public class AndroidPointerCapture implements ViewTreeObserver.OnWindowFocusChan
         if(hasFocus && Tools.isAndroid8OrHigher()) mHostView.requestPointerCapture();
     }
 
+    /** Capture can silently lapse (focus bounce, overlay window); re-request it when the game's grab state flips. */
+    public void ensureCaptured() {
+        if (!Tools.isAndroid8OrHigher()) return;
+        if (mHostView.hasPointerCapture()) return;
+        handleAutomaticCapture();
+    }
+
     public void detach() {
         mHostView.setOnCapturedPointerListener(null);
         mHostView.getViewTreeObserver().removeOnWindowFocusChangeListener(this);

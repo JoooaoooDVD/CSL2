@@ -196,6 +196,19 @@ public class GameView extends FrameLayout implements PlatformGrabListener, Surfa
         // Avoid going through the JNI each time.
         updateGrabState(Platform.isGrabbing());
 
+        // A physical mouse that only hovers (no click yet, or the capture was lost to a focus
+        // change) reaches us here with the *system* pointer's absolute position. Feeding that into
+        // the cursor makes it jump to wherever the system pointer was parked - e.g. right after a
+        // GUI opens and the cursor was centred. Re-capture on the first hover instead of waiting
+        // for a click, and drop this absolute sample; the captured stream is relative.
+        if (Tools.isAndroid8OrHigher() && mPointerCapture != null
+                && event.getToolType(mouseCursorIndex) == MotionEvent.TOOL_TYPE_MOUSE
+                && !hasPointerCapture() && hasWindowFocus()) {
+            mPointerCapture.handleAutomaticCapture();
+            if (event.getActionMasked() == MotionEvent.ACTION_HOVER_MOVE
+                    || event.getActionMasked() == MotionEvent.ACTION_HOVER_ENTER) return true;
+        }
+
         switch(event.getActionMasked()) {
             case MotionEvent.ACTION_HOVER_MOVE:
                 Platform.cursorX = event.getX(mouseCursorIndex) / cursorRatioX;
@@ -334,6 +347,9 @@ public class GameView extends FrameLayout implements PlatformGrabListener, Surfa
             mCurrentTouchProcessor.cancelPendingActions();
             mCurrentTouchProcessor = pickEventProcessor(isGrabbing);
             mLastGrabState = isGrabbing;
+            if (Tools.isAndroid8OrHigher() && mPointerCapture != null) {
+                try { mPointerCapture.ensureCaptured(); } catch (Throwable ignored) {}
+            }
         }
     }
 
