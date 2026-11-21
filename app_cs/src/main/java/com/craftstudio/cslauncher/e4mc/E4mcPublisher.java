@@ -90,9 +90,13 @@ public final class E4mcPublisher {
 
     /** Ends the guest's connection at the relay; they can't come back while blocked (see HostSettings.kick). */
     public boolean kick(@NonNull String name) {
+        applyPolicy();
+        long rh = mRelayHandle;
+        if (rh != 0) {
+            try { return CsRelayNative.nativeKick(rh, name) > 0; } catch (Throwable t) { Log.w(TAG, "relay kick", t); return false; }
+        }
         long h = mHandle;
         if (h == 0) return false;
-        applyPolicy();
         try {
             return E4mcNative.nativeKick(h, name) > 0;
         } catch (UnsatisfiedLinkError e) {
@@ -148,10 +152,32 @@ public final class E4mcPublisher {
 
     /** Tunnels {@code port}; safe to call again (restarts). Main thread. */
     public void start(int port) {
+        mFallback = false;
+        mFallbackNote = null;
+        startWith(port, HostSettings.tunnel());
+    }
+
+    /** The tunnel carrying the world right now ({@link HostSettings#TUNNEL_CS_RELAY} / {@code TUNNEL_E4MC}). */
+    public int activeTunnel() { return mRelayHandle != 0 ? HostSettings.TUNNEL_CS_RELAY : HostSettings.TUNNEL_E4MC; }
+    /** True when e4mc took over because the CS Relay could not be reached this session. */
+    public boolean isFallback() { return mFallback; }
+    /** Why the fallback happened ("CS Relay: Cannot reach …"), for the hosting card; null otherwise. */
+    @Nullable public String fallbackNote() { return mFallbackNote; }
+    private volatile boolean mFallback;
+    @Nullable private volatile String mFallbackNote;
+
+    /** Switches the live world to the other tunnel now (the address changes; friends get the new one). */
+    public void switchTunnel(int tunnel) {
+        HostSettings.setTunnel(tunnel);
+        if (mPort > 0 && isActive()) start(mPort);
+        else notifyChanged();
+    }
+
+    private void startWith(int port, int tunnel) {
         stopInternal(false);
         mPort = port;
         mProblem = null;
-        if (HostSettings.tunnel() == HostSettings.TUNNEL_CS_RELAY) {
+        if (tunnel == HostSettings.TUNNEL_CS_RELAY) {
             startCsRelay(port);
             return;
         }
@@ -199,6 +225,7 @@ public final class E4mcPublisher {
         mRelayHandle = h;
         mPhase = Phase.STARTING;
         HostSettings.clearInvited();
+        applyPolicy();
         notifyChanged();
         mMain.removeCallbacks(mRelayPoll);
         mMain.postDelayed(mRelayPoll, 300);
@@ -218,27 +245,82 @@ public final class E4mcPublisher {
                 FriendsClient.get().setHosting(addr, mWorld, "java", hostedVersion());
                 changed = true;
             }
-            int streams = CsRelayNative.nativeStreams(h);
-            if (streams != mGuests) { mGuests = streams; changed = true; }
+            // Named guests (logged in through the door) drive the card; streams without a name
+            // (status pings, a login still being read) are not players.
+            String names = null;
+            try { names = CsRelayNative.nativeGuestNames(h); } catch (Throwable t) { Log.w(TAG, "relay names", t); }
+            if (syncGuestNames(names)) changed = true;
+            int guests;
+            synchronized (mGuestNames) { guests = mGuestNames.size(); }
+            if (guests != mGuests) { mGuests = guests; changed = true; }
+            String news = null;
+            try { news = CsRelayNative.nativePoll(h); } catch (Throwable t) { Log.w(TAG, "relay poll", t); }
+            if (news != null) { noteRefusals(news); changed = true; }
+            if (HostSettings.access() == HostSettings.ACCESS_FRIENDS) applyPolicy();
         } else if (state == CsRelayNative.STATE_FAILED || state == CsRelayNative.STATE_STOPPED) {
             String problem = CsRelayNative.nativeProblem(h);
             mRelayHandle = 0;
             CsRelayNative.nativeStop(h);
             mAddress = null;
             mGuests = 0;
+            synchronized (mGuestNames) { mGuestNames.clear(); }
+            FriendsClient.get().clearHosting();
             if (state == CsRelayNative.STATE_FAILED) {
-                mPhase = Phase.FAILED;
-                mProblem = problem == null ? "CS relay disconnected" : problem;
+                mProblem = problem == null ? "CS Relay disconnected" : problem;
                 Log.w(TAG, "CS relay failed: " + mProblem);
+                // Secondary tunnel: e4mc carries the world when the CS Relay is unreachable (once per
+                // publish, so a dead relay does not bounce the world back and forth).
+                if (HostSettings.fallback() && !mFallback && mPort > 0 && mEnabled) {
+                    mFallback = true;
+                    mFallbackNote = "CS Relay: " + mProblem;
+                    Log.i(TAG, "falling back to e4mc");
+                    int port = mPort;
+                    startWith(port, HostSettings.TUNNEL_E4MC);
+                    return;
+                }
+                mPhase = Phase.FAILED;
             } else {
                 mPhase = Phase.IDLE;
             }
-            FriendsClient.get().clearHosting();
             notifyChanged();
             return;
         }
         if (changed) notifyChanged();
         mMain.postDelayed(mRelayPoll, mPhase == Phase.PUBLISHED ? 1000 : 300);
+    }
+
+    /** Replaces the guest list with the names the tunnel reports; fires joined/left; true when it changed. */
+    private boolean syncGuestNames(@Nullable String names) {
+        java.util.List<String> now = new java.util.ArrayList<>();
+        if (names != null) for (String n : names.split("\n")) if (!n.isEmpty() && !now.contains(n)) now.add(n);
+        java.util.List<String> before;
+        synchronized (mGuestNames) { before = new java.util.ArrayList<>(mGuestNames); mGuestNames.clear(); mGuestNames.addAll(now); }
+        boolean changed = false;
+        for (String n : now) if (!before.remove(n)) {
+            HostSettings.noteJoined(n);
+            for (GuestListener l : mGuestListeners) { try { l.onGuest(n, true); } catch (RuntimeException e) { Log.w(TAG, "guest listener", e); } }
+            changed = true;
+        }
+        for (String n : before) {
+            for (GuestListener l : mGuestListeners) { try { l.onGuest(n, false); } catch (RuntimeException e) { Log.w(TAG, "guest listener", e); } }
+            changed = true;
+        }
+        return changed;
+    }
+
+    private void noteRefusals(@NonNull String news) {
+        for (String line : news.split("\n")) {
+            int tab = line.indexOf('\t');
+            if (tab <= 0) continue;
+            String name = line.substring(0, tab), reason = line.substring(tab + 1);
+            synchronized (mRecentRefusals) {
+                mRecentRefusals.addFirst(name + " — " + reason);
+                while (mRecentRefusals.size() > 5) mRecentRefusals.removeLast();
+            }
+            for (RefusalListener l : mRefusals) {
+                try { l.onGuestRefused(name, reason); } catch (RuntimeException e) { Log.w(TAG, "refusal listener", e); }
+            }
+        }
     }
 
     /** Name of the selected account: the relay derives the host's subdomain from it. */
@@ -252,7 +334,7 @@ public final class E4mcPublisher {
         }
     }
 
-    /** True while the CS relay carries the world (no door policy, no kick on this tunnel). */
+    /** True while the CS Relay carries the world. */
     public boolean usesCsRelay() { return mRelayHandle != 0; }
 
     private void poll() {
@@ -277,39 +359,12 @@ public final class E4mcPublisher {
         if (guests != mGuests) { mGuests = guests; changed = true; }
         // Who is in: the list of names drives the hosting card, the "joined before" memory and the notes
         try {
-            String names = E4mcNative.nativeGuestNames(h);
-            java.util.List<String> now = new java.util.ArrayList<>();
-            if (names != null) for (String n : names.split("\n")) if (!n.isEmpty()) now.add(n);
-            java.util.List<String> before;
-            synchronized (mGuestNames) { before = new java.util.ArrayList<>(mGuestNames); mGuestNames.clear(); mGuestNames.addAll(now); }
-            for (String n : now) if (!before.remove(n)) {
-                HostSettings.noteJoined(n);
-                for (GuestListener l : mGuestListeners) { try { l.onGuest(n, true); } catch (RuntimeException e) { Log.w(TAG, "guest listener", e); } }
-                changed = true;
-            }
-            for (String n : before) {
-                for (GuestListener l : mGuestListeners) { try { l.onGuest(n, false); } catch (RuntimeException e) { Log.w(TAG, "guest listener", e); } }
-                changed = true;
-            }
+            if (syncGuestNames(E4mcNative.nativeGuestNames(h))) changed = true;
         } catch (UnsatisfiedLinkError ignored) {
             // Older e4mc library without the names: the count above still works
         }
         String news = E4mcNative.nativePoll(h);
-        if (news != null) {
-            for (String line : news.split("\n")) {
-                int tab = line.indexOf('\t');
-                if (tab <= 0) continue;
-                String name = line.substring(0, tab), reason = line.substring(tab + 1);
-                synchronized (mRecentRefusals) {
-                    mRecentRefusals.addFirst(name + " — " + reason);
-                    while (mRecentRefusals.size() > 5) mRecentRefusals.removeLast();
-                }
-                for (RefusalListener l : mRefusals) {
-                    try { l.onGuestRefused(name, reason); } catch (RuntimeException e) { Log.w(TAG, "refusal listener", e); }
-                }
-            }
-            changed = true;
-        }
+        if (news != null) { noteRefusals(news); changed = true; }
         // Friends come and go: "friends only" follows the current list.
         if (HostSettings.access() == HostSettings.ACCESS_FRIENDS) applyPolicy();
         if (changed) notifyChanged();
@@ -322,7 +377,8 @@ public final class E4mcPublisher {
      */
     public void applyPolicy() {
         long h = mHandle;
-        if (h == 0) return;
+        long rh = mRelayHandle;
+        if (h == 0 && rh == 0) return;
         java.util.List<String> names = HostSettings.allowedNames();
         String allowed = null;
         if (names != null) {
@@ -332,6 +388,20 @@ public final class E4mcPublisher {
         }
         int max = HostSettings.maxPlayers();
         int guests = max == HostSettings.NO_LIMIT ? 0 : Math.max(1, max - 1);
+        if (rh != 0) {
+            try {
+                CsRelayNative.nativeSetPolicy(rh, guests, allowed, HostSettings.closedReason());
+                java.util.List<String> blocked = HostSettings.blocked();
+                StringBuilder sb = new StringBuilder();
+                for (String n : blocked) { if (sb.length() > 0) sb.append('\n'); sb.append(n); }
+                CsRelayNative.nativeSetBlocked(rh, sb.length() == 0 ? null : sb.toString());
+                String motd = HostSettings.motd();
+                CsRelayNative.nativeSetMotd(rh, motd.isEmpty() ? null : motd);
+            } catch (Throwable t) {
+                Log.w(TAG, "relay policy", t);
+            }
+            return;
+        }
         try {
             E4mcNative.nativeSetPolicy(h, guests, allowed, HostSettings.closedReason());
         } catch (Throwable t) {
@@ -370,6 +440,7 @@ public final class E4mcPublisher {
         mAddress = null;
         mGuests = 0;
         mPhase = Phase.IDLE;
+        synchronized (mGuestNames) { mGuestNames.clear(); }
         synchronized (mRecentRefusals) { mRecentRefusals.clear(); }
         if (notify) notifyChanged();
     }

@@ -15,7 +15,10 @@
  * side only polls state from the main thread (no callbacks from native
  * threads).
  *
- * Zero dependencies; no door policy here (that stays with e4mc).
+ * Zero dependencies. The door policy lives here too: a guest's first packets (handshake +
+ * login start) name the player before a byte reaches the game, so the player limit, the
+ * allowed / blocked names and Kick are enforced at the relay door, and a refused guest reads
+ * the reason on their login screen. Status pings get the host's custom MOTD spliced in.
  */
 
 #include <arpa/inet.h>
@@ -29,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <unistd.h>
@@ -81,6 +85,12 @@ typedef struct stream {
     pthread_cond_t window_cv;
     pthread_t thread;
     int thread_started;
+    /* door: bytes from the guest are held until handshake + login start are parsed */
+    int inspect;                 /* 1 while holding the first packets */
+    int kind;                    /* 0 unknown, 1 status ping, 2 login */
+    uint8_t ibuf[1024];
+    size_t ilen;
+    char name[32];               /* the guest's player name once logged in */
 } stream_t;
 
 struct relay {
@@ -104,6 +114,15 @@ struct relay {
     pthread_t main_thread;
     pthread_t ping_thread;
     int ping_started;
+
+    /* door policy (set from Java, read by the main loop / bridge threads) */
+    pthread_mutex_t policy_lock;
+    int max_guests;              /* 0 = no limit */
+    char *allowed;               /* newline separated names, NULL = anyone */
+    char *blocked;               /* newline separated names, NULL = none */
+    char reason[256];            /* what a guest outside `allowed` reads */
+    char motd[512];              /* custom MOTD for status pings, empty = the game's own */
+    char refusals[2048];         /* "name<TAB>reason\n" since the last poll */
 };
 
 /* ---- small helpers ---- */
@@ -176,6 +195,135 @@ static int set_timeout(int fd, int opt, int seconds) {
     return setsockopt(fd, SOL_SOCKET, opt, &tv, sizeof(tv));
 }
 
+/* ---- Minecraft protocol bits (door) ---- */
+
+/* Reads a VarInt; returns bytes used, 0 = need more, -1 = malformed. */
+static int read_varint(const uint8_t *p, size_t len, int32_t *out) {
+    int32_t v = 0;
+    for (int i = 0; i < 5; i++) {
+        if ((size_t) i >= len) return 0;
+        v |= (int32_t) (p[i] & 0x7f) << (7 * i);
+        if (!(p[i] & 0x80)) { *out = v; return i + 1; }
+    }
+    return -1;
+}
+
+static int write_varint(uint8_t *p, uint32_t v) {
+    int n = 0;
+    do {
+        uint8_t b = v & 0x7f;
+        v >>= 7;
+        if (v) b |= 0x80;
+        p[n++] = b;
+    } while (v);
+    return n;
+}
+
+/* One framed packet at p: *hdr = length-prefix size, *body = payload size. 0 = need more, -1 = bad. */
+static int packet_at(const uint8_t *p, size_t len, int *hdr, int32_t *body) {
+    int h = read_varint(p, len, body);
+    if (h <= 0) return h;
+    if (*body <= 0 || *body > 65535) return -1;
+    if (len < (size_t) h + (size_t) *body) return 0;
+    *hdr = h;
+    return 1;
+}
+
+/* Case-insensitive membership in a newline separated list. */
+static int list_has(const char *list, const char *name) {
+    if (!list || !name || !*name) return 0;
+    size_t n = strlen(name);
+    const char *p = list;
+    while (*p) {
+        const char *e = strchr(p, '\n');
+        size_t l = e ? (size_t) (e - p) : strlen(p);
+        if (l == n && strncasecmp(p, name, n) == 0) return 1;
+        if (!e) break;
+        p = e + 1;
+    }
+    return 0;
+}
+
+/* JSON string escape into out (bounded); returns chars written. */
+static size_t json_escape(const char *in, char *out, size_t cap) {
+    size_t j = 0;
+    for (const unsigned char *p = (const unsigned char *) in; *p && j + 7 < cap; p++) {
+        if (*p == '"' || *p == '\\') { out[j++] = '\\'; out[j++] = (char) *p; }
+        else if (*p == '\n') { out[j++] = '\\'; out[j++] = 'n'; }
+        else if (*p < 0x20) { j += (size_t) snprintf(out + j, cap - j, "\\u%04x", *p); }
+        else out[j++] = (char) *p;
+    }
+    out[j] = 0;
+    return j;
+}
+
+/* Skips one JSON value starting at p (string, object, array, number, literal); NULL when cut. */
+static const char *json_skip(const char *p, const char *end) {
+    while (p < end && (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r')) p++;
+    if (p >= end) return NULL;
+    if (*p == '"') {
+        for (p++; p < end; p++) {
+            if (*p == '\\') { p++; continue; }
+            if (*p == '"') return p + 1;
+        }
+        return NULL;
+    }
+    if (*p == '{' || *p == '[') {
+        int depth = 0, in_str = 0;
+        for (; p < end; p++) {
+            if (in_str) {
+                if (*p == '\\') { p++; continue; }
+                if (*p == '"') in_str = 0;
+                continue;
+            }
+            if (*p == '"') in_str = 1;
+            else if (*p == '{' || *p == '[') depth++;
+            else if (*p == '}' || *p == ']') { if (--depth == 0) return p + 1; }
+        }
+        return NULL;
+    }
+    while (p < end && *p != ',' && *p != '}' && *p != ']' && *p != ' ') p++;
+    return p;
+}
+
+/*
+ * Replaces the "description" of a status-response JSON with the custom MOTD. in/in_len is the
+ * JSON text; returns a malloc'd string (or NULL when the key is missing / malformed).
+ */
+static char *motd_splice(const char *in, size_t in_len, const char *motd, size_t *out_len) {
+    const char *end = in + in_len;
+    const char *key = NULL;
+    for (const char *p = in; p + 13 < end; p++) {
+        if (memcmp(p, "\"description\"", 13) == 0) { key = p; break; }
+    }
+    if (!key) return NULL;
+    const char *colon = memchr(key + 13, ':', (size_t) (end - key - 13));
+    if (!colon) return NULL;
+    const char *vend = json_skip(colon + 1, end);
+    if (!vend) return NULL;
+    char esc[1200];
+    json_escape(motd, esc, sizeof(esc));
+    size_t head = (size_t) (colon + 1 - in), tail = (size_t) (end - vend);
+    char *out = malloc(head + tail + strlen(esc) + 16);
+    if (!out) return NULL;
+    memcpy(out, in, head);
+    size_t j = head;
+    j += (size_t) sprintf(out + j, "{\"text\":\"%s\"}", esc);
+    memcpy(out + j, vend, tail);
+    j += tail;
+    out[j] = 0;
+    *out_len = j;
+    return out;
+}
+
+static void note_refusal(relay_t *r, const char *name, const char *reason) {
+    pthread_mutex_lock(&r->policy_lock);
+    size_t have = strlen(r->refusals);
+    snprintf(r->refusals + have, sizeof(r->refusals) - have, "%s\t%s\n", name, reason);
+    pthread_mutex_unlock(&r->policy_lock);
+    LOGI("door: %s refused: %s", name, reason);
+}
+
 /* ---- streams ---- */
 
 static stream_t *stream_find(relay_t *r, uint32_t id) {
@@ -216,37 +364,125 @@ static void stream_release(stream_t *s) {
 }
 
 /* Local world → relay. Reads the local socket, sends DATA frames within the send window. */
+/* Sends local bytes to the relay within the send window. 0 ok, -1 stream/relay gone. */
+static int bridge_send(stream_t *s, const uint8_t *buf, size_t n) {
+    relay_t *r = s->relay;
+    size_t off = 0;
+    while (off < n) {
+        uint32_t to_send;
+        pthread_mutex_lock(&s->lock);
+        while (s->send_window <= 0 && !s->closed && r->running) {
+            struct timespec ts;
+            struct timeval now;
+            gettimeofday(&now, NULL);
+            ts.tv_sec = now.tv_sec + 1;
+            ts.tv_nsec = now.tv_usec * 1000;
+            pthread_cond_timedwait(&s->window_cv, &s->lock, &ts);
+        }
+        if (s->closed || !r->running) {
+            pthread_mutex_unlock(&s->lock);
+            return -1;
+        }
+        to_send = (uint32_t) ((size_t) s->send_window < n - off ? (size_t) s->send_window : n - off);
+        s->send_window -= (int32_t) to_send;
+        pthread_mutex_unlock(&s->lock);
+        if (send_frame(r, TYPE_DATA, 0, s->id, buf + off, to_send) != 0) return -1;
+        off += to_send;
+    }
+    return 0;
+}
+
+/*
+ * A status ping's first server packet is the status response (JSON): when the host set a MOTD
+ * it is spliced in before the bytes go out. Holds at most 256 KB (favicons are a few KB).
+ */
+#define MOTD_HOLD_MAX (256 * 1024)
+static int bridge_status_response(stream_t *s, uint8_t **hold, size_t *held, size_t *cap, const uint8_t *buf, size_t n, int *done) {
+    if (*held + n > MOTD_HOLD_MAX) {
+        /* Too big to be a status response: give up, pass everything as is. */
+        *done = 1;
+        if (*held && bridge_send(s, *hold, *held) != 0) return -1;
+        *held = 0;
+        return bridge_send(s, buf, n);
+    }
+    if (*cap < *held + n) {
+        size_t nc = (*held + n) * 2;
+        uint8_t *p = realloc(*hold, nc);
+        if (!p) { *done = 1; return bridge_send(s, buf, n); }
+        *hold = p;
+        *cap = nc;
+    }
+    memcpy(*hold + *held, buf, n);
+    *held += n;
+    int hdr;
+    int32_t body;
+    int rc = packet_at(*hold, *held, &hdr, &body);
+    if (rc == 0) return 0; /* need more */
+    *done = 1;
+    if (rc > 0) {
+        const uint8_t *pk = *hold + hdr;
+        int32_t id, jlen;
+        int a = read_varint(pk, (size_t) body, &id);
+        int b = a > 0 ? read_varint(pk + a, (size_t) body - a, &jlen) : 0;
+        if (a > 0 && b > 0 && id == 0 && jlen > 0 && a + b + jlen == body) {
+            char motd[512];
+            pthread_mutex_lock(&s->relay->policy_lock);
+            strncpy(motd, s->relay->motd, sizeof(motd) - 1);
+            motd[sizeof(motd) - 1] = 0;
+            pthread_mutex_unlock(&s->relay->policy_lock);
+            size_t out_len = 0;
+            char *json = motd[0] ? motd_splice((const char *) pk + a + b, (size_t) jlen, motd, &out_len) : NULL;
+            if (json) {
+                uint8_t *pkt = malloc(out_len + 16);
+                if (pkt) {
+                    uint8_t vb[5], vl[5];
+                    int nb = write_varint(vb, (uint32_t) out_len);
+                    int nl = write_varint(vl, (uint32_t) (1 + nb + out_len));
+                    size_t j = 0;
+                    memcpy(pkt + j, vl, (size_t) nl); j += (size_t) nl;
+                    pkt[j++] = 0;
+                    memcpy(pkt + j, vb, (size_t) nb); j += (size_t) nb;
+                    memcpy(pkt + j, json, out_len); j += out_len;
+                    free(json);
+                    int src = bridge_send(s, pkt, j);
+                    free(pkt);
+                    if (src != 0) return -1;
+                    /* whatever followed the status response (the pong) goes out unchanged */
+                    size_t rest = *held - (size_t) hdr - (size_t) body;
+                    if (rest && bridge_send(s, *hold + hdr + body, rest) != 0) return -1;
+                    *held = 0;
+                    return 0;
+                }
+                free(json);
+            }
+        }
+    }
+    int src = bridge_send(s, *hold, *held);
+    *held = 0;
+    return src;
+}
+
 static void *stream_bridge(void *arg) {
     stream_t *s = (stream_t *) arg;
     relay_t *r = s->relay;
     uint8_t buf[16 * 1024];
+    uint8_t *hold = NULL;
+    size_t held = 0, hold_cap = 0;
+    int motd_done = 0;
     for (;;) {
         ssize_t n = recv(s->fd, buf, sizeof(buf), 0);
         if (n < 0 && errno == EINTR) continue;
         if (n <= 0) break;
-        size_t off = 0;
-        while (off < (size_t) n) {
-            uint32_t to_send;
-            pthread_mutex_lock(&s->lock);
-            while (s->send_window <= 0 && !s->closed && r->running) {
-                struct timespec ts;
-                struct timeval now;
-                gettimeofday(&now, NULL);
-                ts.tv_sec = now.tv_sec + 1;
-                ts.tv_nsec = now.tv_usec * 1000;
-                pthread_cond_timedwait(&s->window_cv, &s->lock, &ts);
-            }
-            if (s->closed || !r->running) {
-                pthread_mutex_unlock(&s->lock);
-                goto out;
-            }
-            to_send = (uint32_t) ((size_t) s->send_window < (size_t) n - off ? (size_t) s->send_window : (size_t) n - off);
-            s->send_window -= (int32_t) to_send;
-            pthread_mutex_unlock(&s->lock);
-            if (send_frame(r, TYPE_DATA, 0, s->id, buf + off, to_send) != 0) goto out;
-            off += to_send;
+        pthread_mutex_lock(&s->lock);
+        int status_ping = s->kind == 1;
+        pthread_mutex_unlock(&s->lock);
+        if (status_ping && !motd_done) {
+            if (bridge_status_response(s, &hold, &held, &hold_cap, buf, (size_t) n, &motd_done) != 0) goto out;
+        } else if (bridge_send(s, buf, (size_t) n) != 0) {
+            goto out;
         }
     }
+    if (held && bridge_send(s, hold, held) != 0) goto out;
     /* Local world finished sending. */
     pthread_mutex_lock(&s->lock);
     int already_closed = s->closed;
@@ -267,6 +503,7 @@ static void *stream_bridge(void *arg) {
         stream_close(s, 1);
     }
 out:
+    free(hold);
     stream_close(s, 1);
     stream_release(s);
     return NULL;
@@ -305,6 +542,10 @@ static stream_t *stream_open(relay_t *r, uint32_t id) {
             s->remote_fin = 0;
             s->send_window = INITIAL_WINDOW;
             s->recv_unacked = 0;
+            s->inspect = 1;
+            s->kind = 0;
+            s->ilen = 0;
+            s->name[0] = 0;
             r->open_streams++;
             break;
         }
@@ -327,6 +568,124 @@ static stream_t *stream_open(relay_t *r, uint32_t id) {
     }
     s->thread_started = 1;
     return s;
+}
+
+/* ---- the door ---- */
+
+static int local_send(int fd, const uint8_t *p, size_t left) {
+    while (left > 0) {
+        ssize_t n = send(fd, p, left, MSG_NOSIGNAL);
+        if (n < 0 && errno == EINTR) continue;
+        if (n <= 0) return -1;
+        p += n;
+        left -= (size_t) n;
+    }
+    return 0;
+}
+
+/* Login disconnect (login state, id 0x00, JSON text) to the guest, then FIN: they read the reason. */
+static void door_refuse(stream_t *s, const char *name, const char *reason) {
+    relay_t *r = s->relay;
+    char esc[600];
+    json_escape(reason, esc, sizeof(esc));
+    char json[700];
+    int jl = snprintf(json, sizeof(json), "{\"text\":\"%s\"}", esc);
+    uint8_t pkt[800], vb[5], vl[5];
+    int nb = write_varint(vb, (uint32_t) jl);
+    int nl = write_varint(vl, (uint32_t) (1 + nb + jl));
+    size_t j = 0;
+    memcpy(pkt + j, vl, (size_t) nl); j += (size_t) nl;
+    pkt[j++] = 0;
+    memcpy(pkt + j, vb, (size_t) nb); j += (size_t) nb;
+    memcpy(pkt + j, json, (size_t) jl); j += (size_t) jl;
+    send_frame(r, TYPE_DATA, 0, s->id, pkt, (uint32_t) j);
+    send_frame(r, TYPE_WINDOW_UPDATE, FLAG_FIN, s->id, NULL, 0);
+    note_refusal(r, name, reason);
+    stream_close(s, 0);
+}
+
+static int door_guests(relay_t *r, stream_t *self) {
+    int n = 0;
+    pthread_mutex_lock(&r->streams_lock);
+    for (int i = 0; i < MAX_STREAMS; i++) {
+        stream_t *o = &r->streams[i];
+        if (o != self && o->in_use && !o->closed && o->name[0]) n++;
+    }
+    pthread_mutex_unlock(&r->streams_lock);
+    return n;
+}
+
+/*
+ * Guest bytes while the door holds them. Returns 1 when the bytes were consumed (held, forwarded
+ * or the stream was refused and closed); 0 when inspection is over and the caller forwards as usual.
+ */
+static int door_feed(stream_t *s, const uint8_t *data, size_t len) {
+    relay_t *r = s->relay;
+    if (!s->inspect) return 0;
+    if (s->ilen + len > sizeof(s->ibuf)) {
+        /* Not a vanilla handshake (or a huge one): let it through untouched. */
+        s->inspect = 0;
+        if (s->ilen && local_send(s->fd, s->ibuf, s->ilen) != 0) { stream_close(s, 1); return 1; }
+        return 0;
+    }
+    memcpy(s->ibuf + s->ilen, data, len);
+    s->ilen += len;
+
+    int hdr;
+    int32_t body;
+    int rc = packet_at(s->ibuf, s->ilen, &hdr, &body);
+    if (rc == 0) return 1;
+    int accept = 0;
+    char name[32] = {0};
+    if (rc < 0) { accept = 1; goto decide; }
+    {
+        const uint8_t *pk = s->ibuf + hdr;
+        size_t pl = (size_t) body;
+        int32_t id, proto, alen, next = 0;
+        int a = read_varint(pk, pl, &id);
+        int b = a > 0 ? read_varint(pk + a, pl - a, &proto) : 0;
+        int c = b > 0 ? read_varint(pk + a + b, pl - a - b, &alen) : 0;
+        if (a <= 0 || b <= 0 || c <= 0 || id != 0 || alen < 0 || (size_t) (a + b + c + alen + 2) > pl) { accept = 1; goto decide; }
+        size_t off = (size_t) (a + b + c + alen + 2);
+        int d = read_varint(pk + off, pl - off, &next);
+        if (d <= 0) { accept = 1; goto decide; }
+        if (next == 1) { s->kind = 1; accept = 1; goto decide; }
+        /* login (2) or transfer (3): the next packet is Login Start with the name */
+        s->kind = 2;
+        size_t first = (size_t) hdr + (size_t) body;
+        int hdr2;
+        int32_t body2;
+        int rc2 = packet_at(s->ibuf + first, s->ilen - first, &hdr2, &body2);
+        if (rc2 == 0) return 1;
+        if (rc2 < 0) { accept = 1; goto decide; }
+        const uint8_t *lp = s->ibuf + first + hdr2;
+        int32_t lid, nlen;
+        int e = read_varint(lp, (size_t) body2, &lid);
+        int f = e > 0 ? read_varint(lp + e, (size_t) body2 - e, &nlen) : 0;
+        if (e <= 0 || f <= 0 || lid != 0 || nlen <= 0 || nlen > 16 || (size_t) (e + f + nlen) > (size_t) body2) { accept = 1; goto decide; }
+        memcpy(name, lp + e + f, (size_t) nlen);
+        name[nlen] = 0;
+        for (char *q = name; *q; q++) if ((unsigned char) *q < ' ') *q = '?';
+    }
+    {
+        char reason[256] = {0};
+        pthread_mutex_lock(&r->policy_lock);
+        int max = r->max_guests;
+        if (list_has(r->blocked, name)) snprintf(reason, sizeof(reason), "You were removed from this world by the host.");
+        else if (r->allowed && !list_has(r->allowed, name)) snprintf(reason, sizeof(reason), "%s", r->reason[0] ? r->reason : "This world is not open to you.");
+        pthread_mutex_unlock(&r->policy_lock);
+        if (!reason[0] && max > 0 && door_guests(r, s) >= max) snprintf(reason, sizeof(reason), "The world is full (%d player%s).", max + 1, max + 1 == 1 ? "" : "s");
+        if (reason[0]) { door_refuse(s, name, reason); return 1; }
+        pthread_mutex_lock(&s->lock);
+        strncpy(s->name, name, sizeof(s->name) - 1);
+        pthread_mutex_unlock(&s->lock);
+        LOGI("door: %s in", name);
+        accept = 1;
+    }
+decide:
+    s->inspect = 0;
+    if (accept && local_send(s->fd, s->ibuf, s->ilen) != 0) { stream_close(s, 1); return 1; }
+    return 1;
 }
 
 /* ---- relay connection ---- */
@@ -512,18 +871,15 @@ static void *main_loop(void *arg) {
             pthread_mutex_unlock(&s->lock);
         }
         if (type == TYPE_DATA && length > 0) {
-            /* Relay → local world. Blocking write with SO_SNDTIMEO; a stuck world resets the stream. */
-            const uint8_t *p = payload;
-            size_t left = length;
-            int ok = 1;
-            while (left > 0) {
-                ssize_t n = send(s->fd, p, left, MSG_NOSIGNAL);
-                if (n < 0 && errno == EINTR) continue;
-                if (n <= 0) { ok = 0; break; }
-                p += n;
-                left -= (size_t) n;
-            }
-            if (!ok) {
+            /* Relay → local world. The door holds the first packets; then a blocking write with
+               SO_SNDTIMEO (a stuck world resets the stream). */
+            int consumed = door_feed(s, payload, length);
+            if (consumed) {
+                pthread_mutex_lock(&s->lock);
+                int c = s->closed;
+                pthread_mutex_unlock(&s->lock);
+                if (c) continue;
+            } else if (local_send(s->fd, payload, length) != 0) {
                 stream_close(s, 1);
                 continue;
             }
@@ -570,6 +926,7 @@ relay_t *csrelay_start(const char *host, int port, int local_port, const char *p
     pthread_mutex_init(&r->write_lock, NULL);
     pthread_mutex_init(&r->state_lock, NULL);
     pthread_mutex_init(&r->streams_lock, NULL);
+    pthread_mutex_init(&r->policy_lock, NULL);
     for (int i = 0; i < MAX_STREAMS; i++) {
         r->streams[i].fd = -1;
         pthread_mutex_init(&r->streams[i].lock, NULL);
@@ -637,7 +994,83 @@ void csrelay_stop(relay_t *r) {
     pthread_mutex_destroy(&r->write_lock);
     pthread_mutex_destroy(&r->state_lock);
     pthread_mutex_destroy(&r->streams_lock);
+    pthread_mutex_destroy(&r->policy_lock);
+    free(r->allowed);
+    free(r->blocked);
     free(r);
+}
+
+/* ---- door policy API ---- */
+
+static char *dup_or_null(const char *s) { return s && *s ? strdup(s) : NULL; }
+
+void csrelay_set_policy(relay_t *r, int max_guests, const char *allowed, const char *reason) {
+    pthread_mutex_lock(&r->policy_lock);
+    r->max_guests = max_guests < 0 ? 0 : max_guests;
+    free(r->allowed);
+    r->allowed = dup_or_null(allowed);
+    strncpy(r->reason, reason ? reason : "", sizeof(r->reason) - 1);
+    r->reason[sizeof(r->reason) - 1] = 0;
+    pthread_mutex_unlock(&r->policy_lock);
+}
+
+void csrelay_set_blocked(relay_t *r, const char *blocked) {
+    pthread_mutex_lock(&r->policy_lock);
+    free(r->blocked);
+    r->blocked = dup_or_null(blocked);
+    pthread_mutex_unlock(&r->policy_lock);
+}
+
+void csrelay_set_motd(relay_t *r, const char *motd) {
+    pthread_mutex_lock(&r->policy_lock);
+    strncpy(r->motd, motd ? motd : "", sizeof(r->motd) - 1);
+    r->motd[sizeof(r->motd) - 1] = 0;
+    pthread_mutex_unlock(&r->policy_lock);
+}
+
+/* Names of the guests logged in now, newline separated (login order = slot order); "" when none. */
+void csrelay_guest_names(relay_t *r, char *buf, size_t len) {
+    size_t j = 0;
+    buf[0] = 0;
+    pthread_mutex_lock(&r->streams_lock);
+    for (int i = 0; i < MAX_STREAMS; i++) {
+        stream_t *s = &r->streams[i];
+        if (!s->in_use || s->closed) continue;
+        pthread_mutex_lock(&s->lock);
+        if (s->name[0] && j + strlen(s->name) + 2 < len) {
+            if (j) buf[j++] = '\n';
+            strcpy(buf + j, s->name);
+            j += strlen(s->name);
+        }
+        pthread_mutex_unlock(&s->lock);
+    }
+    pthread_mutex_unlock(&r->streams_lock);
+}
+
+int csrelay_kick(relay_t *r, const char *name) {
+    int n = 0;
+    for (int i = 0; i < MAX_STREAMS; i++) {
+        stream_t *s = &r->streams[i];
+        int hit = 0;
+        pthread_mutex_lock(&r->streams_lock);
+        if (s->in_use && !s->closed) {
+            pthread_mutex_lock(&s->lock);
+            hit = s->name[0] && strcasecmp(s->name, name) == 0;
+            pthread_mutex_unlock(&s->lock);
+        }
+        pthread_mutex_unlock(&r->streams_lock);
+        if (hit) { stream_close(s, 1); n++; }
+    }
+    return n;
+}
+
+/* Refusals since the last call ("name<TAB>reason\n" lines), cleared; "" when none. */
+void csrelay_poll(relay_t *r, char *buf, size_t len) {
+    pthread_mutex_lock(&r->policy_lock);
+    strncpy(buf, r->refusals, len - 1);
+    buf[len - 1] = 0;
+    r->refusals[0] = 0;
+    pthread_mutex_unlock(&r->policy_lock);
 }
 
 /* ---- JNI ---- */
@@ -700,18 +1133,94 @@ Java_com_craftstudio_cslauncher_e4mc_CsRelayNative_nativeStop(JNIEnv *env, jclas
     (void) env; (void) clazz;
     csrelay_stop((relay_t *) (intptr_t) handle);
 }
+
+JNIEXPORT void JNICALL
+Java_com_craftstudio_cslauncher_e4mc_CsRelayNative_nativeSetPolicy(JNIEnv *env, jclass clazz, jlong handle, jint maxGuests, jstring allowed, jstring reason) {
+    (void) clazz;
+    relay_t *r = (relay_t *) (intptr_t) handle;
+    if (!r) return;
+    const char *a = allowed ? (*env)->GetStringUTFChars(env, allowed, NULL) : NULL;
+    const char *re = reason ? (*env)->GetStringUTFChars(env, reason, NULL) : NULL;
+    csrelay_set_policy(r, maxGuests, a, re);
+    if (a) (*env)->ReleaseStringUTFChars(env, allowed, a);
+    if (re) (*env)->ReleaseStringUTFChars(env, reason, re);
+}
+
+JNIEXPORT void JNICALL
+Java_com_craftstudio_cslauncher_e4mc_CsRelayNative_nativeSetBlocked(JNIEnv *env, jclass clazz, jlong handle, jstring blocked) {
+    (void) clazz;
+    relay_t *r = (relay_t *) (intptr_t) handle;
+    if (!r) return;
+    const char *b = blocked ? (*env)->GetStringUTFChars(env, blocked, NULL) : NULL;
+    csrelay_set_blocked(r, b);
+    if (b) (*env)->ReleaseStringUTFChars(env, blocked, b);
+}
+
+JNIEXPORT void JNICALL
+Java_com_craftstudio_cslauncher_e4mc_CsRelayNative_nativeSetMotd(JNIEnv *env, jclass clazz, jlong handle, jstring motd) {
+    (void) clazz;
+    relay_t *r = (relay_t *) (intptr_t) handle;
+    if (!r) return;
+    char m[512];
+    jstr_copy(env, motd, m, sizeof(m));
+    csrelay_set_motd(r, m);
+}
+
+JNIEXPORT jstring JNICALL
+Java_com_craftstudio_cslauncher_e4mc_CsRelayNative_nativeGuestNames(JNIEnv *env, jclass clazz, jlong handle) {
+    (void) clazz;
+    relay_t *r = (relay_t *) (intptr_t) handle;
+    char buf[MAX_STREAMS * 34];
+    if (!r) return NULL;
+    csrelay_guest_names(r, buf, sizeof(buf));
+    return buf[0] ? (*env)->NewStringUTF(env, buf) : NULL;
+}
+
+JNIEXPORT jint JNICALL
+Java_com_craftstudio_cslauncher_e4mc_CsRelayNative_nativeKick(JNIEnv *env, jclass clazz, jlong handle, jstring name) {
+    (void) clazz;
+    relay_t *r = (relay_t *) (intptr_t) handle;
+    char n[64];
+    if (!r) return 0;
+    jstr_copy(env, name, n, sizeof(n));
+    return n[0] ? csrelay_kick(r, n) : 0;
+}
+
+JNIEXPORT jstring JNICALL
+Java_com_craftstudio_cslauncher_e4mc_CsRelayNative_nativePoll(JNIEnv *env, jclass clazz, jlong handle) {
+    (void) clazz;
+    relay_t *r = (relay_t *) (intptr_t) handle;
+    char buf[2048];
+    if (!r) return NULL;
+    csrelay_poll(r, buf, sizeof(buf));
+    return buf[0] ? (*env)->NewStringUTF(env, buf) : NULL;
+}
 #endif
 
 /* ---- standalone test: csrelay_test <localPort> [player] ---- */
 #ifdef CSRELAY_TEST_MAIN
 int main(int argc, char **argv) {
     int local = argc > 1 ? atoi(argv[1]) : 25565;
-    relay_t *r = csrelay_start(NULL, 0, local, argc > 2 ? argv[2] : NULL);
+    const char *host = getenv("CSRELAY_HOST");
+    int port = getenv("CSRELAY_PORT") ? atoi(getenv("CSRELAY_PORT")) : 0;
+    relay_t *r = csrelay_start(host, port, local, argc > 2 ? argv[2] : NULL);
+    if (getenv("CSRELAY_MOTD")) csrelay_set_motd(r, getenv("CSRELAY_MOTD"));
+    if (getenv("CSRELAY_MAX") || getenv("CSRELAY_ALLOWED"))
+        csrelay_set_policy(r, getenv("CSRELAY_MAX") ? atoi(getenv("CSRELAY_MAX")) : 0, getenv("CSRELAY_ALLOWED"), "Invited players only.");
+    if (getenv("CSRELAY_BLOCKED")) csrelay_set_blocked(r, getenv("CSRELAY_BLOCKED"));
     char buf[256];
     int iters = argc > 3 ? atoi(argv[3]) : 600;
     for (int i = 0; i < iters; i++) {
         int st = csrelay_state(r);
-        if (st == STATE_UP && csrelay_join_address(r, buf, sizeof(buf))) printf("UP %s streams=%d\n", buf, csrelay_streams(r));
+        if (st == STATE_UP && csrelay_join_address(r, buf, sizeof(buf))) {
+            char names[512], news[512];
+            csrelay_guest_names(r, names, sizeof(names));
+            csrelay_poll(r, news, sizeof(news));
+            for (char *q = names; *q; q++) if (*q == '\n') *q = ',';
+            for (char *q = news; *q; q++) if (*q == '\n') *q = '|';
+            printf("UP %s streams=%d guests=[%s] refused=[%s]\n", buf, csrelay_streams(r), names, news);
+            if (getenv("CSRELAY_KICK") && i == 6) printf("kicked %d\n", csrelay_kick(r, getenv("CSRELAY_KICK")));
+        }
         if (st == STATE_FAILED || st == STATE_STOPPED) {
             printf("ENDED state=%d problem=%s\n", st, csrelay_problem(r, buf, sizeof(buf)) ? buf : "-");
             break;

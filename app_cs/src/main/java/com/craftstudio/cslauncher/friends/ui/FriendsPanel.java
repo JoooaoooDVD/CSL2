@@ -256,19 +256,26 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
             return;
         }
         E4mcPublisher p = E4mcPublisher.get();
+        // Status badge next to the switch: Live / Connecting / Stopped / Disconnected
+        LinearLayout head = hrow();
         Switch sw = new Switch(mCtx);
         sw.setText(R.string.friends_sharing_switch);
         sw.setTextColor(color(R.color.vl_text));
         sw.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
         sw.setChecked(p.isEnabled());
         sw.setOnCheckedChangeListener((b, on) -> p.setEnabled(on));
-        card.addView(sw);
+        sw.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        head.addView(sw);
+        head.addView(statusBadge(p));
+        card.addView(head);
+        String tunnelName = HostSettings.tunnelLabel(p.isActive() ? p.activeTunnel() : HostSettings.tunnel());
         switch (p.phase()) {
             case STARTING:
-                card.addView(statusLine(mCtx.getString(HostSettings.tunnel() == HostSettings.TUNNEL_CS_RELAY ? R.string.host_connecting_cs : R.string.friends_sharing_connecting), R.color.vl_warn));
+                card.addView(statusLine(mCtx.getString(R.string.host_connecting_via, tunnelName), R.color.vl_warn));
+                if (p.isFallback() && p.fallbackNote() != null) card.addView(dim(mCtx.getString(R.string.host_fallback_note, p.fallbackNote())));
                 break;
             case PUBLISHED: {
-                card.addView(statusLine(mCtx.getString(R.string.friends_sharing_live), R.color.vl_ok));
+                // The address, big and tappable, with the tunnel it goes through underneath
                 TextView addr = new TextView(mCtx);
                 addr.setText(p.address());
                 addr.setTextColor(color(R.color.vl_code));
@@ -277,14 +284,26 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
                 addr.setBackgroundResource(R.drawable.bg_vl_code);
                 addr.setPadding(dp(14), dp(10), dp(14), dp(10));
                 addr.setOnClickListener(v -> copy(p.address(), R.string.friends_address_copied));
-                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                lp.topMargin = dp(6);
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                lp.topMargin = dp(8);
                 card.addView(addr, lp);
+                card.addView(dim(p.isFallback() ? mCtx.getString(R.string.host_via_fallback, tunnelName) : mCtx.getString(R.string.host_via, tunnelName)));
                 LinearLayout copyRow = hrow();
-                copyRow.addView(smallButton(mCtx.getString(R.string.host_copy_ip), R.drawable.bg_vl_btn_primary, v -> copy(p.address(), R.string.friends_address_copied)));
-                if (p.usesCsRelay()) { copyRow.addView(gap()); copyRow.addView(dim(mCtx.getString(R.string.host_tunnel_cs))); }
+                TextView copyBtn = button(mCtx.getString(R.string.host_copy_ip), R.drawable.bg_vl_btn_primary, v -> copy(p.address(), R.string.friends_address_copied));
+                copyBtn.setLayoutParams(new LinearLayout.LayoutParams(0, dp(40), 1f));
+                copyRow.addView(copyBtn);
+                copyRow.addView(gap());
+                TextView inviteBtn = button(mCtx.getString(R.string.friends_invite_all), R.drawable.bg_friends_btn_join, v -> inviteAll());
+                inviteBtn.setLayoutParams(new LinearLayout.LayoutParams(0, dp(40), 1f));
+                copyRow.addView(inviteBtn);
                 card.addView(copyRow);
-                card.addView(dim(mCtx.getString(R.string.friends_sharing_guests, p.guests())));
+                // Players: live count against the limit
+                int limit = HostSettings.maxPlayers();
+                String count = limit == HostSettings.NO_LIMIT
+                        ? mCtx.getString(R.string.host_players_online, p.guests())
+                        : mCtx.getString(R.string.host_players_online_of, p.guests(), Math.max(0, limit - 1));
+                card.addView(eyebrow(count));
+                if (p.guestNames().isEmpty()) card.addView(dim(mCtx.getString(R.string.host_players_none)));
                 for (String name : p.guestNames()) {
                     LinearLayout grow = listRow();
                     grow.setClickable(false);
@@ -304,17 +323,28 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
                 }
                 for (String line : p.recentRefusals()) card.addView(statusLine(mCtx.getString(R.string.host_refused, line), R.color.vl_warn));
                 LinearLayout row = hrow();
-                row.addView(button(mCtx.getString(R.string.friends_invite_all), R.drawable.bg_friends_btn_join, v -> inviteAll()));
+                int other = p.activeTunnel() == HostSettings.TUNNEL_CS_RELAY ? HostSettings.TUNNEL_E4MC : HostSettings.TUNNEL_CS_RELAY;
+                row.addView(smallButton(mCtx.getString(R.string.host_switch_to, HostSettings.tunnelLabel(other)), R.drawable.bg_vl_btn_ghost, v -> {
+                    p.switchTunnel(other);
+                    toast(R.string.host_switching);
+                    render();
+                }));
                 row.addView(gap());
-                row.addView(button(mCtx.getString(R.string.friends_sharing_stop), R.drawable.bg_vl_btn_danger, v -> p.stop()));
+                row.addView(smallButton(mCtx.getString(R.string.friends_sharing_stop), R.drawable.bg_vl_btn_danger, v -> p.stop()));
                 card.addView(row);
                 break;
             }
             case FAILED: {
-                card.addView(statusLine(mCtx.getString(R.string.host_disconnected, p.problem() == null ? (HostSettings.tunnel() == HostSettings.TUNNEL_CS_RELAY ? "CS Relay" : "e4mc") : p.problem()), R.color.vl_bad));
+                card.addView(statusLine(mCtx.getString(R.string.host_disconnected, p.problem() == null ? tunnelName : p.problem()), R.color.vl_bad));
                 if (p.port() > 0) {
                     LinearLayout row = hrow();
                     row.addView(button(mCtx.getString(R.string.friends_sharing_retry), R.drawable.bg_vl_btn_primary, v -> p.start(p.port())));
+                    int other = HostSettings.tunnel() == HostSettings.TUNNEL_CS_RELAY ? HostSettings.TUNNEL_E4MC : HostSettings.TUNNEL_CS_RELAY;
+                    row.addView(gap());
+                    row.addView(button(mCtx.getString(R.string.host_try_other, HostSettings.tunnelLabel(other)), R.drawable.bg_vl_btn_ghost, v -> {
+                        p.switchTunnel(other);
+                        render();
+                    }));
                     card.addView(row);
                 }
                 break;
@@ -361,6 +391,18 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
         stepper.addView(smallButton("+", R.drawable.bg_vl_btn_ghost, v -> { HostSettings.setMaxPlayers(HostSettings.stepMaxPlayers(1)); render(); }));
         card.addView(settingRow(R.drawable.ic_vl_player, mCtx.getString(R.string.host_players_title), HostSettings.maxPlayersLabel(),
                 mCtx.getString(R.string.host_players_java_cap), stepper));
+        // One-tap presets; the stepper above walks the finer stops
+        LinearLayout presets = hrow();
+        int[] quick = {2, 4, 8, 10, 16, HostSettings.NO_LIMIT};
+        int current = HostSettings.maxPlayers();
+        for (int q : quick) {
+            String label = q == HostSettings.NO_LIMIT ? mCtx.getString(R.string.host_players_unlimited) : String.valueOf(q);
+            TextView chip = smallButton(label, q == current ? R.drawable.bg_vl_btn_primary : R.drawable.bg_vl_btn_ghost, v -> { HostSettings.setMaxPlayers(q); render(); });
+            chip.setLayoutParams(new LinearLayout.LayoutParams(0, dp(34), 1f));
+            presets.addView(chip);
+            if (q != HostSettings.NO_LIMIT) presets.addView(gap());
+        }
+        card.addView(presets);
 
         card.addView(eyebrow(mCtx.getString(R.string.host_section_world)));
         // Server icon (server-icon.png in the game folder, written at game start).
@@ -370,6 +412,33 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
                     HostSettings.setIcon((HostSettings.icon() + 1) % 3);
                     render();
                 })));
+        // MOTD: the line under the world in friends' server lists (spliced in by the CS Relay door).
+        String motdNow = HostSettings.motd();
+        card.addView(settingRow(R.drawable.ic_vl_lan, mCtx.getString(R.string.host_motd),
+                motdNow.isEmpty() ? mCtx.getString(R.string.host_motd_default) : motdNow, mCtx.getString(R.string.host_motd_hint), null));
+        LinearLayout motdRow = hrow();
+        motdRow.setPadding(0, dp(2), 0, 0);
+        EditText motd = new EditText(mCtx);
+        motd.setHint(R.string.host_motd_placeholder);
+        motd.setSingleLine(true);
+        motd.setText(motdNow);
+        motd.setBackgroundResource(R.drawable.bg_vl_field);
+        motd.setTextColor(color(R.color.vl_text));
+        motd.setHintTextColor(color(R.color.vl_text_faint));
+        motd.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        motd.setPadding(dp(14), 0, dp(14), 0);
+        motd.setImeOptions(EditorInfo.IME_ACTION_DONE);
+        motd.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(HostSettings.MOTD_MAX)});
+        motd.setLayoutParams(new LinearLayout.LayoutParams(0, dp(44), 1f));
+        motdRow.addView(motd);
+        motdRow.addView(gap());
+        motdRow.addView(button(mCtx.getString(R.string.host_save), R.drawable.bg_vl_btn_primary, v -> {
+            hideKeyboard(motd);
+            HostSettings.setMotd(motd.getText().toString());
+            toast(R.string.host_saved);
+            render();
+        }));
+        card.addView(motdRow);
         // Cheats: the game decides at Open to LAN.
         card.addView(settingRow(R.drawable.ic_vl_settings, mCtx.getString(R.string.host_cheats), mCtx.getString(R.string.host_cheats_value),
                 mCtx.getString(R.string.host_cheats_java), null));
@@ -397,54 +466,93 @@ public final class FriendsPanel implements FriendsClient.Listener, E4mcPublisher
             card.addView(clearRow);
         }
 
-        // The relay.
+        // The relay: CS Relay (primary) or e4mc (secondary), as a two-way segment, plus the fallback switch.
         card.addView(eyebrow(mCtx.getString(R.string.host_section_relay)));
-        // TEMPORARY: tunnel choice — e4mc (default) or the Craft Studio test relay in Mumbai.
         boolean csRelay = HostSettings.tunnel() == HostSettings.TUNNEL_CS_RELAY;
-        card.addView(settingRow(R.drawable.ic_vl_signal, mCtx.getString(R.string.host_tunnel),
-                mCtx.getString(csRelay ? R.string.host_tunnel_cs : R.string.host_tunnel_e4mc),
-                mCtx.getString(csRelay ? R.string.host_tunnel_cs_hint : R.string.host_tunnel_e4mc_hint),
-                smallButton(mCtx.getString(R.string.host_change), R.drawable.bg_vl_btn_ghost, v -> {
-                    HostSettings.setTunnel(csRelay ? HostSettings.TUNNEL_E4MC : HostSettings.TUNNEL_CS_RELAY);
-                    if (mHost.inGame() && E4mcPublisher.get().isActive()) toast(R.string.host_relay_saved_next);
-                    render();
-                })));
+        LinearLayout seg = hrow();
+        TextView segCs = button(mCtx.getString(R.string.host_tunnel_cs_short), csRelay ? R.drawable.bg_vl_btn_primary : R.drawable.bg_vl_btn_ghost, v -> chooseTunnel(HostSettings.TUNNEL_CS_RELAY));
+        segCs.setLayoutParams(new LinearLayout.LayoutParams(0, dp(40), 1f));
+        seg.addView(segCs);
+        seg.addView(gap());
+        TextView segE4 = button(mCtx.getString(R.string.host_tunnel_e4mc_short), csRelay ? R.drawable.bg_vl_btn_ghost : R.drawable.bg_vl_btn_primary, v -> chooseTunnel(HostSettings.TUNNEL_E4MC));
+        segE4.setLayoutParams(new LinearLayout.LayoutParams(0, dp(40), 1f));
+        seg.addView(segE4);
+        card.addView(seg);
+        card.addView(dim(mCtx.getString(csRelay ? R.string.host_tunnel_cs_hint : R.string.host_tunnel_e4mc_hint)));
+        Switch fb = new Switch(mCtx);
+        fb.setText(R.string.host_fallback);
+        fb.setTextColor(color(R.color.vl_text));
+        fb.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        fb.setChecked(HostSettings.fallback());
+        fb.setOnCheckedChangeListener((b, on) -> HostSettings.setFallback(on));
+        LinearLayout.LayoutParams fblp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        fblp.topMargin = dp(8);
+        card.addView(fb, fblp);
+        card.addView(dim(mCtx.getString(R.string.host_fallback_hint)));
         if (csRelay) {
             card.addView(dim(mCtx.getString(R.string.host_tunnel_cs_note, CsRelayNative.relayAddress())));
         } else {
-        card.addView(settingRow(R.drawable.ic_vl_signal, mCtx.getString(R.string.host_relay),
-                HostSettings.relay().isEmpty() ? mCtx.getString(R.string.host_relay_auto) : HostSettings.relay(), null, null));
-        LinearLayout relayRow = hrow();
-        relayRow.setPadding(0, dp(2), 0, 0);
-        EditText relay = new EditText(mCtx);
-        relay.setHint(R.string.host_relay_hint);
-        relay.setSingleLine(true);
-        relay.setText(HostSettings.relay());
-        relay.setBackgroundResource(R.drawable.bg_vl_field);
-        relay.setTextColor(color(R.color.vl_text));
-        relay.setHintTextColor(color(R.color.vl_text_faint));
-        relay.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-        relay.setPadding(dp(14), 0, dp(14), 0);
-        relay.setImeOptions(EditorInfo.IME_ACTION_DONE);
-        relay.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_URI);
-        relay.setLayoutParams(new LinearLayout.LayoutParams(0, dp(44), 1f));
-        relayRow.addView(relay);
-        relayRow.addView(gap());
-        relayRow.addView(button(mCtx.getString(R.string.host_save), R.drawable.bg_vl_btn_primary, v -> {
-            String text = relay.getText().toString().trim();
-            hideKeyboard(relay);
-            if (!text.isEmpty() && !isHostPort(text)) {
-                toast(R.string.host_relay_bad);
-                return;
-            }
-            HostSettings.setRelay(text);
-            toast(mHost.inGame() && E4mcPublisher.get().isActive() ? R.string.host_relay_saved_next : R.string.host_saved);
-            render();
-        }));
-        card.addView(relayRow);
-        card.addView(dim(mCtx.getString(R.string.host_relay_note)));
+            card.addView(settingRow(R.drawable.ic_vl_signal, mCtx.getString(R.string.host_relay),
+                    HostSettings.relay().isEmpty() ? mCtx.getString(R.string.host_relay_auto) : HostSettings.relay(), null, null));
+            LinearLayout relayRow = hrow();
+            relayRow.setPadding(0, dp(2), 0, 0);
+            EditText relay = new EditText(mCtx);
+            relay.setHint(R.string.host_relay_hint);
+            relay.setSingleLine(true);
+            relay.setText(HostSettings.relay());
+            relay.setBackgroundResource(R.drawable.bg_vl_field);
+            relay.setTextColor(color(R.color.vl_text));
+            relay.setHintTextColor(color(R.color.vl_text_faint));
+            relay.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+            relay.setPadding(dp(14), 0, dp(14), 0);
+            relay.setImeOptions(EditorInfo.IME_ACTION_DONE);
+            relay.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_URI);
+            relay.setLayoutParams(new LinearLayout.LayoutParams(0, dp(44), 1f));
+            relayRow.addView(relay);
+            relayRow.addView(gap());
+            relayRow.addView(button(mCtx.getString(R.string.host_save), R.drawable.bg_vl_btn_primary, v -> {
+                String text = relay.getText().toString().trim();
+                hideKeyboard(relay);
+                if (!text.isEmpty() && !isHostPort(text)) {
+                    toast(R.string.host_relay_bad);
+                    return;
+                }
+                HostSettings.setRelay(text);
+                toast(mHost.inGame() && E4mcPublisher.get().isActive() ? R.string.host_relay_saved_next : R.string.host_saved);
+                render();
+            }));
+            card.addView(relayRow);
+            card.addView(dim(mCtx.getString(R.string.host_relay_note)));
         }
         mContent.addView(card);
+    }
+
+    /** Picks the tunnel; a live world moves over right away (its address changes). */
+    private void chooseTunnel(int tunnel) {
+        if (HostSettings.tunnel() == tunnel) return;
+        E4mcPublisher p = E4mcPublisher.get();
+        if (mHost.inGame() && p.isActive()) {
+            p.switchTunnel(tunnel);
+            toast(R.string.host_switching);
+        } else {
+            HostSettings.setTunnel(tunnel);
+        }
+        render();
+    }
+
+    /** Live / Connecting / Disconnected / Stopped, as a coloured pill with a dot. */
+    private TextView statusBadge(E4mcPublisher p) {
+        int text, colorRes;
+        switch (p.phase()) {
+            case PUBLISHED: text = R.string.host_status_live; colorRes = R.color.vl_ok; break;
+            case STARTING: text = R.string.host_status_connecting; colorRes = R.color.vl_warn; break;
+            case FAILED: text = R.string.host_status_down; colorRes = R.color.vl_bad; break;
+            default: text = R.string.host_status_stopped; colorRes = R.color.vl_text_dim;
+        }
+        TextView t = pill("●  " + mCtx.getString(text));
+        t.setTextColor(color(colorRes));
+        t.setTypeface(null, Typeface.BOLD);
+        return t;
     }
 
     /** A settings row: icon tile, title + optional hint, the value as a pill, and an action on the right. */

@@ -41,8 +41,12 @@ public final class HostSettings {
     private static final String K_ACCESS = "cs.host.access";
     private static final String K_RELAY = "cs.host.relay";
     private static final String K_TUNNEL = "cs.host.tunnel";
-    /** Which tunnel carries guests: e4mc (public relays, door policy) or the temporary CS test relay. */
+    /** Which tunnel carries guests: the CS Relay (default) or e4mc's public relays (secondary / fallback). */
     public static final int TUNNEL_E4MC = 0, TUNNEL_CS_RELAY = 1;
+    private static final String K_FALLBACK = "cs.host.fallback";
+    private static final String K_MOTD = "cs.host.motd";
+    /** Longest MOTD the door splices into status pings. */
+    public static final int MOTD_MAX = 120;
 
     /** Names invited from this process while hosting ("invited only" lets them in). */
     private static final Set<String> sInvited = Collections.synchronizedSet(new LinkedHashSet<String>());
@@ -180,11 +184,33 @@ public final class HostSettings {
     }
 
     public static int tunnel() {
-        int t = prefs().getInt(K_TUNNEL, TUNNEL_E4MC);
-        return t == TUNNEL_CS_RELAY ? TUNNEL_CS_RELAY : TUNNEL_E4MC;
+        int t = prefs().getInt(K_TUNNEL, TUNNEL_CS_RELAY);
+        return t == TUNNEL_E4MC ? TUNNEL_E4MC : TUNNEL_CS_RELAY;
     }
 
     public static void setTunnel(int tunnel) { prefs().edit().putInt(K_TUNNEL, tunnel).apply(); }
+
+    @NonNull
+    public static String tunnelLabel(int tunnel) { return tunnel == TUNNEL_E4MC ? "e4mc" : "CS Relay"; }
+
+    /** When the CS Relay cannot be reached, the world goes out through e4mc instead (default on). */
+    public static boolean fallback() { return prefs().getBoolean(K_FALLBACK, true); }
+
+    public static void setFallback(boolean on) { prefs().edit().putBoolean(K_FALLBACK, on).apply(); }
+
+    /** The line friends see under the world in their server list; empty = the game's own ("name - world"). */
+    @NonNull
+    public static String motd() {
+        String m = prefs().getString(K_MOTD, "");
+        return m == null ? "" : m.trim();
+    }
+
+    public static void setMotd(@Nullable String motd) {
+        String m = motd == null ? "" : motd.trim().replace('\n', ' ');
+        if (m.length() > MOTD_MAX) m = m.substring(0, MOTD_MAX);
+        prefs().edit().putString(K_MOTD, m).apply();
+        E4mcPublisher.get().applyPolicy();
+    }
 
     public static void setRelay(@Nullable String relay) {
         prefs().edit().putString(K_RELAY, relay == null ? "" : relay.trim()).apply();
