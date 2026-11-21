@@ -316,6 +316,46 @@ static char *motd_splice(const char *in, size_t in_len, const char *motd, size_t
     return out;
 }
 
+/*
+ * Replaces "max" inside the "players" object of a status-response JSON with max_players.
+ * Returns a malloc'd string (or NULL when the key is missing / malformed).
+ */
+static char *max_players_splice(const char *in, size_t in_len, int max_players, size_t *out_len) {
+    const char *end = in + in_len;
+    const char *pkey = NULL;
+    for (const char *p = in; p + 9 < end; p++) {
+        if (memcmp(p, "\"players\"", 9) == 0) { pkey = p; break; }
+    }
+    if (!pkey) return NULL;
+    const char *pcolon = memchr(pkey + 9, ':', (size_t) (end - pkey - 9));
+    if (!pcolon) return NULL;
+    const char *pobj = pcolon + 1;
+    while (pobj < end && (*pobj == ' ' || *pobj == '\t' || *pobj == '\n' || *pobj == '\r')) pobj++;
+    if (pobj >= end || *pobj != '{') return NULL;
+    const char *pend = json_skip(pobj, end);
+    if (!pend) return NULL;
+    const char *mkey = NULL;
+    for (const char *p = pobj; p + 5 < pend; p++) {
+        if (memcmp(p, "\"max\"", 5) == 0) { mkey = p; break; }
+    }
+    if (!mkey) return NULL;
+    const char *mcolon = memchr(mkey + 5, ':', (size_t) (pend - mkey - 5));
+    if (!mcolon) return NULL;
+    const char *vend = json_skip(mcolon + 1, pend);
+    if (!vend) return NULL;
+    char num[24];
+    int nlen = snprintf(num, sizeof(num), "%d", max_players);
+    size_t head = (size_t) (mcolon + 1 - in), tail = (size_t) (end - vend);
+    char *out = malloc(head + (size_t) nlen + tail + 1);
+    if (!out) return NULL;
+    memcpy(out, in, head);
+    memcpy(out + head, num, (size_t) nlen);
+    memcpy(out + head + nlen, vend, tail);
+    out[head + (size_t) nlen + tail] = 0;
+    *out_len = head + (size_t) nlen + tail;
+    return out;
+}
+
 static void note_refusal(relay_t *r, const char *name, const char *reason) {
     pthread_mutex_lock(&r->policy_lock);
     size_t have = strlen(r->refusals);
@@ -426,12 +466,26 @@ static int bridge_status_response(stream_t *s, uint8_t **hold, size_t *held, siz
         int b = a > 0 ? read_varint(pk + a, (size_t) body - a, &jlen) : 0;
         if (a > 0 && b > 0 && id == 0 && jlen > 0 && a + b + jlen == body) {
             char motd[512];
+            int max_guests;
             pthread_mutex_lock(&s->relay->policy_lock);
             strncpy(motd, s->relay->motd, sizeof(motd) - 1);
             motd[sizeof(motd) - 1] = 0;
+            max_guests = s->relay->max_guests;
             pthread_mutex_unlock(&s->relay->policy_lock);
-            size_t out_len = 0;
-            char *json = motd[0] ? motd_splice((const char *) pk + a + b, (size_t) jlen, motd, &out_len) : NULL;
+            const char *cur = (const char *) pk + a + b;
+            size_t cur_len = (size_t) jlen;
+            char *json = NULL;
+            if (motd[0]) {
+                size_t ml = 0;
+                char *m = motd_splice(cur, cur_len, motd, &ml);
+                if (m) { json = m; cur = m; cur_len = ml; }
+            }
+            if (max_guests > 0) {
+                size_t pl = 0;
+                char *p = max_players_splice(cur, cur_len, max_guests + 1, &pl);
+                if (p) { free(json); json = p; cur = p; cur_len = pl; }
+            }
+            size_t out_len = cur_len;
             if (json) {
                 uint8_t *pkt = malloc(out_len + 16);
                 if (pkt) {
@@ -604,12 +658,15 @@ static void door_refuse(stream_t *s, const char *name, const char *reason) {
     stream_close(s, 0);
 }
 
-static int door_guests(relay_t *r, stream_t *self) {
+static int door_guests(relay_t *r, stream_t *self, const char *name) {
     int n = 0;
     pthread_mutex_lock(&r->streams_lock);
     for (int i = 0; i < MAX_STREAMS; i++) {
         stream_t *o = &r->streams[i];
-        if (o != self && o->in_use && !o->closed && o->name[0]) n++;
+        if (o != self && o->in_use && !o->closed && o->name[0]) {
+            if (name && name[0] && strcasecmp(o->name, name) == 0) continue;
+            n++;
+        }
     }
     pthread_mutex_unlock(&r->streams_lock);
     return n;
@@ -674,7 +731,7 @@ static int door_feed(stream_t *s, const uint8_t *data, size_t len) {
         if (list_has(r->blocked, name)) snprintf(reason, sizeof(reason), "You were removed from this world by the host.");
         else if (r->allowed && !list_has(r->allowed, name)) snprintf(reason, sizeof(reason), "%s", r->reason[0] ? r->reason : "This world is not open to you.");
         pthread_mutex_unlock(&r->policy_lock);
-        if (!reason[0] && max > 0 && door_guests(r, s) >= max) snprintf(reason, sizeof(reason), "The world is full (%d player%s).", max + 1, max + 1 == 1 ? "" : "s");
+        if (!reason[0] && max > 0 && door_guests(r, s, name) >= max) snprintf(reason, sizeof(reason), "The world is full (%d player%s).", max + 1, max + 1 == 1 ? "" : "s");
         if (reason[0]) { door_refuse(s, name, reason); return 1; }
         pthread_mutex_lock(&s->lock);
         strncpy(s->name, name, sizeof(s->name) - 1);

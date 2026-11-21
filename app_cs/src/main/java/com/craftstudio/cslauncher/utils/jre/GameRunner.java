@@ -403,18 +403,18 @@ public class GameRunner {
 
     /**
      * World hosting settings for the Java edition: the integrated server's hard-coded LAN limit of 8
-     * players is lifted by the CS host agent (components/cs_host_agent) to the limit the player chose;
-     * the value is read when the LAN world opens, so it applies from this game start.
+     * players is lifted by the CS host agent (components/cs_host_agent) to the ceiling (512) so the
+     * live player limit in the Hosting panel can be raised or lowered at any time without restarting
+     * the game; the relay door enforces the exact limit the player chose.
      */
     private static void addHostAgentArgs(List<String> javaArgList) {
         File agent = new File(Tools.DIR_DATA, "cs_host_agent/cs-host-agent.jar");
-        int max = com.craftstudio.cslauncher.e4mc.HostSettings.javaMaxPlayers();
         if (!agent.isFile()) {
             Log.w(Tools.APP_NAME, "CS host agent missing, LAN worlds keep the game's limit of 8");
             return;
         }
         javaArgList.add("-javaagent:" + agent.getAbsolutePath());
-        javaArgList.add("-D" + com.craftstudio.cslauncher.e4mc.HostSettings.JAVA_PROPERTY + "=" + max);
+        javaArgList.add("-D" + com.craftstudio.cslauncher.e4mc.HostSettings.JAVA_PROPERTY + "=" + com.craftstudio.cslauncher.e4mc.HostSettings.JAVA_MAX_PLAYERS);
     }
 
     private static void addAuthlibInjectorArgs(List<String> javaArgList, Account account) {
